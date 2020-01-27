@@ -1,0 +1,3 @@
+Install using devtools::install_github("DalOFISkateRay/staRVe",build_vignettes=TRUE).
+
+Note: You must have the development version of TMB installed from github.com/kaskr/adcomp.
