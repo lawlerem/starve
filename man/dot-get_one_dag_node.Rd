@@ -4,8 +4,15 @@
 \alias{.get_one_dag_node}
 \title{Get parent nodes for a node of a directed acyclic graph.}
 \usage{
-.get_one_dag_node(x, nodes, n_neighbours, max_dist, distance_units,
-  silent = T, ...)
+.get_one_dag_node(
+  x,
+  nodes,
+  n_neighbours,
+  max_dist,
+  distance_units,
+  silent = T,
+  ...
+)
 }
 \arguments{
 \item{x}{An \code{sf} object containing one point geometry (if more than one

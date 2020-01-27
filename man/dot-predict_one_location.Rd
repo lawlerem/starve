@@ -4,8 +4,17 @@
 \alias{.predict_one_location}
 \title{Predict from a \code{staRVe} object at a single new location.}
 \usage{
-.predict_one_location(location, x, time, covariates, n_neighbours,
-  max_dist, distance_units, parameter_covariance, ...)
+.predict_one_location(
+  location,
+  x,
+  time,
+  covariates,
+  n_neighbours,
+  max_dist,
+  distance_units,
+  parameter_covariance,
+  ...
+)
 }
 \arguments{
 \item{location}{An object of class \code{sf} containing one point geometry.

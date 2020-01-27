@@ -12,13 +12,13 @@ Encoding: UTF-8
 LazyData: true
 ByteCompile: true
 Imports: 
-    TMB,
+    TMB (>= 1.7.16),
     Rcpp,
     RcppEigen,
     RANN,
     dplyr,
     geosphere,
-    nngeo,
+    nngeo (>= 0.3.0),
     units,
     raster,
     parallel,
@@ -28,7 +28,7 @@ LinkingTo:
     Rcpp,
     TMB,
     RcppEigen
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 Suggests: 
     knitr,
     rmarkdown
@@ -46,3 +46,4 @@ Collate:
     'src.R'
 Depends: 
     sf
+SystemRequirements: C++14

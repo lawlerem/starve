@@ -4,8 +4,13 @@
 \alias{construct_dag}
 \title{Construct a directed acyclic graph for an \code{sf} object with point geometry.}
 \usage{
-construct_dag(x, n_neighbours = 10, max_dist = Inf,
-  distance_units = "km", silent = T)
+construct_dag(
+  x,
+  n_neighbours = 10,
+  max_dist = Inf,
+  distance_units = "km",
+  silent = T
+)
 }
 \description{
 The directed acyclic graph is stored as an ordered list. The i'th element of

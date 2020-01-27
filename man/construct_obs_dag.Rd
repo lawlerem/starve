@@ -4,8 +4,15 @@
 \alias{construct_obs_dag}
 \title{Construct a directed acyclic graph between two \code{sf} objects with point geometry.}
 \usage{
-construct_obs_dag(x, y, n_neighbours = 10, check_intersection = T,
-  max_dist = Inf, distance_units = "km", silent = T)
+construct_obs_dag(
+  x,
+  y,
+  n_neighbours = 10,
+  check_intersection = T,
+  max_dist = Inf,
+  distance_units = "km",
+  silent = T
+)
 }
 \arguments{
 \item{x}{An \code{sf} object containing point geometries. Directed edges will

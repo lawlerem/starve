@@ -4,8 +4,18 @@
 \alias{.sf_to_observation}
 \title{Convert an sf object to a spatio-temporal Observation.}
 \usage{
-.sf_to_observation(sf_object, Process, formula, n_neighbours, distribution,
-  link, silent = T, max_dist = Inf, distance_units = "km", ...)
+.sf_to_observation(
+  sf_object,
+  Process,
+  formula,
+  n_neighbours,
+  distribution,
+  link,
+  silent = T,
+  max_dist = Inf,
+  distance_units = "km",
+  ...
+)
 }
 \arguments{
 \item{sf_object}{An object of class `sf` containing point geometries and

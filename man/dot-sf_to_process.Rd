@@ -4,8 +4,17 @@
 \alias{.sf_to_process}
 \title{Convert an sf object to a spatio-temporal Process, with TMB input.}
 \usage{
-.sf_to_process(sf_object, n_neighbours, time_range, time_type, time_name,
-  silent = T, max_dist = Inf, distance_units = "km", ...)
+.sf_to_process(
+  sf_object,
+  n_neighbours,
+  time_range,
+  time_type,
+  time_name,
+  silent = T,
+  max_dist = Inf,
+  distance_units = "km",
+  ...
+)
 }
 \arguments{
 \item{sf_object}{An object of class `sf` containing point geometries. All

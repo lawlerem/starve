@@ -4,9 +4,18 @@
 \alias{prepare_staRVe_input}
 \title{Convert an `sf' object to a form appropriate for the TMB::MakeADFun function.}
 \usage{
-prepare_staRVe_input(formula, Observation, Process = Observation,
-  n_neighbours = 10, distribution = "bernoulli", link = "logit",
-  silent = T, max_dist = Inf, distance_units = "km", ...)
+prepare_staRVe_input(
+  formula,
+  Observation,
+  Process = Observation,
+  n_neighbours = 10,
+  distribution = "bernoulli",
+  link = "logit",
+  silent = T,
+  max_dist = Inf,
+  distance_units = "km",
+  ...
+)
 }
 \arguments{
 \item{formula}{A formula object used to describe the model. The details are given
