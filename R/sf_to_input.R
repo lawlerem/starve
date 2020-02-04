@@ -12,16 +12,17 @@ NULL
 #' @export
 get_staRVe_distributions<- function(which = c("distribution","link")) {
   if( "distribution" %in% which ) {
-    distributions<- c("gaussian",
-                      "poisson",
-                      "negative binomial",
-                      "bernoulli")
+    distributions<- c("gaussian", # 0
+                      "poisson", # 1
+                      "negative binomial", # 2
+                      "bernoulli", # 3
+                      "gamma") # 4
     names(distributions)<- rep("distribution",length(distributions))
   } else { distributions<- character(0) }
   if( "link" %in% which ) {
-    links<- c("identity",
-              "log",
-              "logit")
+    links<- c("identity", # 0
+              "log", # 1
+              "logit") # 2
     names(links)<- rep("link",length(links))
   } else { links<- character(0) }
 
@@ -186,7 +187,8 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
                         numeric(1), # normal
                         numeric(0), # Poisson
                         numeric(1), # Neg. Binom.
-                        numeric(0)) # Bernoulli
+                        numeric(0), # Bernoulli
+                        numeric(1)) # Gamma
   link_code<- .link_to_code(link)
 
   time_name<- attr(.time_from_formula(formula,sf_object),"name")

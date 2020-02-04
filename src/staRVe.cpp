@@ -133,6 +133,10 @@ Type objective_function<Type>::operator() () {
     Type par_overdispersion = exp(response_pars(0))+1;
     REPORT(par_overdispersion);
     ADREPORT(par_overdispersion);
+  } else if( distribution_code == 4 ) { // Gamma
+    Type par_sd = sqrt(exp(response_pars(0)));
+    REPORT(par_sd);
+    ADREPORT(par_sd);
   } else {}
 
   Type par_tau = tau;

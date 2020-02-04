@@ -22,6 +22,8 @@ struct response_density {
       case 1 : return dpois(data,mean,true); // Poisson
       case 2 : return dnbinom2(data,mean,(exp(pars(0))+1)*mean,true); // Neg. Binomial
       case 3 : return dbinom(data,T(1),mean,true); // Bernoulli with p = mean
+      case 4 : return dgamma(data,pow(mean,2)/exp(pars(0)),exp(pars(0))/mean,true);
+                                  // shape = mu^2/var,     scale = var/mu
       default : return dnorm(data,mean,exp(pars(0)),true); // Normal
     }
   }
