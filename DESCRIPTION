@@ -38,6 +38,7 @@ Collate:
     'access_staRVe.R'
     'access_TMB_out.R'
     'dag.R'
+    'data.R'
     'formula.R'
     'fit.R'
     'predict.R'
