@@ -354,7 +354,7 @@ prepare_staRVe_input<- function(formula,
                     settings = settings)
 
   if( fit == T ) {
-    model_fit<- fit_staRVe(return_val,...)
+    model_fit<- fit_staRVe(return_val,silent = silent,...)
     return(model_fit)
   } else {
     return(return_val)
