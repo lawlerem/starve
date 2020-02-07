@@ -59,6 +59,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
   } else {}
 
   m<- min(nrow(nodes),n_neighbours)
+  suppressMessages({
   nn_obj<- nngeo::st_nn(x = x,
                         y = nodes,
                         returnDist = T,
@@ -66,6 +67,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
                         progress = !silent,
                         k = m,
                         maxdist = max_dist)
+  })
   names(nn_obj)<- c("nn","dist")
 
   parents<- nn_obj$nn[[1]]

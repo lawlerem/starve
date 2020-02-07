@@ -268,17 +268,17 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'
 #' @param formula A formula object used to describe the model. The details are given
 #'  under `Details'.
-#' @param Observation An object of class `sf` containing point geometries. Data
+#' @param data An object of class `sf` containing point geometries. Data
 #'  used in the `formula' object will be found here.
 #' @param Process An object of class `sf` containing point geometries.
 #'  The default value uses the same locations as the observations. All locations
 #'  will be used in every time index, so special care should be taken in choosing
 #'  the number of points present. Any data fields (include time) will be discarded.
 #' @param n_neighbours An integer giving the number of parents for each node.
-#' @param distribution A character vector giving the response distribution.
-#'  See \code{get_staRVe_distributions("distribution")}.
-#' @param link A character vector giving the response link function.
-#'  See \code{get_staRVe_distributions("link")}.
+#' @param distribution A character vector giving the response distribution. The
+#'  default is "gaussian". See \code{get_staRVe_distributions("distribution")}.
+#' @param link A character vector giving the response link function. The default
+#'  is "identity". See \code{get_staRVe_distributions("link")}.
 #' @param silent Should intermediate calculations be printed?
 #' @param max_dist The maximum distance used to search for parents.
 #'  Unless this has a units attribute, units are assumed to be the same as
@@ -288,20 +288,22 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'
 #' @return A list with three components. The first is a list of data and parameters
 #'  to pass directly to TMB::MakeADFun. The second is a list of \code{sf} objects
-#'  storing minimal versions of Observation and Process. The third is a list of
+#'  storing minimal versions of Observation (== data) and Process. The third is a list of
 #'  settings used in the model (n_neighbours, distance_units, etc.).
 #'
 #' @export
 prepare_staRVe_input<- function(formula,
-                                Observation,
-                                Process = Observation,
+                                data,
+                                Process = data,
                                 n_neighbours = 10,
-                                distribution = "bernoulli",
-                                link = "logit",
+                                distribution = "gaussian",
+                                link = "identity",
                                 silent = T,
                                 max_dist = Inf,
                                 distance_units = "km",
+                                fit = F,
                                 ...) {
+  Observation<- data # Want to call data in the call for conformity with glm
   max_dist<- units::set_units(max_dist,distance_units,mode="standard")
   max_dist<- units::set_units(max_dist,"m") # st_nn needs input in meters.
 
@@ -347,8 +349,16 @@ prepare_staRVe_input<- function(formula,
                   distribution_code = TMB_objects$data$distribution_code,
                   link_code = TMB_objects$data$link_code,
                   time_column = attr(time_info,"name"))
+  return_val<- list(TMB_objects = TMB_objects,
+                    sf_objects = sf_objects,
+                    settings = settings)
 
-  return(list(TMB_objects = TMB_objects,
-              sf_objects = sf_objects,
-              settings = settings))
+  if( fit == T ) {
+    model_fit<- fit_staRVe(return_val,...)
+    return(model_fit)
+  } else {
+    return(return_val)
+  }
+
+  return(return_val) # Not actually necessary but a good safeguard
 }

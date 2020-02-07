@@ -6,14 +6,15 @@
 \usage{
 prepare_staRVe_input(
   formula,
-  Observation,
-  Process = Observation,
+  data,
+  Process = data,
   n_neighbours = 10,
-  distribution = "bernoulli",
-  link = "logit",
+  distribution = "gaussian",
+  link = "identity",
   silent = T,
   max_dist = Inf,
   distance_units = "km",
+  fit = F,
   ...
 )
 }
@@ -21,7 +22,7 @@ prepare_staRVe_input(
 \item{formula}{A formula object used to describe the model. The details are given
 under `Details'.}
 
-\item{Observation}{An object of class `sf` containing point geometries. Data
+\item{data}{An object of class `sf` containing point geometries. Data
 used in the `formula' object will be found here.}
 
 \item{Process}{An object of class `sf` containing point geometries.
@@ -31,11 +32,11 @@ the number of points present. Any data fields (include time) will be discarded.}
 
 \item{n_neighbours}{An integer giving the number of parents for each node.}
 
-\item{distribution}{A character vector giving the response distribution.
-See \code{get_staRVe_distributions("distribution")}.}
+\item{distribution}{A character vector giving the response distribution. The
+default is "gaussian". See \code{get_staRVe_distributions("distribution")}.}
 
-\item{link}{A character vector giving the response link function.
-See \code{get_staRVe_distributions("link")}.}
+\item{link}{A character vector giving the response link function. The default
+is "identity". See \code{get_staRVe_distributions("link")}.}
 
 \item{silent}{Should intermediate calculations be printed?}
 
@@ -49,7 +50,7 @@ See \code{\link{construct_dag}}.}
 \value{
 A list with three components. The first is a list of data and parameters
  to pass directly to TMB::MakeADFun. The second is a list of \code{sf} objects
- storing minimal versions of Observation and Process. The third is a list of
+ storing minimal versions of Observation (== data) and Process. The third is a list of
  settings used in the model (n_neighbours, distance_units, etc.).
 }
 \description{
