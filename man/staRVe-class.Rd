@@ -19,6 +19,9 @@ An S4 class to hold results from an analysis of RV data.
 \item{\code{parameters}}{A data.frame containing the columns \code{par}, and \code{par_se}.}
 
 \item{\code{convergence}}{A character vector giving the convergence message.}
+
+\item{\code{settings}}{A list with elements: n_neighbours, distance_units, formula,
+distribution_code, link_code, and time_column.}
 }}
 
 \concept{staRVe-classe}

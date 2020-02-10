@@ -29,7 +29,9 @@ setClass(
 #' @slot Process An \code{sf} object containing data.frame with columns \code{w} and \code{w_se}, and an \code{sfc} object containing location data.
 #' @slot parameters A data.frame containing the columns \code{par}, and \code{par_se}.
 #' @slot convergence A character vector giving the convergence message.
-#"
+#' @slot settings A list with elements: n_neighbours, distance_units, formula,
+#'   distribution_code, link_code, and time_column.
+#'
 #' @export
 setClass(
     Class = "staRVe",
