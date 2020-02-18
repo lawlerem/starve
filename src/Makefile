@@ -8,3 +8,6 @@ predict_w.so: predict_w.cpp
 
 family.so: family.cpp
 	Rscript --vanilla -e "TMB::compile('family.cpp')"
+
+clean:
+	rm -rf *.o
