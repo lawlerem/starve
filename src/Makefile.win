@@ -1,0 +1,13 @@
+all: staRVe.dll predict_w.dll family.dll
+	#
+staRVe.dll: staRVe.cpp
+	Rscript --vanilla -e "TMB::compile('staRVe.cpp',flags='-O3')"
+
+predict_w.dll: predict_w.cpp
+	Rscript --vanilla -e "TMB::compile('predict_w.cpp',flags='-O3')"
+
+family.dll: family.cpp
+	Rscript --vanilla -e "TMB::compile('family.cpp',flags='-O3')"
+
+clean:
+	rm -rf *o
