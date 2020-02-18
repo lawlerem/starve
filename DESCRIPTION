@@ -47,4 +47,4 @@ Collate:
     'src.R'
 Depends: 
     sf
-SystemRequirements: C++14
+
