@@ -17,7 +17,8 @@ for Observation and Process, and the third stores model settings.}
 on the MakeADFun TMB object. Requires a special install of TMB,
 see \code{?TMB::runSymbolicAnalysis}.}
 
-\item{...}{Optional parameters to be passed to TMB::MakeADFun and TMB::sdreport.}
+\item{...}{Optional parameters to be passed to TMB::MakeADFun, TMB::sdreport,
+or nlminb.}
 }
 \value{
 An object of class \code{staRVe} containing the model fit.

@@ -340,8 +340,9 @@ setGeneric(name = "get_resp",
 setMethod(f = "get_resp",
           signature = "TMB_out",
           definition = function(x,sf_obj) {
-    resp<- get_geo_vars(x,"resp",sf_obj,get_sd=T)
-    colnames(resp)[1:2]<- c("response","response_se")
+    resp<- get_geo_vars(x,"resp",sf_obj,get_sd=F)
+    # colnames(resp)[1:2]<- c("response","response_se")
+    colnames(resp)[1]<- c("response")
     return(resp)
 })
 
@@ -356,9 +357,9 @@ setGeneric(name = "get_observation",
 setMethod(f = "get_observation",
           signature = "TMB_out",
           definition = function(x,sf_obj) {
-    resp<- get_resp(x,sf_obj)
+    # resp<- get_resp(x,sf_obj)
 
-    return(resp)
+    return(sf_obj)
 })
 
 #' @export

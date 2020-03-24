@@ -9,6 +9,7 @@
   Process,
   formula,
   n_neighbours,
+  p_far_neighbours,
   distribution,
   link,
   silent = T,
@@ -24,8 +25,12 @@ covariate columns.}
 \item{Process}{An object of class `sf` containing point geometries. These
 will be used as the parent nodes for the observation locations.}
 
+\item{formula}{A formula used to describe the model. See \code{prepare_staRVe_input}.}
+
 \item{n_neighbours}{A positive integer giving the (maximum) number of
 parents for each node.}
+
+\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
 
 \item{distribution}{A character vector giving the response distribution.
 See \code{get_staRVe_distributions("distribution")}.}
@@ -41,8 +46,6 @@ the supplied \code{distance_units}. See \code{\link{construct_dag}}.}
 
 \item{distance_units}{Which units should be used for distances?
 See \code{\link{construct_dag}}.}
-
-\item{A}{formula used to describe the model. See \code{prepare_staRVe_input}.}
 }
 \value{
 A list with 4 elements:

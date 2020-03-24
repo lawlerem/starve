@@ -8,6 +8,7 @@
   x,
   nodes,
   n_neighbours,
+  p_far_neighbours,
   max_dist,
   distance_units,
   silent
@@ -20,11 +21,16 @@ is present, only the first will be used).}
 \item{nodes}{An \code{sf} object containing point geometries. These will
 be the possible parent nodes of \code{x}.}
 
-\item{n_neighbours}{A positive integer giving the number of parents for each node.}
+\item{n_neighbours}{A positive integer giving the (maximum) number of
+parents for each node.}
+
+\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
 
 \item{max_dist}{The maximum distance (in meters) to search for parents.}
 
 \item{distance_units}{Which units should be used for distances?}
+
+\item{silent}{Should intermediate calculations be shown?}
 }
 \value{
 A list with elements "parents" and "dists". The "parents" element

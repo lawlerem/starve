@@ -37,8 +37,10 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #' @param nodes An \code{sf} object containing point geometries. These will
 #'   be the possible parent nodes of \code{x}.
 #' @param n_neighbours A positive integer giving the number of parents for each node.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param max_dist The maximum distance (in meters) to search for parents.
 #' @param distance_units Which units should be used for distances?
+#' @param silent Should intermediate calculations be shown?
 #'
 #' @return A list with elements "parents" and "dists". The "parents" element
 #'   is a vector giving the indices of the rows of \code{nodes} which are the
@@ -48,6 +50,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
 .get_one_dag_node<- function(x,
                              nodes,
                              n_neighbours,
+                             p_far_neighbours,
                              max_dist,
                              distance_units,
                              silent = T,
@@ -58,7 +61,13 @@ order_by_location<- function(x,time=NULL,return="sort") {
     return(list(parents,dists))
   } else {}
 
-  m<- min(nrow(nodes),n_neighbours)
+  if( nrow(nodes) <= n_neighbours ) {
+    n_far_neighbours<- 0
+    m<- nrow(nodes)
+  } else {
+    n_far_neighbours<- round(p_far_neighbours*n_neighbours)
+    m<- n_neighbours - n_far_neighbours
+  }
   suppressMessages({
   nn_obj<- nngeo::st_nn(x = x,
                         y = nodes,
@@ -77,8 +86,12 @@ order_by_location<- function(x,time=NULL,return="sort") {
     return(list(parents,dists))
   } else {}
 
+  far_neighbours<- sample(seq(nrow(nodes))[-parents],size = n_far_neighbours)
+  parents<- c(parents,far_neighbours)
+
   nn_obj$dist<- matrix(nn_obj$dist[[1]],nrow=1)
-  cross_dists<- units::set_units(nn_obj$dist,"m") # st_nn always returns meters
+  cross_dists<- cbind(nn_obj$dist, sf::st_distance(x,nodes[far_neighbours,]))
+  cross_dists<- units::set_units(cross_dists,"m") # st_nn always returns meters
   cross_dists<- units::set_units(cross_dists,distance_units,mode="standard")
   parent_dists<- units::set_units(sf::st_distance(nodes[parents,]),"m")
   parent_dists<- units::set_units(parent_dists,distance_units,mode="standard")
@@ -93,9 +106,12 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #'   is present, only the first will be used).
 #' @param nodes An \code{sf} object containing point geometries. These will
 #'   be the possible parent nodes of \code{x}.
-#' @param n_neighbours A positive integer giving the number of parents for each node.
+#' @param n_neighbours A positive integer giving the (maximum) number of
+#'  parents for each node.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param max_dist The maximum distance (in meters) to search for parents.
 #' @param distance_units Which units should be used for distances?
+#' @param silent Should intermediate calculations be shown?
 #'
 #' @return A list with elements "parents" and "dists". The "parents" element
 #'   is a vector giving the indices of the rows of \code{nodes} which are the
@@ -109,6 +125,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
 .get_one_intersects_dag_node<- function(x,
                                         nodes,
                                         n_neighbours,
+                                        p_far_neighbours,
                                         max_dist,
                                         distance_units,
                                         silent) {
@@ -117,6 +134,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
     node<- .get_one_dag_node(x = x,
                              nodes = nodes,
                              n_neighbours = n_neighbours,
+                             p_far_neighbours = p_far_neighbours,
                              max_dist = max_dist,
                              distance_units = distance_units,
                              silent = silent)
@@ -138,9 +156,19 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #' There can only be an edge from vertex i to vertex j if i comes before j in
 #'  the rows of \code{x}.
 #'
+#' @param x An \code{sf} object containing point geometries, which will be the
+#'  nodes of the graph.
+#' @param n_neighbours A positive integer giving the (maximum) number of
+#'  parents for each node.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
+#' @param max_dist The maximum distance (in meters) to search for parents.
+#' @param distance_units Which units should be used for distances?
+#' @param silent Should intermediate calculations be shown?
+#'
 #' @export
 construct_dag<- function(x,
                          n_neighbours = 10,
+                         p_far_neighbours = 0.2,
                          max_dist = Inf,
                          distance_units = "km",
                          silent = T) {
@@ -152,6 +180,7 @@ construct_dag<- function(x,
     .get_one_dag_node(x = x[i,],
                       nodes = head(x,i-1),
                       n_neighbours = n_neighbours,
+                      p_far_neighbours = p_far_neighbours,
                       max_dist =  max_dist,
                       distance_units = distance_units,
                       silent = silent)
@@ -174,6 +203,7 @@ construct_dag<- function(x,
 #' @param y An \code{sf} objecy containing point geometries. Directed edges will
 #'  leave nodes in y.
 #' @param n_neighbours An integer giving the number of parents for each node.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param check_intersection Logical. If true, if any point in \code{x} is also
 #'   a point in \code{y}, then there will be exactly one edge into that point in
 #'   \code{x} coming from the same point in \code{y} (with a distance of 0).
@@ -189,6 +219,7 @@ construct_dag<- function(x,
 construct_obs_dag<- function(x,
                              y,
                              n_neighbours = 10,
+                             p_far_neighbours = 0.2,
                              check_intersection = T,
                              max_dist = Inf,
                              distance_units = "km",
@@ -201,6 +232,7 @@ construct_obs_dag<- function(x,
     args<- list(x = x[i,],
                 nodes = y,
                 n_neighbours = n_neighbours,
+                p_far_neighbours = p_far_neighbours,
                 max_dist = max_dist,
                 distance_units = distance_units,
                 silent = silent)

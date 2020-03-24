@@ -7,6 +7,7 @@
 .sf_to_process(
   sf_object,
   n_neighbours,
+  p_far_neighbours,
   time_range,
   time_type,
   time_name,
@@ -23,8 +24,15 @@ locations will be used for every time index.}
 \item{n_neighbours}{A positive integer giving the (maximum) number of
 parents for each node.}
 
+\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
+
+\item{time_range}{A integer vector containing at least the minimum time and
+maximum time for the model.}
+
 \item{time_type}{Which time structure should be used? Must be one of
 \code{independent}, \code{ar1} (default), or \code{rw}.}
+
+\item{time_name}{What is the name of the time index?}
 
 \item{silent}{Should intermediate calculations be printed?}
 
@@ -34,8 +42,6 @@ the supplied \code{distance_units}. See \code{\link{construct_dag}}.}
 
 \item{distance_units}{Which units should be used for distances?
 See \code{\link{construct_dag}}.}
-
-\item{n_time}{A positive integer giving the number of time indices.}
 }
 \value{
 A list with 4 elements:

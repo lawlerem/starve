@@ -8,6 +8,7 @@ construct_obs_dag(
   x,
   y,
   n_neighbours = 10,
+  p_far_neighbours = 0.2,
   check_intersection = T,
   max_dist = Inf,
   distance_units = "km",
@@ -22,6 +23,8 @@ enter nodes in x.}
 leave nodes in y.}
 
 \item{n_neighbours}{An integer giving the number of parents for each node.}
+
+\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
 
 \item{check_intersection}{Logical. If true, if any point in \code{x} is also
 a point in \code{y}, then there will be exactly one edge into that point in

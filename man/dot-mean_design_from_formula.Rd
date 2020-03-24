@@ -7,9 +7,9 @@
 .mean_design_from_formula(x, data)
 }
 \arguments{
-\item{x}{A formula object with terms grouped in a mean(...) function.}
+\item{x}{A formula object with terms grouped in a \code{mean(...)} function.}
 
-\item{data}{A data.frame to retrieve the covariate data from.}
+\item{data}{A data.frame containing the covariate data.}
 }
 \value{
 The design matrix for the covariates.

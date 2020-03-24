@@ -27,7 +27,7 @@ Type objective_function<Type>::operator() () {
   DATA_STRUCT(ys_edges,directed_graph);
   DATA_STRUCT(ys_dists,dag_dists);
 
-  DATA_IVECTOR(link_w_time);
+  DATA_IVECTOR(resp_w_time);
 
   DATA_MATRIX(mean_design);
 
@@ -35,14 +35,19 @@ Type objective_function<Type>::operator() () {
   DATA_STRUCT(ws_edges,directed_graph);
   DATA_STRUCT(ws_dists,dag_dists);
 
+  DATA_IVECTOR(pred_w_time);
+  DATA_STRUCT(pred_ws_edges,directed_graph);
+  DATA_STRUCT(pred_ws_dists,dag_dists);
+
   PARAMETER(mu);
   PARAMETER_VECTOR(response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
-  PARAMETER_VECTOR(link_w);
+  PARAMETER_VECTOR(resp_w);
   PARAMETER(logtau);
   PARAMETER(logrho);
   PARAMETER(logit_w_phi);
   PARAMETER_VECTOR(proc_w);
+  PARAMETER_VECTOR(pred_w);
 
   Type tau = exp(logtau);
   Type rho = exp(logrho);
@@ -53,6 +58,9 @@ Type objective_function<Type>::operator() () {
 
   vector<vector<int> > ws_dag = ws_edges.dag;
   vector<matrix<Type> > ws_dist = ws_dists.dag_dist;
+
+  vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
+  vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
   covariance<Type> cov(tau,rho);
   inv_link_function inv_link = {link_code};
@@ -65,16 +73,19 @@ Type objective_function<Type>::operator() () {
 
   vector<int> w_segment(2);
   vector<int> y_segment(2);
-  vector<int> link_w_segment(2);
+  vector<int> resp_w_segment(2);
+  vector<int> pred_w_segment(2);
 
   vector<Type> resp_response(obs_y.size());
 
   Type nll = 0.0;
+  Type pred_nll = 0.0;
 
   // Initial time
   w_segment = get_time_segment(w_time,0);
   y_segment = get_time_segment(y_time,0);
-  link_w_segment = get_time_segment(link_w_time,0);
+  resp_w_segment = get_time_segment(resp_w_time,0);
+  pred_w_segment = get_time_segment(pred_w_time,0);
 
   nngp<Type> process(cov,
                      proc_w.segment(w_segment(0),w_segment(1)),
@@ -87,19 +98,25 @@ Type objective_function<Type>::operator() () {
                          keep.segment(y_segment(0),y_segment(1)),
                          ys_dag.segment(y_segment(0),y_segment(1)),
                          ys_dist.segment(y_segment(0),y_segment(1)),
-                         link_w.segment(link_w_segment(0),link_w_segment(1)),
+                         resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                          matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
                          family);
   resp_response.segment(y_segment(0),y_segment(1)) = obs.find_response();
 
+  process.predict_w(pred_ws_dag,
+                    pred_ws_dist,
+                    pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                    pred_nll);
+
   nll -= process.loglikelihood()
-            + obs.link_w_loglikelihood()
+            + obs.resp_w_loglikelihood()
             + obs.y_loglikelihood();
 
   for(int time=1; time<n_time; time++) {
     w_segment = get_time_segment(w_time,time);
     y_segment = get_time_segment(y_time,time);
-    link_w_segment = get_time_segment(link_w_time,time);
+    resp_w_segment = get_time_segment(resp_w_time,time);
+    pred_w_segment = get_time_segment(pred_w_time,time);
 
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
                      w_phi * process.get_w());
@@ -107,14 +124,21 @@ Type objective_function<Type>::operator() () {
                  keep.segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
                  ys_dist.segment(y_segment(0),y_segment(1)),
-                 link_w.segment(link_w_segment(0),link_w_segment(1)),
+                 resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                  matrix_row_segment(mean_design,y_segment(0),y_segment(1)));
     resp_response.segment(y_segment(0),y_segment(1)) = obs.find_response();
 
+    process.predict_w(pred_ws_dag,
+                      pred_ws_dist,
+                      pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                      pred_nll);
+
     nll -= process.loglikelihood()
-              + obs.link_w_loglikelihood()
+              + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
   }
+
+  REPORT(pred_nll);
 
   Type par_mu = mu;
   REPORT(par_mu);
@@ -163,7 +187,8 @@ Type objective_function<Type>::operator() () {
   REPORT(obs_y);
 
   // vector<Type> resp_response = resp_response;
-  ADREPORT(resp_response);
+  REPORT(resp_response);
+  // ADREPORT(resp_response);
 
-  return(nll);
+  return(nll+pred_nll);
 }

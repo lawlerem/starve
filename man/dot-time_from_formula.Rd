@@ -10,7 +10,7 @@
 \item{x}{A formula object with a time(...,type) function containing one entry,
 and a `type' argument which can be one of "ar1", "rw", or "independent".}
 
-\item{data}{A data.frame to retrieve the time index from.}
+\item{data}{A data.frame containing the time information.}
 }
 \value{
 A vector containing the index, with a `name' attribute

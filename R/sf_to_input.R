@@ -52,7 +52,7 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 }
 
 .w_time_for_process<- function(Process,
-                                n_time) {
+                               n_time) {
   w_time<- sapply(seq(0,n_time-1),rep,nrow(Process))
   w_time<- c(w_time) # Remove names
   return(w_time)
@@ -65,9 +65,12 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'   locations will be used for every time index.
 #' @param n_neighbours A positive integer giving the (maximum) number of
 #'   parents for each node.
-#' @param n_time A positive integer giving the number of time indices.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
+#' @param time_range A integer vector containing at least the minimum time and
+#'   maximum time for the model.
 #' @param time_type Which time structure should be used? Must be one of
 #'    \code{independent}, \code{ar1} (default), or \code{rw}.
+#' @param time_name What is the name of the time index?
 #' @param silent Should intermediate calculations be printed?
 #' @param max_dist The maximum distance used to search for parents.
 #'   Unless this has a units attribute, units are assumed to be the same as
@@ -86,6 +89,7 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'  }
 .sf_to_process<- function(sf_object,
                          n_neighbours,
+                         p_far_neighbours,
                          time_range,
                          time_type,
                          time_name,
@@ -98,6 +102,7 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
   Process<- order_by_location(Process)
   Process_dag<- construct_dag(Process,
                               n_neighbours = n_neighbours,
+                              p_far_neighbours = p_far_neighbours,
                               silent = silent,
                               max_dist = max_dist,
                               distance_units = distance_units)
@@ -109,12 +114,16 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 
   data<- list(w_time = w_time,
               ws_edges = Process_dag[[1]],
-              ws_dists = Process_dag[[2]])
+              ws_dists = Process_dag[[2]],
+              pred_w_time = numeric(0),
+              pred_ws_edges = list(numeric(0)),
+              pred_ws_dists = list(matrix(0,nrow=0,ncol=0)))
   pars<- list(logtau = 0,
               logrho = log(mean(unlist(data$ws_dists))),
               logit_w_phi = 0,
-              proc_w = proc_w)
-  rand<- c("proc_w")
+              proc_w = proc_w,
+              pred_w = numeric(0))
+  rand<- c("proc_w","pred_w")
   map<- list()
 
   if( time_type == "ar1" ) {
@@ -149,9 +158,10 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'   covariate columns.
 #' @param Process An object of class `sf` containing point geometries. These
 #'   will be used as the parent nodes for the observation locations.
-#' @param A formula used to describe the model. See \code{prepare_staRVe_input}.
+#' @param formula A formula used to describe the model. See \code{prepare_staRVe_input}.
 #' @param n_neighbours A positive integer giving the (maximum) number of
 #'   parents for each node.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param distribution A character vector giving the response distribution.
 #'   See \code{get_staRVe_distributions("distribution")}.
 #' @param link A character vector giving the response link function.
@@ -176,6 +186,7 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
                              Process,
                              formula,
                              n_neighbours,
+                             p_far_neighbours,
                              distribution,
                              link,
                              silent = T,
@@ -210,6 +221,7 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
   Observation_dag<- construct_obs_dag(Observation,
                                       Process,
                                       n_neighbours = n_neighbours,
+                                      p_far_neighbours = p_far_neighbours,
                                       silent = silent,
                                       max_dist = max_dist,
                                       distance_units = distance_units)
@@ -217,9 +229,9 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
   Observation_dists<- Observation_dag[[2]]
 
   edge_degrees<- unlist(lapply(Observation_edges,length))
-  link_w_idx<- (edge_degrees != 1)
-  link_w<- numeric(sum(link_w_idx))
-  link_w_time<- y_time[link_w_idx]
+  resp_w_idx<- (edge_degrees != 1)
+  resp_w<- numeric(sum(resp_w_idx))
+  resp_w_time<- y_time[resp_w_idx]
 
   data<- list(n_time = n_time,
               distribution_code = distribution_code,
@@ -228,13 +240,13 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
               obs_y = c(obs_y),
               ys_edges = Observation_edges,
               ys_dists = Observation_dists,
-              link_w_time = link_w_time,
+              resp_w_time = resp_w_time,
               mean_design = mean_design)
   pars<- list(mu = 0,
               response_pars = response_pars,
               mean_pars = mean_parameters,
-              link_w = link_w)
-  rand<- c("link_w")
+              resp_w = resp_w)
+  rand<- c("resp_w")
   map<- list()
 
   obs_var_names<- c(attr(obs_y,"name"),attr(y_time,"name"),attr(Observation,"sf_column"))
@@ -262,9 +274,9 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #' an AR(1) structure, "rw" for a random walk, and "independent" for independent
 #' spatial fields each year.
 #'
-#' The variables in the mean(...) ``special" are linear predictors for the mean
+#' The variables in the \code{mean(...)} ``special" are linear predictors for the mean
 #' of the response variable. Any formula valid for the \code{lm} command can be used
-#' inside the mean(...), however any missing values will likely cause errors.
+#' inside the \code{mean(...)}, however any missing values will likely cause errors.
 #'
 #' @param formula A formula object used to describe the model. The details are given
 #'  under `Details'.
@@ -275,6 +287,7 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'  will be used in every time index, so special care should be taken in choosing
 #'  the number of points present. Any data fields (include time) will be discarded.
 #' @param n_neighbours An integer giving the number of parents for each node.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param distribution A character vector giving the response distribution. The
 #'  default is "gaussian". See \code{get_staRVe_distributions("distribution")}.
 #' @param link A character vector giving the response link function. The default
@@ -285,6 +298,8 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'  the supplied \code{distance_units}. See \code{\link{construct_dag}}.
 #' @param distance_units Which units should be used for distances?
 #'  See \code{\link{construct_dag}}.
+#' @param fit Should the model be fit in this call? If true, only returns
+#'  the fitted model.
 #'
 #' @return A list with three components. The first is a list of data and parameters
 #'  to pass directly to TMB::MakeADFun. The second is a list of \code{sf} objects
@@ -296,6 +311,7 @@ prepare_staRVe_input<- function(formula,
                                 data,
                                 Process = data,
                                 n_neighbours = 10,
+                                p_far_neighbours = 0.2,
                                 distribution = "gaussian",
                                 link = "identity",
                                 silent = T,
@@ -315,6 +331,7 @@ prepare_staRVe_input<- function(formula,
 
   tmb_proc<- .sf_to_process(Process,
                             n_neighbours = n_neighbours,
+                            p_far_neighbours = p_far_neighbours,
                             time_range = range(time_info),
                             time_type = attr(time_info,"type"),
                             time_name = attr(time_info,"name"),
@@ -326,6 +343,7 @@ prepare_staRVe_input<- function(formula,
                                Process,
                                formula = formula,
                                n_neighbours = n_neighbours,
+                               p_far_neighbours = p_far_neighbours,
                                distribution = distribution,
                                link = link,
                                silent = T,
@@ -344,6 +362,7 @@ prepare_staRVe_input<- function(formula,
   sf_objects<- list(Observation = tmb_obs$Observation,
                     Process = tmb_proc$Process)
   settings<- list(n_neighbours = n_neighbours,
+                  p_far_neighbours = p_far_neighbours,
                   distance_units = distance_units,
                   formula = formula,
                   distribution_code = TMB_objects$data$distribution_code,

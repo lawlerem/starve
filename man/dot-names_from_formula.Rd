@@ -7,7 +7,7 @@
 .names_from_formula(x)
 }
 \arguments{
-\item{x}{A formula object with terms grouped in a mean(...) function.}
+\item{x}{A formula object with terms grouped in a \code{mean(...)} function.}
 }
 \value{
 A character vector giving the names of covariates used in a formula.

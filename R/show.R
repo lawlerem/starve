@@ -9,6 +9,7 @@ setMethod(f = "show",
           signature = "TMB_out",
           definition = function(object) {
     cat("A S4 object with slots obj, opt, and sdr.")
+    cat("")
     return(invisible())
 })
 
@@ -35,6 +36,7 @@ setMethod(f = "show",
     cat("Estimated Parameters\n")
     cat("--------------------\n\n")
     print(parameters(object))
+    cat("")
 
     return(invisible())
 })

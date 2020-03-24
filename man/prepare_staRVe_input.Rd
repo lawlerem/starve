@@ -9,6 +9,7 @@ prepare_staRVe_input(
   data,
   Process = data,
   n_neighbours = 10,
+  p_far_neighbours = 0.2,
   distribution = "gaussian",
   link = "identity",
   silent = T,
@@ -32,6 +33,8 @@ the number of points present. Any data fields (include time) will be discarded.}
 
 \item{n_neighbours}{An integer giving the number of parents for each node.}
 
+\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
+
 \item{distribution}{A character vector giving the response distribution. The
 default is "gaussian". See \code{get_staRVe_distributions("distribution")}.}
 
@@ -46,6 +49,9 @@ the supplied \code{distance_units}. See \code{\link{construct_dag}}.}
 
 \item{distance_units}{Which units should be used for distances?
 See \code{\link{construct_dag}}.}
+
+\item{fit}{Should the model be fit in this call? If true, only returns
+the fitted model.}
 }
 \value{
 A list with three components. The first is a list of data and parameters
@@ -64,7 +70,7 @@ valid options for the `type' argument in \code{time(t,type="ar1")} -- "ar1" for
 an AR(1) structure, "rw" for a random walk, and "independent" for independent
 spatial fields each year.
 
-The variables in the mean(...) ``special" are linear predictors for the mean
+The variables in the \code{mean(...)} ``special" are linear predictors for the mean
 of the response variable. Any formula valid for the \code{lm} command can be used
-inside the mean(...), however any missing values will likely cause errors.
+inside the \code{mean(...)}, however any missing values will likely cause errors.
 }

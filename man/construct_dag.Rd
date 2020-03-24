@@ -7,10 +7,26 @@
 construct_dag(
   x,
   n_neighbours = 10,
+  p_far_neighbours = 0.2,
   max_dist = Inf,
   distance_units = "km",
   silent = T
 )
+}
+\arguments{
+\item{x}{An \code{sf} object containing point geometries, which will be the
+nodes of the graph.}
+
+\item{n_neighbours}{A positive integer giving the (maximum) number of
+parents for each node.}
+
+\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
+
+\item{max_dist}{The maximum distance (in meters) to search for parents.}
+
+\item{distance_units}{Which units should be used for distances?}
+
+\item{silent}{Should intermediate calculations be shown?}
 }
 \description{
 The directed acyclic graph is stored as an ordered list. The i'th element of

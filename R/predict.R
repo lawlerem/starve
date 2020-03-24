@@ -1,203 +1,6 @@
 #' @include classes.R access_staRVe.R access_TMB_out.R fit.R formula.R
 NULL
 
-.mc_integrate<- function(fn,
-                         par_mean,
-                         par_cov,
-                         mc_samples = 500) {
-  samples<- mvtnorm::rmvnorm(n = mc_samples,
-                             mean = par_mean,
-                             sigma = par_cov)
-  evals<- apply(samples,MARGIN=1,fn)
-  return(mean(evals))
-}
-
-.predict_w<- function(location,
-                      x,
-                      time,
-                      n_neighbours,
-                      max_dist,
-                      distance_units,
-                      parameter_covariance,
-                      ...) {
-  w<- process(x)
-  w_times<- w[,settings(x)$time_column,drop=T]
-  this_w<- w[w_times == time,]
-
-  parents<- location$parents[[1]]
-
-  this_time_w<- c(this_w[parents,"w",drop=T])
-  w_se<- c(this_w[parents,"w_se",drop=T])
-  if( length(w_se) > 0 ) {
-    variance_inflation<- diag(c(0,w_se))
-  } else {
-    variance_inflation<- matrix(0,nrow=1,ncol=1)
-  }
-
-  if( (time-1) %in% names(w) ) {
-    last_w<- w[w_times == (time-1),]
-    last_time_w<- c(last_w[parents,"w",drop=T])
-  } else{
-    last_time_w<- rep(0,length(parents))
-  }
-
-  par_idx<- rownames(parameter_covariance) %in% c("logtau","logrho","logit_w_phi")
-  par_cov<- parameter_covariance[par_idx,par_idx]
-
-  data<- list(distances = location$dists[[1]],
-              variance_inflation = variance_inflation,
-              this_time_w = this_time_w,
-              last_time_w = last_time_w)
-
-  working_pars<- get_working_pars(x)[c("logtau","logrho","logit_w_phi"),]
-  pars<- list(logtau = working_pars["logtau","par"],
-              logrho = working_pars["logrho","par"],
-              logit_w_phi = working_pars["logit_w_phi","par"])
-  map<- obj(x)$env$map
-  map<- map[names(map) %in% c("logtau","logrho","logit_w_phi")]
-
-  data$return_type<- 0
-  kriging_mean<- TMB::MakeADFun(data = data,
-                                para = pars,
-                                map = map,
-                                DLL = "predict_w",
-                                silent = TRUE)
-
-  data$return_type<- 1
-  kriging_variance<- TMB::MakeADFun(data = data,
-                                    para = pars,
-                                    map = map,
-                                    DLL = "predict_w",
-                                    silent = TRUE)
-  pred_mean<- .mc_integrate(kriging_mean$fn,
-                            kriging_mean$par,
-                            par_cov,
-                            ...)
-  pred_var<- .mc_integrate(function(...) {
-                             kriging_variance$fn(...) +
-                             kriging_mean$fn(...)^2
-                           },
-                           kriging_variance$par,
-                           par_cov,
-                           ...)
-  pred_var<- pred_var - pred_mean^2
-
-  return(data.frame(w = pred_mean,w_se = sqrt(pred_var)))
-}
-
-.predict_linear<- function(x,
-                           w,
-                           w_se,
-                           covariates,
-                           parameter_covariance) {
-  covar_names<- .names_from_formula(settings(x)$formula)
-  if( missing(covariates) && (length(covar_names) == 0) ) {
-    mean_design<- numeric(0)
-  } else if( missing(covariates) && (length(covar_names) != 0) ) {
-    stop("Missing covariates, please supply them.")
-  } else if( !all(covar_names %in% names(covariates)) ) {
-    stop("Missing some covariates. Please check covariate names.")
-  } else {
-    mean_design<- .mean_design_from_formula(settings(x)$formula,
-                                            covariates)
-    mean_design<- as.numeric(mean_design)
-  }
-
-  beta<- opt(x)$par[names(opt(x)$par) %in% c("mu","mean_pars")]
-
-  par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
-  par_cov<- parameter_covariance[par_idx,par_idx]
-
-  mean_design<- c(1,mean_design)
-  linear<- t(mean_design) %*% beta + w
-  linear_se<- sqrt(t(mean_design) %*% par_cov %*% mean_design + w_se^2)
-
-  return(data.frame(linear = linear,
-                    linear_se = linear_se))
-}
-
-.predict_response<- function(x,
-                             linear,
-                             linear_se,
-                             mc_samples = 100) {
-  data<- list(link_code = settings(x)$link_code)
-  pars<- list(x = 0)
-  link_function<- TMB::MakeADFun(data = data,
-                                 para = pars,
-                                 DLL = "family",
-                                 silent = TRUE)
-  samples<- rnorm(mc_samples,linear,linear_se)
-  samples<- sapply(samples,link_function$fn)
-
-  return(data.frame(response = mean(samples),
-                    response_se = sd(samples)))
-}
-
-#' Predict from a \code{staRVe} object at a single new location.
-#'
-#' @param location An object of class \code{sf} containing one point geometry.
-#'   There should also be a \code{parents} column containing an integer vector
-#'   entry, and a \code{dists} column containing a distance matrix.
-#' @param x An object of class \code{staRVe}.
-#' @param time The time at which to predict.
-#' @param n_neighbours The maximum number of parents used to predict.
-#'
-#' @export
-.predict_one_location<- function(location,
-                                 x,
-                                 time,
-                                 covariates,
-                                 n_neighbours,
-                                 max_dist,
-                                 distance_units,
-                                 parameter_covariance,
-                                 ...) {
-  pred_w<- .predict_w(location = location,
-                      x = x,
-                      time = time,
-                      n_neighbours = n_neighbours,
-                      max_dist = max_dist,
-                      distance_units = distance_units,
-                      parameter_covariance = parameter_covariance,
-                      ...)
-
-
-  covar_names<- .names_from_formula(settings(x)$formula)
-  if( missing(covariates) && (length(covar_names) == 0) ) {
-    pred_linear<- .predict_linear(x,
-                                  w = pred_w$w,
-                                  w_se = pred_w$w_se,
-                                  parameter_covariance = parameter_covariance)
-  } else if( missing(covariates) && (length(covar_names) != 0) ) {
-    stop("Missing covariates, please supply them.")
-  } else if( !all(covar_names %in% names(covariates)) ) {
-    stop("Missing some covariates. Check the names of your raster covariates.")
-  } else {
-    covariates<- covariates[covariates[,settings(x)$time_column,drop=T] == time,]
-    suppressMessages(covariates<- sf::st_join(location,
-                                              covariates,
-                                              left = T))
-    pred_linear<- .predict_linear(x,
-                                  w = pred_w$w,
-                                  w_se = pred_w$w_se,
-                                  covariates = covariates,
-                                  parameter_covariance = parameter_covariance)
-  }
-
-
-  pred_response<- .predict_response(x,
-                                    linear = pred_linear$linear,
-                                    linear_se = pred_linear$linear_se,
-                                    ...)
-
-  pred_location<- sf:::cbind.sf(pred_w,
-                                pred_linear,
-                                pred_response,
-                                data.frame(time = time),
-                                location[,attr(location,"st_geometry")])
-  return(pred_location)
-}
-
 #' Reform a list of \code{Raster*} objects to an \code{sf} data.frame.
 #'
 #' @param x A list of \code{Raster*} objects.
@@ -250,37 +53,41 @@ NULL
   return(sf_output)
 }
 
+
 #' Predict from a \code{staRVe} object.
 #'
 #' @param x An object of class \code{staRVe}.
 #' @param locations Either an object of class \code{sf} containing point geometries,
-#'  or an object of class \code{RasterLayer}. If a \code{RasterLayer} object, predictions
-#'  will be made for all raster cells whose value are not NA. If the raster has no values,
-#'  then predictions will be made at every cell. This object should not have any
-#'  time information.
+#'  or an object of class \code{RasterLayer}. This object should not have any
+#'  time information, as predictions will be made at each location at every time.
+#'  If a \code{RasterLayer} object, predictions will be made for all raster cells
+#'  whose value are not NA. If the raster has no values, then predictions will
+#'  be made at every cell. Raster predictions are made at the midpoint of each cell.
 #' @param covariates Either a data.frame of class \code{sf} or a list of \code{Raster*}
-#'  objects, depending on the input type of \code{locations}.
+#'  objects, depending on the input type of \code{locations}. If the model has
+#'  no covariates, then nothing needs to be supplied.
 #'
 #'  If \code{locations} is of class \code{sf} with point geometries, then
 #'  \code{covariates} should also be of class \code{sf}. The data.frame should contain
-#'  columns for each of the covariates, a column for the time index, and a point
-#'  geometry. For each time unit and prediction point, there should be a row
-#'  in the \code{covariates} data.frame, but the rows do not need to be in the
-#'  same order as \code{locations}.
+#'  columns for each of the covariates, a column for the time index, and a column
+#'  of point geometries. For each time unit and prediction point, there should
+#'  be a row in the \code{covariates} data.frame, but the rows do not need to be
+#'  in the same order as \code{locations}.
 #'
 #'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
 #'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
 #'  contain data for one covariate, should have one layer for each time unit,
 #'  and should have the same raster geometry as the \code{locations} object. The
 #'  layer names of each raster layer should be of the form \code{T####}, where
-#'  \code{####} gives the specific time unit.
-#' @param time What time units should predictions be made for? If set to "model",
+#'  \code{####} gives the specific time index.
+#' @param time What time indices should predictions be made for? If set to "model",
 #'  predictions are made for every time present in the model. The supplied time
-#'  units must be a subset of those in the model.
+#'  indices must be a subset of those in the model.
 #'
 #' @return Either a \code{sf} object or a list of \code{Raster*} objects,
-#'  containing predictions (with standard errors) for the spatial field and for
-#'  the response. The return type is the same as the type of input for \code{locations}.
+#'  containing predictions (with standard errors) for the spatial field, the linear
+#'  predictor on the link scale, and the response.
+#'  The return type is the same as the type of input for \code{locations}.
 #'
 #' @export
 setGeneric(name = "predict_staRVe",
@@ -288,17 +95,9 @@ setGeneric(name = "predict_staRVe",
 
 )
 #' @param n_neighbours The maximum number of parents each node should have.
-#'  If set to "model", then this number is taken from the model directed acyclic graph.
-#' @param runOrderings A logical value. Should TMB::runSymbolicAnalysis be used?
-#' @param get_sd Should standard errors be computed?
-#'  Warning: computing standard errors can take a significant amount of time.
-#' @param max_dist The maximum distance to search for parents. If set to "model,
-#'  the maximum distance is set to the two times the spatial range parameter.
-#'  Unless this has a units attribute, units are assumed to be the same as the model.
-#'  See \code{\link{construct_dag}}.
-#' @param parallel_cores How many cores to run in parallel? Defaults to one.
-#'  See parallel::detectCores() for the number of cores on your machine. Uses
-#'  parallel::mclapply, and thus never runs in parallel on Windows machines.
+#'  If set to "model", then this number is taken from the model settings.
+#' @param p_far_neighbours What percent of neighbours should be randomly selected?
+#'  The default is 0. If set to "model", then this number is taken from the model settings.
 #'
 #' @export
 #' @rdname predict_staRVe
@@ -308,40 +107,64 @@ setMethod(f = "predict_staRVe",
                                 locations,
                                 covariates,
                                 n_neighbours = "model",
-                                max_dist = "model",
+                                p_far_neighbours = 0,
                                 time = "model",
                                 ...) {
-  covar_names<- .names_from_formula(settings(x)$formula)
-  if( missing(covariates) && (length(covar_names) == 0) ) {
-    covariates<- "missing"
-  } else if( missing(covariates) && (length(covar_names) != 0) ) {
-    stop("Missing covariates, please supply them.")
-  } else if( !all(covar_names %in% names(covariates)) ) {
-    stop("Missing some covariates. Please check covariate names.")
-  } else {  }
+    covar_names<- .names_from_formula(settings(x)$formula)
+    if( missing(covariates) && (length(covar_names) == 0) ) {
+      covariates<- "missing"
+    } else if( missing(covariates) && (length(covar_names) != 0) ) {
+      stop("Missing covariates, please supply them.")
+    } else if( !all(covar_names %in% names(covariates)) ) {
+      stop("Missing some covariates. Please check covariate names.")
+    } else {  }
 
-  if( identical(n_neighbours,"model") ) {
-    n_neighbours<- settings(x)$n_neighbours
-  } else {}
+    if( identical(n_neighbours,"model") ) {
+      n_neighbours<- settings(x)$n_neighbours
+    } else {}
 
-  if( identical(max_dist,"model") ) {
-    max_dist<- 2*parameters(x)[["rho","par"]]
-  } else {}
-  max_dist<- units::set_units(max_dist,settings(x)$distance_units,mode="standard")
-  max_dist<- units::set_units(max_dist,"m")
+    if( identical(p_far_neighbours,"model") ) {
+      p_far_neighbours<- settings(x)$p_far_neighbours
+    } else {}
 
-  model_times<- unique(process(x)[,settings(x)$time_column,drop=T])
-  if( identical(time,"model") ) {
-    pred_times<- model_times
-  } else {
-    pred_times<- intersect(model_times,time)
-  }
+    max_dist<- Inf
+    max_dist<- units::set_units(max_dist,settings(x)$distance_units,mode="standard")
+    max_dist<- units::set_units(max_dist,"m")
 
-  fit_hessian<- numDeriv::hessian(obj(x)$fn,
-                                    opt(x)$par)
-  fit_cov<- solve(fit_hessian)
-  rownames(fit_cov)<- colnames(fit_cov)<- names(opt(x)$par)
+    model_times<- unique(process(x)[,settings(x)$time_column,drop=T])
+    if( identical(time,"model") ) {
+      pred_times<- model_times
+    } else {
+      pred_times<- intersect(model_times,time)
+    }
 
+    predictions<- .predict_w(x,
+                             locations = locations,
+                             n_neighbours = n_neighbours,
+                             p_far_neighbours = p_far_neighbours,
+                             max_dist = max_dist,
+                             pred_times = pred_times)
+    colnames(predictions)[colnames(predictions) == "time"] <- settings(x)$time_column
+
+    predictions<- .predict_linear(x,
+                                  predictions,
+                                  covariates)
+    predictions<- .predict_response(x,predictions)
+    predictions[,1:6]<- predictions[,c(5,6,3,4,1,2),drop=T]
+    colnames(predictions)[1:6]<- colnames(predictions)[c(5,6,3,4,1,2)]
+
+    return(predictions)
+})
+
+
+.predict_w<- function(x,
+                      locations,
+                      n_neighbours,
+                      p_far_neighbours,
+                      max_dist,
+                      pred_times,
+                      dist_tol = 0.00001,
+                      ...) {
   locations<- locations[,attr(locations,"sf_column")]
   process_locs<- process(x)
   process_times<- process_locs[,settings(x)$time_column,drop=T]
@@ -349,53 +172,138 @@ setMethod(f = "predict_staRVe",
   dag<- construct_obs_dag(x = locations,
                           y = process_locs,
                           n_neighbours = n_neighbours,
-                          check_intersection = F,
+                          p_far_neighbours = p_far_neighbours,
+                          check_intersection = T,
                           max_dist = max_dist,
                           distance_units = settings(x)$distance_units,
                           silent = T)
-  locations$parents<- dag[[1]]
-  locations$dists<- dag[[2]]
+  pred_ws_dag<- dag[[1]]
+  pred_ws_dists<- dag[[2]]
 
-  location_list<- lapply(seq(nrow(locations)),function(i) {
-    return(locations[i,]) # each row to a list element
-  })
-
-  pred_out_by_time<- parallel::mclapply(pred_times,
-                                        mc.cores=1,
-                                        FUN = function(time) {
-    if( identical(covariates,"missing") ) {
-      predictions<- lapply(location_list,
-                           .predict_one_location,
-                           x = x,
-                           time = time,
-                           n_neighbours = n_neighbours,
-                           max_dist = as.numeric(max_dist),
-                           distance_units = settings(x)$distance_units,
-                           parameter_covariance = fit_cov,
-                           ...)
+  pred_ws_dists<- lapply(pred_ws_dists,function(x) {
+    if( identical(matrix(0),x) ) {
+      return(matrix(c(0,dist_tol,dist_tol,0),nrow=2))
     } else {
-      predictions<- lapply(location_list,
-                           .predict_one_location,
-                           x = x,
-                           time = time,
-                           covariates = covariates,
-                           n_neighbours = n_neighbours,
-                           max_dist = max_dist,
-                           distance_units = settings(x)$distance_units,
-                           parameter_covariance = fit_cov,
-                           ...)
+      return(x)
     }
-    predictions<- do.call(rbind,predictions)
-
-    return(predictions)
   })
 
-  prediction<- do.call(rbind,pred_out_by_time)
-  rownames(prediction)<- NULL
-  colnames(prediction)[colnames(prediction) == "time"]<- settings(x)$time_column
+  locations<- do.call(rbind,lapply(pred_times,function(time) {
+    sf:::cbind.sf(time,locations)
+  }))
+  pred_times<- locations$time
 
-  return(prediction)
-})
+  obj<- obj(x)
+  obj$env$data$pred_w_time<- pred_times - min(process(x)[,settings(x)$time_column,drop=T])
+  obj$env$data$pred_ws_edges<- Rdag_to_Cdag(pred_ws_dag)
+  obj$env$data$pred_ws_dists<- pred_ws_dists
+  obj$env$parameters$pred_w<- numeric(length(pred_times))
+
+  data<- obj$env$data
+  pars<- obj$env$parameters
+  rand<- c("resp_w","proc_w","pred_w")
+  # map<- obj$env$map # Don't need this, it's taken care of in obj$env$parameters
+  DLL<- "staRVe"
+
+  obj<- TMB::MakeADFun(data = data,
+                       para = pars,
+                       random = rand,
+                       # map = map,
+                       DLL = DLL,
+                       silent = T)
+  obj$fn(opt(x)$par)
+
+  sdr<- TMB::sdreport(obj,
+                      par.fixed = opt(x)$par,
+                      hessian.fixed = settings(x)$hess,
+                      getReportCovariance=F)
+
+  TMB_out<- new("TMB_out",
+                obj = obj,
+                opt = opt(x),
+                sdr = sdr,
+                symbolicAnalysis = symbolicAnalysis(x),
+                TMB_in = list())
+  predictions<- get_geo_vars(TMB_out,
+                             var = "pred",
+                             locations,
+                             get_sd = T)
+  colnames(predictions)[1:2]<- c("w","w_se")
+  rownames(predictions)<- NULL
+  return(predictions)
+}
+
+.predict_linear<- function(x,
+                           w_predictions,
+                           covariates) {
+  if( identical(covariates,"missing") ) {
+    design<- matrix(1,nrow = nrow(w_predictions))
+  } else {
+    covar_names<- .names_from_formula(settings(x)$formula)
+
+    w_predictions<- w_predictions[,!(names(w_predictions) %in% covar_names)]
+    w_predictions<- split(w_predictions,w_predictions[,settings(x)$time_column,drop=T])
+
+    covariates<- covariates[,c(covar_names,settings(x)$time_column)]
+    covariates<- split(covariates,covariates[,settings(x)$time_column,drop=T])
+    covariates<- covariates[names(covariates) %in% names(w_predictions)]
+
+    do.call(rbind,lapply(names(w_predictions), function(time) {
+      this_w<- w_predictions[[time]]
+      this_covar<- covariates[[time]][,covar_names]
+      suppressMessages(joined<- sf::st_join(this_w,this_covar,left=T))
+      return(joined)
+    })) -> w_predictions
+
+    design<- .mean_design_from_formula(settings(x)$formula,
+                                              w_predictions)
+    design<- cbind(1,design)
+  }
+  beta<- opt(x)$par[names(opt(x)$par) %in% c("mu","mean_pars")]
+
+  parameter_covariance<- settings(x)$par_cov
+  par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
+  par_cov<- as.matrix(parameter_covariance[par_idx,par_idx])
+
+  linear<- design %*% beta + w_predictions$w
+  # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
+  # The method below is equivalent to the commented version
+  linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+
+  return(sf:::cbind.sf(linear,linear_se,w_predictions))
+}
+
+.predict_response<- function(x,
+                             linear_predictions) {
+  data<- list(link_code = settings(x)$link_code)
+  pars<- list(x = 0)
+  link_function<- TMB::MakeADFun(data = data,
+                                 para = pars,
+                                 DLL = "family",
+                                 silent = T)
+  second_order_mean<- function(linear,linear_se) {
+    mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
+    return(as.numeric(mean))
+  }
+  second_order_se<- function(linear,linear_se) {
+    se<- sqrt(link_function$gr(linear)^2*linear_se^2
+      + 0.5*link_function$he(linear)^2*linear_se^4)
+    return(as.numeric(se))
+  }
+  response<- sapply(seq(nrow(linear_predictions)),function(i) {
+    return(second_order_mean(linear_predictions[i,"linear",drop=T],
+                             linear_predictions[i,"linear_se",drop=T]))
+  })
+  response_se<- sapply(seq(nrow(linear_predictions)),function(i) {
+    return(second_order_se(linear_predictions[i,"linear",drop=T],
+                           linear_predictions[i,"linear_se",drop=T]))
+  })
+  predictions<- sf:::cbind.sf(response,response_se,linear_predictions)
+  return(predictions)
+}
+
+
+
 
 #' @export
 #' @rdname predict_staRVe

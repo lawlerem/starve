@@ -10,7 +10,8 @@ NULL
 #' @param runOrderings Logical value. If true, runs TMB::runSymbolicAnalysis
 #'  on the MakeADFun TMB object. Requires a special install of TMB,
 #'  see \code{?TMB::runSymbolicAnalysis}.
-#' @param ... Optional parameters to be passed to TMB::MakeADFun and TMB::sdreport.
+#' @param ... Optional parameters to be passed to TMB::MakeADFun, TMB::sdreport,
+#'  or nlminb.
 #'
 #' @return An object of class \code{staRVe} containing the model fit.
 #'
@@ -41,10 +42,28 @@ fit_staRVe<- function(Input,silent=F,runOrderings=F,...) {
         TMB::runSymbolicAnalysis(obj)
     } else {}
 
-    opt<- nlminb(obj$par,obj$fn,obj$gr)
-    sdr<- TMB::sdreport(obj,getReportCovariance=F,...)
+    system.time({
+      opt<- nlminb(obj$par,obj$fn,obj$gr)
+    }) -> settings$opt_time
+    system.time({
+      settings$hess<- numDeriv::jacobian(obj$gr,
+                                         opt$par,
+                                         method = "simple")
+      settings$hess<- as.matrix(Matrix::forceSymmetric(settings$hess))
+      settings$par_cov<- solve(settings$hess)
+      rownames(settings$par_cov)<- colnames(settings$par_cov)<- names(opt$par)
+    }) -> settings$hessian_time
+    system.time({
+      sdr<- TMB::sdreport(obj,
+                          par.fixed = opt$par,
+                          hessian.fixed = settings$hess,
+                          getReportCovariance=F,...)
+    }) -> settings$sdr_time
 
-    TMB_out<- new("TMB_out",obj=obj,opt=opt,sdr=sdr,
+    TMB_out<- new("TMB_out",
+                  obj=obj,
+                  opt=opt,
+                  sdr=sdr,
                   symbolicAnalysis=runOrderings,TMB_in=TMB_input)
     fit<- staRVe(TMB_out,
                  Observation_sf=sf_data$Observation,
@@ -52,6 +71,32 @@ fit_staRVe<- function(Input,silent=F,runOrderings=F,...) {
                  settings = settings)
     rownames(observation(fit))<- NULL
     rownames(process(fit))<- NULL
+
+    observation<- sf:::cbind.sf(data.frame(w = 0,w_se = 0),observation(fit))
+    obs_dag<- TMB_in(fit)$data$ys_edges
+
+    resp_w_idx<- 1
+    sdout<- sdreport(fit)
+    resp_w_rows<- grep(paste0("^","resp_w"),rownames(sdout))
+    resp_w<- sdout[resp_w_rows,]
+    colnames(resp_w)<- c("w","w_se")
+
+    for( i in seq(nrow(observation)) ) {
+      if( length(obs_dag[[i]]) == 1 ) {
+        this_time<- observation[i,settings(fit)$time_column,drop=T]
+        w<- process(fit)[process(fit)[,settings(fit)$time_column,drop=T] == this_time,]
+        observation[i,c("w","w_se")]<- w[obs_dag[[i]],c("w","w_se"),drop=T]
+      } else {
+        observation[i,c("w","w_se")]<- resp_w[resp_w_idx,c("w","w_se")]
+        resp_w_idx<- resp_w_idx+1
+      }
+    }
+    observation<- .predict_linear(fit,observation,observation)
+    observation<- .predict_response(fit,observation)
+    observation[,1:6]<- observation[,c(5,6,3,4,1,2),drop=T]
+    colnames(observation)[1:6]<- colnames(observation)[c(5,6,3,4,1,2)]
+    observation(fit)<- observation
+
 
     return(fit)
 }

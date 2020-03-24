@@ -19,8 +19,8 @@
 
 #' Retrieve observation mean covariate data from a formula and a data.frame.
 #'
-#' @param x A formula object with terms grouped in a mean(...) function.
-#' @param data A data.frame to retrieve the covariate data from.
+#' @param x A formula object with terms grouped in a \code{mean(...)} function.
+#' @param data A data.frame containing the covariate data.
 #'
 #' @return The design matrix for the covariates.
 .mean_design_from_formula<- function(x,data) {
@@ -45,7 +45,7 @@
 #'
 #' @param x A formula object with a time(...,type) function containing one entry,
 #'  and a `type' argument which can be one of "ar1", "rw", or "independent".
-#' @param data A data.frame to retrieve the time index from.
+#' @param data A data.frame containing the time information.
 #'
 #' @return A vector containing the index, with a `name' attribute
 #'  containing the name of the time index and a `type' attribute containing the
@@ -87,7 +87,7 @@
 
 #' Check which covariates are used in a staRVe formula
 #'
-#' @param x A formula object with terms grouped in a mean(...) function.
+#' @param x A formula object with terms grouped in a \code{mean(...)} function.
 #'
 #' @return A character vector giving the names of covariates used in a formula.
 .names_from_formula<- function(x) {
