@@ -6,6 +6,7 @@
 \usage{
 .sf_to_process(
   sf_object,
+  formula,
   n_neighbours,
   p_far_neighbours,
   time_range,

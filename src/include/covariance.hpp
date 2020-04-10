@@ -4,11 +4,15 @@ class covariance {
     Type tau;
     Type rho;
     Type sqtau;
+    Type nu;
+
+    int covar_code;
+
     template<typename T> T dist(T d);
     template<typename T> T covFun(T d);
 
   public:
-    covariance(Type tau, Type rho);
+    covariance(Type tau, Type rho, Type nu, int covar_code);
     covariance() = default;
 
     template<typename T> T operator() (T d);
@@ -19,9 +23,11 @@ class covariance {
 
 // Initializer
 template<class Type>
-covariance<Type>::covariance(Type tau, Type rho) :
+covariance<Type>::covariance(Type tau, Type rho, Type nu, int covar_code) :
   tau(tau),
-  rho(rho) {
+  rho(rho),
+  nu(nu),
+  covar_code(covar_code) {
   this->sqtau = pow(tau,2);
 }
 
@@ -38,8 +44,14 @@ T covariance<Type>::dist(T d) {
 template<class Type>
 template<typename T>
 T covariance<Type>::covFun(T d) {
-  T cov = (T)sqtau * exp( -dist(d) /(T)rho );
-  return cov;
+  // return (T)sqtau * exp( -dist(d) /(T)rho ); // Exponential
+  switch(covar_code) {
+    case 0 : return (T)sqtau * exp( -dist(d) /(T)rho ); // Exponential
+    case 1 : return (T)sqtau * exp( -pow(dist(d)/(T)rho,2) ); // Gaussian
+    case 2 : return (T)sqtau * matern(d, rho, nu); // Matern
+
+    default : return (T)sqtau * matern(d, rho, nu); // Matern
+  }
 }
 
 // Covariance function operator -- single

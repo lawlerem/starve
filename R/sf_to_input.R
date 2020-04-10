@@ -3,22 +3,25 @@ NULL
 
 #' Print a list of implemented response distributions and link functions.
 #'
-#' @param which A character vector containing one or both of "distribution"
-#'  and "link". Defaults to both.
+#' @param which A character vector containing "distribution", "link", and/or
+#'  "covariance". Defaults to all.
 #'
-#' @return A named character vector giving the implemented distributions and/or
-#'  link functions, depending on the value of the `which` parameter.
+#' @return A named character vector giving the implemented distributions,
+#'  link functions, and/or covariance functions, depending on the value of the
+#'  `which` parameter.
 #'
 #' @export
-get_staRVe_distributions<- function(which = c("distribution","link")) {
+get_staRVe_distributions<- function(which = c("distribution","link","covariance")) {
   if( "distribution" %in% which ) {
     distributions<- c("gaussian", # 0
                       "poisson", # 1
                       "negative binomial", # 2
                       "bernoulli", # 3
-                      "gamma") # 4
+                      "gamma", # 4
+                      "lognormal") # 5
     names(distributions)<- rep("distribution",length(distributions))
   } else { distributions<- character(0) }
+
   if( "link" %in% which ) {
     links<- c("identity", # 0
               "log", # 1
@@ -26,7 +29,14 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
     names(links)<- rep("link",length(links))
   } else { links<- character(0) }
 
-  return(c(distributions,links))
+  if( "covariance" %in% which ) {
+    covars<- c("exponential", # 0
+               "gaussian", # 1
+               "matern") # 2
+    names(covars)<- rep("covariance",length(covars))
+  } else { covars<- character(0) }
+
+  return(c(distributions,links,covars))
 }
 
 .distribution_to_code<- function(distribution) {
@@ -49,6 +59,15 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
   }
 
   return(link_code)
+}
+
+.covariance_to_code<- function(covariance) {
+  covar_code<- charmatch(covariance,get_staRVe_distributions("covariance"))
+  if( is.na(covar_code) || covar_code == 0 ) {
+    stop("Supplied covariance function is not implemented, or matches multiple covariance functions.")
+  } else {
+    covar_code<- covar_code - 1 # Convert to cpp
+  }
 }
 
 .w_time_for_process<- function(Process,
@@ -88,15 +107,16 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'     \item{map}{A list to pass to TMB::MakeADFun.}
 #'  }
 .sf_to_process<- function(sf_object,
-                         n_neighbours,
-                         p_far_neighbours,
-                         time_range,
-                         time_type,
-                         time_name,
-                         silent = T,
-                         max_dist = Inf,
-                         distance_units = "km",
-                         ...) {
+                          formula,
+                          n_neighbours,
+                          p_far_neighbours,
+                          time_range,
+                          time_type,
+                          time_name,
+                          silent = T,
+                          max_dist = Inf,
+                          distance_units = "km",
+                          ...) {
   Process<- sf_object[,attr(sf_object,"sf_column")] # Only need locations
   Process<- unique(Process)
   Process<- order_by_location(Process)
@@ -112,7 +132,15 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
   w_time<- .w_time_for_process(Process,n_time)
   proc_w<- numeric(length(w_time))
 
-  data<- list(w_time = w_time,
+  covariance<- .covariance_from_formula(formula)
+  if( covariance$covariance == "exponential" ) {
+    covariance$nu<- 0.5
+  } else if ( covariance$covariance == "gaussian" ) {
+    covariance$nu<- Inf
+  } else {}
+
+  data<- list(covar_code = .covariance_to_code(covariance$covariance),
+              w_time = w_time,
               ws_edges = Process_dag[[1]],
               ws_dists = Process_dag[[2]],
               pred_w_time = numeric(0),
@@ -120,11 +148,16 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
               pred_ws_dists = list(matrix(0,nrow=0,ncol=0)))
   pars<- list(logtau = 0,
               logrho = log(mean(unlist(data$ws_dists))),
+              lognu = ifelse(is.nan(covariance$nu),0,log(covariance$nu)),
               logit_w_phi = 0,
               proc_w = proc_w,
               pred_w = numeric(0))
   rand<- c("proc_w","pred_w")
   map<- list()
+
+  if( !is.nan(covariance$nu) ) {
+    map$lognu<- factor(NA)
+  } else {}
 
   if( time_type == "ar1" ) {
     # Do nothing
@@ -183,23 +216,24 @@ get_staRVe_distributions<- function(which = c("distribution","link")) {
 #'     \item{map}{A list to pass to TMB::MakeADFun.}
 #'  }
 .sf_to_observation<- function(sf_object,
-                             Process,
-                             formula,
-                             n_neighbours,
-                             p_far_neighbours,
-                             distribution,
-                             link,
-                             silent = T,
-                             max_dist = Inf,
-                             distance_units = "km",
-                             ...) {
+                              Process,
+                              formula,
+                              n_neighbours,
+                              p_far_neighbours,
+                              distribution,
+                              link,
+                              silent = T,
+                              max_dist = Inf,
+                              distance_units = "km",
+                              ...) {
   distribution_code<- .distribution_to_code(distribution)
   response_pars<- switch(distribution_code+1,
                         numeric(1), # normal
                         numeric(0), # Poisson
                         numeric(1), # Neg. Binom.
                         numeric(0), # Bernoulli
-                        numeric(1)) # Gamma
+                        numeric(1), # Gamma
+                        numeric(1)) # lognormal
   link_code<- .link_to_code(link)
 
   time_name<- attr(.time_from_formula(formula,sf_object),"name")
@@ -330,6 +364,7 @@ prepare_staRVe_input<- function(formula,
   Observation<- order_by_location(Observation,time=Observation$Year)
 
   tmb_proc<- .sf_to_process(Process,
+                            formula = formula,
                             n_neighbours = n_neighbours,
                             p_far_neighbours = p_far_neighbours,
                             time_range = range(time_info),

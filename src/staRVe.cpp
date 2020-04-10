@@ -31,6 +31,7 @@ Type objective_function<Type>::operator() () {
 
   DATA_MATRIX(mean_design);
 
+  DATA_INTEGER(covar_code);
   DATA_IVECTOR(w_time);
   DATA_STRUCT(ws_edges,directed_graph);
   DATA_STRUCT(ws_dists,dag_dists);
@@ -45,12 +46,14 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(resp_w);
   PARAMETER(logtau);
   PARAMETER(logrho);
+  PARAMETER(lognu);
   PARAMETER(logit_w_phi);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
 
   Type tau = exp(logtau);
   Type rho = exp(logrho);
+  Type nu = exp(lognu);
   Type w_phi = invlogit(logit_w_phi);
 
   vector<vector<int> > ys_dag = ys_edges.dag;
@@ -62,7 +65,7 @@ Type objective_function<Type>::operator() () {
   vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
-  covariance<Type> cov(tau,rho);
+  covariance<Type> cov(tau,rho,nu,covar_code);
   inv_link_function inv_link = {link_code};
   response_density y_density = {distribution_code};
   glm<Type> family(inv_link,
@@ -153,12 +156,20 @@ Type objective_function<Type>::operator() () {
     Type par_sd = exp(response_pars(0));
     REPORT(par_sd);
     ADREPORT(par_sd);
+  } else if( distribution_code == 1 ) { // Poisson
+    // no extra pars
   } else if( distribution_code == 2 ) { // Neg. Binomial
     Type par_overdispersion = exp(response_pars(0))+1;
     REPORT(par_overdispersion);
     ADREPORT(par_overdispersion);
+  } else if( distribution_code == 3 ) { // Bernoulli
+    // no extra pars
   } else if( distribution_code == 4 ) { // Gamma
     Type par_sd = sqrt(exp(response_pars(0)));
+    REPORT(par_sd);
+    ADREPORT(par_sd);
+  } else if( distribution_code == 5 ) { // lognormal
+    Type par_sd = exp(response_pars(0));
     REPORT(par_sd);
     ADREPORT(par_sd);
   } else {}
@@ -177,6 +188,13 @@ Type objective_function<Type>::operator() () {
   REPORT(working_par_logrho);
   ADREPORT(working_par_logrho);
 
+  Type par_nu = nu;
+  REPORT(par_nu);
+  ADREPORT(par_nu);
+  Type working_par_nu = nu;
+  REPORT(working_par_nu);
+  ADREPORT(working_par_nu);
+
   Type par_w_phi = w_phi;
   REPORT(par_w_phi);
   ADREPORT(par_w_phi);
@@ -191,4 +209,5 @@ Type objective_function<Type>::operator() () {
   // ADREPORT(resp_response);
 
   return(nll+pred_nll);
+
 }

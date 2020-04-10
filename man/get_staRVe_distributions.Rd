@@ -4,15 +4,16 @@
 \alias{get_staRVe_distributions}
 \title{Print a list of implemented response distributions and link functions.}
 \usage{
-get_staRVe_distributions(which = c("distribution", "link"))
+get_staRVe_distributions(which = c("distribution", "link", "covariance"))
 }
 \arguments{
-\item{which}{A character vector containing one or both of "distribution"
-and "link". Defaults to both.}
+\item{which}{A character vector containing "distribution", "link", and/or
+"covariance". Defaults to all.}
 }
 \value{
-A named character vector giving the implemented distributions and/or
- link functions, depending on the value of the `which` parameter.
+A named character vector giving the implemented distributions,
+ link functions, and/or covariance functions, depending on the value of the
+ `which` parameter.
 }
 \description{
 Print a list of implemented response distributions and link functions.

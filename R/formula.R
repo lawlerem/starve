@@ -6,7 +6,7 @@
 #' @return A vector containing the response variable, with a `name' attribute
 #'  containing the name of the response variable.
 .response_from_formula<- function(x,data) {
-  the_terms<- terms(x,specials=c("mean","time"))
+  the_terms<- terms(x,specials=c("mean","time","space"))
   if( attr(the_terms,"response") == 0 ) {
     stop("Response variable must be specified.")
   } else {}
@@ -24,7 +24,7 @@
 #'
 #' @return The design matrix for the covariates.
 .mean_design_from_formula<- function(x,data) {
-  the_terms<- terms(x,specials=c("mean","time"))
+  the_terms<- terms(x,specials=c("mean","time","space"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^mean",term.labels,value=T)
   if( length(the_call) == 0 ) {
@@ -57,9 +57,9 @@
     attr(x,"type")<- type
     return(x)
   }
-  the_terms<- terms(x,specials=c("mean","time"))
+  the_terms<- terms(x,specials=c("mean","time","space"))
   term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("time",term.labels,value=T)
+  the_call<- grep("^time",term.labels,value=T)
   if( length(the_call) == 0 ) {
     x<- rep(0,nrow(data))
     attr(x,"name")<- "Time"
@@ -81,6 +81,47 @@
   attr(new_terms,"intercept")<- 0
   x<- model.frame(new_terms,data=data)[[1]]
   attr(x,"name")<- the_name
+
+  return(x)
+}
+
+#' Retrieve a spatial covariance function from a formula.
+#'
+#' @param x A formula object with a space(covariance,nu) function. The covariance
+#'   argument must be one those listed in get_staRVe_distributions("covariance").
+#'   The `nu' argument is only necessary when using the Matern covariance, and
+#'   supplying it fixes the value of nu (the smoothness parameter).
+#'
+#' @return A list containing the name of the covariance function and the value of nu.
+.covariance_from_formula<- function(x,data=data.frame(1)) {
+  space<- function(covariance,nu) {
+    covar<- pmatch(covariance,get_staRVe_distributions("covariance"))
+    covar<- get_staRVe_distributions("covariance")[covar]
+    if( missing(nu) ) {
+      nu<- NaN
+    }
+    covariance<- cbind(covar,
+                       nu)
+    colnames(covariance)<- c("covariance","nu")
+
+    return(covariance)
+  }
+  the_terms<- terms(x,specials=c("mean","time","space"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("^space",term.labels,value=T)
+
+  if( length(the_call) == 0 ) {
+    return(list(covariance = "exponential",
+                nu = 0.5))
+  } else {}
+
+  the_call<- gsub("space","~space",the_call)
+  new_terms<- terms(formula(the_call),specials="space")
+  attr(new_terms,"intercept")<- 0
+  x<- model.frame(new_terms,data=data)[[1]]
+  x<- as.list(x)
+  names(x)<- c("covariance","nu")
+  x$nu<- as.numeric(x$nu)
 
   return(x)
 }
