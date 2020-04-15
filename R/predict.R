@@ -53,6 +53,19 @@ NULL
   return(sf_output)
 }
 
+#'
+.get_to_future_w_time<- function(future_time,model_times,n_nodes) {
+  # Need to add proc_w random effects for extra times
+  extra_time<- seq(1,future_time-max(model_times))
+  extra_time<- do.call(c,lapply(extra_time,function(time) {
+    rep(time,n_nodes)
+  }))
+  extra_w<- numeric(length(extra_time))
+
+  return(list(proc_w = extra_w,
+              w_time = extra_time))
+}
+
 
 #' Predict from a \code{staRVe} object.
 #'
@@ -131,19 +144,12 @@ setMethod(f = "predict_staRVe",
     max_dist<- units::set_units(max_dist,settings(x)$distance_units,mode="standard")
     max_dist<- units::set_units(max_dist,"m")
 
-    model_times<- unique(process(x)[,settings(x)$time_column,drop=T])
-    if( identical(time,"model") ) {
-      pred_times<- model_times
-    } else {
-      pred_times<- intersect(model_times,time)
-    }
-
     predictions<- .predict_w(x,
                              locations = locations,
                              n_neighbours = n_neighbours,
                              p_far_neighbours = p_far_neighbours,
                              max_dist = max_dist,
-                             pred_times = pred_times)
+                             pred_times = times)
     colnames(predictions)[colnames(predictions) == "time"] <- settings(x)$time_column
 
     predictions<- .predict_linear(x,
@@ -187,6 +193,21 @@ setMethod(f = "predict_staRVe",
       return(x)
     }
   })
+
+  model_times<- unique(process(x)[,settings(x)$time_column,drop=T])
+  if( identical(pred_times,"model") ) {
+    pred_times<- model_times
+  } else {}
+  if( max(pred_times) > max(model_times) ) {
+    future_times<- .get_to_future_w_time(future_time = max(pred_time),
+                                         model_times = model_times,
+                                         n_nodes = length(obj$env$data$ws_edges))
+
+    obj$env$parameters$proc_w<- c(obj$env$parameters$proc_w,future_times$proc_w)
+    obj$env$data$w_time<- c(obj$env$data$w_time,
+                            future_times$w_time+max(obj$env$data$w_time))
+    obj$env$data$n_time<- length(unique(obj$env$data$w_time))
+  } else {}
 
   locations<- do.call(rbind,lapply(pred_times,function(time) {
     sf:::cbind.sf(time,locations)
