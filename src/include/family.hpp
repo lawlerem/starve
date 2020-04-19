@@ -24,7 +24,7 @@ struct response_density {
       case 3 : return dbinom(data,T(1),mean,true); // Bernoulli with p = mean
       case 4 : return dgamma(data,pow(mean,2)/exp(pars(0)),exp(pars(0))/mean,true);
                                   // shape = mu^2/var,     scale = var/mu
-      case 5 : return dnorm(log(data),mean,exp(pars(0)),true) - log(data);
+      case 5 : return dnorm(log(data),mean,exp(pars(0)),true) - log(data); // Log-normal
       default : return dnorm(data,mean,exp(pars(0)),true); // Normal
     }
   }

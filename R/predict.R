@@ -53,6 +53,19 @@ NULL
   return(sf_output)
 }
 
+#'
+.get_to_future_w_time<- function(future_time,model_times,n_nodes) {
+  # Need to add proc_w random effects for extra times
+  extra_time<- seq(1,future_time-max(model_times))
+  extra_time<- do.call(c,lapply(extra_time,function(time) {
+    rep(time,n_nodes)
+  }))
+  extra_w<- numeric(length(extra_time))
+
+  return(list(proc_w = extra_w,
+              w_time = extra_time))
+}
+
 
 #' Predict from a \code{staRVe} object.
 #'
@@ -131,19 +144,12 @@ setMethod(f = "predict_staRVe",
     max_dist<- units::set_units(max_dist,settings(x)$distance_units,mode="standard")
     max_dist<- units::set_units(max_dist,"m")
 
-    model_times<- unique(process(x)[,settings(x)$time_column,drop=T])
-    if( identical(time,"model") ) {
-      pred_times<- model_times
-    } else {
-      pred_times<- intersect(model_times,time)
-    }
-
     predictions<- .predict_w(x,
                              locations = locations,
                              n_neighbours = n_neighbours,
                              p_far_neighbours = p_far_neighbours,
                              max_dist = max_dist,
-                             pred_times = pred_times)
+                             pred_times = time)
     colnames(predictions)[colnames(predictions) == "time"] <- settings(x)$time_column
 
     predictions<- .predict_linear(x,
@@ -166,9 +172,10 @@ setMethod(f = "predict_staRVe",
                       dist_tol = 0.00001,
                       ...) {
   locations<- locations[,attr(locations,"sf_column")]
+  locations<- unique(locations)
   process_locs<- process(x)
   process_times<- process_locs[,settings(x)$time_column,drop=T]
-  process_locs<- process_locs[process_times == pred_times[[1]],]
+  process_locs<- process_locs[process_times == process_times[[1]],]
   dag<- construct_obs_dag(x = locations,
                           y = process_locs,
                           n_neighbours = n_neighbours,
@@ -188,19 +195,35 @@ setMethod(f = "predict_staRVe",
     }
   })
 
+  model_times<- unique(process(x)[,settings(x)$time_column,drop=T])
+  if( identical(pred_times,"model") ) {
+    pred_times<- model_times
+  } else {}
+
+  data<- obj(x)$env$data
+  pars<- obj(x)$env$parameters
+
+  if( max(pred_times) > max(model_times) ) {
+    future_times<- .get_to_future_w_time(future_time = max(pred_times),
+                                         model_times = model_times,
+                                         n_nodes = length(data$ws_edges))
+
+    pars$proc_w<- c(pars$proc_w,future_times$proc_w)
+    data$w_time<- c(data$w_time,
+                    future_times$w_time+max(data$w_time))
+    data$n_time<- as.numeric(length(unique(data$w_time)))
+  } else {}
+
   locations<- do.call(rbind,lapply(pred_times,function(time) {
     sf:::cbind.sf(time,locations)
   }))
   pred_times<- locations$time
 
-  obj<- obj(x)
-  obj$env$data$pred_w_time<- pred_times - min(process(x)[,settings(x)$time_column,drop=T])
-  obj$env$data$pred_ws_edges<- Rdag_to_Cdag(pred_ws_dag)
-  obj$env$data$pred_ws_dists<- pred_ws_dists
-  obj$env$parameters$pred_w<- numeric(length(pred_times))
+  data$pred_w_time<- pred_times - min(process(x)[,settings(x)$time_column,drop=T])
+  data$pred_ws_edges<- Rdag_to_Cdag(pred_ws_dag)
+  data$pred_ws_dists<- pred_ws_dists
+  pars$pred_w<- numeric(length(pred_times))
 
-  data<- obj$env$data
-  pars<- obj$env$parameters
   rand<- c("resp_w","proc_w","pred_w")
   # map<- obj$env$map # Don't need this, it's taken care of in obj$env$parameters
   DLL<- "staRVe"
