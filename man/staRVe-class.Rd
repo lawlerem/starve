@@ -24,4 +24,10 @@ An S4 class to hold results from an analysis of RV data.
 distribution_code, link_code, and time_column.}
 }}
 
-\concept{staRVe-classe}
+\seealso{
+Other staRVe-classes: 
+\code{\link{TMB_out-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_process-class}}
+}
+\concept{staRVe-classes}

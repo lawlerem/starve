@@ -19,4 +19,10 @@ An S4 class to hold the raw TMB output of \code{fit_catch_data}.
 \item{\code{symbolicAnalysis}}{A logical value. Was runOrderings used to fit the model?}
 }}
 
+\seealso{
+Other staRVe-classes: 
+\code{\link{staRVe-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_process-class}}
+}
 \concept{staRVe-classes}
