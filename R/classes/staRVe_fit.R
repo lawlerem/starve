@@ -1,4 +1,4 @@
-#' @include classes.R staRVe_tracing.R staRVe_model.R Access_TMB_out.R
+#' @include classes.R generics.R staRVe_tracing.R staRVe_model.R Access_TMB_out.R
 NULL
 
 #################
@@ -7,12 +7,6 @@ NULL
 ###           ###
 #################
 
-#' Create a \code{staRVe_fit} object
-#'
-#' @export
-setGeneric(name = "staRVe_fit",
-           def = function(x,...) standardGeneric("staRVe_fit")
-)
 #' @details The \code{initialize} function is not mean to be used by the user,
 #'   use \code{staRVe_fit} instead.
 #'
@@ -51,19 +45,9 @@ setMethod(
 NULL
 
 #' @export
-#' @rdname Access_staRVe_fit
-setGeneric(name = "tracing",
-           def = function(x) standardGeneric("tracing")
-)
-#' @export
 setMethod(f = "tracing",
           signature = "staRVe_fit",
           definition = function(x) return(x@tracing)
-)
-#' @export
-#' @rdname Access_staRVe_fit
-setGeneric(name = "tracing<-",
-           def = function(x,value) standardGeneric("tracing<-")
 )
 #' @export
 setReplaceMethod(f = "tracing",
@@ -76,19 +60,9 @@ setReplaceMethod(f = "tracing",
 
 
 #' @export
-#' @rdname Access_staRVe_fit
-setGeneric(name = "TMB_out",
-           def = function(x) standardGeneric("TMB_out")
-)
-#' @export
 setMethod(f = "TMB_out",
           signature = "staRVe_fit",
           definition = function(x) return(x@TMB_out)
-)
-#' @export
-#' @rdname Access_staRVe_fit
-setGeneric(name = "TMB_out<-",
-           def = function(x,value) standardGeneric("TMB_out<-")
 )
 #' @export
 setReplaceMethod(f = "TMB_out",

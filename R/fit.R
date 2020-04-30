@@ -1,4 +1,4 @@
-#' @include classes.R access_staRVe.R access_TMB_out.R formula.R
+#' @include classes.R generics.Raccess_staRVe.R access_TMB_out.R formula.R
 NULL
 
 #' Fit a TMB model

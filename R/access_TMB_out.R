@@ -1,4 +1,4 @@
-#' @include classes.R access_staRVe.R
+#' @include classes.R generics.R access_staRVe.R
 NULL
 
 
@@ -8,14 +8,6 @@ NULL
 ###                     ###
 ###########################
 
-#' Create or extract a \code{TMB_out} object.
-#'
-#' @param x An object to coerce to clas \code{TMB_out}.
-#'
-#' @export
-setGeneric(name = "TMB_out",
-           def = function(x,...) standardGeneric("TMB_out")
-)
 #' @details The \code{initeialize} function is not meant to be used by the user,
 #'  use \code{TMB_out} instead.
 #'
@@ -60,19 +52,9 @@ setMethod(
 NULL
 
 #' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "obj",
-           def = function(x) standardGeneric("obj")
-)
-#' @export
 setMethod(f = "obj",
           signature = "TMB_out",
           definition = function(x) return(x@obj)
-)
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "obj<-",
-           def = function(x,value) standardGeneric("obj<-")
 )
 #' @export
 setReplaceMethod(f = "obj",
@@ -84,20 +66,11 @@ setReplaceMethod(f = "obj",
 )
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "opt",
-           def = function(x) standardGeneric("opt")
-)
+
 #' @export
 setMethod(f = "opt",
           signature = "TMB_out",
           definition = function(x) return(x@opt)
-)
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "opt<-",
-           def = function(x,value) standardGeneric("opt<-")
 )
 #' @export
 setReplaceMethod(f = "opt",
@@ -109,20 +82,11 @@ setReplaceMethod(f = "opt",
 )
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "sdr",
-           def = function(x) standardGeneric("sdr")
-)
+
 #' @export
 setMethod(f = "sdr",
           signature = "TMB_out",
           definition = function(x) return(x@sdr)
-)
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "sdr<-",
-           def = function(x,value) standardGeneric("sdr<-")
 )
 #' @export
 setReplaceMethod(f = "sdr",
@@ -134,20 +98,11 @@ setReplaceMethod(f = "sdr",
 )
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "symbolicAnalysis",
-           def = function(x) standardGeneric("symbolicAnalysis")
-)
+
 #' @export
 setMethod(f = "symbolicAnalysis",
           signature = "TMB_out",
           definition = function(x) return(x@symbolicAnalysis)
-)
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "symbolicAnalysis<-",
-           def = function(x,value) standardGeneric("symbolicAnalysis<-")
 )
 #' @export
 setReplaceMethod(f = "symbolicAnalysis",
@@ -159,20 +114,11 @@ setReplaceMethod(f = "symbolicAnalysis",
 )
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "TMB_in",
-           def = function(x) standardGeneric("TMB_in")
-)
+
 #' @export
 setMethod(f = "TMB_in",
           signature = "TMB_out",
           definition = function(x) return(x@TMB_in)
-)
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "TMB_in<-",
-           def = function(x,value) standardGeneric("TMB_in<-")
 )
 #' @export
 setReplaceMethod(f = "TMB_in",
@@ -185,23 +131,14 @@ setReplaceMethod(f = "TMB_in",
 
 
 
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "report",
-           def = function(x) standardGeneric("report")
-)
 #' @export
 setMethod(f = "report",
           signature = "TMB_out",
           definition = function(x) return(obj(x)$report())
 )
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "sdreport",
-           def = function(x) standardGeneric("sdreport")
-)
+
+
 #' @export
 setMethod(f = "sdreport",
           signature = "TMB_out",
@@ -209,11 +146,7 @@ setMethod(f = "sdreport",
 )
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_working_pars",
-           def = function(x) standardGeneric("get_working_pars")
-)
+
 #' @export
 setMethod(f = "get_working_pars",
           signature = "TMB_out",
@@ -228,11 +161,8 @@ setMethod(f = "get_working_pars",
   return(working_pars)
 })
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_pars",
-           def = function(x) standardGeneric("get_pars")
-)
+
+
 #' @export
 setMethod(f = "get_pars",
           signature = "TMB_out",
@@ -250,11 +180,8 @@ setMethod(f = "get_pars",
     return(pars)
 })
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_parameters",
-           def = function(x) standardGeneric("get_parameters")
-)
+
+
 #' @export
 #' @rdname Access_TMB_out
 setMethod(f = "get_parameters",
@@ -265,11 +192,8 @@ setMethod(f = "get_parameters",
     return(pars)
 })
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_geo_vars",
-           def = function(x,var,sf_obj,get_sd) standardGeneric("get_geo_vars")
-)
+
+
 #' @export
 #' @rdname Access_TMB_out
 setMethod(f = "get_geo_vars",
@@ -297,11 +221,8 @@ setMethod(f = "get_geo_vars",
     return(sf_obj)
 })
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_proc",
-           def = function(x,sf_obj) standardGeneric("get_proc")
-)
+
+
 #' @export
 #' @rdname Access_TMB_out
 setMethod(f = "get_proc",
@@ -313,11 +234,7 @@ setMethod(f = "get_proc",
 })
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_obs",
-           def = function(x,sf_obj) standardGeneric("get_obs")
-)
+
 #' @export
 #' @rdname Access_TMB_out
 setMethod(f = "get_obs",
@@ -330,11 +247,7 @@ setMethod(f = "get_obs",
 })
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_resp",
-           def = function(x,sf_obj) standardGeneric("get_resp")
-)
+
 #' @export
 #' @rdname Access_TMB_out
 setMethod(f = "get_resp",
@@ -347,11 +260,7 @@ setMethod(f = "get_resp",
 })
 
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_observation",
-           def = function(x,sf_obj) standardGeneric("get_observation")
-)
+
 #' @export
 #' @rdname Access_TMB_out
 setMethod(f = "get_observation",
@@ -362,11 +271,8 @@ setMethod(f = "get_observation",
     return(sf_obj)
 })
 
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_process",
-           def = function(x,sf_obj) standardGeneric("get_process")
-)
+
+
 #' @export
 #' @rdname Access_TMB_out
 setMethod(f = "get_process",
@@ -378,11 +284,7 @@ setMethod(f = "get_process",
 })
 
 
-# #' @export
-# #' @rdname Access_TMB_out
-# setGeneric(name = "convergence",
-#            def = function(x) standardGeneric("convergence")
-# ) # Generic defined to staRVe
+
 #' @export
 setMethod("convergence",
           signature = "TMB_out",

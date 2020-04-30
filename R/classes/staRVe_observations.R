@@ -1,4 +1,4 @@
-#' @include classes.R dag.R staRVe_observation_parameters.R staRVe_process.R
+#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R
 NULL
 
 #################
@@ -7,12 +7,6 @@ NULL
 ###           ###
 #################
 
-#' Create a \code{staRVe_observations} object
-#'
-#' @export
-setGeneric(name = "staRVe_observations",
-           def = function(x,...) standardGeneric("staRVe_observations")
-)
 #' @details The \code{initialize} function is not mean to be used by the user,
 #'   use \code{staRVe_observations} instead.
 #'
@@ -58,19 +52,9 @@ setMethod(
 NULL
 
 #' @export
-#' @rdname Access_staRVe_observations
-setGeneric(name = "data",
-           def = function(x) standardGeneric("data")
-)
-#' @export
 setMethod(f = "data",
           signature = "staRVe_observations",
           definition = function(x) return(x@data)
-)
-#' @export
-#' @rdname Access_staRVe_observations
-setGeneric(name = "data<-",
-           def = function(x,value) standardGeneric("data<-")
 )
 #' @export
 setReplaceMethod(f = "data",
@@ -82,30 +66,10 @@ setReplaceMethod(f = "data",
 
 
 
-
-#' Get or set slots from an object of class \code{staRVe_observations}.
-#'
-#' @param x An object of class \code{staRVe_observations}.
-#' @param value A replacement value
-#'
-#' @family Access_staRVe_observations
-#' @name Access_staRVe_observations
-NULL
-
-#' @export
-#' @rdname Access_staRVe_observations
-setGeneric(name = "transient_graph",
-           def = function(x) standardGeneric("transient_graph")
-)
 #' @export
 setMethod(f = "transient_graph",
           signature = "staRVe_observations",
           definition = function(x) return(x@transient_graph)
-)
-#' @export
-#' @rdname Access_staRVe_observations
-setGeneric(name = "transient_graph<-",
-           def = function(x,value) standardGeneric("transient_graph<-")
 )
 #' @export
 setReplaceMethod(f = "transient_graph",
@@ -117,33 +81,11 @@ setReplaceMethod(f = "transient_graph",
 
 
 
-
-#' Get or set slots from an object of class \code{staRVe_observations}.
-#'
-#' @param x An object of class \code{staRVe_observations}.
-#' @param value A replacement value
-#'
-#' @family Access_staRVe_observations
-#' @name Access_staRVe_observations
-NULL
-
-# Defined in staRVe_process.R
-# #' @export
-# #' @rdname Access_staRVe_observations
-# setGeneric(name = "parameters",
-#            def = function(x) standardGeneric("parameters")
-# )
 #' @export
 setMethod(f = "parameters",
           signature = "staRVe_observations",
           definition = function(x) return(x@parameters)
 )
-# Defined in staRVe_process.R
-# #' @export
-# #' @rdname Access_staRVe_observations
-# setGeneric(name = "parameters<-",
-#            def = function(x,value) standardGeneric("parameters<-")
-# )
 #' @export
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_observations",

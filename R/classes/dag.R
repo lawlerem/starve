@@ -1,4 +1,4 @@
-#' @include classes.R
+#' @include classes.R generics.R
 NULL
 
 #####################
@@ -7,12 +7,6 @@ NULL
 ###               ###
 #####################
 
-#' Create a \code{dag} object
-#'
-#' @export
-setGeneric(name = "dag",
-           def = function(x,...) standardGeneric("dag")
-)
 #' @details The \code{initialize} function is not mean to be used by the user,
 #'   use \code{dag} instead.
 #'
@@ -48,19 +42,9 @@ setMethod(
 NULL
 
 #' @export
-#' @rdname Access_dag
-setGeneric(name = "edges",
-           def = function(x) standardGeneric("edges")
-)
-#' @export
 setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
-)
-#' @export
-#' @rdname Access_dag
-setGeneric(name = "edges<-",
-           def = function(x,value) standardGeneric("edges<-")
 )
 #' @export
 setReplaceMethod(f = "edges",
@@ -73,19 +57,9 @@ setReplaceMethod(f = "edges",
 
 
 #' @export
-#' @rdname Access_dag
-setGeneric(name = "distances",
-           def = function(x) standardGeneric("distances")
-)
-#' @export
 setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
-)
-#' @export
-#' @rdname Access_dag
-setGeneric(name = "distances<-",
-           def = function(x,value) standardGeneric("distances<-")
 )
 #' @export
 setReplaceMethod(f = "distances",

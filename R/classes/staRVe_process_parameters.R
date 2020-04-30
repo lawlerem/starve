@@ -1,4 +1,4 @@
-#' @include classes.R
+#' @include classes.R generics.R
 NULL
 
 #################
@@ -7,12 +7,6 @@ NULL
 ###           ###
 #################
 
-#' Create a \code{staRVe_process_parameters} object
-#'
-#' @export
-setGeneric(name = "staRVe_process_parameters",
-           def = function(x,...) standardGeneric("staRVe_process_parameters")
-)
 #' @details The \code{initialize} function is not mean to be used by the user,
 #'   use \code{staRVe_process_parameters} instead.
 #'
@@ -52,19 +46,9 @@ setMethod(
 NULL
 
 #' @export
-#' @rdname Access_staRVe_process_parameters
-setGeneric(name = "covariance_function",
-           def = function(x) standardGeneric("covariance_function")
-)
-#' @export
 setMethod(f = "covariance_function",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@covariance_function)
-)
-#' @export
-#' @rdname Access_staRVe_process_parameters
-setGeneric(name = "covariance_function<-",
-           def = function(x,value) standardGeneric("covariance_function<-")
 )
 #' @export
 setReplaceMethod(f = "covariance_function",
@@ -77,19 +61,9 @@ setReplaceMethod(f = "covariance_function",
 
 
 #' @export
-#' @rdname Access_staRVe_process_parameters
-setGeneric(name = "spatial_parameters",
-           def = function(x) standardGeneric("spatial_parameters")
-)
-#' @export
 setMethod(f = "spatial_parameters",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@spatial_parameters)
-)
-#' @export
-#' @rdname Access_staRVe_process_parameters
-setGeneric(name = "spatial_parameters<-",
-           def = function(x,value) standardGeneric("spatial_parameters<-")
 )
 #' @export
 setReplaceMethod(f = "spatial_parameters",
@@ -102,19 +76,9 @@ setReplaceMethod(f = "spatial_parameters",
 
 
 #' @export
-#' @rdname Access_staRVe_process_parameters
-setGeneric(name = "time_parameters",
-           def = function(x) standardGeneric("time_parameters")
-)
-#' @export
 setMethod(f = "time_parameters",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@time_parameters)
-)
-#' @export
-#' @rdname Access_staRVe_process_parameters
-setGeneric(name = "time_parameters<-",
-           def = function(x,value) standardGeneric("time_parameters<-")
 )
 #' @export
 setReplaceMethod(f = "time_parameters",
