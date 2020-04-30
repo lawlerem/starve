@@ -117,7 +117,7 @@ setClass(
 
 #' An S4 class to hold the input for a staRVe model
 setClass(
-  Class = "staRVe_in",
+  Class = "staRVe_model",
   slots = c(
     process = "staRVe_process",
     observations = "staRVe_observations",
@@ -139,9 +139,10 @@ setClass(
 
 #' An S4 class to hold a fitted staRVe model
 setClass(
-  Class = "a_new_staRVe",
+  Class = "staRVe_fit",
   slots = c(
-    fit_tracing = "staRVe_tracing"
+    tracing = "staRVe_tracing",
+    TMB_out = "TMB_out"
   ),
-  contains = c("staRVe_in","TMB_out")
+  contains = c("staRVe_model")
 )
