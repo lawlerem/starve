@@ -17,13 +17,15 @@ setMethod(
   signature = "staRVe_settings",
   definition = function(.Object,
                         formula = new("formula"),
-                        n_neighbours = numeric,
-                        p_far_neighbours = "numeric",
-                        distance_units = "character") {
+                        n_neighbours = 10,
+                        p_far_neighbours = 0.2,
+                        distance_units = "km",
+                        max_distance = Inf) {
     formula(.Object)<- formula
     n_neighbours(.Object)<- n_neighbours
     p_far_neighbours(.Object)<- p_far_neighbours
     distance_units(.Object)<- distance_units
+    max_distance(.Object)<- max_distance
 
     return(.Object)
   }
@@ -101,5 +103,20 @@ setReplaceMethod(f = "distance_units",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
   x@distance_units<- value
+  return(x)
+})
+
+
+
+#' @export
+setMethod(f = "max_distance",
+          signature = "staRVe_settings",
+          definition = function(x) return(x@max_distance)
+)
+#' @export
+setReplaceMethod(f = "max_distance",
+                 signature = "staRVe_settings",
+                 definition = function(x,value) {
+  x@max_distance<- value
   return(x)
 })

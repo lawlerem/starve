@@ -111,7 +111,8 @@ setClass(
     formula = "formula",
     n_neighbours = "numeric",
     p_far_neighbours = "numeric",
-    distance_units = "character"
+    distance_units = "character",
+    max_distance = "numeric"
   )
 )
 

@@ -1,4 +1,4 @@
-#' @include classes.R generics.R dag.R staRVe_process_parameters.R
+#' @include classes.R generics.R utility.R dag.R staRVe_process_parameters.R
 NULL
 
 #################
@@ -96,3 +96,64 @@ setReplaceMethod(f = "parameters",
   x@parameters<- value
   return(x)
 })
+
+
+
+###############
+###         ###
+### Utility ###
+###         ###
+###############
+
+prepare_staRVe_process<- function(nodes,
+                                  time = data.frame(time=0),
+                                  settings = new("staRVe_settings") ) {
+  process<- new("staRVe_process")
+
+  covariance<- .covariance_from_formula(formula(settings))
+  time_form<- .time_from_formula(formula(settings),time)
+
+  # random_effects = "sf",
+  nodes<- nodes[,attr(nodes,"sf_column")] # Only need locations
+  nodes<- order_by_location(unique(nodes))
+  time_seq<- seq(min(time),max(time))
+  random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
+    df<- sf:::cbind.sf(data.frame(w = 0,
+                                  fixed = F,
+                                  time = t),
+                       nodes)
+    names(df)[[2]]<- attr(time_form,"name")
+  }))
+
+  # persistent_graph = "dag",
+  persistent_graph(process)<- construct_dag(nodes,
+    settings = settings,
+    silent = T
+  )
+
+  # parameters = "staRVe_process_parameters"
+  parameters<- new("staRVe_process_parameters")
+  covariance_function(parameters)<- covariance$covariance
+  spatial_parameters(parameters)<- data.frame(
+    par = c(0,0,ifelse(is.nan(covariance$nu),0,covariance$nu)),
+    fixed = c(F,F,ifelse(is.nan(covariance$nu),F,T)),
+    row.names = c("rho","tau","nu")
+  )
+
+
+  time_parameters(parameters)<- data.frame(
+    par = c(switch(attr(time_form,"type"),
+                   ar1 = 0.5,
+                   independent = 0,
+                   rw = 1),
+    fixed = c(c(switch(attr(time_form,"type"),
+                   ar1 = F,
+                   independent = T,
+                   rw = T),),
+    row.names = c("phi")
+  )
+
+  parameters(process)<- parameters
+
+  return(process)
+}

@@ -8,7 +8,7 @@ NULL
 ###                     ###
 ###########################
 
-#' @details The \code{initeialize} function is not meant to be used by the user,
+#' @details The \code{initialize} function is not meant to be used by the user,
 #'  use \code{TMB_out} instead.
 #'
 #' @export

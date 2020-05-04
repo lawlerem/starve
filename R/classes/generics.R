@@ -213,6 +213,18 @@ setGeneric(name = "hess_time<-",
 
 # I
 
+#' Increase indices by one to translate from C to R.
+#'
+#' @export
+setGeneric(name = "idxC_to_R",
+def = function(x) standardGeneric("idxC_to_R")
+)
+#' Reduce indices by one to translate from R to C.
+#'
+#' @export
+setGeneric(name = "idxR_to_C",
+           def = function(x) standardGeneric("idxR_to_C")
+)
 
 
 
@@ -247,6 +259,17 @@ setGeneric(name = "link_function<-",
 
 
 # M
+
+#' @export
+#' @rdname Access_staRVe_settings
+setGeneric(name = "max_distance",
+           def = function(x) standardGeneric("max_distance")
+)
+#' @export
+#' @rdname Access_staRVe_settings
+setGeneric(name = "max_distance<-",
+           def = function(x,value) standardGeneric("max_distance<-")
+)
 
 
 
