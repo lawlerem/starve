@@ -103,7 +103,6 @@ setReplaceMethod(f = "parameters",
 ###############
 
 prepare_staRVe_observations<- function(data,
-                                       # This shouldn't have a default.
                                        process,
                                        settings = new("staRVe_settings"),
                                        distribution = "gaussian",
@@ -140,7 +139,7 @@ prepare_staRVe_observations<- function(data,
 
   # parameters = "staRVe_observation_parameters"
   parameters<- new("staRVe_observation_parameters")
-  
+
   response_distribution(parameters)<- unname(grep(distribution,
     get_staRVe_distributions("distribution"),
     value = T))
