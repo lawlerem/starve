@@ -21,9 +21,10 @@
 #'
 #' @param x A formula object with terms grouped in a \code{mean(...)} function.
 #' @param data A data.frame containing the covariate data.
+#' @param return Either "model.matrix"  or "model.frame"
 #'
 #' @return The design matrix for the covariates.
-.mean_design_from_formula<- function(x,data) {
+.mean_design_from_formula<- function(x,data,return = "model.matrix") {
   the_terms<- terms(x,specials=c("mean","time","space"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^mean",term.labels,value=T)
@@ -35,7 +36,10 @@
   new_formula<- sub("\\)$","",new_formula)
   new_terms<- terms(formula(new_formula))
   attr(new_terms,"intercept")<- 0
-  the_df<- model.matrix(new_terms,data=data)
+  the_df<- switch(return,
+    model.matrix = model.matrix(new_terms,data=data),
+    model.frame = model.frame(new_terms,data=data)
+  )
   attr(the_df,"assign")<- NULL
   rownames(the_df)<- NULL
   return(the_df)

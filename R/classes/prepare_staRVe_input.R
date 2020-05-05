@@ -67,7 +67,13 @@ prepare_staRVe_input<- function(formula,
     time = data,
     settings = settings(model),
   )
-  observations(model)<- prepare_staRVe_observation(
-
+  observations(model)<- prepare_staRVe_observations(
+    data = data,
+    process = process(model),
+    settings settings(model),
+    distribution = distribution,
+    link = link
   )
+
+  return(model)
 }

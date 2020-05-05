@@ -93,3 +93,96 @@ setReplaceMethod(f = "parameters",
   x@parameters<- value
   return(x)
 })
+
+
+
+###############
+###         ###
+### Utility ###
+###         ###
+###############
+
+prepare_staRVe_observations<- function(data,
+                                       # This shouldn't have a default.
+                                       process,
+                                       settings = new("staRVe_settings"),
+                                       distribution = "gaussian",
+                                       link = "identity") {
+  observations<- new("staRVe_observations")
+  time_form<- .time_from_formula(formula(settings),data)
+
+  # data = "sf"
+  data<- order_by_location(data,time = data[[attr(time_form,"name")]])
+  y<- .response_from_formula(formula(settings),data))
+  time_form<- .time_from_formula(formula(settings),data) #in order)
+  response<- data.frame(y = c(y),t = c(time_form))
+  names(response)<- c(attr(y,"name"),attr(time_form,"name"))
+
+  design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
+
+  data(observations)<- sf:::cbind.sf(
+    design,
+    response,
+    data[,attr(data,"sf_column")]
+  )
+  attr(data(observations),"time_column")<- attr(time_form,"name")
+
+
+
+  # transient_graph = "dag"
+  transient_graph(observations)<- construct_obs_dag(
+    x = data,
+    y = random_effects(process),
+    settings = new("staRVe_settings"),
+  )
+
+
+
+  # parameters = "staRVe_observation_parameters"
+  parameters<- new("staRVe_observation_parameters")
+  
+  response_distribution(parameters)<- unname(grep(distribution,
+    get_staRVe_distributions("distribution"),
+    value = T))
+
+  response_parameters(parameters)<- data.frame(
+    par = c(switch(distribution,
+      gaussian = numeric(1),
+      poisson = numeric(0),
+      `negative binomial` = numeric(1),
+      bernoulli = numeric(0),
+      gamma = numeric(1),
+      lognormal = numeric(1)
+    ),
+    fixed = c(switch(distribution,
+      gaussian = rep(F,1),
+      poisson = rep(F,0),
+      `negative binomial` = rep(F,1),
+      bernoulli = rep(F,0),
+      gamma = rep(F,1),
+      lognormal = rep(F,1)
+    ),
+    row.names = c(switch(distribution,
+      gaussian = c("sd"),
+      poisson = c(),
+      `negative binomial` = c("overdispersion"),
+      bernoulli = c(),
+      gamma = c("sd"),
+      lognormal = c("sd"),
+    )
+  )
+
+  link_function(parameters)<- unname(grep(link,
+    get_staRVe_distributions("link"),
+    value = T))
+
+  design<- .mean_design_from_formula(formula(settings),data)
+  fixed_effects(parameters)<- data.frame(
+    par = c(0,numeric(ncol(design))),
+    fixed = c(0,rep(F,length(ncol(design)))),
+    row.names = c("mu",names(design))
+  )
+  parameters(observations)<- parameters)
+
+  return(observations)
+}

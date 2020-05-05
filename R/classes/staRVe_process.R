@@ -124,6 +124,7 @@ prepare_staRVe_process<- function(nodes,
                        nodes)
     names(df)[[2]]<- attr(time_form,"name")
   }))
+  attr(random_effects(process),"time_column")<- attr(time_form,"name")
 
   # persistent_graph = "dag",
   persistent_graph(process)<- construct_dag(nodes,
