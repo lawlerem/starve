@@ -107,7 +107,7 @@ setReplaceMethod(f = "distances",
     m<- nrow(nodes)
   } else {
     n_far_neighbours<- round(p_far_neighbours(settings)*n_neighbours(settings))
-    m<- n_neighbours - n_far_neighbours
+    m<- n_neighbours(settings) - n_far_neighbours
   }
   suppressMessages({
   nn_obj<- nngeo::st_nn(x = x,
@@ -172,7 +172,7 @@ setReplaceMethod(f = "distances",
   if( length(intersection_idx) == 0 ) {
     node<- .get_one_dag_node(x = x,
                              nodes = nodes,
-                             settings = settings
+                             settings = settings,
                              silent = silent)
   } else {
     parents<- intersection_idx[[1]] # Don't want more than 1
@@ -203,10 +203,10 @@ setReplaceMethod(f = "distances",
 construct_dag<- function(x,
                          settings = new("staRVe_settings"),
                          silent = T) {
-  max_distance(settings)<- units::set_units(max_distance(settings),
-                                            distance_units(settings),
-                                            mode="standard")
-  max_distance(settings)<- as.numeric(units::set_units(max_distance(settings),"m"))
+  max_dist<- units::set_units(max_distance(settings),
+                              distance_units(settings),
+                              mode="standard")
+  max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
   nn_list<- lapply(seq(nrow(x)), function(i) {
@@ -251,10 +251,10 @@ construct_obs_dag<- function(x,
                              settings = new("staRVe_settings"),
                              check_intersection = T,
                              silent = T) {
-  max_distance(settings)<- units::set_units(max_distance(settings),
-                                            distance_units(settings),
-                                            mode="standard")
-  max_distance(settings)<- as.numeric(units::set_units(max_distance(settings),"m"))
+  max_dist<- units::set_units(max_distance(settings),
+                              distance_units(settings),
+                              mode="standard")
+  max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
   nn_list<- lapply(seq(nrow(x)), function(i) {

@@ -20,7 +20,7 @@ setMethod(
                         observations = new("staRVe_observations"),
                         settings = new("staRVe_settings")) {
     process(.Object)<- process
-    observation(.Object)<- observations
+    observations(.Object)<- observations
     settings(.Object)<- settings
 
     return(.Object)

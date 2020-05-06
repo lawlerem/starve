@@ -25,7 +25,10 @@ setMethod(
                         transient_graph = new("dag"),
                         parameters = new("staRVe_observation_parameters")) {
     data(.Object)<- data
-    attr(data,"active_time")<- "time"
+    if( !is.null(attr(data(.Object),"active_time")) &&
+        "time" %in% colnames(data(.Object)) ) {
+      attr(data(.Object),"active_time")<- "time"
+    } else {}
 
     transient_graph(.Object)<- transient_graph
     parameters(.Object)<- parameters
@@ -112,7 +115,7 @@ prepare_staRVe_observations<- function(data,
 
   # data = "sf"
   data<- order_by_location(data,time = data[[attr(time_form,"name")]])
-  y<- .response_from_formula(formula(settings),data))
+  y<- .response_from_formula(formula(settings),data)
   time_form<- .time_from_formula(formula(settings),data) #in order)
   response<- data.frame(y = c(y),t = c(time_form))
   names(response)<- c(attr(y,"name"),attr(time_form,"name"))
@@ -152,7 +155,7 @@ prepare_staRVe_observations<- function(data,
       bernoulli = numeric(0),
       gamma = numeric(1),
       lognormal = numeric(1)
-    ),
+    )),
     fixed = c(switch(distribution,
       gaussian = rep(F,1),
       poisson = rep(F,0),
@@ -160,7 +163,7 @@ prepare_staRVe_observations<- function(data,
       bernoulli = rep(F,0),
       gamma = rep(F,1),
       lognormal = rep(F,1)
-    ),
+    )),
     row.names = c(switch(distribution,
       gaussian = c("sd"),
       poisson = c(),
@@ -168,7 +171,7 @@ prepare_staRVe_observations<- function(data,
       bernoulli = c(),
       gamma = c("sd"),
       lognormal = c("sd"),
-    )
+    ))
   )
 
   link_function(parameters)<- unname(grep(link,
@@ -178,10 +181,10 @@ prepare_staRVe_observations<- function(data,
   design<- .mean_design_from_formula(formula(settings),data)
   fixed_effects(parameters)<- data.frame(
     par = c(0,numeric(ncol(design))),
-    fixed = c(0,rep(F,length(ncol(design)))),
+    fixed = rep(F,1+ncol(design)),
     row.names = c("mu",names(design))
   )
-  parameters(observations)<- parameters)
+  parameters(observations)<- parameters
 
   return(observations)
 }

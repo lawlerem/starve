@@ -54,6 +54,7 @@ prepare_staRVe_input<- function(formula,
                                 distance_units = "km",
                                 fit = F,
                                 ...) {
+  time_form<- .time_from_formula(formula,data)
   model<- new("staRVe_model")
   settings(model)<- new("staRVe_settings",
     formula = formula,
@@ -64,13 +65,13 @@ prepare_staRVe_input<- function(formula,
   )
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
-    time = data,
-    settings = settings(model),
+    time = as.data.frame(data)[,attr(time_form,"name"),drop=F],
+    settings = settings(model)
   )
   observations(model)<- prepare_staRVe_observations(
     data = data,
     process = process(model),
-    settings settings(model),
+    settings = settings(model),
     distribution = distribution,
     link = link
   )

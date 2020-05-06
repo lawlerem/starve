@@ -25,10 +25,11 @@ setMethod(
                         ),
                         persistent_graph = new("dag"),
                         parameters = new("staRVe_process_parameters")) {
-    data(.Object)<- data
-    if( !is.null(attr(data,"active_time")) && "time" %in% colnames(data) ) {
-      attr(data,"active_time")<- "time"
-    else {}
+    random_effects(.Object)<- random_effects
+    if( !is.null(attr(random_effects(.Object),"active_time")) &&
+        "time" %in% colnames(random_effects(.Object)) ) {
+      attr(random_effects(.Object),"active_time")<- "time"
+    } else {}
 
     persistent_graph(.Object)<- persistent_graph
     parameters(.Object)<- parameters
@@ -122,9 +123,11 @@ prepare_staRVe_process<- function(nodes,
                                   fixed = F,
                                   time = t),
                        nodes)
-    names(df)[[2]]<- attr(time_form,"name")
+    colnames(df)[[2]]<- attr(time_form,"name")
+    return(df)
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")
+
 
   # persistent_graph = "dag",
   persistent_graph(process)<- construct_dag(nodes,
@@ -146,11 +149,11 @@ prepare_staRVe_process<- function(nodes,
     par = c(switch(attr(time_form,"type"),
                    ar1 = 0.5,
                    independent = 0,
-                   rw = 1),
-    fixed = c(c(switch(attr(time_form,"type"),
+                   rw = 1)),
+    fixed = c(switch(attr(time_form,"type"),
                    ar1 = F,
                    independent = T,
-                   rw = T),),
+                   rw = T)),
     row.names = c("phi")
   )
 
