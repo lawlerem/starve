@@ -646,11 +646,6 @@ setGeneric(name = "time_parameters<-",
 setGeneric(name = "TMB_in",
            def = function(x) standardGeneric("TMB_in")
 )
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "TMB_in<-",
-           def = function(x,value) standardGeneric("TMB_in<-")
-)
 
 #' @export
 #' @rdname Access_staRVe_fit

@@ -4,11 +4,13 @@
 \name{bird_survey}
 \alias{bird_survey}
 \title{House finch counts from the Breeding Bird Survey}
-\format{An sf object of point geometries containing 1,575 rows and 2 fields:
+\format{
+An sf object of point geometries containing 1,575 rows and 2 fields:
 \describe{
  \item{cnt}{The number of bird sighting for one sampling unit.}
  \item{year}{The year of the sample.}
-}}
+}
+}
 \source{
 \url{ftp://ftpext.usgs.gov/pub/er/md/laurel/BBS/Archivefiles/Version2016v0/}
 }

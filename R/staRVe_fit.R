@@ -1,4 +1,4 @@
-#' @include classes.R generics.R staRVe_tracing.R staRVe_model.R Access_TMB_out.R
+#' @include classes.R generics.R staRVe_tracing.R staRVe_model.R
 NULL
 
 #################
@@ -16,7 +16,7 @@ setMethod(
   f = "initialize",
   signature = "staRVe_fit",
   definition = function(.Object,
-                        staRVe_model = new("staRVe_model",
+                        staRVe_model = new("staRVe_model"),
                         tracing = new("staRVe_tracing"),
                         TMB_out = new("TMB_out")) {
     as(.Object,"staRVe_model")<- staRVe_model

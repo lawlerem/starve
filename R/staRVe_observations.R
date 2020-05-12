@@ -182,7 +182,7 @@ prepare_staRVe_observations<- function(data,
   fixed_effects(parameters)<- data.frame(
     par = c(0,numeric(ncol(design))),
     fixed = rep(F,1+ncol(design)),
-    row.names = c("mu",names(design))
+    row.names = c("mu",colnames(design))
   )
   parameters(observations)<- parameters
 

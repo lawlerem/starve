@@ -123,7 +123,7 @@ prepare_staRVe_process<- function(nodes,
                                   fixed = F,
                                   time = t),
                        nodes)
-    colnames(df)[[2]]<- attr(time_form,"name")
+    colnames(df)[[3]]<- attr(time_form,"name")
     return(df)
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")
