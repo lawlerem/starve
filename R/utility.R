@@ -42,6 +42,15 @@ NULL
   return(link_code)
 }
 
+# x should be a vector
+.logical_to_map<- function(x) {
+  y<- seq_along(x)
+  y[x]<- NA
+  y<- as.factor(y)
+
+  return(y)
+}
+
 
 
 

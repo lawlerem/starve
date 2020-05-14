@@ -254,7 +254,21 @@ setMethod(f = "TMB_in",
     pred_w = numeric(0)
   )
   rand<- c("resp_w","proc_w","pred_w")
-  map<- list()
+  map<- list(
+    mu = fixed_effects(parameters(observations))["mu","fixed"],
+    response_pars = response_parameters(parameters(observations))[,"fixed"],
+    mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"fixed"],
+    resp_w = logical(
+      sum(sapply(edges(transient_graph(observations)),length) > 1)
+    ),
+    logtau = spatial_parameters(parameters(process))["tau","fixed"],
+    logrho = spatial_parameters(parameters(process))["rho","fixed"],
+    lognu = spatial_parameters(parameters(process))["nu","fixed"],
+    logit_w_phi = time_parameters(parameters(process))["phi","fixed"],
+    proc_w = random_effects(process)[,"fixed",drop=T],
+    pred_w = logical(0)
+  )
+  map<- lapply(map,.logical_to_map)
 
   return(list(
     data = data,
