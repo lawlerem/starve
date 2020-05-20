@@ -322,6 +322,7 @@ setMethod(f = "idxC_to_R",
   edges(x)<- lapply(edges(x),function(parents) {
     return(parents+1)
   })
+  return(x)
 })
 
 setMethod(f = "idxR_to_C",
@@ -330,4 +331,5 @@ setMethod(f = "idxR_to_C",
   edges(x)<- lapply(edges(x),function(parents) {
     return(parents-1)
   })
+  return(x)
 })

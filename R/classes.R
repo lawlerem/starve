@@ -93,8 +93,7 @@ setClass(
   slots = c(
     obj = "list",
     opt = "list",
-    sdr = "sdreport",
-    symbolicAnalysis = "logical"
+    sdr = "sdreport"
   )
 )
 

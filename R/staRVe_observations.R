@@ -123,6 +123,12 @@ prepare_staRVe_observations<- function(data,
   design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
 
   data(observations)<- sf:::cbind.sf(
+    w = 0,
+    w_se = NA,
+    linear = NA,
+    linear_se = NA,
+    response = NA,
+    response_se = NA,
     design,
     response,
     data[,attr(data,"sf_column")]
@@ -143,9 +149,11 @@ prepare_staRVe_observations<- function(data,
   # parameters = "staRVe_observation_parameters"
   parameters<- new("staRVe_observation_parameters")
 
-  response_distribution(parameters)<- unname(grep(distribution,
-    get_staRVe_distributions("distribution"),
-    value = T))
+  response_distribution(parameters)<- unname(
+    get_staRVe_distributions("distribution")[
+      charmatch(distribution,get_staRVe_distributions("distribution"))
+    ]
+  )
 
   response_parameters(parameters)<- data.frame(
     par = c(switch(distribution,
@@ -155,6 +163,14 @@ prepare_staRVe_observations<- function(data,
       bernoulli = numeric(0),
       gamma = numeric(1),
       lognormal = numeric(1)
+    )),
+    se = c(switch(distribution,
+      gaussian = NA,
+      poisson = numeric(0),
+      `negative binomial` = NA,
+      bernoulli = numeric(0),
+      gamma = NA,
+      lognormal = NA
     )),
     fixed = c(switch(distribution,
       gaussian = rep(F,1),
@@ -174,13 +190,16 @@ prepare_staRVe_observations<- function(data,
     ))
   )
 
-  link_function(parameters)<- unname(grep(link,
-    get_staRVe_distributions("link"),
-    value = T))
+  link_function(parameters)<- unname(
+    get_staRVe_distributions("link")[
+      charmatch(link,get_staRVe_distributions("link"))
+    ]
+  )
 
   design<- .mean_design_from_formula(formula(settings),data)
   fixed_effects(parameters)<- data.frame(
     par = c(0,numeric(ncol(design))),
+    se = NA,
     fixed = rep(F,1+ncol(design)),
     row.names = c("mu",colnames(design))
   )

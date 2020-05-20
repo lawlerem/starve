@@ -120,10 +120,11 @@ prepare_staRVe_process<- function(nodes,
   time_seq<- seq(min(time),max(time))
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
     df<- sf:::cbind.sf(data.frame(w = 0,
+                                  se = NA,
                                   fixed = F,
                                   time = t),
                        nodes)
-    colnames(df)[[3]]<- attr(time_form,"name")
+    colnames(df)[[4]]<- attr(time_form,"name")
     return(df)
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")
@@ -140,6 +141,7 @@ prepare_staRVe_process<- function(nodes,
   covariance_function(parameters)<- covariance$covariance
   spatial_parameters(parameters)<- data.frame(
     par = c(0,0,ifelse(is.nan(covariance$nu),0,covariance$nu)),
+    se = NA,
     fixed = c(F,F,ifelse(is.nan(covariance$nu),F,T)),
     row.names = c("rho","tau","nu")
   )
@@ -150,6 +152,7 @@ prepare_staRVe_process<- function(nodes,
                    ar1 = 0.5,
                    independent = 0,
                    rw = 1)),
+    se = NA,
     fixed = c(switch(attr(time_form,"type"),
                    ar1 = F,
                    independent = T,

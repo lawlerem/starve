@@ -38,6 +38,7 @@ Depends:
 Collate: 
     'classes.R'
     'generics.R'
+    'TMB_out.R'
     'utility.R'
     'dag.R'
     'data.R'

@@ -196,18 +196,18 @@ setMethod(f = "TMB_in",
     link_code = .link_to_code(
       link_function(parameters(observations))
     ),
-    y_time = data(observations)[,time_column,drop=T],
+    y_time = c(data(observations)[,time_column,drop=T]),
     obs_y = c(.response_from_formula(
       formula(settings(x)),
       data(observations)
     )),
-    ys_edges = edges(transient_graph(observations)),
+    ys_edges = edges(idxR_to_C(transient_graph(observations))),
     ys_dists = distances(transient_graph(observations)),
-    resp_w_time = data(observations)[
+    resp_w_time = c(data(observations)[
       sapply(edges(transient_graph(observations)),length) > 1,
       time_column,
       drop=T
-    ],
+    ]),
     mean_design = .mean_design_from_formula(
       formula(settings(x)),
       data(observations)
@@ -215,13 +215,24 @@ setMethod(f = "TMB_in",
     covar_code = .covariance_to_code(
       covariance_function(parameters(process))
     ),
-    w_time = random_effects(process)[,time_column,drop=T],
-    ws_edges = edges(persistent_graph(process)),
+    w_time = c(random_effects(process)[,time_column,drop=T]),
+    ws_edges = edges(idxR_to_C(persistent_graph(process))),
     ws_dists = distances(persistent_graph(process)),
     pred_w_time = numeric(0),
     pred_ws_edges = list(numeric(0)),
     pred_ws_dists = list(matrix(0,nrow=0,ncol=0))
   )
+
+  time_names<- c(
+    "y_time",
+    "resp_w_time",
+    "w_time",
+    "pred_w_time"
+  )
+  data[time_names]<- lapply(data[time_names],function(x) {
+    return(x - min(data$w_time))
+  })
+
   para<- list(
     mu = fixed_effects(parameters(observations))["mu","par"],
     response_pars = response_parameters(parameters(observations))[,"par"],
@@ -250,7 +261,7 @@ setMethod(f = "TMB_in",
       qlogis(time_parameters(parameters(process))["phi","par"]),
       qlogis(0)
     ),
-    proc_w = random_effects(process)[,"w",drop=T],
+    proc_w = c(random_effects(process)[,"w",drop=T]),
     pred_w = numeric(0)
   )
   rand<- c("resp_w","proc_w","pred_w")
@@ -276,4 +287,77 @@ setMethod(f = "TMB_in",
     rand = rand,
     map = map
   ))
+})
+
+
+#' @export
+setMethod(f = "update_staRVe_model",
+          signature = c(x = "staRVe_model",
+                        y = "TMB_out"),
+          definition = function(x,y) {
+  sdr_mat<- summary(sdr(y))
+  par_names<- character(0)
+
+  spatial_parameters(parameters(process(x)))<- within(
+    spatial_parameters(parameters(process(x))),{
+      par_names<<- c("par_rho","par_tau","par_nu")
+      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+    }
+  )
+
+  time_parameters(parameters(process(x)))<- within(
+    time_parameters(parameters(process(x))),{
+      par_names<<- c("par_w_phi")
+      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+    }
+  )
+
+  random_effects(process(x))<- within(
+    random_effects(process(x)),{
+      par_names<<- c("proc_w")
+      w<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+    }
+  )
+
+  fixed_effects(parameters(observations(x)))<- within(
+    fixed_effects(parameters(observations(x))),{
+      par_names<<- c("par_mu","par_mean_pars")
+      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+    }
+  )
+
+  response_parameters(parameters(observations(x)))<- within(
+    response_parameters(parameters(observations(x))),{
+      par_names<<- c("par_sd","par_overdispersion")
+      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+    }
+  )
+
+  data<- data(observations(x))
+  obs_dag<- transient_graph(observations(x))
+  random_effects<- random_effects(process(x))
+  time_column<- attr(data,"time_column")
+
+  resp_w_idx<- 1
+  resp_w<- sdr_mat[rownames(sdr_mat) == "resp_w",]
+
+  for( i in seq(nrow(data)) ) {
+    if( length(edges(obs_dag)[[i]]) == 1 ) {
+      w<- random_effects[
+        random_effects[,time_column,drop=T] == data[i,time_column,drop=T],
+      ]
+      data[i,c("w","w_se")]<- as.data.frame(w)[edges(obs_dag)[[i]],c("w","se")]
+    } else {
+      data[i,c("w","w_se")]<- resp_w[resp_w_idx,]
+      resp_w_idx<- resp_w_idx+1
+    }
+  }
+  data(observations(x))<- data
+
+  return(x)
 })

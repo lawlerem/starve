@@ -685,6 +685,13 @@ setGeneric(name = "transient_graph<-",
 
 # U
 
+#' Update a \code{staRVe_model} object from a model fit.
+#'
+#' @export
+setGeneric(name = "update_staRVe_model",
+           def = function(x,y) standardGeneric("update_staRVe_model")
+)
+
 
 
 
