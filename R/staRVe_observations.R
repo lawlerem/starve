@@ -138,9 +138,13 @@ prepare_staRVe_observations<- function(data,
 
 
   # transient_graph = "dag"
+  random_effects<- split(
+    random_effects(process),
+    random_effects(process)[,attr(random_effects(process),"time_column",drop=T]
+  )[[1]]
   transient_graph(observations)<- construct_obs_dag(
     x = data,
-    y = random_effects(process),
+    y = random_effects,
     settings = new("staRVe_settings"),
   )
 
