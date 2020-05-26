@@ -399,46 +399,6 @@ setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
 )
 
-#' Predict from a \code{staRVe} object.
-#'
-#' @param x An object of class \code{staRVe}.
-#' @param locations Either an object of class \code{sf} containing point geometries,
-#'  or an object of class \code{RasterLayer}. This object should not have any
-#'  time information, as predictions will be made at each location at every time.
-#'  If a \code{RasterLayer} object, predictions will be made for all raster cells
-#'  whose value are not NA. If the raster has no values, then predictions will
-#'  be made at every cell. Raster predictions are made at the midpoint of each cell.
-#' @param covariates Either a data.frame of class \code{sf} or a list of \code{Raster*}
-#'  objects, depending on the input type of \code{locations}. If the model has
-#'  no covariates, then nothing needs to be supplied.
-#'
-#'  If \code{locations} is of class \code{sf} with point geometries, then
-#'  \code{covariates} should also be of class \code{sf}. The data.frame should contain
-#'  columns for each of the covariates, a column for the time index, and a column
-#'  of point geometries. For each time unit and prediction point, there should
-#'  be a row in the \code{covariates} data.frame, but the rows do not need to be
-#'  in the same order as \code{locations}.
-#'
-#'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
-#'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
-#'  contain data for one covariate, should have one layer for each time unit,
-#'  and should have the same raster geometry as the \code{locations} object. The
-#'  layer names of each raster layer should be of the form \code{T####}, where
-#'  \code{####} gives the specific time index.
-#' @param time What time indices should predictions be made for? If set to "model",
-#'  predictions are made for every time present in the model. The supplied time
-#'  indices must be a subset of those in the model.
-#'
-#' @return Either a \code{sf} object or a list of \code{Raster*} objects,
-#'  containing predictions (with standard errors) for the spatial field, the linear
-#'  predictor on the link scale, and the response.
-#'  The return type is the same as the type of input for \code{locations}.
-#'
-#' @export
-setGeneric(name = "predict_staRVe",
-           def = function(x,locations,...) standardGeneric("predict_staRVe")
-)
-
 #' @export
 #' @rdname Access_staRVe_model
 setGeneric(name = "process",
@@ -583,6 +543,46 @@ setGeneric(name = "staRVe_observation_parameters",
 #' @export
 setGeneric(name = "staRVe_observations",
            def = function(x,...) standardGeneric("staRVe_observations")
+)
+
+#' Predict from a \code{staRVe} object.
+#'
+#' @param x An object of class \code{staRVe}.
+#' @param locations Either an object of class \code{sf} containing point geometries,
+#'  or an object of class \code{RasterLayer}. This object should not have any
+#'  time information, as predictions will be made at each location at every time.
+#'  If a \code{RasterLayer} object, predictions will be made for all raster cells
+#'  whose value are not NA. If the raster has no values, then predictions will
+#'  be made at every cell. Raster predictions are made at the midpoint of each cell.
+#' @param covariates Either a data.frame of class \code{sf} or a list of \code{Raster*}
+#'  objects, depending on the input type of \code{locations}. If the model has
+#'  no covariates, then nothing needs to be supplied.
+#'
+#'  If \code{locations} is of class \code{sf} with point geometries, then
+#'  \code{covariates} should also be of class \code{sf}. The data.frame should contain
+#'  columns for each of the covariates, a column for the time index, and a column
+#'  of point geometries. For each time unit and prediction point, there should
+#'  be a row in the \code{covariates} data.frame, but the rows do not need to be
+#'  in the same order as \code{locations}.
+#'
+#'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
+#'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
+#'  contain data for one covariate, should have one layer for each time unit,
+#'  and should have the same raster geometry as the \code{locations} object. The
+#'  layer names of each raster layer should be of the form \code{T####}, where
+#'  \code{####} gives the specific time index.
+#' @param time What time indices should predictions be made for? If set to "model",
+#'  predictions are made for every time present in the model. The supplied time
+#'  indices must be a subset of those in the model.
+#'
+#' @return Either a \code{sf} object or a list of \code{Raster*} objects,
+#'  containing predictions (with standard errors) for the spatial field, the linear
+#'  predictor on the link scale, and the response.
+#'  The return type is the same as the type of input for \code{locations}.
+#'
+#' @export
+setGeneric(name = "staRVe_predict",
+           def = function(x,locations,...) standardGeneric("staRVe_predict")
 )
 
 #' Create a \code{staRVe_process} object

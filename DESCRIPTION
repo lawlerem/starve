@@ -42,6 +42,7 @@ Collate:
     'utility.R'
     'dag.R'
     'data.R'
+    'fit.R'
     'src.R'
     'staRVe_settings.R'
     'staRVe_process_parameters.R'

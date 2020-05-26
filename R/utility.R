@@ -11,6 +11,54 @@ NULL
 
 # .
 
+.add_random_effects_by_time<- function(x,times) {
+  random_effects<- random_effects(process(x))
+  nodes<- split(
+    random_effects[,attr(random_effects,"sf_column")],
+    random_effects[,attr(random_effects,"time_column"),drop=T]
+  )[[1]]
+  model_times<- unique(random_effects[,attr(random_effects,"time_column"),drop=T])
+
+  if( min(times) < min(model_times) ) {
+    extra_times<- seq(min(times),min(model_times)-1)
+    extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
+      df<- sf:::cbind.sf(data.frame(w = 0,
+                                    se = NA,
+                                    fixed = F,
+                                    time = t),
+                         nodes)
+      colnames(df)[[4]]<- attr(random_effects,"time_column")
+      return(df)
+    }))
+
+    random_effects(process(x))<- rbind(
+      extra_effects,
+      random_effects(process(x))
+    )
+  } else {}
+
+  if( max(times) > max(model_times) ) {
+    extra_times<- seq(max(model_times)+1,max(times))
+    extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
+      df<- sf:::cbind.sf(data.frame(w = 0,
+                                    se = NA,
+                                    fixed = F,
+                                    time = t),
+                         nodes)
+      colnames(df)[[4]]<- attr(random_effects,"time_column")
+      return(df)
+    }))
+
+    random_effects(process(x))<- rbind(
+      random_effects(process(x)),
+      extra_effects
+    )
+  } else {}
+
+  attr(random_effects(process(x)),"time_column")<- attr(random_effects,"time_column")
+  return(x)
+}
+
 .covariance_to_code<- function(covariance) {
   covar_code<- charmatch(covariance,get_staRVe_distributions("covariance"))
   if( is.na(covar_code) || covar_code == 0 ) {
@@ -49,6 +97,77 @@ NULL
   y<- as.factor(y)
 
   return(y)
+}
+
+#' Check which covariates are used in a staRVe formula
+#'
+#' @param x A formula object with terms grouped in a \code{mean(...)} function.
+#'
+#' @return A character vector giving the names of covariates used in a formula.
+.names_from_formula<- function(x) {
+  # Remove response and time from formula
+  the_terms<- terms(x,specials=c("mean","time"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("time",term.labels,value=T,invert=T) # Get rid of time(...)
+  if( length(the_call) == 0 ) {
+    return(character(0))
+  } else {}
+  new_formula<- paste(the_call,collapse=" + ")
+  new_formula<- paste("~",new_formula)
+  var_names<- all.vars(formula(new_formula))
+  return(var_names)
+}
+
+#' Reform a list of \code{Raster*} objects to an \code{sf} data.frame.
+#'
+#' @param x A list of \code{Raster*} objects.
+#' @param time_name A string giving the name of the time variable.
+#'
+#' @return An \code{sf} data.frame.
+.sf_from_raster_list<- function(x,time_name) {
+  sf_list<- lapply(x,function(raster_brick) {
+    layer_names<- names(raster_brick)
+    layer_list<- lapply(layer_names,function(name) {
+      numeric_name<- as.numeric(gsub("t","",name,ignore.case=T))
+      sf_layer<- sf::st_as_sf(raster::rasterToPoints(raster_brick[[name]],spatial=T))
+      sf_layer<- cbind(sf_layer[,name,drop=T],
+                       numeric_name,
+                       sf_layer[,attr(sf_layer,"st_geometry")])
+      colnames(sf_layer)[1:2]<- c("value",time_name)
+      return(sf_layer)
+    })
+    return(do.call(rbind,layer_list))
+  })
+  sf_list<- lapply(names(x), function(name) {
+    colnames(sf_list[[name]])[[1]]<- name
+    return(sf_list[[name]])
+  })
+  unique_times<- lapply(sf_list, function(x) {
+    return(unique(x[,time_name,drop=T]))
+  })
+  unique_times<- sort(unique(do.call(c,unique_times)))
+
+  unique_geoms<- unique(sf_list[[1]][,attr(sf_list[[1]],"st_geometry")])
+  # This assumes the initial rasters are the same.
+
+
+  sf_output<- lapply(unique_times,function(time) {
+    year_sf<- cbind(time,unique_geoms)
+    var_columns<- lapply(sf_list,function(var) {
+      var_year<- var[var[,time_name,drop=T]==time,]
+      var_year[,time_name]<- NULL
+      suppressMessages(var_year<- sf::st_join(unique_geoms,var_year))
+      var_year<- sf::st_drop_geometry(var_year)
+      return(var_year)
+    })
+    var_df<- do.call(cbind.data.frame,var_columns)
+    year_sf<- sf:::cbind.sf(var_df,year_sf)
+    return(year_sf)
+  })
+  sf_output<- do.call(rbind,sf_output)
+  colnames(sf_output)[colnames(sf_output)=="time"]<- time_name
+
+  return(sf_output)
 }
 
 
@@ -241,25 +360,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 
 # N
-
-#' Check which covariates are used in a staRVe formula
-#'
-#' @param x A formula object with terms grouped in a \code{mean(...)} function.
-#'
-#' @return A character vector giving the names of covariates used in a formula.
-.names_from_formula<- function(x) {
-  # Remove response and time from formula
-  the_terms<- terms(x,specials=c("mean","time"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("time",term.labels,value=T,invert=T) # Get rid of time(...)
-  if( length(the_call) == 0 ) {
-    return(character(0))
-  } else {}
-  new_formula<- paste(the_call,collapse=" + ")
-  new_formula<- paste("~",new_formula)
-  var_names<- all.vars(formula(new_formula))
-  return(var_names)
-}
 
 
 
