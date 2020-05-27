@@ -28,22 +28,27 @@ LinkingTo:
     Rcpp,
     TMB,
     RcppEigen
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-Collate: 
-    'classes.R'
-    'access_staRVe.R'
-    'access_TMB_out.R'
-    'dag.R'
-    'data.R'
-    'formula.R'
-    'fit.R'
-    'predict.R'
-    'sf_to_input.R'
-    'show.R'
-    'src.R'
 Depends: 
     sf
+Collate: 
+    'classes.R'
+    'generics.R'
+    'TMB_out.R'
+    'utility.R'
+    'dag.R'
+    'data.R'
+    'fit.R'
+    'src.R'
+    'staRVe_settings.R'
+    'staRVe_process_parameters.R'
+    'staRVe_process.R'
+    'staRVe_observation_parameters.R'
+    'staRVe_observations.R'
+    'staRVe_model.R'
+    'staRVe_tracing.R'
+    'staRVe_fit.R'

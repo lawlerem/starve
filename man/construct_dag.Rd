@@ -4,29 +4,18 @@
 \alias{construct_dag}
 \title{Construct a directed acyclic graph for an \code{sf} object with point geometry.}
 \usage{
-construct_dag(
-  x,
-  n_neighbours = 10,
-  p_far_neighbours = 0.2,
-  max_dist = Inf,
-  distance_units = "km",
-  silent = T
-)
+construct_dag(x, settings = new("staRVe_settings"), silent = T)
 }
 \arguments{
 \item{x}{An \code{sf} object containing point geometries, which will be the
 nodes of the graph.}
 
-\item{n_neighbours}{A positive integer giving the (maximum) number of
-parents for each node.}
-
-\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
-
-\item{max_dist}{The maximum distance (in meters) to search for parents.}
-
-\item{distance_units}{Which units should be used for distances?}
+\item{settings}{An object of class \code{staRVe_settings}.}
 
 \item{silent}{Should intermediate calculations be shown?}
+}
+\value{
+An object of class \code{dag}.
 }
 \description{
 The directed acyclic graph is stored as an ordered list. The i'th element of

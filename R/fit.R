@@ -1,145 +1,287 @@
-#' @include classes.R access_staRVe.R access_TMB_out.R formula.R
-NULL
-
-#' Fit a TMB model
-#'
-#' @param Input A list with three components, the output of \code{\link{prepare_staRVe_input}}.
-#'  The first element stores the raw TMB input, the second stores \code{sf} objects
-#'  for Observation and Process, and the third stores model settings.
-#' @param silent Suppress optimization and residual tracing information?
-#' @param runOrderings Logical value. If true, runs TMB::runSymbolicAnalysis
-#'  on the MakeADFun TMB object. Requires a special install of TMB,
-#'  see \code{?TMB::runSymbolicAnalysis}.
-#' @param ... Optional parameters to be passed to TMB::MakeADFun, TMB::sdreport,
-#'  or nlminb.
-#'
-#' @return An object of class \code{staRVe} containing the model fit.
+#' Fit a \code{staRVe_model} object.
 #'
 #' @export
-fit_staRVe<- function(Input,silent=F,runOrderings=F,...) {
-    TMB_input<- Input[[1]]
-    sf_data<- Input[[2]]
-    settings<- Input[[3]]
+setMethod(f = "staRVe_fit",
+          signature = "staRVe_model",
+          definition = function(x,silent = F,...) {
+  TMB_input<- TMB_in(x)
 
-    data<- TMB_input$data
-    data$ys_edges<- Rdag_to_Cdag(data$ys_edges)
-    data$ws_edges<- Rdag_to_Cdag(data$ws_edges)
+  TMB_out<- new("TMB_out")
+  tracing<- new("staRVe_tracing")
 
-    pars<- TMB_input$pars
-    rand<- TMB_input$rand
-    map<- TMB_input$map
-    DLL<- "staRVe"
+  obj(TMB_out)<- TMB::MakeADFun(
+    data = TMB_input$data,
+    para = TMB_input$para,
+    random = TMB_input$rand,
+    map = TMB_input$map,
+    DLL = "staRVe",
+    silent = silent,
+    ...
+  )
 
-    obj<- TMB::MakeADFun(data=data,
-                         para=pars,
-                         random=rand,
-                         map=map,
-                         DLL=DLL,
-                         silent=silent,
-                         ...)
+  system.time({
+    opt(TMB_out)<- nlminb(obj(TMB_out)$par,
+                          obj(TMB_out)$fn,
+                          obj(TMB_out)$gr)
+  }) -> opt_time(tracing)
 
-    if( runOrderings == T ) {
-        TMB::runSymbolicAnalysis(obj)
-    } else {}
+  system.time({
+    hess<- numDeriv::jacobian(
+      obj(TMB_out)$gr,
+      opt(TMB_out)$par,
+      method = "simple"
+    )
+    hess<- as.matrix(Matrix::forceSymmetric(hess))
+    par_cov<- solve(hess)
 
-    system.time({
-      opt<- nlminb(obj$par,obj$fn,obj$gr)
-    }) -> settings$opt_time
-    system.time({
-      settings$hess<- numDeriv::jacobian(obj$gr,
-                                         opt$par,
-                                         method = "simple")
-      settings$hess<- as.matrix(Matrix::forceSymmetric(settings$hess))
-      settings$par_cov<- solve(settings$hess)
-      rownames(settings$par_cov)<- colnames(settings$par_cov)<- names(opt$par)
-    }) -> settings$hessian_time
-    system.time({
-      sdr<- TMB::sdreport(obj,
-                          par.fixed = opt$par,
-                          hessian.fixed = settings$hess,
-                          getReportCovariance=F,...)
-    }) -> settings$sdr_time
+    rownames(hess)<-
+      colnames(hess)<-
+      rownames(par_cov)<-
+      colnames(par_cov)<-
+      names(opt(TMB_out)$par)
 
-    TMB_out<- new("TMB_out",
-                  obj=obj,
-                  opt=opt,
-                  sdr=sdr,
-                  symbolicAnalysis=runOrderings,TMB_in=TMB_input)
-    fit<- staRVe(TMB_out,
-                 Observation_sf=sf_data$Observation,
-                 Process_sf=sf_data$Process,
-                 settings = settings)
-    rownames(observation(fit))<- NULL
-    rownames(process(fit))<- NULL
+    parameter_hessian(tracing)<- hess
+    parameter_covariance(tracing)<- par_cov
+  }) -> hess_time(tracing)
 
-    observation<- sf:::cbind.sf(data.frame(w = 0,w_se = 0),observation(fit))
-    obs_dag<- TMB_in(fit)$data$ys_edges
+  system.time({
+    sdr(TMB_out)<- TMB::sdreport(
+      obj(TMB_out),
+      par.fixed = opt(TMB_out)$par,
+      hessian.fixed = parameter_hessian(tracing),
+      getReportCovariance = F,
+      ...
+    )
+  }) -> sdr_time(tracing)
 
-    resp_w_idx<- 1
-    sdout<- sdreport(fit)
-    resp_w_rows<- grep(paste0("^","resp_w"),rownames(sdout))
-    resp_w<- sdout[resp_w_rows,]
-    colnames(resp_w)<- c("w","w_se")
+  fit<- new("staRVe_fit",
+            staRVe_model = x,
+            tracing = tracing,
+            TMB_out = TMB_out)
+  as(fit,"staRVe_model")<- update_staRVe_model(
+    x = as(fit,"staRVe_model"),
+    y = TMB_out(fit)
+  )
+  predictions<- data(observations(fit))
+  predictions<- .predict_linear(fit,predictions,predictions)
+  predictions<- .predict_response(fit,predictions)
 
-    for( i in seq(nrow(observation)) ) {
-      if( length(obs_dag[[i]]) == 1 ) {
-        this_time<- observation[i,settings(fit)$time_column,drop=T]
-        w<- process(fit)[process(fit)[,settings(fit)$time_column,drop=T] == this_time,]
-        observation[i,c("w","w_se")]<- w[obs_dag[[i]],c("w","w_se"),drop=T]
-      } else {
-        observation[i,c("w","w_se")]<- resp_w[resp_w_idx,c("w","w_se")]
-        resp_w_idx<- resp_w_idx+1
-      }
-    }
-    observation<- .predict_linear(fit,observation,observation)
-    observation<- .predict_response(fit,observation)
-    observation[,1:6]<- observation[,c(5,6,3,4,1,2),drop=T]
-    colnames(observation)[1:6]<- colnames(observation)[c(5,6,3,4,1,2)]
-    observation(fit)<- observation
+  data(observations(fit))[,c("linear","linear_se","response","response_se")]<-
+    predictions[,c("linear","linear_se","response","response_se"),drop=T]
 
+  return(fit)
+})
 
-    return(fit)
-}
-
-
-#' Compute residuals for a staRVe model
-#'
-#' @param object A staRVe object.
+#' Predict at a set of point locations.
 #'
 #' @export
-residuals<- function(object) {
-    distribution_code<- obj(object)$env$data$distribution_code
+setMethod(f = "staRVe_predict",
+          signature = c("staRVe_fit","sf"),
+          definition = function(x,
+                                locations,
+                                covariates,
+                                time = "model",
+                                ...) {
+  covar_names<- .names_from_formula(formula(settings(x)))
+  if( missing(covariates) && (length(covar_names) == 0) ) {
+    covariates<- "missing"
+  } else if( missing(covariates) && (length(covar_names) != 0) ) {
+    stop("Missing covariates, please supply them.")
+  } else if( !all(covar_names %in% names(covariates)) ) {
+    stop("Missing some covariates. Please check covariate names.")
+  } else {  }
 
-    sf_obj<- observation(object)[,c(settings(object)$time_column,
-                                    attr(observation(object),"sf_column"))]
+  model_times<- unique(random_effects(process(x))[,attr(random_effects(process(x)),"time_column"),drop=T])
+  if( identical(time,"model") ) {
+    time<- model_times
+  } else {}
 
-    if( distribution_code == 0 ) { # Normal
-      warning("Residuals not supported for this response distribution.")
-      pred<- data.frame(residual = numeric(nrow(sf_obj)))
-    } else if ( distribution_code %in% c(1,2) ) { # Poisson / Neg. Binom
-      max_obs<- as.vector(obj(object)$env$data[["y"]])
-      max_obs<- as.integer(round(2*max(max_obs)))
-      pred<- TMB::oneStepPredict(obj(object),
-                  observation.name = "obs_y",
-                  data.term.indicator="keep",
-                  discrete=T,
-                  discreteSupport=c(0,max_obs),
-                  method="oneStepGeneric",
-                  trace = F)
-    } else if ( distribution_code == 3 ) { # Bernoulli
-      pred<- TMB::oneStepPredict(obj(object),
-                  observation.name = "obs_y",
-                  data.term.indicator="keep",
-                  discrete=T,
-                  discreteSupport=c(0,1),
-                  method="oneStepGeneric",
-                  trace = F)
+  predictions<- .predict_w(x,
+                           locations = locations,
+                           pred_times = time)
+  predictions<- .predict_linear(x,
+                                predictions,
+                                covariates)
+  predictions<- .predict_response(x,
+                                  predictions)
+
+  predictions[,1:6]<- predictions[,c(5,6,3,4,1,2),drop=T]
+  colnames(predictions)[1:6]<- colnames(predictions)[c(5,6,3,4,1,2)]
+  attr(predictions,"time_column")<- attr(random_effects(process(x)),"time_column")
+
+  return(predictions)
+})
+
+.predict_w<- function(x,
+                      locations,
+                      pred_times,
+                      dist_tol = 0.00001,
+                      ...) {
+  random_effects<- random_effects(process(x))
+  locations<- unique(locations[,attr(locations,"sf_column")])
+  pred_times<- unique(pred_times)
+
+  predictions<- do.call(rbind,lapply(pred_times,function(t) {
+    df<- sf:::cbind.sf(data.frame(w = 0,
+                                  w_se = NA,
+                                  time = t),
+                       locations)
+    colnames(df)[[3]]<- attr(random_effects,"time_column")
+    return(df)
+  }))
+  attr(predictions,"time_column")<- attr(random_effects,"time_column")
+
+  dag<- construct_obs_dag(
+    x = locations,
+    y = split(
+      random_effects,
+      random_effects[,attr(random_effects,"time_column"),drop=T]
+    )[[1]],
+    settings = settings(x)
+  )
+  distances(dag)<- lapply(distances(dag),function(x) {
+    if( identical(matrix(0),x) ) {
+      return(matrix(c(0,dist_tol,dist_tol,0),nrow = 2))
     } else {
-      warning("Residuals not supported for this response distribution.")
-      pred<- data.frame(residual = numeric(nrow(sf_obj)))
+      return(x)
     }
-    resid<- cbind(pred$residual,sf_obj)
-    colnames(resid)[1]<- "residual"
+  })
 
-    return(resid)
+  x<- .add_random_effects_by_time(x,pred_times)
+
+  TMB_input<- TMB_in(x)
+  TMB_input$data$pred_w_time<- c(predictions[,attr(random_effects,"time_column"),drop=T]
+    - min(random_effects(process(x))[,attr(random_effects(process(x)),"time_column"),drop=T]))
+  TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))
+  TMB_input$data$pred_ws_dists<- distances(dag)
+
+  TMB_input$para$pred_w<- predictions$w
+  TMB_input$map$pred_w<- NULL
+
+  obj<- TMB::MakeADFun(
+    data = TMB_input$data,
+    para = TMB_input$para,
+    random = TMB_input$rand,
+    map = TMB_input$map,
+    DLL = "staRVe",
+    silent = TRUE,
+    ...
+  )
+  obj$fn(opt(TMB_out(x))$par)
+
+  sdr<- summary(TMB::sdreport(obj,
+                      par.fixed = opt(TMB_out(x))$par,
+                      hessian.fixed = parameter_hessian(tracing(x)),
+                      getReportCovariance = F))
+  predictions[,c("w","w_se")] <- sdr[rownames(sdr) == "pred_w",]
+
+  return(predictions)
 }
+
+.predict_linear<- function(x,
+                           w_predictions,
+                           covariates) {
+  if( identical(covariates,"missing") ) {
+    design<- matrix(1,nrow = nrow(w_predictions))
+  } else {
+    time_column<- attr(random_effects(process(x)),"time_column")
+    covar_names<- .names_from_formula(formula(settings(x)))
+
+    w_predictions<- w_predictions[,!(names(w_predictions) %in% covar_names)]
+    w_predictions<- split(w_predictions,
+                          w_predictions[,time_column,drop=T])
+
+    covariates<- covariates[,c(covar_names,time_column)]
+    covariates<- split(covariates,covariates[,time_column,drop=T])
+    covariates<- covariates[names(covariates) %in% names(w_predictions)] # Get same years
+
+    w_predictions<- do.call(rbind,lapply(names(w_predictions), function(t) {
+      this_w<- w_predictions[[t]]
+      this_covar<- covariates[[t]][,covar_names]
+      suppressMessages(return(sf::st_join(this_w,this_covar,left=T)))
+    }))
+
+    design<- .mean_design_from_formula(formula(settings(x)),
+                                       w_predictions)
+    design<- cbind(1,design)
+  }
+
+  beta<- opt(TMB_out(x))$par[names(opt(TMB_out(x))$par) %in% c("mu","mean_pars")]
+
+  parameter_covariance<- parameter_covariance(tracing(x))
+  par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
+  par_cov<- as.matrix(parameter_covariance[par_idx,par_idx])
+  linear<- design %*% beta + w_predictions$w
+
+  # The commented and uncommented methods are the same
+  # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
+  linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+
+  return(sf:::cbind.sf(linear,linear_se,w_predictions))
+}
+
+.predict_response<- function(x,
+                             linear_predictions) {
+  data<- list(link_code = .link_to_code(
+    link_function(parameters(observations(x)))
+  ))
+  para<- list(x = 0)
+  link_function<- TMB::MakeADFun(
+    data = data,
+    para = para,
+    DLL = "family",
+    silent = T
+  )
+
+  second_order_mean<- function(linear,linear_se) {
+    mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
+    return(as.numeric(mean))
+  }
+  second_order_se<- function(linear,linear_se) {
+    se<- sqrt(link_function$gr(linear)^2*linear_se^2
+      + 0.5*link_function$he(linear)^2*linear_se^4)
+    return(as.numeric(se))
+  }
+  response<- sapply(seq(nrow(linear_predictions)),function(i) {
+    return(second_order_mean(linear_predictions[i,"linear",drop=T],
+                             linear_predictions[i,"linear_se",drop=T]))
+  })
+  response_se<- sapply(seq(nrow(linear_predictions)),function(i) {
+    return(second_order_se(linear_predictions[i,"linear",drop=T],
+                           linear_predictions[i,"linear_se",drop=T]))
+  })
+  predictions<- sf:::cbind.sf(response,response_se,linear_predictions)
+  return(predictions)
+}
+
+
+#' @export
+setMethod(f = "staRVe_predict",
+          signature = c("staRVe_fit","RasterLayer"),
+          definition = function(x,locations,covariates,...) {
+  prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
+  prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
+
+  covar_names<- .names_from_formula(formula(settings(x)))
+  if( missing(covariates) && (length(covar_names) == 0) ) {
+    pred<- staRVe_predict(x,prediction_points,...)
+  } else if( missing(covariates) && (length(covar_names) != 0) ) {
+    stop("Missing covariates, please supply them.")
+  } else if( !all(covar_names %in% names(covariates)) ) {
+    stop("Missing some covariates. Check the names of your raster covariates.")
+  } else {
+    covar_points<- .sf_from_raster_list(covariates,
+      time_name=attr(random_effects(process(x)),"time_column"))
+    pred<- staRVe_predict(x,prediction_points,covar_points,...)
+  }
+
+  pred_by_time<- split(pred,pred[,attr(random_effects(process(x)),"time_column"),drop=T])
+  pred_raster_by_time<- lapply(pred_by_time,raster::rasterize,locations)
+  pred_raster_by_time<- lapply(pred_raster_by_time,function(raster_time) {
+    ID_layer<- 1
+    time_layer<- raster::nlayers(raster_time)
+    return(raster_time[[-c(ID_layer,time_layer)]])
+  }) # Remove ID and time layer
+
+  return(pred_raster_by_time)
+})

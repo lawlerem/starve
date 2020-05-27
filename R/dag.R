@@ -1,34 +1,117 @@
-#' Sort an \code{sf} object with point geometry by location.
-#'
-#' The sorting is determined by lexicographic ordering, in order of the columns
-#'  of the geometry object. The locations are put in increasing order according
-#'  to the first column, and then ties are put in order according to the second
-#'  column, and so on. See \code{\link{order}}.
-#'
-#' @param x An \code{sf} object containing point geometries.
-#' @param time If present, a time index to be the primary (slowest running)
-#'  sorting term.
-#' @param return Should be one of ``sort" or ``order". If ``sort", a sorted copy
-#'  of \code{x} is returned. If ``order", a vector of sorted indices is returned.
-#'
-#' @return Either a copy of \code{x} whose rows as sorted (\code{return='sort'});
-#'  or an integer vector of sorted indices (\code{return='order'}).
+#' @include classes.R generics.R utility.R
+NULL
+
+#####################
+###               ###
+### Construct_dag ###
+###               ###
+#####################
+
+#' @details The \code{initialize} function is not mean to be used by the user,
+#'   use \code{dag} instead.
 #'
 #' @export
-order_by_location<- function(x,time=NULL,return="sort") {
-    coords<- as.data.frame(sf::st_coordinates(x))
-    if( !is.null(time) ) {coords<- cbind(time,coords)} else {}
-    the_order<- do.call(order,as.list(coords))
-    if( return == "order" ) {
-        return(the_order)
-    } else if( return == "sort" ) {
-        x<- x[the_order,]
-        return(x)
-    } else {
-        stop("Argument return must be one of `sort' of `order'")
-    }
-    return(0)
-}
+#' @rdname dag
+setMethod(
+  f = "initialize",
+  signature = "dag",
+  definition = function(.Object,
+                        edges = list(),
+                        distances = list(),
+                        distance_units = "km") {
+    edges(.Object)<- edges
+    distances(.Object)<- distances
+    distance_units(.Object)<- distance_units
+
+    return(.Object)
+  }
+)
+
+
+##################
+###            ###
+### Access_dag ###
+###            ###
+##################
+
+#' Get or set slots from an object of class \code{dag}.
+#'
+#' @param x An object of class \code{dag}.
+#' @param value A replacement value.
+#'
+#' @family Access_dag
+#' @name Access_dag
+NULL
+
+#' Print method for objects of class \code{dag}.
+#'
+#' @export
+#' @noRd
+setMethod(f = "show",
+          signature = "dag",
+          definition = function(object) {
+  n_nodes<- length(edges(object))
+  avg_deg<- median(do.call(c,lapply(edges(object),length)))
+  avg_dist<- mean(do.call(c,lapply(distances(object),c)))
+  cat("\n")
+  print(paste0("A directed acyclic graph with ",n_nodes,
+               " nodes, with an median in-degree of ",avg_deg,"."))
+  print(paste0("The average edge distance is ",round(avg_dist,2),"",
+               distance_units(object),"."))
+
+  return(invisible())
+})
+
+#' @export
+setMethod(f = "edges",
+          signature = "dag",
+          definition = function(x) return(x@edges)
+)
+#' @export
+setReplaceMethod(f = "edges",
+                 signature = "dag",
+                 definition = function(x,value) {
+  x@edges<- value
+  return(x)
+})
+
+
+
+#' @export
+setMethod(f = "distances",
+          signature = "dag",
+          definition = function(x) return(x@distances)
+)
+#' @export
+setReplaceMethod(f = "distances",
+                 signature = "dag",
+                 definition = function(x,value) {
+  x@distances<- value
+  return(x)
+})
+
+
+
+#' @export
+setMethod(f = "distance_units",
+          signature = "dag",
+          definition = function(x) return(x@distance_units)
+)
+#' @export
+setReplaceMethod(f = "distance_units",
+                 signature = "dag",
+                 definition = function(x,value) {
+  x@distance_units<- value
+  return(x)
+})
+
+
+
+###############
+###         ###
+### Utility ###
+###         ###
+###############
 
 #' Get parent nodes for a node of a directed acyclic graph.
 #'
@@ -36,10 +119,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #'   is present, only the first will be used).
 #' @param nodes An \code{sf} object containing point geometries. These will
 #'   be the possible parent nodes of \code{x}.
-#' @param n_neighbours A positive integer giving the number of parents for each node.
-#' @param p_far_neighbours What percent of neighbours should be randomly selected?
-#' @param max_dist The maximum distance (in meters) to search for parents.
-#' @param distance_units Which units should be used for distances?
+#' @param settings An object of class \code{staRVe_settings}.
 #' @param silent Should intermediate calculations be shown?
 #'
 #' @return A list with elements "parents" and "dists". The "parents" element
@@ -49,10 +129,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #'   the distances between parent nodes.
 .get_one_dag_node<- function(x,
                              nodes,
-                             n_neighbours,
-                             p_far_neighbours,
-                             max_dist,
-                             distance_units,
+                             settings,
                              silent = T,
                              ...) {
   if( nrow(nodes) == 0 ) {
@@ -61,12 +138,12 @@ order_by_location<- function(x,time=NULL,return="sort") {
     return(list(parents,dists))
   } else {}
 
-  if( nrow(nodes) <= n_neighbours ) {
+  if( nrow(nodes) <= n_neighbours(settings) ) {
     n_far_neighbours<- 0
     m<- nrow(nodes)
   } else {
-    n_far_neighbours<- round(p_far_neighbours*n_neighbours)
-    m<- n_neighbours - n_far_neighbours
+    n_far_neighbours<- round(p_far_neighbours(settings)*n_neighbours(settings))
+    m<- n_neighbours(settings) - n_far_neighbours
   }
   suppressMessages({
   nn_obj<- nngeo::st_nn(x = x,
@@ -75,7 +152,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
                         sparse = T,
                         progress = !silent,
                         k = m,
-                        maxdist = max_dist)
+                        maxdist = max_distance(settings))
   })
   names(nn_obj)<- c("nn","dist")
 
@@ -92,11 +169,16 @@ order_by_location<- function(x,time=NULL,return="sort") {
   nn_obj$dist<- matrix(nn_obj$dist[[1]],nrow=1)
   cross_dists<- cbind(nn_obj$dist, sf::st_distance(x,nodes[far_neighbours,]))
   cross_dists<- units::set_units(cross_dists,"m") # st_nn always returns meters
-  cross_dists<- units::set_units(cross_dists,distance_units,mode="standard")
+  cross_dists<- units::set_units(cross_dists,
+                                 distance_units(settings),
+                                 mode="standard")
   parent_dists<- units::set_units(sf::st_distance(nodes[parents,]),"m")
-  parent_dists<- units::set_units(parent_dists,distance_units,mode="standard")
+  parent_dists<- units::set_units(parent_dists,
+                                  distance_units(settings),
+                                  mode="standard")
   dists<- rbind(cross_dists,parent_dists)
   dists<- cbind(c(0,cross_dists),dists)
+
   return(list(parents,dists))
 }
 
@@ -106,11 +188,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #'   is present, only the first will be used).
 #' @param nodes An \code{sf} object containing point geometries. These will
 #'   be the possible parent nodes of \code{x}.
-#' @param n_neighbours A positive integer giving the (maximum) number of
-#'  parents for each node.
-#' @param p_far_neighbours What percent of neighbours should be randomly selected?
-#' @param max_dist The maximum distance (in meters) to search for parents.
-#' @param distance_units Which units should be used for distances?
+#' @param settings An object of class \code{staRVe_settings}.
 #' @param silent Should intermediate calculations be shown?
 #'
 #' @return A list with elements "parents" and "dists". The "parents" element
@@ -124,19 +202,13 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #'   zero matrix.
 .get_one_intersects_dag_node<- function(x,
                                         nodes,
-                                        n_neighbours,
-                                        p_far_neighbours,
-                                        max_dist,
-                                        distance_units,
+                                        settings,
                                         silent) {
   intersection_idx<- sf::st_equals(x,nodes)[[1]]
   if( length(intersection_idx) == 0 ) {
     node<- .get_one_dag_node(x = x,
                              nodes = nodes,
-                             n_neighbours = n_neighbours,
-                             p_far_neighbours = p_far_neighbours,
-                             max_dist = max_dist,
-                             distance_units = distance_units,
+                             settings = settings,
                              silent = silent)
   } else {
     parents<- intersection_idx[[1]] # Don't want more than 1
@@ -158,37 +230,35 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #'
 #' @param x An \code{sf} object containing point geometries, which will be the
 #'  nodes of the graph.
-#' @param n_neighbours A positive integer giving the (maximum) number of
-#'  parents for each node.
-#' @param p_far_neighbours What percent of neighbours should be randomly selected?
-#' @param max_dist The maximum distance (in meters) to search for parents.
-#' @param distance_units Which units should be used for distances?
+#' @param settings An object of class \code{staRVe_settings}.
 #' @param silent Should intermediate calculations be shown?
+#'
+#' @return An object of class \code{dag}.
 #'
 #' @export
 construct_dag<- function(x,
-                         n_neighbours = 10,
-                         p_far_neighbours = 0.2,
-                         max_dist = Inf,
-                         distance_units = "km",
+                         settings = new("staRVe_settings"),
                          silent = T) {
-  max_dist<- units::set_units(max_dist,distance_units,mode="standard")
-  max_dist<- units::set_units(max_dist,"m") ### st_nn expects meters.
-  max_dist<- as.numeric(max_dist)
+  max_dist<- units::set_units(max_distance(settings),
+                              distance_units(settings),
+                              mode="standard")
+  max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
+  ### st_nn expects meters.
 
   nn_list<- lapply(seq(nrow(x)), function(i) {
     .get_one_dag_node(x = x[i,],
                       nodes = head(x,i-1),
-                      n_neighbours = n_neighbours,
-                      p_far_neighbours = p_far_neighbours,
-                      max_dist =  max_dist,
-                      distance_units = distance_units,
+                      settings = settings,
                       silent = silent)
   })
   edge_list<- lapply(nn_list,`[[`,1)
   dist_list<- lapply(nn_list,`[[`,2)
-  return(list(edge_list = edge_list,
-              dist_list = dist_list))
+  dag<- new("dag",
+            edges = edge_list,
+            distances = dist_list,
+            distance_units = distance_units(settings))
+
+  return(dag)
 }
 
 #' Construct a directed acyclic graph between two \code{sf} objects with point geometry.
@@ -210,31 +280,24 @@ construct_dag<- function(x,
 #' @param max_dist The maximum distance (in m) to search for parents.
 #' @param return_units Which units should be used for distances?
 #'
-#' @return Two lists. `edge_list` is a list with an entry for each node containing
-#'  the indices of the parents of that node. `dist_list` is a list with an entry
-#'  for each node containing the distance between that node and its parents
-#'  (first row) and the pairwise distances between its parents.
+#' @return An object of class \code{dag}.
 #'
 #' @export
 construct_obs_dag<- function(x,
                              y,
-                             n_neighbours = 10,
-                             p_far_neighbours = 0.2,
+                             settings = new("staRVe_settings"),
                              check_intersection = T,
-                             max_dist = Inf,
-                             distance_units = "km",
                              silent = T) {
-  max_dist<- units::set_units(max_dist,distance_units,mode="standard")
-  max_dist<- units::set_units(max_dist,"m") ### st_nn expects meters.
-  max_dist<- as.numeric(max_dist)
+  max_dist<- units::set_units(max_distance(settings),
+                              distance_units(settings),
+                              mode="standard")
+  max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
+  ### st_nn expects meters.
 
   nn_list<- lapply(seq(nrow(x)), function(i) {
     args<- list(x = x[i,],
                 nodes = y,
-                n_neighbours = n_neighbours,
-                p_far_neighbours = p_far_neighbours,
-                max_dist = max_dist,
-                distance_units = distance_units,
+                settings = settings,
                 silent = silent)
     if( check_intersection == T ) {
       do.call(.get_one_intersects_dag_node,args)
@@ -245,38 +308,28 @@ construct_obs_dag<- function(x,
 
   edge_list<- lapply(nn_list,`[[`,1)
   dist_list<- lapply(nn_list,`[[`,2)
-  return(list(edge_list = edge_list,
-              dist_list = dist_list))
+  dag<- new("dag",
+            edges = edge_list,
+            distances = dist_list,
+            distance_units = distance_units(settings))
+
+  return(dag)
 }
 
+setMethod(f = "idxC_to_R",
+          signature = "dag",
+          definition = function(x) {
+  edges(x)<- lapply(edges(x),function(parents) {
+    return(parents+1)
+  })
+  return(x)
+})
 
-
-#' Reduce all the parent indices of a directed acyclic graph by one for use in cpp.
-#'
-#' @param dag A directed acyclic graph. See \code{\link{construct_dag}}.
-#'
-#' @return The same directed acyclic graph as passed in with all parent indices
-#'  reduced by one.
-#'
-#' @export
-Rdag_to_Cdag<- function(dag) {
-    dag<- lapply(dag,function(parents) {
-        return(parents-1)
-    })
-    return(dag)
-}
-
-#' Increase all the parent indices of a directed acyclic graph by one for use in R.
-#'
-#' @param dag A directed acyclic graph. See \code{\link{construct_dag}}.
-#'
-#' @return The same directed acyclic graph as passed in with all parent indices
-#'  increased by one.
-#'
-#' @export
-Cdag_to_Rdag<- function(dag) {
-    dag<- lapply(dag,function(parents) {
-        return(parents+1)
-    })
-    return(dag)
-}
+setMethod(f = "idxR_to_C",
+          signature = "dag",
+          definition = function(x) {
+  edges(x)<- lapply(edges(x),function(parents) {
+    return(parents-1)
+  })
+  return(x)
+})

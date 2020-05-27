@@ -3,20 +3,7 @@
 \docType{class}
 \name{TMB_out-class}
 \alias{TMB_out-class}
-\title{An S4 class to hold the raw TMB output of \code{fit_catch_data}.}
+\title{An S4 class to hold TMB-related objects}
 \description{
-An S4 class to hold the raw TMB output of \code{fit_catch_data}.
+An S4 class to hold TMB-related objects
 }
-\section{Slots}{
-
-\describe{
-\item{\code{obj}}{A list. The output of \code{TMB::MakeADFun}.}
-
-\item{\code{opt}}{A list. The output of \code{nlminb}.}
-
-\item{\code{sdr}}{An object of class \code{sdreport}. The output of \code{TMB::sdreport(obj)}.}
-
-\item{\code{symbolicAnalysis}}{A logical value. Was runOrderings used to fit the model?}
-}}
-
-\concept{staRVe-classes}
