@@ -71,3 +71,23 @@ setReplaceMethod(f = "TMB_out",
   x@TMB_out<- value
   return(x)
 })
+
+
+
+###################
+### Meta-Access ###
+###################
+
+#' @export
+setMethod(f = "convergence",
+          signature = "staRVe_fit",
+          definition = function(x) {
+  return(convergence(TMB_out(x)))
+})
+
+#' @export
+setMethod(f = "timing",
+          signature = "staRVe_fit",
+          definition = function(x) {
+  return(timing(tracing(x)))
+})

@@ -82,3 +82,16 @@ setReplaceMethod(f = "sdr",
   x@sdr<- value
   return(x)
 })
+
+
+
+###################
+### Meta-Access ###
+###################
+
+#' @export
+setMethod(f = "convergence",
+          signature = "TMB_out",
+          definition = function(x) {
+  return(opt(x)$message)
+})

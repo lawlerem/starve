@@ -120,3 +120,19 @@ setReplaceMethod(f = "parameter_covariance",
   x@parameter_covariance<- value
   return(x)
 })
+
+
+
+###################
+### Meta-Access ###
+###################
+
+#' @export
+setMethod(f = "timing",
+          signature = "staRVe_tracing",
+          definition = function(x) {
+  timings<- list(fit = opt_time(x),
+                 hessian = hess_time(x),
+                 sdr = sdr_time(x))
+  return(timings)
+})

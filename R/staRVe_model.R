@@ -1,4 +1,4 @@
-#' @include classes.R generics.R staRVe_process.R staRVe_observations.R staRVe_settings.R
+#' @include classes.R generics.R staRVe_process.R staRVe_observations.R staRVe_parameters.R staRVe_settings.R
 NULL
 
 #################
@@ -85,6 +85,73 @@ setReplaceMethod(f = "settings",
                  definition = function(x,value) {
   x@settings<- value
   return(x)
+})
+
+
+
+###################
+### Meta-Access ###
+###################
+
+#' @export
+setMethod(f = "parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  parameters<- new("staRVe_parameters",
+                   process_parameters = parameters(process(x)),
+                   observation_parameters = parameters(observations(x)))
+  return(parameters)
+})
+#' @export
+setReplaceMethod(f = "parameters",
+                 signature = c("staRVe_model","staRVe_parameters"),
+                 definition = function(x,value) {
+  parameters(process(x))<- as(value,"staRVe_process_parameters")
+  parameters(observations(x))<- as(value,"staRVe_observation_parameters")
+  return(x)
+})
+
+#' @export
+setMethod(f = "data",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(data(observations(x)))
+})
+#' @export
+setReplaceMethod(f = "data",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  data(observations(x))<- value
+  return(x)
+})
+
+#' @export
+setMethod(f = "random_effects",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(random_effects(process(x)))
+})
+#' @export
+setReplaceMethod(f = "random_effects",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  random_effects(process(x))<- value
+  return(x)
+})
+
+
+
+###################
+### Meta-Access ###
+###################
+
+#' @export
+setMethod(f = "graph",
+          signature = "staRVe_model",
+          definition = function(x) {
+  graph<- list(persistent_graph = persistent_graph(process(x)),
+               transient_graph = transient_graph(observations(x)))
+  return(graph)
 })
 
 

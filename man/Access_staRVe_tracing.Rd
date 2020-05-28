@@ -11,6 +11,7 @@
 \alias{parameter_hessian<-}
 \alias{sdr_time}
 \alias{sdr_time<-}
+\alias{timing}
 \alias{Access_staRVe_tracing}
 \title{Get or set slots from an object of class \code{staRVe_tracing}.}
 \usage{
@@ -33,6 +34,8 @@ parameter_hessian(x) <- value
 sdr_time(x)
 
 sdr_time(x) <- value
+
+timing(x)
 }
 \arguments{
 \item{x}{An object of class \code{staRVe_tracing}.}

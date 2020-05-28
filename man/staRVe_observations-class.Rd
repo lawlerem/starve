@@ -9,6 +9,7 @@ An S4 class to hold the observation information for a staRVe model.
 }
 \seealso{
 Other staRVe-classes: 
+\code{\link{staRVe_parameters-class}},
 \code{\link{staRVe_process-class}}
 }
 \concept{staRVe-classes}
