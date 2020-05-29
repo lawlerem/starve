@@ -43,24 +43,7 @@ setMethod(
 #' @name Access_dag
 NULL
 
-#' Print method for objects of class \code{dag}.
-#'
-#' @export
-#' @noRd
-setMethod(f = "show",
-          signature = "dag",
-          definition = function(object) {
-  n_nodes<- length(edges(object))
-  avg_deg<- median(do.call(c,lapply(edges(object),length)))
-  avg_dist<- mean(do.call(c,lapply(distances(object),c)))
-  cat("\n")
-  print(paste0("A directed acyclic graph with ",n_nodes,
-               " nodes, with an median in-degree of ",avg_deg,"."))
-  print(paste0("The average edge distance is ",round(avg_dist,2),"",
-               distance_units(object),"."))
 
-  return(invisible())
-})
 
 #' @export
 setMethod(f = "edges",
