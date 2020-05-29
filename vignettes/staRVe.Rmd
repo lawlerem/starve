@@ -45,74 +45,82 @@ data(bird_survey)
 bird_survey
 ```
 
+The `bird_survey` data must first be transformed into an object of class `staRVe_model`, which we can do through the `prepare_staRVe_model` function.
+
 We can specify a model using the formula interface (see `?lm` or `?glm`), although formulae work a bit differently in the `staRVe` package.
 A typical formula for a `staRVe` model will look like
-`Count ~ mean(Speed+Distance) + time(Year,type="ar1")`.
-Covariates, here `Speed` and `Distance`, affecting the mean of the response variable (in this case `TotalCount`) can be given through the `mean(...)` function. The inside of `mean(...)` also follows the formula interface.
+`Count ~ mean(Area+Elevation) + time(Year,type="ar1") + space("exponential")`.
+Covariates, here `Area` and `Elevation`, affecting the mean of the response variable (in this case `Count`) can be given through the `mean(...)` function. The inside of `mean(...)` also follows the formula interface.
 
-The time effect is also specified through the formula, using the `time(Year,type="ar1")` function.
+The temporal and spatial structures are also specified through the formula.
+The time effect is determined through the `time(Year,type="ar1")` function.
 You can only specify one variable to be your time variable, and the three `type`s available are `independent`, `ar1`, and `rw`.
 
-The spatial field nodes can be provided through a second `sf` object -- otherwise the default behaviour uses all the locations in the data as the nodes (WARNING: if there are a large number of unique locations, the model preparation can take a long time).
-For our example, we'll use all of the locations in the data only from the year 2000 as our spatial field nodes.
+The spatial covariance function is specified through the `space("matern",nu=1.5)` function, while the spatial locations are automatically retrieved from the data.
+Explicity specifying the covariance function is not necessary.
+By omitting the `space(...)` function an exponential covariance function is used.
+
+The spatio-temporal dependence structure is specified through a \emph{directed acyclic graph}, which acts similar to a mesh. The nodes of this graph can be provided through a second `sf` object -- otherwise the default behaviour uses all the locations in the data as the nodes (if there are a large number of unique locations, the model preparation can take a long time).
+The graph also needs edges connecting the nodes, which the package will create automatically.
+The user must specify how many edges enter each node through the `n_neighbours` argument (default of 10) of `prepare_staRVe_model`.
+
+For our example analysis, we will use the locations from the year 2000 as the nodes in our graph.
 ```{r}
-field_nodes<- subset(bird_survey,year == 2000)
+nodes<- subset(bird_survey,year == 2000)
 ```
 
-Finally, you can specify number of parent nodes for each observation using the `n_neighbours` argument (shortened to just `n` below). We will also use `time(Year,type="ar1")` to set up independent spatial fields each year.
-
+We can also specify a link function and response distribution.
 As we have count data, we will use a Poisson distribution with a log link.
+By default the model is not fit right away, but we will tell the package to fit the model with the argument `fit = T`.
 
 ```{r}
-staRVe_in<- prepare_staRVe_input(cnt ~ time(year,type="ar1"),
-  bird_survey,
-  field_nodes,
+bird_model<- prepare_staRVe_model(
+  cnt ~ time(year,type="ar1"),
+  data = bird_survey,
+  nodes = nodes,
   distribution = "poisson",
   link = "log",
-  n=5)
+  n = 5,
+  fit = T)
 ```
 
-Once `prepare_staRVe_input` has transformed the data into a suitable format, all that is left to do is run the `fit_staRVe` function.
-This function takes care of all the routine bits of fitting a model with TMB: making the objective object (with `TMB::MakeADFun`), optimizing the model (with `nlminb`), and finding the standard errors of parameter estimates (with `TMB::sdreport`).
-The function then returns the output of each of those three steps as elements of a list, as well as two `sf` objects, containing the estimated random field (with standard errors), and containing the data, estimated response (with standard errors), and residuals.
+The first thing we need to check is convergence of the model fit:
 
 ```{r}
-(bird_fit<- fit_staRVe(staRVe_in,silent=T))
+convergence(bird_model)
 ```
 
-You should always check for model convergence, which you can do by looking at either `convergence(bird_fit)` (less information) or `opt(bird_fit)` (more information):
-
-```{r}
-opt(bird_fit)
-```
-
-A convergence code of 0, or a message saying something about `relative convergence` is a good sign.
+A message saying something about `relative convergence` or `X-convergence` is a good sign.
 If the message says `false converge` or `failed to converge`, then you should not trust the output of the model.
 Of course, you should always look at the parameter and random effect estimates to make sure they make sense!
-You can inspect the output of the model:
 
+Let's start with the parameters.
 ```{r}
-obs_fit<- observation(bird_fit)
-proc_fit<- process(bird_fit)
-par_fit<- parameters(bird_fit)
-
-obs_fit
-plot(obs_fit)
+parameters(bird_model)
 ```
-
-The plots above are aggregated by time, but you can look at a plot for a single time unit:
-
+Here we can see the maximum likelihood estimates for our model.
+The spatial covariance is the exponential covariance function as we specified earlier.
+The spatial range parameter is
+  rho = `r spatial_parameters(parameters(bird_model))["rho","par"]`, the spatio-temporal variance is
+  tau = `r spatial_parameters(parameters(bird_model))["tau","par"]`, and the spatial smoothness parameter is fixed at nu = 0.5 for the exponential covariance.
+The distance units for rho can be seen with
 ```{r}
-plot(subset(obs_fit,year == 2002))
+settings(bird_model)
 ```
+So the effective spatial range, i.e.~the distance at which locations are approximately uncorrelated, is `r spatial_parameters(parameters(bird_model))["rho","par"]` kilometres.
 
+The temporal autoregressive parameters is
+  phi = `r time_parameters(parameters(bird_model))["phi","par"]`.
+All of the above spatial and temporal parameters are on the random effects scale, and could change drastically once transformed to the response scale.
 
-Since they can take a significant time to compute, residuals are not included in the output of the `fit_staRVe` function.
-They can be computed with the `residuals` function.
+Our response distribution is a Poisson distribution, which does not have any additional parameters (such as a variance or over-dispersion parameter) to estimate.
+Similarly, we have no covariates in our model so the only fixed effect is a constant mean of
+  mu = `r fixed_effects(parameters(bird_model))["mu","par"]` (before taking the link function to the response scale).
 
-```{r,eval=F}
-### Not evaluated
-residuals(bird_fit)
+In addition to the parameters, you can also inspect the random effects and the in-sample predictions for the data, both of which are `sf` objects.
+```{r}
+random_effects(bird_model)
+data(bird_model)
 ```
 
 
@@ -136,12 +144,13 @@ raster_to_predict[]<- 0
 ```
 Then we can predict on that raster:
 ```{r}
-raster_prediction<- predict_staRVe(bird_fit,raster_to_predict)
+raster_prediction<- staRVe_predict(bird_model,raster_to_predict)
 names(raster_prediction)
 raster_prediction[[1]]
 ```
 
-Since we the data we supplied to `prepare_staRVe_input` had multiple years, the resulting `raster_prediction` is a list with a raster object for each year.
+Since we the data we supplied to `prepare_staRVe_model` had multiple years, the resulting `raster_prediction` is a list with a raster object for each year.
+
 
 
 # Some theory and some terminology
@@ -150,15 +159,9 @@ Now that we've seen how to fit a model, let's actually take a look at the model 
 
 ## A description of the model
 
-The current implementation supports a univariate spatial field at a single point in time, with no covariate information.
-It's limited, but easily extendable, and understanding the foundation model will go a long way in feeling comfortable with more complicated ones.
+For simplicity let's look at presence-absence data, using a logit link and Bernoulli response distribution.
 
-For now the model assumes we are looking at presence-absence data, as a presence-absence model can be more robust to data quality.
-Changing the model to analyze either counts or biomass would be as simple as changing the observation distribution and link function.
-All of the underlying mechanics would be exactly the same as the presence-absence model.
-So be aware of the aforementioned limitations, and know that there is a sleugh of items left on the to-do list.
-
-The foundation model (univariate, single year, no covariates) for presence-absence data can be described by the following equations:
+A purely spatial model for presence-absence data without covariates can be described by the following equations:
 
 \[
 \begin{aligned}
@@ -174,16 +177,15 @@ The foundation model (univariate, single year, no covariates) for presence-absen
 Let's piece this together step by step.
 The first equation, called the observation equation, involves the $i$th data point at location $\mathbf{s}$, denoted $Y_{i}\left(\mathbf{s}\right)$, conditional on a random field value at the same location, given by $w\left(\mathbf{s}\right)$.
 Since our data here is presence-absence data, our response variable $Y$ can be either a `0` for an absence or a `1` for presence.
-That's why we use the Bernoulli distribution.
-This distribution gives the probability of a presence, where that probability is given, in this model, by the value
+Our Bernoulli distribution is governed by the probability of a presence, where that probability is given by the value
 $\text{invlogit}\left[\mu + w\left(\mathbf{s}\right)\right].$
-The invlogit function is called the link function, and takes values from $(-\infty,\infty)$ and transforms them to probabilities in the interval $(0,1)$.
+The invlogit function is our (inverse) link function, and takes values from $(-\infty,\infty)$ and transforms them to probabilities in the interval $(0,1)$.
 Finally the parameter $\mu$ controls the overall (non-spatial) probability of a presence, while the random field $w\left(\mathbf{s}\right)$ controls how this probability changes with location.
 
 The invlogit link function frees up the values of $\mu$ and $w\left(\mathbf{s}\right)$ to take on any value in the real numbers.
 This freedom sets up the spatial random field $W\left(\mathbf{s}\right)$ to follow a Gaussian process.
 The second equation above, called the process equation, describes this spatial random field.
-(You might notice I use both upper-case $W$ and lower-case $w$ -- the big $W$ stands for a *random variable* which is described by a probability distribution; the small $w$ is an actual number that stands for a *realization* of the big $W$.)
+(You might notice I use both upper-case $W$ and lower-case $w$ -- the big $W$ stands for a *random variable*; the small $w$ is an actual number that stands for a *realization* of $W$.)
 
 A Gaussian process, shortened to GP, is written as
 \[
@@ -191,18 +193,16 @@ A Gaussian process, shortened to GP, is written as
         C\left(\mathbf{s}_{1},\mathbf{s}_{2}\right)
     \right).
 \]
-The parameter $\mu\left(\mathbf{s}\right)$ is actually a function which gives the mean of the spatial random field at each location.
-In practice the mean fucntion $\mu\left(\mathbf{s}\right)$ is commonly fixed equal to 0.
-Otherwise the parameter $\mu$ in the observation equation can be confused with the mean function for the Gaussian process.
+The parameter $\mu\left(\mathbf{s}\right)$ is a function which gives the mean of the spatial random field at each location.
+In practice the mean function $\mu\left(\mathbf{s}\right)$ is fixed equal to 0 for identifiability concerns with the parameter $\mu$ in the observation equation.
 
 The second parameter, $C\left(\mathbf{s}_{1},\mathbf{s}_{2}\right)$, is also a function.
-This second function describes the covariance or correlation of the spatial random field.
-If you give the covariance function two locations (they can even be the same location if you want), it will tell you if you should expect the random field at those two points to be similar.
-High values of the covariance function lead to the random field at those locations to be similar.
+This second function describes the covariance or correlation of the spatial random field as a function of distance.
+If you give the covariance function two locations (or the distance between them), it will tell you if you should expect the random field at those two points to be similar.
 
-While a Gaussian process is actually a function over the entire spatial region of interest, it is common practice to estimate it only at a certain number of points.
+While a Gaussian process is actually a random function over the entire spatial region of interest, it is common practice to estimate it only at a certain number of points.
 These points are sometimes called knots or nodes.
-In a slight abuse of terminology, when I refer to a Gaussian process that could mean either the full function over the entire spatial region or just the knots.
+In a slight abuse of terminology, when I refer to a Gaussian process that could be either the full function over the entire spatial region or just the knots.
 However, when talking about the locations of a Gaussian process that refers specifically to the locations of the knots.
 
 ### Nearest neighbour Gaussian processes
@@ -237,7 +237,7 @@ When trying to find the value of the random field at a specific location $\mathb
 Rachel's nearest neighbour Gaussian process method, on the other hand, uses only the 10 closest locations to $\mathbf{s}$ to predict at $\mathbf{s}$
 Just as with the happiness of the guests, Rachel's nearest neighbour method works *almost* as well as Marc's vanilla Gaussian method.
 
-\
+
 
 There is one more technical detail in the nearest neighbour Gaussian process: information is only allowed to flow in one direction (e.g. from left to right).
 To accomplish this, we create a so called directed acyclic graph (or DAG for short) which described both the flow of information and the factorization of the joint likelihood into conditional likelihoods.

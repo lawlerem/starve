@@ -240,6 +240,10 @@ prepare_staRVe_model<- function(formula,
     link = link
   )
 
+  if( fit == T ) {
+    model<- staRVe_fit(model,silent = silent,...)
+  } else {}
+
   return(model)
 }
 
