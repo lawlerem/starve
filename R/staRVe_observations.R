@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_observations} instead.
 #'
 #' @export
-#' @rdname staRVe_observations
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_observations",
@@ -50,16 +50,18 @@ setMethod(
 #' @param x An object of class \code{staRVe_observations}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_observations
-#' @name Access_staRVe_observations
+#' @family access_staRVe_observations
+#' @name access_staRVe_observations
 NULL
 
 #' @export
+#' @rdname access_staRVe_observations
 setMethod(f = "data",
           signature = "staRVe_observations",
           definition = function(x) return(x@data)
 )
 #' @export
+#' @rdname access_staRVe_observations
 setReplaceMethod(f = "data",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -70,11 +72,13 @@ setReplaceMethod(f = "data",
 
 
 #' @export
+#' @rdname access_staRVe_observations
 setMethod(f = "transient_graph",
           signature = "staRVe_observations",
           definition = function(x) return(x@transient_graph)
 )
 #' @export
+#' @rdname access_staRVe_observations
 setReplaceMethod(f = "transient_graph",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -85,11 +89,13 @@ setReplaceMethod(f = "transient_graph",
 
 
 #' @export
+#' @rdname access_staRVe_observations
 setMethod(f = "parameters",
           signature = "staRVe_observations",
           definition = function(x) return(x@parameters)
 )
 #' @export
+#' @rdname access_staRVe_observations
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -105,6 +111,17 @@ setReplaceMethod(f = "parameters",
 ###         ###
 ###############
 
+#' Prepare the observation part of a staRVe_model object.
+#'
+#' @param data An sf object containing the observations and covariates.
+#' @param process A staRVe_process object.
+#' @param settings A staRVe_settings object.
+#' @param distribution The response distribution to use. must be one given by
+#'   get_staRVe_distributions("distribution").
+#' @param link The link function to use. must be one given by
+#'   get_staRVe_distributions("link").
+#'
+#' @return A staRVe_observations object.
 prepare_staRVe_observations<- function(data,
                                        process,
                                        settings = new("staRVe_settings"),

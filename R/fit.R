@@ -1,5 +1,10 @@
 #' Fit a \code{staRVe_model} object.
 #'
+#' @param x A staRVe_model object.
+#' @param silent Should tracing information be printed?
+#'
+#' @return A staRVe_fit object.
+#'
 #' @export
 setMethod(f = "staRVe_fit",
           signature = "staRVe_model",
@@ -72,9 +77,43 @@ setMethod(f = "staRVe_fit",
   return(fit)
 })
 
-#' Predict at a set of point locations.
+#' Predict from a \code{staRVe_fit} object.
+#'
+#' @param x An object of class \code{staRVe_fit}.
+#' @param locations Either an object of class \code{sf} containing point geometries,
+#'  or an object of class \code{RasterLayer}. This object should not have any
+#'  time information, as predictions will be made at each location at every time.
+#'  If a \code{RasterLayer} object, predictions will be made for all raster cells
+#'  whose value are not NA. If the raster has no values, then predictions will
+#'  be made at every cell. Raster predictions are made at the midpoint of each cell.
+#' @param covariates Either a data.frame of class \code{sf} or a list of \code{Raster*}
+#'  objects, depending on the input type of \code{locations}. If the model has
+#'  no covariates, then nothing needs to be supplied.
+#'
+#'  If \code{locations} is of class \code{sf} with point geometries, then
+#'  \code{covariates} should also be of class \code{sf}. The data.frame should contain
+#'  columns for each of the covariates, a column for the time index, and a column
+#'  of point geometries. For each time unit and prediction point, there should
+#'  be a row in the \code{covariates} data.frame, but the rows do not need to be
+#'  in the same order as \code{locations}.
+#'
+#'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
+#'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
+#'  contain data for one covariate, should have one layer for each time unit,
+#'  and should have the same raster geometry as the \code{locations} object. The
+#'  layer names of each raster layer should be of the form \code{T####}, where
+#'  \code{####} gives the specific time index.
+#' @param time What time indices should predictions be made for? If set to "model",
+#'  predictions are made for every time present in the model. The supplied time
+#'  indices must be a subset of those in the model.
+#'
+#' @return Either a \code{sf} object or a list of \code{Raster*} objects,
+#'  containing predictions (with standard errors) for the spatial field, the linear
+#'  predictor on the link scale, and the response.
+#'  The return type is the same as the type of input for \code{locations}.
 #'
 #' @export
+#' @rdname staRVe_predict
 setMethod(f = "staRVe_predict",
           signature = c("staRVe_fit","sf"),
           definition = function(x,
@@ -110,6 +149,37 @@ setMethod(f = "staRVe_predict",
   attr(predictions,"time_column")<- attr(random_effects(process(x)),"time_column")
 
   return(predictions)
+})
+#' @export
+#' @rdname staRVe_predict
+setMethod(f = "staRVe_predict",
+          signature = c("staRVe_fit","RasterLayer"),
+          definition = function(x,locations,covariates,...) {
+  prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
+  prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
+
+  covar_names<- .names_from_formula(formula(settings(x)))
+  if( missing(covariates) && (length(covar_names) == 0) ) {
+    pred<- staRVe_predict(x,prediction_points,...)
+  } else if( missing(covariates) && (length(covar_names) != 0) ) {
+    stop("Missing covariates, please supply them.")
+  } else if( !all(covar_names %in% names(covariates)) ) {
+    stop("Missing some covariates. Check the names of your raster covariates.")
+  } else {
+    covar_points<- .sf_from_raster_list(covariates,
+      time_name=attr(random_effects(process(x)),"time_column"))
+    pred<- staRVe_predict(x,prediction_points,covar_points,...)
+  }
+
+  pred_by_time<- split(pred,pred[,attr(random_effects(process(x)),"time_column"),drop=T])
+  pred_raster_by_time<- lapply(pred_by_time,raster::rasterize,locations)
+  pred_raster_by_time<- lapply(pred_raster_by_time,function(raster_time) {
+    ID_layer<- 1
+    time_layer<- raster::nlayers(raster_time)
+    return(raster_time[[-c(ID_layer,time_layer)]])
+  }) # Remove ID and time layer
+
+  return(pred_raster_by_time)
 })
 
 .predict_w<- function(x,
@@ -253,35 +323,3 @@ setMethod(f = "staRVe_predict",
   predictions<- sf:::cbind.sf(response,response_se,linear_predictions)
   return(predictions)
 }
-
-
-#' @export
-setMethod(f = "staRVe_predict",
-          signature = c("staRVe_fit","RasterLayer"),
-          definition = function(x,locations,covariates,...) {
-  prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
-  prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
-
-  covar_names<- .names_from_formula(formula(settings(x)))
-  if( missing(covariates) && (length(covar_names) == 0) ) {
-    pred<- staRVe_predict(x,prediction_points,...)
-  } else if( missing(covariates) && (length(covar_names) != 0) ) {
-    stop("Missing covariates, please supply them.")
-  } else if( !all(covar_names %in% names(covariates)) ) {
-    stop("Missing some covariates. Check the names of your raster covariates.")
-  } else {
-    covar_points<- .sf_from_raster_list(covariates,
-      time_name=attr(random_effects(process(x)),"time_column"))
-    pred<- staRVe_predict(x,prediction_points,covar_points,...)
-  }
-
-  pred_by_time<- split(pred,pred[,attr(random_effects(process(x)),"time_column"),drop=T])
-  pred_raster_by_time<- lapply(pred_by_time,raster::rasterize,locations)
-  pred_raster_by_time<- lapply(pred_raster_by_time,function(raster_time) {
-    ID_layer<- 1
-    time_layer<- raster::nlayers(raster_time)
-    return(raster_time[[-c(ID_layer,time_layer)]])
-  }) # Remove ID and time layer
-
-  return(pred_raster_by_time)
-})

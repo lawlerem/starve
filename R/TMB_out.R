@@ -11,7 +11,7 @@ NULL
 #'   use \code{TMB_out} instead.
 #'
 #' @export
-#' @rdname TMB_out
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "TMB_out",
@@ -40,16 +40,18 @@ setMethod(
 #' @param x An object of class \code{TMB_out}.
 #' @param value A replacement value
 #'
-#' @family Access_TMB_out
-#' @name Access_TMB_out
+#' @family access_TMB_out
+#' @name access_TMB_out
 NULL
 
 #' @export
+#' @rdname access_TMB_out
 setMethod(f = "obj",
           signature = "TMB_out",
           definition = function(x) return(x@obj)
 )
 #' @export
+#' @rdname access_TMB_out
 setReplaceMethod(f = "obj",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -58,11 +60,13 @@ setReplaceMethod(f = "obj",
 })
 
 #' @export
+#' @rdname access_TMB_out
 setMethod(f = "opt",
           signature = "TMB_out",
           definition = function(x) return(x@opt)
 )
 #' @export
+#' @rdname access_TMB_out
 setReplaceMethod(f = "opt",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -71,11 +75,13 @@ setReplaceMethod(f = "opt",
 })
 
 #' @export
+#' @rdname access_TMB_out
 setMethod(f = "sdr",
           signature = "TMB_out",
           definition = function(x) return(x@sdr)
 )
 #' @export
+#' @rdname access_TMB_out
 setReplaceMethod(f = "sdr",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -90,6 +96,7 @@ setReplaceMethod(f = "sdr",
 ###################
 
 #' @export
+#' @rdname access_TMB_out
 setMethod(f = "convergence",
           signature = "TMB_out",
           definition = function(x) {

@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_process} instead.
 #'
 #' @export
-#' @rdname staRVe_process
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_process",
@@ -51,16 +51,18 @@ setMethod(
 #' @param x An object of class \code{staRVe_process}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_process
-#' @name Access_staRVe_process
+#' @family access_staRVe_process
+#' @name access_staRVe_process
 NULL
 
 #' @export
+#' @rdname access_staRVe_process
 setMethod(f = "random_effects",
           signature = "staRVe_process",
           definition = function(x) return(x@random_effects)
 )
 #' @export
+#' @rdname access_staRVe_process
 setReplaceMethod(f = "random_effects",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -71,11 +73,13 @@ setReplaceMethod(f = "random_effects",
 
 
 #' @export
+#' @rdname access_staRVe_process
 setMethod(f = "persistent_graph",
           signature = "staRVe_process",
           definition = function(x) return(x@persistent_graph)
 )
 #' @export
+#' @rdname access_staRVe_process
 setReplaceMethod(f = "persistent_graph",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -86,11 +90,13 @@ setReplaceMethod(f = "persistent_graph",
 
 
 #' @export
+#' @rdname access_staRVe_process
 setMethod(f = "parameters",
           signature = "staRVe_process",
           definition = function(x) return(x@parameters)
 )
 #' @export
+#' @rdname access_staRVe_process
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -106,6 +112,13 @@ setReplaceMethod(f = "parameters",
 ###         ###
 ###############
 
+#' Prepare the process part of a staRVe_model object.
+#'
+#' @param nodes An sf object containing the observations and covariates.
+#' @param time A staRVe_process object.
+#' @param settings A staRVe_settings object.
+#'
+#' @return A staRVe_process object.
 prepare_staRVe_process<- function(nodes,
                                   time = data.frame(time=0),
                                   settings = new("staRVe_settings") ) {

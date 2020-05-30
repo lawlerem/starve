@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_observation_parameters} instead.
 #'
 #' @export
-#' @rdname staRVe_observation_parameters
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_observation_parameters",
@@ -43,16 +43,18 @@ setMethod(
 #' @param x An object of class \code{staRVe_observation_parameters}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_observation_parameters
-#' @name Access_staRVe_observation_parameters
+#' @family access_staRVe_observation_parameters
+#' @name access_staRVe_observation_parameters
 NULL
 
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setMethod(f = "response_distribution",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@response_distribution)
 )
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "response_distribution",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -63,11 +65,13 @@ setReplaceMethod(f = "response_distribution",
 
 
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setMethod(f = "response_parameters",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@response_parameters)
 )
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "response_parameters",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -78,11 +82,13 @@ setReplaceMethod(f = "response_parameters",
 
 
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setMethod(f = "link_function",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@link_function)
 )
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "link_function",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -93,11 +99,13 @@ setReplaceMethod(f = "link_function",
 
 
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setMethod(f = "fixed_effects",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@fixed_effects)
 )
 #' @export
+#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "fixed_effects",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {

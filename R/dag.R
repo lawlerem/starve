@@ -11,7 +11,7 @@ NULL
 #'   use \code{dag} instead.
 #'
 #' @export
-#' @rdname dag
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "dag",
@@ -39,18 +39,20 @@ setMethod(
 #' @param x An object of class \code{dag}.
 #' @param value A replacement value.
 #'
-#' @family Access_dag
-#' @name Access_dag
+#' @family access_dag
+#' @name access_dag
 NULL
 
 
 
 #' @export
+#' @rdname access_dag
 setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
 )
 #' @export
+#' @rdname access_dag
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -61,11 +63,13 @@ setReplaceMethod(f = "edges",
 
 
 #' @export
+#' @rdname access_dag
 setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
 )
 #' @export
+#' @rdname access_dag
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -76,11 +80,13 @@ setReplaceMethod(f = "distances",
 
 
 #' @export
+#' @rdname access_dag
 setMethod(f = "distance_units",
           signature = "dag",
           definition = function(x) return(x@distance_units)
 )
 #' @export
+#' @rdname access_dag
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
                  definition = function(x,value) {
@@ -299,6 +305,7 @@ construct_obs_dag<- function(x,
   return(dag)
 }
 
+
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
@@ -307,7 +314,6 @@ setMethod(f = "idxC_to_R",
   })
   return(x)
 })
-
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {
