@@ -106,3 +106,20 @@ setClass(
   ),
   contains = c("staRVe_model")
 )
+
+
+
+
+
+######################
+### Helper Classes ###
+######################
+
+#' An S4 class to collect process and observations parameters.
+#'
+#' @family staRVe-classes
+setClass(
+  Class = "staRVe_parameters",
+  contains = c("staRVe_process_parameters",
+               "staRVe_observation_parameters")
+)

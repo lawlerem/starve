@@ -137,57 +137,9 @@ setGeneric(name = "formula<-",
 # G
 
 #' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_geo_vars",
-           def = function(x,var,sf_obj,get_sd) standardGeneric("get_geo_vars")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_obs",
-           def = function(x,sf_obj) standardGeneric("get_obs")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_observation",
-           def = function(x,sf_obj) standardGeneric("get_observation")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_parameters",
-           def = function(x) standardGeneric("get_parameters")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_pars",
-           def = function(x) standardGeneric("get_pars")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_proc",
-           def = function(x,sf_obj) standardGeneric("get_proc")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_process",
-           def = function(x,sf_obj) standardGeneric("get_process")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_resp",
-           def = function(x,sf_obj) standardGeneric("get_resp")
-)
-
-#' @export
-#' @rdname Access_TMB_out
-setGeneric(name = "get_working_pars",
-           def = function(x) standardGeneric("get_working_pars")
+#' @rdname Access_staRVe_model
+setGeneric(name = "graph",
+           def = function(x) standardGeneric("graph")
 )
 
 
@@ -639,6 +591,12 @@ setGeneric(name = "time_parameters",
 #' @rdname Access_staRVe_process_parameters
 setGeneric(name = "time_parameters<-",
            def = function(x,value) standardGeneric("time_parameters<-")
+)
+
+#' @export
+#' @rdname Access_staRVe_tracing
+setGeneric(name = "timing",
+           def = function(x) standardGeneric("timing")
 )
 
 #' @export
