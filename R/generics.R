@@ -61,13 +61,13 @@ setGeneric(name = "dag",
 
 #' @export
 #' @rdname staRVe_generics
-setGeneric(name = "data",
-           def = function(x) standardGeneric("data")
+setGeneric(name = "dat",
+           def = function(x) standardGeneric("dat")
 )
 #' @export
 #' @rdname staRVe_generics
-setGeneric(name = "data<-",
-           def = function(x,value) standardGeneric("data<-")
+setGeneric(name = "dat<-",
+           def = function(x,value) standardGeneric("dat<-")
 )
 
 #' @export

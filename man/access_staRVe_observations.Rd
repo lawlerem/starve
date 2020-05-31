@@ -2,17 +2,17 @@
 % Please edit documentation in R/staRVe_observations.R
 \name{access_staRVe_observations}
 \alias{access_staRVe_observations}
-\alias{data,staRVe_observations-method}
-\alias{data<-,staRVe_observations-method}
+\alias{dat,staRVe_observations-method}
+\alias{dat<-,staRVe_observations-method}
 \alias{transient_graph,staRVe_observations-method}
 \alias{transient_graph<-,staRVe_observations-method}
 \alias{parameters,staRVe_observations-method}
 \alias{parameters<-,staRVe_observations,ANY-method}
 \title{Get or set slots from an object of class \code{staRVe_observations}.}
 \usage{
-\S4method{data}{staRVe_observations}(x)
+\S4method{dat}{staRVe_observations}(x)
 
-\S4method{data}{staRVe_observations}(x) <- value
+\S4method{dat}{staRVe_observations}(x) <- value
 
 \S4method{transient_graph}{staRVe_observations}(x)
 

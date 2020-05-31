@@ -6,8 +6,8 @@
 \alias{covariance_function}
 \alias{covariance_function<-}
 \alias{dag}
-\alias{data}
-\alias{data<-}
+\alias{dat}
+\alias{dat<-}
 \alias{distance_units}
 \alias{distance_units<-}
 \alias{distances}
@@ -97,9 +97,9 @@ covariance_function(x) <- value
 
 dag(x, ...)
 
-data(x)
+dat(x)
 
-data(x) <- value
+dat(x) <- value
 
 distance_units(x)
 

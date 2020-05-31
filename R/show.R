@@ -91,7 +91,7 @@ setMethod(f = "show",
   cat("\n")
   cat("Data")
   cat("\n")
-  print(data(object))
+  print(dat(object))
 
   return(invisible())
 })

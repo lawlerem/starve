@@ -121,17 +121,17 @@ setReplaceMethod(f = "parameters",
 
 #' @export
 #' @rdname access_staRVe_model
-setMethod(f = "data",
+setMethod(f = "dat",
           signature = "staRVe_model",
           definition = function(x) {
-  return(data(observations(x)))
+  return(dat(observations(x)))
 })
 #' @export
 #' @rdname access_staRVe_model
-setReplaceMethod(f = "data",
+setReplaceMethod(f = "dat",
                  signature = "staRVe_model",
                  definition = function(x,value) {
-  data(observations(x))<- value
+  dat(observations(x))<- value
   return(x)
 })
 
@@ -275,21 +275,21 @@ setMethod(f = "TMB_in",
     link_code = .link_to_code(
       link_function(parameters(observations))
     ),
-    y_time = c(data(observations)[,time_column,drop=T]),
+    y_time = c(dat(observations)[,time_column,drop=T]),
     obs_y = c(.response_from_formula(
       formula(settings(x)),
-      data(observations)
+      dat(observations)
     )),
     ys_edges = edges(idxR_to_C(transient_graph(observations))),
     ys_dists = distances(transient_graph(observations)),
-    resp_w_time = c(data(observations)[
+    resp_w_time = c(dat(observations)[
       sapply(edges(transient_graph(observations)),length) > 1,
       time_column,
       drop=T
     ]),
     mean_design = .mean_design_from_formula(
       formula(settings(x)),
-      data(observations)
+      dat(observations)
     ),
     covar_code = .covariance_to_code(
       covariance_function(parameters(process))
@@ -380,16 +380,16 @@ setMethod(f = "update_staRVe_model",
   spatial_parameters(parameters(process(x)))<- within(
     spatial_parameters(parameters(process(x))),{
       par_names<<- c("par_rho","par_tau","par_nu")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+      par<- sdr_mat[par_names,1]
+      se<- sdr_mat[par_names,2]
     }
   )
 
   time_parameters(parameters(process(x)))<- within(
     time_parameters(parameters(process(x))),{
       par_names<<- c("par_w_phi")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+      par<- sdr_mat[par_names,1]
+      se<- sdr_mat[par_names,2]
     }
   )
 
@@ -404,8 +404,10 @@ setMethod(f = "update_staRVe_model",
   fixed_effects(parameters(observations(x)))<- within(
     fixed_effects(parameters(observations(x))),{
       par_names<<- c("par_mu","par_mean_pars")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+      par<- c(sdr_mat[par_names[[1]],1],
+              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],1])
+      se<- c(sdr_mat[par_names[[1]],2],
+              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],2])
     }
   )
 
@@ -417,7 +419,7 @@ setMethod(f = "update_staRVe_model",
     }
   )
 
-  data<- data(observations(x))
+  data<- dat(observations(x))
   obs_dag<- transient_graph(observations(x))
   random_effects<- random_effects(process(x))
   time_column<- attr(data,"time_column")
@@ -436,7 +438,7 @@ setMethod(f = "update_staRVe_model",
       resp_w_idx<- resp_w_idx+1
     }
   }
-  data(observations(x))<- data
+  dat(observations(x))<- data
 
   return(x)
 })

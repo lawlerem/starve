@@ -24,10 +24,10 @@ setMethod(
                         ),
                         transient_graph = new("dag"),
                         parameters = new("staRVe_observation_parameters")) {
-    data(.Object)<- data
-    if( !is.null(attr(data(.Object),"active_time")) &&
-        "time" %in% colnames(data(.Object)) ) {
-      attr(data(.Object),"active_time")<- "time"
+    dat(.Object)<- data
+    if( !is.null(attr(dat(.Object),"active_time")) &&
+        "time" %in% colnames(dat(.Object)) ) {
+      attr(dat(.Object),"active_time")<- "time"
     } else {}
 
     transient_graph(.Object)<- transient_graph
@@ -56,13 +56,13 @@ NULL
 
 #' @export
 #' @rdname access_staRVe_observations
-setMethod(f = "data",
+setMethod(f = "dat",
           signature = "staRVe_observations",
           definition = function(x) return(x@data)
 )
 #' @export
 #' @rdname access_staRVe_observations
-setReplaceMethod(f = "data",
+setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
   x@data<- value
@@ -139,7 +139,7 @@ prepare_staRVe_observations<- function(data,
 
   design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
 
-  data(observations)<- sf:::cbind.sf(
+  dat(observations)<- sf:::cbind.sf(
     w = 0,
     w_se = NA,
     linear = NA,
@@ -150,7 +150,7 @@ prepare_staRVe_observations<- function(data,
     response,
     data[,attr(data,"sf_column")]
   )
-  attr(data(observations),"time_column")<- attr(time_form,"name")
+  attr(dat(observations),"time_column")<- attr(time_form,"name")
 
 
 
