@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_model} instead.
 #'
 #' @export
-#' @rdname staRVe_model
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_model",
@@ -40,16 +40,18 @@ setMethod(
 #' @param x An object of class \code{staRVe_model}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_model
-#' @name Access_staRVe_model
+#' @family access_staRVe_model
+#' @name access_staRVe_model
 NULL
 
 #' @export
+#' @rdname access_staRVe_model
 setMethod(f = "process",
           signature = "staRVe_model",
           definition = function(x) return(x@process)
 )
 #' @export
+#' @rdname access_staRVe_model
 setReplaceMethod(f = "process",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -60,11 +62,13 @@ setReplaceMethod(f = "process",
 
 
 #' @export
+#' @rdname access_staRVe_model
 setMethod(f = "observations",
           signature = "staRVe_model",
           definition = function(x) return(x@observations)
 )
 #' @export
+#' @rdname access_staRVe_model
 setReplaceMethod(f = "observations",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -75,11 +79,13 @@ setReplaceMethod(f = "observations",
 
 
 #' @export
+#' @rdname access_staRVe_model
 setMethod(f = "settings",
           signature = "staRVe_model",
           definition = function(x) return(x@settings)
 )
 #' @export
+#' @rdname access_staRVe_model
 setReplaceMethod(f = "settings",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -94,6 +100,7 @@ setReplaceMethod(f = "settings",
 ###################
 
 #' @export
+#' @rdname access_staRVe_model
 setMethod(f = "parameters",
           signature = "staRVe_model",
           definition = function(x) {
@@ -103,6 +110,7 @@ setMethod(f = "parameters",
   return(parameters)
 })
 #' @export
+#' @rdname access_staRVe_model
 setReplaceMethod(f = "parameters",
                  signature = c("staRVe_model","staRVe_parameters"),
                  definition = function(x,value) {
@@ -112,26 +120,30 @@ setReplaceMethod(f = "parameters",
 })
 
 #' @export
-setMethod(f = "data",
+#' @rdname access_staRVe_model
+setMethod(f = "dat",
           signature = "staRVe_model",
           definition = function(x) {
-  return(data(observations(x)))
+  return(dat(observations(x)))
 })
 #' @export
-setReplaceMethod(f = "data",
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "dat",
                  signature = "staRVe_model",
                  definition = function(x,value) {
-  data(observations(x))<- value
+  dat(observations(x))<- value
   return(x)
 })
 
 #' @export
+#' @rdname access_staRVe_model
 setMethod(f = "random_effects",
           signature = "staRVe_model",
           definition = function(x) {
   return(random_effects(process(x)))
 })
 #' @export
+#' @rdname access_staRVe_model
 setReplaceMethod(f = "random_effects",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -139,13 +151,8 @@ setReplaceMethod(f = "random_effects",
   return(x)
 })
 
-
-
-###################
-### Meta-Access ###
-###################
-
 #' @export
+#' @rdname access_staRVe_model
 setMethod(f = "graph",
           signature = "staRVe_model",
           definition = function(x) {
@@ -166,12 +173,18 @@ setMethod(f = "graph",
 #'
 #' .
 #'
-#' The formula object should always be of the form \code{y ~ mean(x+z) + time(t,type="ar1")}.
+#' The formula object should always be of the form
+#'   \code{y ~ mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
 #' The variable y should be replaced with the desired response variable, and t
 #' should be replaced with the desired time index. There are currently three
 #' valid options for the `type' argument in \code{time(t,type="ar1")} -- "ar1" for
 #' an AR(1) structure, "rw" for a random walk, and "independent" for independent
-#' spatial fields each year.
+#' spatial fields each year. The \code{space(...)} term specifies the spatial covariance
+#' function.
+#'
+#' If the \code{time(...)} term is missing, all observations are assumed to be
+#' at the same time. If the \code{space(...)} term is missing, the spatial
+#' covariance function defaults to the exponential function.
 #'
 #' The variables in the \code{mean(...)} ``special" are linear predictors for the mean
 #' of the response variable. Any formula valid for the \code{lm} command can be used
@@ -180,11 +193,11 @@ setMethod(f = "graph",
 #' @param formula A formula object used to describe the model. The details are given
 #'  under `Details'.
 #' @param data An object of class `sf` containing point geometries. Data
-#'  used in the `formula' object will be found here.
-#' @param Process An object of class `sf` containing point geometries.
-#'  The default value uses the same locations as the observations. All locations
-#'  will be used in every time index, so special care should be taken in choosing
-#'  the number of points present. Any data fields (include time) will be discarded.
+#'  used for the `formula' object will be found here.
+#' @param nodes An object of class `sf` containing point geometries.
+#'  The default value uses the same locations as the observations. These
+#'  locations will be used as the nodes for the random effects. All locations
+#'  will be used for each year.
 #' @param n_neighbours An integer giving the number of parents for each node.
 #' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param distribution A character vector giving the response distribution. The
@@ -194,16 +207,11 @@ setMethod(f = "graph",
 #' @param silent Should intermediate calculations be printed?
 #' @param max_dist The maximum distance used to search for parents.
 #'  Unless this has a units attribute, units are assumed to be the same as
-#'  the supplied \code{distance_units}. See \code{\link{construct_dag}}.
+#'  the supplied \code{distance_units}.
 #' @param distance_units Which units should be used for distances?
-#'  See \code{\link{construct_dag}}.
-#' @param fit Should the model be fit in this call? If true, only returns
-#'  the fitted model.
+#' @param fit Should the model be fit in this call? If true, returns a fitted model.
 #'
-#' @return A list with three components. The first is a list of data and parameters
-#'  to pass directly to TMB::MakeADFun. The second is a list of \code{sf} objects
-#'  storing minimal versions of Observation (== data) and Process. The third is a list of
-#'  settings used in the model (n_neighbours, distance_units, etc.).
+#' @return A staRVe_model object. If fit=T, a staRVe_fit object.
 #'
 #' @export
 prepare_staRVe_model<- function(formula,
@@ -240,6 +248,10 @@ prepare_staRVe_model<- function(formula,
     link = link
   )
 
+  if( fit == T ) {
+    model<- staRVe_fit(model,silent = silent,...)
+  } else {}
+
   return(model)
 }
 
@@ -247,7 +259,7 @@ prepare_staRVe_model<- function(formula,
 
 #' Convert a staRVe_model object to a form suitable for TMB input.
 #'
-#' @export
+#' @noRd
 setMethod(f = "TMB_in",
           signature = "staRVe_model",
           definition = function(x) {
@@ -263,21 +275,21 @@ setMethod(f = "TMB_in",
     link_code = .link_to_code(
       link_function(parameters(observations))
     ),
-    y_time = c(data(observations)[,time_column,drop=T]),
+    y_time = c(dat(observations)[,time_column,drop=T]),
     obs_y = c(.response_from_formula(
       formula(settings(x)),
-      data(observations)
+      dat(observations)
     )),
     ys_edges = edges(idxR_to_C(transient_graph(observations))),
     ys_dists = distances(transient_graph(observations)),
-    resp_w_time = c(data(observations)[
+    resp_w_time = c(dat(observations)[
       sapply(edges(transient_graph(observations)),length) > 1,
       time_column,
       drop=T
     ]),
     mean_design = .mean_design_from_formula(
       formula(settings(x)),
-      data(observations)
+      dat(observations)
     ),
     covar_code = .covariance_to_code(
       covariance_function(parameters(process))
@@ -357,7 +369,7 @@ setMethod(f = "TMB_in",
 })
 
 
-#' @export
+#' @noRd
 setMethod(f = "update_staRVe_model",
           signature = c(x = "staRVe_model",
                         y = "TMB_out"),
@@ -368,16 +380,16 @@ setMethod(f = "update_staRVe_model",
   spatial_parameters(parameters(process(x)))<- within(
     spatial_parameters(parameters(process(x))),{
       par_names<<- c("par_rho","par_tau","par_nu")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+      par<- sdr_mat[par_names,1]
+      se<- sdr_mat[par_names,2]
     }
   )
 
   time_parameters(parameters(process(x)))<- within(
     time_parameters(parameters(process(x))),{
       par_names<<- c("par_w_phi")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+      par<- sdr_mat[par_names,1]
+      se<- sdr_mat[par_names,2]
     }
   )
 
@@ -392,8 +404,10 @@ setMethod(f = "update_staRVe_model",
   fixed_effects(parameters(observations(x)))<- within(
     fixed_effects(parameters(observations(x))),{
       par_names<<- c("par_mu","par_mean_pars")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
+      par<- c(sdr_mat[par_names[[1]],1],
+              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],1])
+      se<- c(sdr_mat[par_names[[1]],2],
+              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],2])
     }
   )
 
@@ -405,7 +419,7 @@ setMethod(f = "update_staRVe_model",
     }
   )
 
-  data<- data(observations(x))
+  data<- dat(observations(x))
   obs_dag<- transient_graph(observations(x))
   random_effects<- random_effects(process(x))
   time_column<- attr(data,"time_column")
@@ -424,7 +438,7 @@ setMethod(f = "update_staRVe_model",
       resp_w_idx<- resp_w_idx+1
     }
   }
-  data(observations(x))<- data
+  dat(observations(x))<- data
 
   return(x)
 })

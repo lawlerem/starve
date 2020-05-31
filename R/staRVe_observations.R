@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_observations} instead.
 #'
 #' @export
-#' @rdname staRVe_observations
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_observations",
@@ -24,10 +24,10 @@ setMethod(
                         ),
                         transient_graph = new("dag"),
                         parameters = new("staRVe_observation_parameters")) {
-    data(.Object)<- data
-    if( !is.null(attr(data(.Object),"active_time")) &&
-        "time" %in% colnames(data(.Object)) ) {
-      attr(data(.Object),"active_time")<- "time"
+    dat(.Object)<- data
+    if( !is.null(attr(dat(.Object),"active_time")) &&
+        "time" %in% colnames(dat(.Object)) ) {
+      attr(dat(.Object),"active_time")<- "time"
     } else {}
 
     transient_graph(.Object)<- transient_graph
@@ -50,17 +50,19 @@ setMethod(
 #' @param x An object of class \code{staRVe_observations}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_observations
-#' @name Access_staRVe_observations
+#' @family access_staRVe_observations
+#' @name access_staRVe_observations
 NULL
 
 #' @export
-setMethod(f = "data",
+#' @rdname access_staRVe_observations
+setMethod(f = "dat",
           signature = "staRVe_observations",
           definition = function(x) return(x@data)
 )
 #' @export
-setReplaceMethod(f = "data",
+#' @rdname access_staRVe_observations
+setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
   x@data<- value
@@ -70,11 +72,13 @@ setReplaceMethod(f = "data",
 
 
 #' @export
+#' @rdname access_staRVe_observations
 setMethod(f = "transient_graph",
           signature = "staRVe_observations",
           definition = function(x) return(x@transient_graph)
 )
 #' @export
+#' @rdname access_staRVe_observations
 setReplaceMethod(f = "transient_graph",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -85,11 +89,13 @@ setReplaceMethod(f = "transient_graph",
 
 
 #' @export
+#' @rdname access_staRVe_observations
 setMethod(f = "parameters",
           signature = "staRVe_observations",
           definition = function(x) return(x@parameters)
 )
 #' @export
+#' @rdname access_staRVe_observations
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -105,6 +111,17 @@ setReplaceMethod(f = "parameters",
 ###         ###
 ###############
 
+#' Prepare the observation part of a staRVe_model object.
+#'
+#' @param data An sf object containing the observations and covariates.
+#' @param process A staRVe_process object.
+#' @param settings A staRVe_settings object.
+#' @param distribution The response distribution to use. must be one given by
+#'   get_staRVe_distributions("distribution").
+#' @param link The link function to use. must be one given by
+#'   get_staRVe_distributions("link").
+#'
+#' @return A staRVe_observations object.
 prepare_staRVe_observations<- function(data,
                                        process,
                                        settings = new("staRVe_settings"),
@@ -122,7 +139,7 @@ prepare_staRVe_observations<- function(data,
 
   design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
 
-  data(observations)<- sf:::cbind.sf(
+  dat(observations)<- sf:::cbind.sf(
     w = 0,
     w_se = NA,
     linear = NA,
@@ -133,7 +150,7 @@ prepare_staRVe_observations<- function(data,
     response,
     data[,attr(data,"sf_column")]
   )
-  attr(data(observations),"time_column")<- attr(time_form,"name")
+  attr(dat(observations),"time_column")<- attr(time_form,"name")
 
 
 

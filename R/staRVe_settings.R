@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_settings} instead.
 #'
 #' @export
-#' @rdname staRVe_settings
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_settings",
@@ -44,16 +44,18 @@ setMethod(
 #' @param x An object of class \code{staRVe_settings}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_settings
-#' @name Access_staRVe_settings
+#' @family access_staRVe_settings
+#' @name access_staRVe_settings
 NULL
 
 #' @export
+#' @rdname access_staRVe_settings
 setMethod(f = "formula",
           signature = "staRVe_settings",
           definition = function(x) return(x@formula)
 )
 #' @export
+#' @name access_staRVe_settings
 setReplaceMethod(f = "formula",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -64,11 +66,13 @@ setReplaceMethod(f = "formula",
 
 
 #' @export
+#' @name access_staRVe_settings
 setMethod(f = "n_neighbours",
           signature = "staRVe_settings",
           definition = function(x) return(x@n_neighbours)
 )
 #' @export
+#' @name access_staRVe_settings
 setReplaceMethod(f = "n_neighbours",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -79,11 +83,13 @@ setReplaceMethod(f = "n_neighbours",
 
 
 #' @export
+#' @name access_staRVe_settings
 setMethod(f = "p_far_neighbours",
           signature = "staRVe_settings",
           definition = function(x) return(x@p_far_neighbours)
 )
 #' @export
+#' @name access_staRVe_settings
 setReplaceMethod(f = "p_far_neighbours",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -94,11 +100,13 @@ setReplaceMethod(f = "p_far_neighbours",
 
 
 #' @export
+#' @name access_staRVe_settings
 setMethod(f = "distance_units",
           signature = "staRVe_settings",
           definition = function(x) return(x@distance_units)
 )
 #' @export
+#' @name access_staRVe_settings
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -109,11 +117,13 @@ setReplaceMethod(f = "distance_units",
 
 
 #' @export
+#' @name access_staRVe_settings
 setMethod(f = "max_distance",
           signature = "staRVe_settings",
           definition = function(x) return(x@max_distance)
 )
 #' @export
+#' @name access_staRVe_settings
 setReplaceMethod(f = "max_distance",
                  signature = "staRVe_settings",
                  definition = function(x,value) {

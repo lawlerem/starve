@@ -6,6 +6,14 @@
 \usage{
 \S4method{staRVe_fit}{staRVe_model}(x, silent = F, ...)
 }
+\arguments{
+\item{x}{A staRVe_model object.}
+
+\item{silent}{Should tracing information be printed?}
+}
+\value{
+A staRVe_fit object.
+}
 \description{
 Fit a \code{staRVe_model} object.
 }

@@ -24,7 +24,12 @@ prepare_staRVe_model(
 under `Details'.}
 
 \item{data}{An object of class `sf` containing point geometries. Data
-used in the `formula' object will be found here.}
+used for the `formula' object will be found here.}
+
+\item{nodes}{An object of class `sf` containing point geometries.
+The default value uses the same locations as the observations. These
+locations will be used as the nodes for the random effects. All locations
+will be used for each year.}
 
 \item{n_neighbours}{An integer giving the number of parents for each node.}
 
@@ -40,35 +45,31 @@ is "identity". See \code{get_staRVe_distributions("link")}.}
 
 \item{max_dist}{The maximum distance used to search for parents.
 Unless this has a units attribute, units are assumed to be the same as
-the supplied \code{distance_units}. See \code{\link{construct_dag}}.}
+the supplied \code{distance_units}.}
 
-\item{distance_units}{Which units should be used for distances?
-See \code{\link{construct_dag}}.}
+\item{distance_units}{Which units should be used for distances?}
 
-\item{fit}{Should the model be fit in this call? If true, only returns
-the fitted model.}
-
-\item{Process}{An object of class `sf` containing point geometries.
-The default value uses the same locations as the observations. All locations
-will be used in every time index, so special care should be taken in choosing
-the number of points present. Any data fields (include time) will be discarded.}
+\item{fit}{Should the model be fit in this call? If true, returns a fitted model.}
 }
 \value{
-A list with three components. The first is a list of data and parameters
- to pass directly to TMB::MakeADFun. The second is a list of \code{sf} objects
- storing minimal versions of Observation (== data) and Process. The third is a list of
- settings used in the model (n_neighbours, distance_units, etc.).
+A staRVe_model object. If fit=T, a staRVe_fit object.
 }
 \description{
 .
 }
 \details{
-The formula object should always be of the form \code{y ~ mean(x+z) + time(t,type="ar1")}.
+The formula object should always be of the form
+  \code{y ~ mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
 The variable y should be replaced with the desired response variable, and t
 should be replaced with the desired time index. There are currently three
 valid options for the `type' argument in \code{time(t,type="ar1")} -- "ar1" for
 an AR(1) structure, "rw" for a random walk, and "independent" for independent
-spatial fields each year.
+spatial fields each year. The \code{space(...)} term specifies the spatial covariance
+function.
+
+If the \code{time(...)} term is missing, all observations are assumed to be
+at the same time. If the \code{space(...)} term is missing, the spatial
+covariance function defaults to the exponential function.
 
 The variables in the \code{mean(...)} ``special" are linear predictors for the mean
 of the response variable. Any formula valid for the \code{lm} command can be used

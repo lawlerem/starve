@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_parameters} instead.
 #'
 #' @export
-#' @rdname staRVe_parameters
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_parameters",

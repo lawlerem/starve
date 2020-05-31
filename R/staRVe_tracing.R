@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_tracing} instead.
 #'
 #' @export
-#' @rdname staRVe_tracing
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_tracing",
@@ -44,16 +44,18 @@ setMethod(
 #' @param x An object of class \code{staRVe_tracing}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_tracing
-#' @name Access_staRVe_tracing
+#' @family access_staRVe_tracing
+#' @name access_staRVe_tracing
 NULL
 
 #' @export
+#' @rdname access_staRVe_tracing
 setMethod(f = "opt_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@opt_time)
 )
 #' @export
+#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "opt_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -64,11 +66,13 @@ setReplaceMethod(f = "opt_time",
 
 
 #' @export
+#' @rdname access_staRVe_tracing
 setMethod(f = "hess_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@hess_time)
 )
 #' @export
+#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "hess_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -79,11 +83,13 @@ setReplaceMethod(f = "hess_time",
 
 
 #' @export
+#' @rdname access_staRVe_tracing
 setMethod(f = "sdr_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@sdr_time)
 )
 #' @export
+#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "sdr_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -94,11 +100,13 @@ setReplaceMethod(f = "sdr_time",
 
 
 #' @export
+#' @rdname access_staRVe_tracing
 setMethod(f = "parameter_hessian",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_hessian)
 )
 #' @export
+#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "parameter_hessian",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -109,11 +117,13 @@ setReplaceMethod(f = "parameter_hessian",
 
 
 #' @export
+#' @rdname access_staRVe_tracing
 setMethod(f = "parameter_covariance",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_covariance)
 )
 #' @export
+#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "parameter_covariance",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -128,6 +138,7 @@ setReplaceMethod(f = "parameter_covariance",
 ###################
 
 #' @export
+#' @rdname access_staRVe_tracing
 setMethod(f = "timing",
           signature = "staRVe_tracing",
           definition = function(x) {

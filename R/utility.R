@@ -382,8 +382,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @return Either a copy of \code{x} whose rows as sorted (\code{return='sort'});
 #'  or an integer vector of sorted indices (\code{return='order'}).
-#'
-#' @export
 order_by_location<- function(x,time=NULL,return="sort") {
     coords<- as.data.frame(sf::st_coordinates(x))
     if( !is.null(time) ) {coords<- cbind(time,coords)} else {}

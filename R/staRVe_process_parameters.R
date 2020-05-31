@@ -11,7 +11,7 @@ NULL
 #'   use \code{staRVe_process_parameters} instead.
 #'
 #' @export
-#' @rdname staRVe_process_parameters
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "staRVe_process_parameters",
@@ -41,16 +41,18 @@ setMethod(
 #' @param x An object of class \code{staRVe_process_parameters}.
 #' @param value A replacement value
 #'
-#' @family Access_staRVe_process_parameters
-#' @name Access_staRVe_process_parameters
+#' @family access_staRVe_process_parameters
+#' @name access_staRVe_process_parameters
 NULL
 
 #' @export
+#' @rdname access_staRVe_process_parameters
 setMethod(f = "covariance_function",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@covariance_function)
 )
 #' @export
+#' @rdname access_staRVe_process_parameters
 setReplaceMethod(f = "covariance_function",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {
@@ -61,11 +63,13 @@ setReplaceMethod(f = "covariance_function",
 
 
 #' @export
+#' @rdname access_staRVe_process_parameters
 setMethod(f = "spatial_parameters",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@spatial_parameters)
 )
 #' @export
+#' @rdname access_staRVe_process_parameters
 setReplaceMethod(f = "spatial_parameters",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {
@@ -76,11 +80,13 @@ setReplaceMethod(f = "spatial_parameters",
 
 
 #' @export
+#' @rdname access_staRVe_process_parameters
 setMethod(f = "time_parameters",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@time_parameters)
 )
 #' @export
+#' @rdname access_staRVe_process_parameters
 setReplaceMethod(f = "time_parameters",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {

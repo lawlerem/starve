@@ -43,6 +43,7 @@ Collate:
     'dag.R'
     'data.R'
     'fit.R'
+    'show.R'
     'src.R'
     'staRVe_settings.R'
     'staRVe_observation_parameters.R'
