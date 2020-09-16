@@ -30,6 +30,7 @@ Type objective_function<Type>::operator() () {
   DATA_IVECTOR(resp_w_time);
 
   DATA_MATRIX(mean_design);
+  DATA_IVECTOR(sample_size);
 
   DATA_INTEGER(covar_code);
   DATA_IVECTOR(w_time);
@@ -103,6 +104,7 @@ Type objective_function<Type>::operator() () {
                          ys_dist.segment(y_segment(0),y_segment(1)),
                          resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                          matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+                         sample_size.segment(y_segment(0),y_segment(1)),
                          family);
   resp_response.segment(y_segment(0),y_segment(1)) = obs.find_response();
 
@@ -128,7 +130,8 @@ Type objective_function<Type>::operator() () {
                  ys_dag.segment(y_segment(0),y_segment(1)),
                  ys_dist.segment(y_segment(0),y_segment(1)),
                  resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
-                 matrix_row_segment(mean_design,y_segment(0),y_segment(1)));
+                 matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+                 sample_size.segment(y_segment(0),y_segment(1)));
     resp_response.segment(y_segment(0),y_segment(1)) = obs.find_response();
 
     process.predict_w(pred_ws_dag,
@@ -172,6 +175,10 @@ Type objective_function<Type>::operator() () {
     Type par_sd = exp(response_pars(0));
     REPORT(par_sd);
     ADREPORT(par_sd);
+  } else if( distribution_code == 6 ) { // Binomial
+    // no extra pars
+  } else if( distribution_code == 7 ) { // AtLeastOneBinomial
+      // no extra pars
   } else {}
 
   Type par_tau = tau;

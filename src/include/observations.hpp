@@ -8,6 +8,7 @@ class observations {
     vector<matrix<Type> > ys_dists; // Distances for graph
     vector<Type> resp_w;
     matrix<Type> mean_design;
+    vector<int> sample_size;
     glm<Type> family;
 
     vector<Type> response;
@@ -20,6 +21,7 @@ class observations {
                  vector<matrix<Type> > ys_dists,
                  vector<Type> resp_w,
                  matrix<Type> mean_design,
+                 vector<int> sample_size,
                  glm<Type> family);
     observations() = default;
 
@@ -28,7 +30,8 @@ class observations {
                vector<vector<int> > new_graph,
                vector<matrix<Type> > new_dists,
                vector<Type> new_resp_w,
-               matrix<Type> new_mean_design);
+               matrix<Type> new_mean_design,
+               vector<int> new_sample_size);
 
     vector<Type> find_response();
     Type resp_w_loglikelihood();
@@ -45,6 +48,7 @@ observations<Type>::observations(nngp<Type> &process,
                                  vector<matrix<Type> > ys_dists,
                                  vector<Type> resp_w,
                                  matrix<Type> mean_design,
+                                 vector<int> sample_size,
                                  glm<Type> family) :
   process(process),
   y(y),
@@ -53,6 +57,7 @@ observations<Type>::observations(nngp<Type> &process,
   ys_dists(ys_dists),
   resp_w(resp_w),
   mean_design(mean_design),
+  sample_size(sample_size),
   family(family) {
   this->response = find_response();
 }
@@ -64,13 +69,15 @@ void observations<Type>::update_y(vector<Type> new_y,
                                   vector<vector<int> > new_graph,
                                   vector<matrix<Type> > new_dists,
                                   vector<Type> new_resp_w,
-                                  matrix<Type> new_mean_design) {
+                                  matrix<Type> new_mean_design,
+                                  vector<int> new_sample_size) {
   keep = new_keep;
   ys_graph = new_graph; // shouldn't need to resizeLike(new_graph), but maybe
   y = new_y;
   ys_dists = new_dists;
   resp_w = new_resp_w;
   mean_design = new_mean_design;
+  sample_size = new_sample_size;
   this->response = find_response();
 };
 
@@ -119,7 +126,7 @@ Type observations<Type>::y_loglikelihood() {
   Type ans = 0.0;
   response = find_response();
   for(int i=0; i<ys_graph.size(); i++) {
-    ans += keep(i)*family.log_density(Type(y(i)), response(i));
+    ans += keep(i)*family.log_density(Type(y(i)), response(i), sample_size(i));
   }
   return ans;
 }

@@ -18,7 +18,7 @@ class glm {
 
     Type inv_link(vector<Type> fixed_predictors,
                   Type random_predictor);
-    Type log_density(Type x, Type mean);
+    Type log_density(Type x, Type mean, int sample_size);
 };
 
 
@@ -45,6 +45,6 @@ Type glm<Type>::inv_link(vector<Type> fixed_predictors,
 }
 
 template<class Type>
-Type glm<Type>::log_density(Type x, Type mean) {
-  return distribution(x,mean,distribution_pars);
+Type glm<Type>::log_density(Type x, Type mean, int sample_size) {
+  return distribution(x,mean,sample_size,distribution_pars);
 }
