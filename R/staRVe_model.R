@@ -174,13 +174,15 @@ setMethod(f = "graph",
 #' .
 #'
 #' The formula object should always be of the form
-#'   \code{y ~ mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
+#'   \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
 #' The variable y should be replaced with the desired response variable, and t
 #' should be replaced with the desired time index. There are currently three
 #' valid options for the `type' argument in \code{time(t,type="ar1")} -- "ar1" for
 #' an AR(1) structure, "rw" for a random walk, and "independent" for independent
 #' spatial fields each year. The \code{space(...)} term specifies the spatial covariance
 #' function.
+#'
+#' The sample.size(...) term is only used if the response distribution is \code{binomial} or \code{atLeastOneBinomial}. If it is missing the sample sizes are assumed to all be 1.
 #'
 #' If the \code{time(...)} term is missing, all observations are assumed to be
 #' at the same time. If the \code{space(...)} term is missing, the spatial
@@ -201,7 +203,7 @@ setMethod(f = "graph",
 #' @param n_neighbours An integer giving the number of parents for each node.
 #' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param distribution A character vector giving the response distribution. The
-#'  default is "gaussian". See \code{get_staRVe_distributions("distribution")}.
+#'  default is "gaussian". The "atLeastOneBinomial" distribution models the probability of at least one success in n trials. See \code{get_staRVe_distributions("distribution")}.
 #' @param link A character vector giving the response link function. The default
 #'  is "identity". See \code{get_staRVe_distributions("link")}.
 #' @param silent Should intermediate calculations be printed?
@@ -291,6 +293,11 @@ setMethod(f = "TMB_in",
       formula(settings(x)),
       dat(observations)
     ),
+    sample_size = .sample_size_from_formula(
+      formula(settings(x)),
+      dat(observations),
+      nullReturn = T
+    )[,1],
     covar_code = .covariance_to_code(
       covariance_function(parameters(process))
     ),

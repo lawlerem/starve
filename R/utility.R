@@ -270,7 +270,9 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
                       "negative binomial", # 2
                       "bernoulli", # 3
                       "gamma", # 4
-                      "lognormal") # 5
+                      "lognormal", # 5
+                      "binomial", # 6
+                      "atLeastOneBinomial") # 7
     names(distributions)<- rep("distribution",length(distributions))
   } else { distributions<- character(0) }
 
@@ -439,6 +441,36 @@ order_by_location<- function(x,time=NULL,return="sort") {
 
 
 # S
+
+#' Retrieve a sample size from a formula and a data.frame.
+#'
+#' @param x A formula object with a sample.size(...) function containing one entry.
+#' @param data A data.frame containing the sample size information.
+#' @param nullReturn If there is no sample.size(...) function, should a vector of ones be returned?
+#'
+#' @return A data.frame with a single column for the sample size.
+.sample_size_from_formula<- function(x,data,nullReturn=F) {
+  the_terms<- terms(x,specials=c("sample.size","mean","time","space"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("^sample.size",term.labels,value=T)
+  if( length(the_call) == 0 ) {
+    if( nullReturn == F ) {
+      the_df<- matrix(0,nrow=nrow(data),ncol=0)
+    } else if( nullReturn == T ) {
+      the_df<- matrix(1,nrow=nrow(data),ncol=1)
+    }
+    return(the_df)
+  } else {}
+  new_formula<- sub("sample.size\\(","~",the_call)
+  new_formula<- sub("\\)$","",new_formula)
+  new_terms<- terms(formula(new_formula))
+  attr(new_terms,"intercept")<- 0
+  the_df<- model.frame(new_terms,data=data)
+
+  attr(the_df,"assign")<- NULL
+  rownames(the_df)<- NULL
+  return(the_df)
+}
 
 
 

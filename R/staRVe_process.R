@@ -16,7 +16,8 @@ setMethod(
   f = "initialize",
   signature = "staRVe_process",
   definition = function(.Object,
-                        random_effects = sf::st_sf(data.frame(
+                        random_effects = sf::st_sf(
+                          data.frame(
                             w = numeric(1),
                             fixed = logical(1),
                             time = numeric(1)

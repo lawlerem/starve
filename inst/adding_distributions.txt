@@ -1,4 +1,4 @@
-1.) Add to family.cpp
-2.) Add to sf_to_input-> get_staRVe_distributions
-3.) Add number of response pars sf_to_input-> in .sf_to_observation
+1.) Add to family.hpp
+2.) Add to utility.R -> get_staRVe_distributions
+3.) Add number of response pars to staRVe_observations.R -> prepare_staRVe_observations
 4.) Add distribution parameters to ADREPORT at end of staRVe.cpp

@@ -138,6 +138,7 @@ prepare_staRVe_observations<- function(data,
   names(response)<- c(attr(y,"name"),attr(time_form,"name"))
 
   design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
+  sample_size<- .sample_size_from_formula(formula(settings),data)
 
   dat(observations)<- sf:::cbind.sf(
     w = 0,
@@ -147,6 +148,7 @@ prepare_staRVe_observations<- function(data,
     response = NA,
     response_se = NA,
     design,
+    sample_size,
     response,
     data[,attr(data,"sf_column")]
   )
@@ -183,7 +185,9 @@ prepare_staRVe_observations<- function(data,
       `negative binomial` = numeric(1),
       bernoulli = numeric(0),
       gamma = numeric(1),
-      lognormal = numeric(1)
+      lognormal = numeric(1),
+      binomial = numeric(0),
+      atLeastOneBinomial = numeric(0)
     )),
     se = c(switch(distribution,
       gaussian = NA,
@@ -191,7 +195,9 @@ prepare_staRVe_observations<- function(data,
       `negative binomial` = NA,
       bernoulli = numeric(0),
       gamma = NA,
-      lognormal = NA
+      lognormal = NA,
+      binomial = numeric(0),
+      atLeastOneBinomial = numeric(0)
     )),
     fixed = c(switch(distribution,
       gaussian = rep(F,1),
@@ -199,7 +205,9 @@ prepare_staRVe_observations<- function(data,
       `negative binomial` = rep(F,1),
       bernoulli = rep(F,0),
       gamma = rep(F,1),
-      lognormal = rep(F,1)
+      lognormal = rep(F,1),
+      binomial = rep(F,0),
+      atLeastOneBinomial = rep(F,0)
     )),
     row.names = c(switch(distribution,
       gaussian = c("sd"),
@@ -208,6 +216,8 @@ prepare_staRVe_observations<- function(data,
       bernoulli = c(),
       gamma = c("sd"),
       lognormal = c("sd"),
+      binomial = c(),
+      atLeastOneBinomial = c()
     ))
   )
 
