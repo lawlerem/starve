@@ -182,6 +182,60 @@ setMethod(f = "staRVe_predict",
   return(pred_raster_by_time)
 })
 
+
+
+#' Simulate from a staRVe_model.
+#'
+#' @param model A staRVe_model object.
+#'
+#' @return A staRve_model object with simulated random effects and observations.
+#'
+#' @export
+setMethod(f = "staRVe_simulate",
+          signature = "staRve_model",
+          def = function(model,...) {
+  TMB_input<- TMB_in(model)
+
+  obj<- TMB::MakeADFun(
+    data = TMB_input$data,
+    para = TMB_input$para,
+    random = TMB_input$rand,
+    map = TMB_input$map,
+    DLL = "staRVe",
+    silent = T,
+    ...
+  )
+
+  spatial_parameters(parameters(process(model)))$se<- NA
+  time_parameters(parameters(process(model)))$se<- NA
+  response_parameters(parameters(observations(model)))$se<- rep(NA,nrow(response_parameters(parameters(observations(model)))))
+  fixed_effects(parameters(observations(model)))$se<- NA
+
+  sims<- obj$simulate()
+  random_effects(model)$w<- sims$proc_w
+  random_effects(model)$se<- NA
+  time_column<- attr(random_effects(model),"time_column")
+
+  resp_w_idx<- 1
+  for( i in seq(nrow(dat(model))) ) {
+    if( length(edges(transient_graph(observations(model)))[[i]]) == 1 ) {
+      w<- random_effects(model)[
+        random_effects(model)[,time_column,drop=T] == dat(model)[i,time_column,drop=T],
+      ]
+      dat(model)[i,"w"]<- as.data.frame(w)[edges(transient_graph(observations(model)))[i]],"w"]
+    } else {
+      dat(model)[i,"w"]<- sims$resp_w[resp_w_idx]
+      resp_w_idx<- resp_w_idx+1
+    }
+  }
+  dat(model)[,c("w_se","linear","linear_se","response","response_se")]<- NA
+
+  dat(model)[,attr(.response_from_formula(formula(settings(model)),
+                                          dat(model)),"name")]<- sims$obs_y
+
+  return(model)
+}
+
 .predict_w<- function(x,
                       locations,
                       pred_times,

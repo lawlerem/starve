@@ -116,6 +116,11 @@ Type objective_function<Type>::operator() () {
   nll -= process.loglikelihood()
             + obs.resp_w_loglikelihood()
             + obs.y_loglikelihood();
+  SIMULATE{
+    proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+    resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+    obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+  }
 
   for(int time=1; time<n_time; time++) {
     w_segment = get_time_segment(w_time,time);
@@ -142,6 +147,17 @@ Type objective_function<Type>::operator() () {
     nll -= process.loglikelihood()
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
+    SIMULATE{
+      proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+      resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+      obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+    }
+  }
+
+  SIMULATE{
+    REPORT(proc_w);
+    REORT(resp_w);
+    REPORT(obs_y);
   }
 
   REPORT(pred_nll);
