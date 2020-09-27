@@ -73,6 +73,7 @@
 \alias{staRVe_process}
 \alias{staRVe_process_parameters}
 \alias{staRVe_settings}
+\alias{staRVe_simulate}
 \alias{staRVe_tracing}
 \alias{symbolicAnalysis}
 \alias{symbolicAnalysis<-}
@@ -230,6 +231,8 @@ staRVe_process(x, ...)
 staRVe_process_parameters(x, ...)
 
 staRVe_settings(x, ...)
+
+staRVe_simulate(model, ...)
 
 staRVe_tracing(x, ...)
 

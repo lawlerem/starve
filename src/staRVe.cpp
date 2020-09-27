@@ -156,7 +156,7 @@ Type objective_function<Type>::operator() () {
 
   SIMULATE{
     REPORT(proc_w);
-    REORT(resp_w);
+    REPORT(resp_w);
     REPORT(obs_y);
   }
 

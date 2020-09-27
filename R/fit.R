@@ -190,9 +190,9 @@ setMethod(f = "staRVe_predict",
 #'
 #' @return A staRve_model object with simulated random effects and observations.
 #'
-#' @export
+#' @export 
 setMethod(f = "staRVe_simulate",
-          signature = "staRve_model",
+          signature = "staRVe_model",
           def = function(model,...) {
   TMB_input<- TMB_in(model)
 
@@ -222,7 +222,7 @@ setMethod(f = "staRVe_simulate",
       w<- random_effects(model)[
         random_effects(model)[,time_column,drop=T] == dat(model)[i,time_column,drop=T],
       ]
-      dat(model)[i,"w"]<- as.data.frame(w)[edges(transient_graph(observations(model)))[i]],"w"]
+      dat(model)[i,"w"]<- as.data.frame(w)[edges(transient_graph(observations(model)))[[i]],"w"]
     } else {
       dat(model)[i,"w"]<- sims$resp_w[resp_w_idx]
       resp_w_idx<- resp_w_idx+1
@@ -234,7 +234,7 @@ setMethod(f = "staRVe_simulate",
                                           dat(model)),"name")]<- sims$obs_y
 
   return(model)
-}
+})
 
 .predict_w<- function(x,
                       locations,

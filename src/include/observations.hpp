@@ -168,7 +168,7 @@ template<class Type>
 vector<Type> observations<Type>::simulate_y() {
   response = find_response();
   for(int i=0; i<ys_graph.size(); i++) {
-    y(i) = family.simulate(response(i));
+    y(i) = family.simulate(response(i), sample_size(i));
   }
 
   return y;
