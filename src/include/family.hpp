@@ -32,4 +32,20 @@ struct response_density {
       default : return dnorm(data,mean,exp(pars(0)),true); // Normal
     }
   }
+
+  template<class T>
+  T simulate(T mean,int size,vector<T> pars) {
+    switch(distribution_code) {
+      case 0 : return rnorm(mean,exp(pars(0))); // Normal
+      case 1 : return rpois(mean); // Poisson
+      case 2 : return rnbinom(mean,(exp(pars(0))+1)*mean); // Neg. Binomial
+      case 3 : return rbinom(T(1),mean); // Bernoulli with p = mean
+      case 4 : return rgamma(pow(mean,2)/exp(pars(0)),exp(pars(0))/mean);
+                                  // shape = mu^2/var,     scale = var/mu
+      case 5 : return exp(rnorm(mean,exp(pars(0)))); // Log-normal
+      case 6 : return rbinom(T(size),mean); // Binomial
+      case 7 : return (rbinom(T(size),mean) == 0 ? 0 : 1); // AtLeastOneBinomial
+      default : return rnorm(mean,exp(pars(0))); // Normal
+    }
+  }
 };

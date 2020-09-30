@@ -38,6 +38,8 @@ class observations {
     Type y_loglikelihood();
     vector<Type> predict_y(vector<Type> pred_w,
                            matrix<Type> pred_mean_design);
+    vector<Type> simulate_resp_w();
+    vector<Type> simulate_y();
 };
 
 template<class Type>
@@ -139,4 +141,35 @@ vector<Type> observations<Type>::predict_y(vector<Type> pred_w,
     pred_y(i) = family.inv_link(vector<Type>(pred_mean_design.row(i)),pred_w(i));
   }
   return pred_y;
+}
+
+template<class Type>
+vector<Type> observations<Type>::simulate_resp_w() {
+  int resp_w_idx = 0;
+  vector<vector<int> > resp_w_edges(resp_w.size());
+  vector<matrix<Type> > resp_w_dists(resp_w.size());
+  for(int i=0; i<ys_graph.size(); i++) {
+    vector<int> parents = ys_graph(i);
+    if( parents.size() == 1 ) {
+      continue;
+    } else {
+      resp_w_edges(resp_w_idx) = parents;
+      resp_w_dists(resp_w_idx) = ys_dists(i);
+      resp_w_idx++;
+    }
+  }
+
+  resp_w = process.simulate_resp_w(resp_w_edges,resp_w_dists);
+
+  return resp_w;
+}
+
+template<class Type>
+vector<Type> observations<Type>::simulate_y() {
+  response = find_response();
+  for(int i=0; i<ys_graph.size(); i++) {
+    y(i) = family.simulate(response(i), sample_size(i));
+  }
+
+  return y;
 }

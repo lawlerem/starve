@@ -525,6 +525,12 @@ setGeneric(name = "staRVe_settings",
 
 #' @export
 #' @rdname staRVe_generics
+setGeneric(name = "staRVe_simulate",
+           def = function(model,...) standardGeneric("staRVe_simulate")
+)
+
+#' @export
+#' @rdname staRVe_generics
 setGeneric(name = "staRVe_tracing",
            def = function(x,...) standardGeneric("staRVe_tracing")
 )
