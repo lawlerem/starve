@@ -45,16 +45,16 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
-  PARAMETER(logtau);
+  PARAMETER(logScaleTau);
   PARAMETER(logrho);
   PARAMETER(lognu);
   PARAMETER(logit_w_phi);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
 
-  Type tau = exp(logtau);
   Type rho = exp(logrho);
   Type nu = exp(lognu);
+  Type tau = sqrt(exp(logScaleTau)*pow(rho,2*nu));
   Type w_phi = invlogit(logit_w_phi);
 
   vector<vector<int> > ys_dag = ys_edges.dag;
@@ -197,12 +197,12 @@ Type objective_function<Type>::operator() () {
       // no extra pars
   } else {}
 
-  Type par_tau = tau;
-  REPORT(par_tau);
-  ADREPORT(par_tau);
-  Type working_par_logtau = logtau;
-  REPORT(working_par_logtau);
-  ADREPORT(working_par_logtau);
+  Type par_scaleTau = exp(logScaleTau);
+  REPORT(par_scaleTau);
+  ADREPORT(par_scaleTau);
+  Type working_par_logScaleTau = logScaleTau;
+  REPORT(working_par_logScaleTau);
+  ADREPORT(working_par_logScaleTau);
 
   Type par_rho = rho;
   REPORT(par_rho);

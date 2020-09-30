@@ -157,7 +157,7 @@ prepare_staRVe_process<- function(nodes,
     par = c(0,0,ifelse(is.nan(covariance$nu),0,covariance$nu)),
     se = NA,
     fixed = c(F,F,ifelse(is.nan(covariance$nu),F,T)),
-    row.names = c("rho","tau","nu")
+    row.names = c("rho","scaleTau","nu")
   )
 
 
