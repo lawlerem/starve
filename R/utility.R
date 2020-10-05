@@ -203,8 +203,7 @@ NULL
     if( missing(nu) ) {
       nu<- NaN
     }
-    covariance<- cbind(covar,
-                       nu)
+    covariance<- cbind(covar,nu)
     colnames(covariance)<- c("covariance","nu")
 
     return(covariance)
@@ -286,7 +285,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   if( "covariance" %in% which ) {
     covars<- c("exponential", # 0
                "gaussian", # 1
-               "matern") # 2
+               "matern", # 2
+               "matern32") # 3
     names(covars)<- rep("covariance",length(covars))
   } else { covars<- character(0) }
 

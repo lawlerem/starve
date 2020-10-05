@@ -190,7 +190,7 @@ setMethod(f = "staRVe_predict",
 #'
 #' @return A staRve_model object with simulated random effects and observations.
 #'
-#' @export 
+#' @export
 setMethod(f = "staRVe_simulate",
           signature = "staRVe_model",
           def = function(model,...) {

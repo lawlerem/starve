@@ -326,9 +326,9 @@ setMethod(f = "TMB_in",
     resp_w = numeric(
       sum(sapply(edges(transient_graph(observations)),length) > 1)
     ),
-    logtau = ifelse(
-      spatial_parameters(parameters(process))["tau","par"] > 0,
-      log(spatial_parameters(parameters(process))["tau","par"]),
+    logScaleTau = ifelse(
+      spatial_parameters(parameters(process))["scaleTau","par"] > 0,
+      log(spatial_parameters(parameters(process))["scaleTau","par"]),
       log(1)
     ),
     logrho = ifelse(
@@ -358,7 +358,7 @@ setMethod(f = "TMB_in",
     resp_w = logical(
       sum(sapply(edges(transient_graph(observations)),length) > 1)
     ),
-    logtau = spatial_parameters(parameters(process))["tau","fixed"],
+    logScaleTau = spatial_parameters(parameters(process))["scaleTau","fixed"],
     logrho = spatial_parameters(parameters(process))["rho","fixed"],
     lognu = spatial_parameters(parameters(process))["nu","fixed"],
     logit_w_phi = time_parameters(parameters(process))["phi","fixed"],
@@ -386,7 +386,7 @@ setMethod(f = "update_staRVe_model",
 
   spatial_parameters(parameters(process(x)))<- within(
     spatial_parameters(parameters(process(x))),{
-      par_names<<- c("par_rho","par_tau","par_nu")
+      par_names<<- c("par_rho","par_scaleTau","par_nu")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
     }
