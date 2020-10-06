@@ -54,7 +54,11 @@ Type objective_function<Type>::operator() () {
 
   Type rho = exp(logrho);
   Type nu = exp(lognu);
-  Type tau = exp(logScaleTau)*pow(rho,nu);
+  Type tau;
+  switch(covar_code) {
+    case 1 : tau = exp(logScaleTau); // Gaussian, nu=Inf
+    default : tau = exp(logScaleTau)*pow(rho,nu);
+  }
   Type w_phi = invlogit(logit_w_phi);
 
   vector<vector<int> > ys_dag = ys_edges.dag;

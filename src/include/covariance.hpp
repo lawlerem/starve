@@ -49,7 +49,7 @@ T covariance<Type>::covFun(T d) {
     case 0 : return (T)sqtau * exp( -dist(d)/(T)rho ); // Exponential
     case 1 : return (T)sqtau * exp( -pow(dist(d)/(T)rho,2) ); // Gaussian
     case 2 : return (T)sqtau * matern(d, rho, nu); // Matern
-    case 3 : return (T)sqtau * (1 + dist(d)/(T)rho) * exp( -dist(d)/(T)rho ); // Matern32 (nu = 1.5)
+    case 3 : return (T)sqtau * (1 + sqrt(3)*dist(d)/(T)rho) * exp( -sqrt(3)*dist(d)/(T)rho ); // Matern32 (nu = 1.5)
 
     default : return (T)sqtau * matern(d, rho, nu); // Matern
   }
