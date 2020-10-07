@@ -56,8 +56,8 @@ Type objective_function<Type>::operator() () {
   Type nu = exp(lognu);
   Type tau;
   switch(covar_code) {
-    case 1 : tau = exp(logScaleTau); // Gaussian, nu=Inf
-    default : tau = exp(logScaleTau)*pow(rho,nu);
+    case 1 : tau = exp(logScaleTau); break;// Gaussian, nu=Inf
+    default : tau = exp(logScaleTau)*pow(rho,nu); break;
   }
   Type w_phi = invlogit(logit_w_phi);
 

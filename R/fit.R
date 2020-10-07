@@ -31,12 +31,9 @@ setMethod(f = "staRVe_fit",
   }) -> opt_time(tracing)
 
   system.time({
-    hess<- numDeriv::jacobian(
-      obj(TMB_out)$gr,
-      opt(TMB_out)$par,
-      method = "simple"
-    )
-    hess<- as.matrix(Matrix::forceSymmetric(hess))
+    hess<- optimHess(opt(TMB_out)$par,
+                     obj(TMB_out)$fn,
+                     obj(TMB_out)$gr)
     par_cov<- solve(hess)
 
     rownames(hess)<-
