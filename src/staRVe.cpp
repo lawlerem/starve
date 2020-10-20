@@ -42,7 +42,7 @@ Type objective_function<Type>::operator() () {
   DATA_STRUCT(pred_ws_dists,dag_dists);
 
   PARAMETER(mu);
-  PARAMETER_VECTOR(response_pars); // Response distribution parameters except for mean
+  PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
   PARAMETER(logScaleTau);
@@ -52,6 +52,18 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
 
+  vector<Type> response_pars = working_response_pars;
+  switch(distribution_code) {
+    case 0 : response_pars(0) = exp(working_response_pars(0)); break; // Normal
+    case 1 : break; // Poisson
+    case 2 : response_pars(0) = exp(working_response_pars(0))+1; break; // Neg. Binom.
+    case 3 : break; // Bernoulli
+    case 4 : response_pars(0) = exp(working_response_pars(0)); break; // Gamma
+    case 5 : response_pars(0) = exp(working_response_pars(0)); break; // Log-Normal
+    case 6 : break; // Binomial
+    case 7 : break; // AtLeastOneBinomai
+    default : response_pars(0) = exp(working_response_pars(0)); break; // Normal
+  }
   Type rho = exp(logrho);
   Type nu = exp(lognu);
   Type tau;
@@ -176,23 +188,23 @@ Type objective_function<Type>::operator() () {
 
   // switch statement doesn't work with REPORT and ADREPORT for some reason
   if( distribution_code == 0 ) { // Normal
-    Type par_sd = exp(response_pars(0));
+    Type par_sd = response_pars(0);
     REPORT(par_sd);
     ADREPORT(par_sd);
   } else if( distribution_code == 1 ) { // Poisson
     // no extra pars
   } else if( distribution_code == 2 ) { // Neg. Binomial
-    Type par_overdispersion = exp(response_pars(0))+1;
+    Type par_overdispersion = response_pars(0);
     REPORT(par_overdispersion);
     ADREPORT(par_overdispersion);
   } else if( distribution_code == 3 ) { // Bernoulli
     // no extra pars
   } else if( distribution_code == 4 ) { // Gamma
-    Type par_sd = sqrt(exp(response_pars(0)));
+    Type par_sd = response_pars(0);
     REPORT(par_sd);
     ADREPORT(par_sd);
   } else if( distribution_code == 5 ) { // lognormal
-    Type par_sd = exp(response_pars(0));
+    Type par_sd = response_pars(0);
     REPORT(par_sd);
     ADREPORT(par_sd);
   } else if( distribution_code == 6 ) { // Binomial
