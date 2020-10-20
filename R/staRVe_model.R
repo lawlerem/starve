@@ -321,29 +321,63 @@ setMethod(f = "TMB_in",
 
   para<- list(
     mu = fixed_effects(parameters(observations))["mu","par"],
-    response_pars = response_parameters(parameters(observations))[,"par"],
+    # response_pars = response_parameters(parameters(observations))[,"par"],
+    working_response_pars = switch(response_distribution(parameters(observations)),
+      gaussian = ifelse( # Normal; std. dev.
+        response_parameters(parameters(observations))["sd","par"] > 0 ||
+          response_parameters(parameters(observations))["sd","fixed"] == T,
+        log(response_parameters(parameters(observations))["sd","par"]),
+        log(1)
+      ),
+      poisson = numeric(0), # Poisson; NA
+      `negative binomial` = ifelse( # Neg. Binom.; overdispersion
+        response_parameters(parameters(observations))["overdispersion","par"] >= 1 ||
+          reponse_parameters(parameters(observations))["overdispersion","fixed"] == T,
+        log(response_parameters(parameters(observations))["overdispersion","par"]-1),
+        log(1)
+      ),
+      bernoulli = numeric(0), # Bernoulli; NA
+      gamma = ifelse( # Gamma; std. dev.
+        response_parameters(parameters(observations))["sd","par"] > 0 ||
+          response_parameters(parameters(observations))["sd","fixed"] == T,
+        log(response_parameters(parameters(observations))["sd","par"]),
+        log(1)
+      ), # Gamma; std. dev.
+      lognormal = ifelse( # Log-Normal; std. dev.
+        response_parameters(parameters(observations))["sd","par"] > 0 ||
+          response_parameters(parameters(observations))["sd","fixed"] == T,
+        log(response_parameters(parameters(observations))["sd","par"]),
+        log(1)
+      ), # Log-normal; std. dev.
+      binomial = numeric(0), # Binomial; NA
+      atLeastOneBinomial = numeric(0)# atLeastOneBinomial; NA
+    ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],
     resp_w = numeric(
       sum(sapply(edges(transient_graph(observations)),length) > 1)
     ),
     logScaleTau = ifelse(
-      spatial_parameters(parameters(process))["scaleTau","par"] > 0,
+      spatial_parameters(parameters(process))["scaleTau","par"] > 0 ||
+        spatial_parameters(parameters(process))["scaleTau","fixed"] == T,
       log(spatial_parameters(parameters(process))["scaleTau","par"]),
       log(1)
     ),
     logrho = ifelse(
-      spatial_parameters(parameters(process))["rho","par"] > 0,
+      spatial_parameters(parameters(process))["rho","par"] > 0 ||
+        spatial_parameters(parameters(process))["rho","fixed"] == T,
       log(spatial_parameters(parameters(process))["rho","par"]),
       log(1)
     ),
     lognu = ifelse(
-      spatial_parameters(parameters(process))["nu","par"] > 0,
+      spatial_parameters(parameters(process))["nu","par"] > 0 ||
+        spatial_parameters(parameters(process))["nu","fixed"] == T,
       log(spatial_parameters(parameters(process))["nu","par"]),
       log(0.5)
     ),
     logit_w_phi = ifelse(
-      time_parameters(parameters(process))["phi","par"] >= 0
-        && time_parameters(parameters(process))["phi","par"] <= 1,
+      (time_parameters(parameters(process))["phi","par"] >= 0
+        && time_parameters(parameters(process))["phi","par"] <= 1) ||
+        time_parameters(parameters(process))["phi","fixed"] == T,
       qlogis(time_parameters(parameters(process))["phi","par"]),
       qlogis(0)
     ),
@@ -353,7 +387,7 @@ setMethod(f = "TMB_in",
   rand<- c("resp_w","proc_w","pred_w")
   map<- list(
     mu = fixed_effects(parameters(observations))["mu","fixed"],
-    response_pars = response_parameters(parameters(observations))[,"fixed"],
+    working_response_pars = response_parameters(parameters(observations))[,"fixed"],
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"fixed"],
     resp_w = logical(
       sum(sapply(edges(transient_graph(observations)),length) > 1)
