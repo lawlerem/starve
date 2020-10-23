@@ -302,8 +302,9 @@ setMethod(f = "staRVe_simulate",
 .predict_linear<- function(x,
                            w_predictions,
                            covariates) {
+  ### DON'T INCLUDE MU, it's already taken care of in predict_w
   if( identical(covariates,"missing") ) {
-    design<- matrix(1,nrow = nrow(w_predictions))
+    design<- matrix(0,nrow = nrow(w_predictions))
     colnames(design)[[1]]<- "mu"
   } else {
     time_column<- attr(random_effects(process(x)),"time_column")
@@ -325,7 +326,7 @@ setMethod(f = "staRVe_simulate",
 
     design<- .mean_design_from_formula(formula(settings(x)),
                                        w_predictions)
-    design<- cbind(1,design)
+    design<- cbind(0,design)
     colnames(design)[[1]]<- "mu"
   }
 
