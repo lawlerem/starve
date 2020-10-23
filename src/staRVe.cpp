@@ -87,7 +87,6 @@ Type objective_function<Type>::operator() () {
   response_density y_density = {distribution_code};
   glm<Type> family(inv_link,
                    y_density,
-                   mu,
                    mean_pars,
                    response_pars);
 
@@ -109,7 +108,7 @@ Type objective_function<Type>::operator() () {
 
   nngp<Type> process(cov,
                      proc_w.segment(w_segment(0),w_segment(1)),
-                     0*proc_w.segment(w_segment(0),w_segment(1)), // vector of zeros
+                     mu+0*proc_w.segment(w_segment(0),w_segment(1)), // vector of mu
                      ws_dag,
                      ws_dist);
 
