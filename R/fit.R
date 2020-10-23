@@ -304,6 +304,7 @@ setMethod(f = "staRVe_simulate",
                            covariates) {
   if( identical(covariates,"missing") ) {
     design<- matrix(1,nrow = nrow(w_predictions))
+    colnames(design)[[1]]<- "mu"
   } else {
     time_column<- attr(random_effects(process(x)),"time_column")
     covar_names<- .names_from_formula(formula(settings(x)))
@@ -325,15 +326,22 @@ setMethod(f = "staRVe_simulate",
     design<- .mean_design_from_formula(formula(settings(x)),
                                        w_predictions)
     design<- cbind(1,design)
+    colnames(design)[[1]]<- "mu"
   }
 
-  beta<- opt(TMB_out(x))$par[names(opt(TMB_out(x))$par) %in% c("mu","mean_pars")]
+  # beta<- opt(TMB_out(x))$par[names(opt(TMB_out(x))$par) %in% c("mu","mean_pars")]
+  beta<- fixed_effects(parameters(x))[,"par"]
+  names(beta)<- rownames(fixed_effects(parameters(x)))
+  par_cov<- matrix(0,ncol=length(beta),nrow=length(beta))
+  colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(parameters(x)))
 
   parameter_covariance<- parameter_covariance(tracing(x))
   par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
-  par_cov<- as.matrix(parameter_covariance[par_idx,par_idx])
-  linear<- design %*% beta + w_predictions$w
+  par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F]
+  par_idx<- names(beta)[fixed_effects(parameters(x))[,"fixed"] == F]
+  par_cov[par_idx,par_idx]<- par_sdreport
 
+  linear<- design %*% beta + w_predictions$w
   # The commented and uncommented methods are the same
   # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
   linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
