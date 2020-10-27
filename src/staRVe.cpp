@@ -51,6 +51,7 @@ Type objective_function<Type>::operator() () {
   PARAMETER(logit_w_phi);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
+  PARAMETER(dummy); // Allows fixing all parameters
 
   vector<Type> response_pars = working_response_pars;
   switch(distribution_code) {
@@ -144,7 +145,7 @@ Type objective_function<Type>::operator() () {
     pred_w_segment = get_time_segment(pred_w_time,time);
 
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
-                     w_phi * process.get_w());
+                     (1-w_phi)*mu + w_phi*process.get_w());
     obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
                  keep.segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
@@ -246,6 +247,5 @@ Type objective_function<Type>::operator() () {
   REPORT(resp_response);
   // ADREPORT(resp_response);
 
-  return(nll+pred_nll);
-
+  return(nll+pred_nll+0.5*pow(dummy,2));
 }

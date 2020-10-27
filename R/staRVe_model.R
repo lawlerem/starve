@@ -161,6 +161,134 @@ setMethod(f = "graph",
   return(graph)
 })
 
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "covariance_function",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(covariance_function(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "covariance_function",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  covariance_function(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "spatial_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(spatial_parmaeters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "spatial_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  spatial_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "spatial_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(spatial_parameters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "spatial_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  spatial_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "time_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(time_parameters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "time_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  time_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "response_distribution",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(response_distribution(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "response_distribution",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  response_distribution(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "response_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(response_parameters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "response_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  response_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "link_function",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(link_function(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "link_function",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  link_function(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "fixed_effects",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(fixed_effects(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "fixed_effects",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  fixed_effects(parameters(x))<- value
+  return(x)
+})
+
 
 
 ###############
@@ -382,7 +510,8 @@ setMethod(f = "TMB_in",
       qlogis(0)
     ),
     proc_w = c(random_effects(process)[,"w",drop=T]),
-    pred_w = numeric(0)
+    pred_w = numeric(0),
+    dummy = 0
   )
   rand<- c("resp_w","proc_w","pred_w")
   map<- list(

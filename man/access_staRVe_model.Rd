@@ -15,6 +15,20 @@
 \alias{random_effects,staRVe_model-method}
 \alias{random_effects<-,staRVe_model-method}
 \alias{graph,staRVe_model-method}
+\alias{covariance_function,staRVe_model-method}
+\alias{covariance_function<-,staRVe_model-method}
+\alias{spatial_parameters,staRVe_model-method}
+\alias{spatial_parameters<-,staRVe_model-method}
+\alias{time_parameters,staRVe_model-method}
+\alias{time_parameters<-,staRVe_model-method}
+\alias{response_distribution,staRVe_model-method}
+\alias{response_distribution<-,staRVe_model-method}
+\alias{response_parameters,staRVe_model-method}
+\alias{response_parameters<-,staRVe_model-method}
+\alias{link_function,staRVe_model-method}
+\alias{link_function<-,staRVe_model-method}
+\alias{fixed_effects,staRVe_model-method}
+\alias{fixed_effects<-,staRVe_model-method}
 \title{Get or set slots from an object of class \code{staRVe_model}.}
 \usage{
 \S4method{process}{staRVe_model}(x)
@@ -42,6 +56,38 @@
 \S4method{random_effects}{staRVe_model}(x) <- value
 
 \S4method{graph}{staRVe_model}(x)
+
+\S4method{covariance_function}{staRVe_model}(x)
+
+\S4method{covariance_function}{staRVe_model}(x) <- value
+
+\S4method{spatial_parameters}{staRVe_model}(x)
+
+\S4method{spatial_parameters}{staRVe_model}(x) <- value
+
+\S4method{spatial_parameters}{staRVe_model}(x)
+
+\S4method{spatial_parameters}{staRVe_model}(x) <- value
+
+\S4method{time_parameters}{staRVe_model}(x)
+
+\S4method{time_parameters}{staRVe_model}(x) <- value
+
+\S4method{response_distribution}{staRVe_model}(x)
+
+\S4method{response_distribution}{staRVe_model}(x) <- value
+
+\S4method{response_parameters}{staRVe_model}(x)
+
+\S4method{response_parameters}{staRVe_model}(x) <- value
+
+\S4method{link_function}{staRVe_model}(x)
+
+\S4method{link_function}{staRVe_model}(x) <- value
+
+\S4method{fixed_effects}{staRVe_model}(x)
+
+\S4method{fixed_effects}{staRVe_model}(x) <- value
 }
 \arguments{
 \item{x}{An object of class \code{staRVe_model}.}
