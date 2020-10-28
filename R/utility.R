@@ -106,9 +106,9 @@ NULL
 #' @return A character vector giving the names of covariates used in a formula.
 .names_from_formula<- function(x) {
   # Remove response and time from formula
-  the_terms<- terms(x,specials=c("mean","time"))
+  the_terms<- terms(x,specials=c("mean","time","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("time",term.labels,value=T,invert=T) # Get rid of time(...)
+  the_call<- grep("mean",term.labels,value=T) # Pick out mean(...)
   if( length(the_call) == 0 ) {
     return(character(0))
   } else {}
