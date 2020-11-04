@@ -510,8 +510,7 @@ setMethod(f = "TMB_in",
       qlogis(0)
     ),
     proc_w = c(random_effects(process)[,"w",drop=T]),
-    pred_w = numeric(0),
-    dummy = 0
+    pred_w = numeric(0)
   )
   rand<- c("resp_w","proc_w","pred_w")
   map<- list(

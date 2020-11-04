@@ -51,7 +51,6 @@ Type objective_function<Type>::operator() () {
   PARAMETER(logit_w_phi);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
-  PARAMETER(dummy); // Allows fixing all parameters
 
   vector<Type> response_pars = working_response_pars;
   switch(distribution_code) {
@@ -247,5 +246,5 @@ Type objective_function<Type>::operator() () {
   REPORT(resp_response);
   // ADREPORT(resp_response);
 
-  return(nll+pred_nll+0.5*pow(dummy,2));
+  return(nll+pred_nll);
 }
