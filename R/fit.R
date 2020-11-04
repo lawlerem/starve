@@ -25,22 +25,37 @@ setMethod(f = "staRVe_fit",
   )
 
   system.time({
-    opt(TMB_out)<- nlminb(obj(TMB_out)$par,
-                          obj(TMB_out)$fn,
-                          obj(TMB_out)$gr)
+    if( length(obj(TMB_out)$par) > 0 ) {
+      opt(TMB_out)<- nlminb(obj(TMB_out)$par,
+                            obj(TMB_out)$fn,
+                            obj(TMB_out)$gr)
+    } else {
+      opt(TMB_out)<- list(
+        par = numeric(0),
+        objective = obj(TMB_out)$fn(),
+        convergence = 0,
+        iterations = 0,
+        evaluations = c("function"=0,gradient=0),
+        message = "No parameters to optimize (NA)"
+      )
+    }
   }) -> opt_time(tracing)
 
   system.time({
-    hess<- optimHess(opt(TMB_out)$par,
-                     obj(TMB_out)$fn,
-                     obj(TMB_out)$gr)
-    par_cov<- solve(hess)
+    if( length(opt(TMB_out)$par) > 0 ) {
+      hess<- optimHess(opt(TMB_out)$par,
+                       obj(TMB_out)$fn,
+                       obj(TMB_out)$gr)
+      par_cov<- solve(hess)
 
-    rownames(hess)<-
-      colnames(hess)<-
-      rownames(par_cov)<-
-      colnames(par_cov)<-
-      names(opt(TMB_out)$par)
+      rownames(hess)<-
+        colnames(hess)<-
+        rownames(par_cov)<-
+        colnames(par_cov)<-
+        names(opt(TMB_out)$par)
+    } else {
+      hess<- par_cov<- matrix(0,nrow=0,ncol=0)
+    }
 
     parameter_hessian(tracing)<- hess
     parameter_covariance(tracing)<- par_cov
