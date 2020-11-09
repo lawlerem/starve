@@ -49,6 +49,7 @@ Type objective_function<Type>::operator() () {
   PARAMETER(logrho);
   PARAMETER(lognu);
   PARAMETER(logit_w_phi);
+  PARAMETER(log_time_sd);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
 
@@ -72,6 +73,7 @@ Type objective_function<Type>::operator() () {
     default : tau = exp(logScaleTau)*pow(rho,nu); break;
   }
   Type w_phi = invlogit(logit_w_phi);
+  Type time_sd = exp(log_time_sd);
 
   vector<vector<int> > ys_dag = ys_edges.dag;
   vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
@@ -107,6 +109,7 @@ Type objective_function<Type>::operator() () {
   pred_w_segment = get_time_segment(pred_w_time,0);
 
   nngp<Type> process(cov,
+                     time_sd,
                      proc_w.segment(w_segment(0),w_segment(1)),
                      mu+0*proc_w.segment(w_segment(0),w_segment(1)), // vector of mu
                      ws_dag,
@@ -239,6 +242,13 @@ Type objective_function<Type>::operator() () {
   Type working_par_logit_w_phi = logit_w_phi;
   REPORT(working_par_logit_w_phi);
   ADREPORT(working_par_logit_w_phi);
+
+  Type par_time_sd = time_sd;
+  REPORT(par_time_sd);
+  ADREPORT(par_time_sd);
+  Type working_par_log_time_sd = log_time_sd;
+  REPORT(working_par_log_time_sd);
+  ADREPORT(working_par_log_time_sd);
 
   REPORT(obs_y);
 

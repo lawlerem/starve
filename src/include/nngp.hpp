@@ -2,6 +2,7 @@ template<class Type>
 class nngp {
   private:
     covariance<Type> cov; // Covariance Function
+    Type time_sd; // standard deviation for first random effect (no parents)
     vector<Type> w; // Field value at knots
     vector<Type> mean; // Field mean at knots
     vector<vector<int> > ws_graph; // dag as edge list
@@ -12,6 +13,7 @@ class nngp {
 
   public:
     nngp(covariance<Type> cov,
+         Type time_sd,
          vector<Type> w,
          vector<Type> mean,
          vector<vector<int> > ws_graph,
@@ -36,11 +38,13 @@ class nngp {
 
 template<class Type>
 nngp<Type>::nngp(covariance<Type> cov,
+                 Type time_sd,
                  vector<Type> w,
                  vector<Type> mean,
                  vector<vector<int> > ws_graph,
                  vector<matrix<Type> > ws_dists) :
   cov(cov),
+  time_sd(time_sd),
   w(w),
   mean(mean),
   ws_graph(ws_graph),
@@ -82,7 +86,7 @@ void nngp<Type>::update_w(vector<Type> new_w,
 
 template<class Type>
 Type nngp<Type>::loglikelihood() {
-  Type ans = dnorm(w(0), mean(0), sqrt(cov(Type(0))), true);
+  Type ans = dnorm(w(0), mean(0), time_sd, true);
   for(int i=1; i<ws_graph.size(); i++) {
     kriging<Type> krig = fieldPred(ws_graph(i),
                                    ws_dists(i),
@@ -112,7 +116,7 @@ vector<Type> nngp<Type>::predict_w(vector<vector<int> > into_edges,
 
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
-  w(0) = rnorm(mean(0), sqrt(cov(Type(0))));
+  w(0) = rnorm(mean(0), time_sd);
   for(int i=1; i<w.size(); i++) {
     kriging<Type> krig = fieldPred(ws_graph(i),
                                    ws_dists(i),

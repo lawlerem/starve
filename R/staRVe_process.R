@@ -175,13 +175,15 @@ prepare_staRVe_process<- function(nodes,
     par = c(switch(attr(time_form,"type"),
                    ar1 = 0.5,
                    independent = 0,
-                   rw = 1)),
+                   rw = 1),
+            0),
     se = NA,
     fixed = c(switch(attr(time_form,"type"),
                    ar1 = F,
                    independent = T,
-                   rw = T)),
-    row.names = c("phi")
+                   rw = T),
+              F),
+    row.names = c("phi","sd")
   )
 
   parameters(process)<- parameters
