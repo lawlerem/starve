@@ -509,6 +509,12 @@ setMethod(f = "TMB_in",
       qlogis(time_parameters(parameters(process))["phi","par"]),
       qlogis(0)
     ),
+    log_time_sd = ifelse(
+      time_parameters(parameters(process))["sd","par"] > 0 ||
+        time_parameters(parameters(process))["sd","fixed"] == T,
+      log(time_parameters(parameters(process))["sd","par"]),
+      log(1)
+    ),
     proc_w = c(random_effects(process)[,"w",drop=T]),
     pred_w = numeric(0)
   )
@@ -524,6 +530,7 @@ setMethod(f = "TMB_in",
     logrho = spatial_parameters(parameters(process))["rho","fixed"],
     lognu = spatial_parameters(parameters(process))["nu","fixed"],
     logit_w_phi = time_parameters(parameters(process))["phi","fixed"],
+    log_time_sd = time_parameters(parameters(process))["sd","fixed"],
     proc_w = random_effects(process)[,"fixed",drop=T],
     pred_w = logical(0)
   )
@@ -556,7 +563,7 @@ setMethod(f = "update_staRVe_model",
 
   time_parameters(parameters(process(x)))<- within(
     time_parameters(parameters(process(x))),{
-      par_names<<- c("par_w_phi")
+      par_names<<- c("par_w_phi","par_time_sd")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
     }
