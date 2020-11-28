@@ -185,6 +185,9 @@ prepare_staRVe_process<- function(nodes,
               F),
     row.names = c("phi","sd")
   )
+  if( length(unique(time_seq)) == 1 ) {
+    time_parameters(parameters)$fixed<- c(T,T)
+  } else {}
 
   parameters(process)<- parameters
 
