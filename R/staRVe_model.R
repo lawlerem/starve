@@ -330,6 +330,8 @@ setReplaceMethod(f = "fixed_effects",
 #'  will be used for each year.
 #' @param n_neighbours An integer giving the number of parents for each node.
 #' @param p_far_neighbours What percent of neighbours should be randomly selected?
+#' @param persistent_graph If an object of class \code{dag} is supplied, that graph is used for the persistent graph.
+#' @param transient_graph If an object of class \code{dag} is supplied, that graph is used for the transient graph.
 #' @param distribution A character vector giving the response distribution. The
 #'  default is "gaussian". The "atLeastOneBinomial" distribution models the probability of at least one success in n trials. See \code{get_staRVe_distributions("distribution")}.
 #' @param link A character vector giving the response link function. The default
@@ -348,7 +350,9 @@ prepare_staRVe_model<- function(formula,
                                 data,
                                 nodes = data,
                                 n_neighbours = 10,
-                                p_far_neighbours = 0.2,
+                                p_far_neighbours = 0,
+                                persistent_graph = NA,
+                                transient_graph = NA,
                                 distribution = "gaussian",
                                 link = "identity",
                                 silent = T,
@@ -367,12 +371,14 @@ prepare_staRVe_model<- function(formula,
   )
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
+    persistent_graph = persistent_graph.
     time = as.data.frame(data)[,attr(time_form,"name"),drop=F],
     settings = settings(model)
   )
   observations(model)<- prepare_staRVe_observations(
     data = data,
     process = process(model),
+    transient_graph = transient_graph,
     settings = settings(model),
     distribution = distribution,
     link = link

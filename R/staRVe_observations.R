@@ -124,6 +124,7 @@ setReplaceMethod(f = "parameters",
 #' @return A staRVe_observations object.
 prepare_staRVe_observations<- function(data,
                                        process,
+                                       transient_graph = NA,
                                        settings = new("staRVe_settings"),
                                        distribution = "gaussian",
                                        link = "identity") {
@@ -161,12 +162,15 @@ prepare_staRVe_observations<- function(data,
     random_effects(process),
     random_effects(process)[,attr(random_effects(process),"time_column"),drop=T]
   )[[1]]
-  transient_graph(observations)<- construct_obs_dag(
-    x = data,
-    y = random_effects,
-    settings = new("staRVe_settings"),
-  )
-
+  if( is.na(transient_graph) || class(transient_graph) != "dag" ) {
+    transient_graph(observations)<- construct_obs_dag(
+      x = data,
+      y = random_effects,
+      settings = new("staRVe_settings"),
+    )
+  } else {
+    transient_graph(observations)<- transient_graph
+  }
 
 
   # parameters = "staRVe_observation_parameters"
