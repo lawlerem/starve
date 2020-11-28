@@ -86,13 +86,18 @@ void nngp<Type>::update_w(vector<Type> new_w,
 
 template<class Type>
 Type nngp<Type>::loglikelihood() {
-  Type ans = dnorm(w(0), mean(0), time_sd, true);
-  for(int i=1; i<ws_graph.size(); i++) {
-    kriging<Type> krig = fieldPred(ws_graph(i),
-                                   ws_dists(i),
-                                   mean(i),
-                                   false);
-    ans += dnorm(w(i), krig.mean(), krig.sd(), true);
+  Type ans = 0.0;
+  // Type ans = dnorm(w(0), mean(0), time_sd, true);
+  for(int i=0; i<ws_graph.size(); i++) {
+    if( ws_graph(i).size() == 0 ) {
+      ans += dnorm(w(i), mean(i), time_sd, true);
+    } else {
+      kriging<Type> krig = fieldPred(ws_graph(i),
+                                     ws_dists(i),
+                                     mean(i),
+                                     false);
+      ans += dnorm(w(i), krig.mean(), krig.sd(), true);
+    }
   }
   return ans;
 }
@@ -116,13 +121,17 @@ vector<Type> nngp<Type>::predict_w(vector<vector<int> > into_edges,
 
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
-  w(0) = rnorm(mean(0), time_sd);
-  for(int i=1; i<w.size(); i++) {
-    kriging<Type> krig = fieldPred(ws_graph(i),
-                                   ws_dists(i),
-                                   mean(i),
-                                   false);
-    w(i) = rnorm(krig.mean(), krig.sd());
+  // w(0) = rnorm(mean(0), time_sd);
+  for(int i=0; i<w.size(); i++) {
+    if( ws_graph(i).size() == 0 ) {
+      w(i) = rnorm(mean(i), time_sd);
+    } else {
+      kriging<Type> krig = fieldPred(ws_graph(i),
+                                     ws_dists(i),
+                                     mean(i),
+                                     false);
+      w(i) = rnorm(krig.mean(), krig.sd());
+    }
   }
 
   return w;
