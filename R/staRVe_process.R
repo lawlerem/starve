@@ -146,7 +146,7 @@ prepare_staRVe_process<- function(nodes,
 
 
   # persistent_graph = "dag",
-  if( is.na(persistent_graph) || class(persistent_graph) != "dag" ) {
+  if( identical(persistent_graph,NA) || class(persistent_graph) != "dag" ) {
     persistent_graph(process)<- construct_dag(nodes,
       settings = settings,
       silent = T

@@ -371,7 +371,7 @@ prepare_staRVe_model<- function(formula,
   )
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
-    persistent_graph = persistent_graph.
+    persistent_graph = persistent_graph,
     time = as.data.frame(data)[,attr(time_form,"name"),drop=F],
     settings = settings(model)
   )

@@ -162,7 +162,7 @@ prepare_staRVe_observations<- function(data,
     random_effects(process),
     random_effects(process)[,attr(random_effects(process),"time_column"),drop=T]
   )[[1]]
-  if( is.na(transient_graph) || class(transient_graph) != "dag" ) {
+  if( identical(transient_graph,NA) || class(transient_graph) != "dag" ) {
     transient_graph(observations)<- construct_obs_dag(
       x = data,
       y = random_effects,
