@@ -6,6 +6,7 @@
 \usage{
 prepare_staRVe_process(
   nodes,
+  persistent_graph = NA,
   time = data.frame(time = 0),
   settings = new("staRVe_settings")
 )

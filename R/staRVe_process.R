@@ -121,6 +121,7 @@ setReplaceMethod(f = "parameters",
 #'
 #' @return A staRVe_process object.
 prepare_staRVe_process<- function(nodes,
+                                  persistent_graph = NA,
                                   time = data.frame(time=0),
                                   settings = new("staRVe_settings") ) {
   process<- new("staRVe_process")
@@ -145,10 +146,14 @@ prepare_staRVe_process<- function(nodes,
 
 
   # persistent_graph = "dag",
-  persistent_graph(process)<- construct_dag(nodes,
-    settings = settings,
-    silent = T
-  )
+  if( identical(persistent_graph,NA) || class(persistent_graph) != "dag" ) {
+    persistent_graph(process)<- construct_dag(nodes,
+      settings = settings,
+      silent = T
+    )
+  } else {
+    persistent_graph(process)<- persistent_graph
+  }
 
   # parameters = "staRVe_process_parameters"
   parameters<- new("staRVe_process_parameters")

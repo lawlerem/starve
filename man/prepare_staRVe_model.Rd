@@ -9,7 +9,9 @@ prepare_staRVe_model(
   data,
   nodes = data,
   n_neighbours = 10,
-  p_far_neighbours = 0.2,
+  p_far_neighbours = 0,
+  persistent_graph = NA,
+  transient_graph = NA,
   distribution = "gaussian",
   link = "identity",
   silent = T,
@@ -34,6 +36,10 @@ will be used for each year.}
 \item{n_neighbours}{An integer giving the number of parents for each node.}
 
 \item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
+
+\item{persistent_graph}{If an object of class \code{dag} is supplied, that graph is used for the persistent graph.}
+
+\item{transient_graph}{If an object of class \code{dag} is supplied, that graph is used for the transient graph.}
 
 \item{distribution}{A character vector giving the response distribution. The
 default is "gaussian". The "atLeastOneBinomial" distribution models the probability of at least one success in n trials. See \code{get_staRVe_distributions("distribution")}.}
