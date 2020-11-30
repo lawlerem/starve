@@ -231,12 +231,13 @@ setMethod(f = "staRVe_simulate",
   resp_w_idx<- 1
   for( i in seq(nrow(dat(model))) ) {
     if( length(edges(transient_graph(observations(model)))[[i]]) == 1 ) {
-      w<- random_effects(model)[
-        random_effects(model)[,time_column,drop=T] == dat(model)[i,time_column,drop=T],
-      ]
-      dat(model)[i,"w"]<- as.data.frame(w)[edges(transient_graph(observations(model)))[[i]],"w"]
+      re<- random_effects(model)
+      w<- re[,"w",drop=T][re[,time_column,drop=T] == dat(model)[i,time_column,drop=T]]
+      dat(model)$w[[i]]<- w[[
+                             edges(transient_graph(observations(model)))[[i]]
+                           ]]
     } else {
-      dat(model)[i,"w"]<- sims$resp_w[resp_w_idx]
+      dat(model)$w[[i]]<- sims$resp_w[resp_w_idx]
       resp_w_idx<- resp_w_idx+1
     }
   }
