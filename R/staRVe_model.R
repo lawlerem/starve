@@ -613,7 +613,7 @@ setMethod(f = "update_staRVe_model",
     if( length(edges(obs_dag)[[i]]) == 1 ) {
       re<- random_effects(x)
       w<- re[,c("w","se"),drop=T][re[,time_column,drop=T] == dat(x)[1,time_column,drop=T],]
-      data[1,c("w","se")]<- w[edges(obs_dag)[[1]],c("w","se")]
+      data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]],c("w","se")]
     } else {
       data[i,c("w","w_se")]<- resp_w[resp_w_idx,]
       resp_w_idx<- resp_w_idx+1
