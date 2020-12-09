@@ -199,14 +199,24 @@ setMethod(f = "staRVe_predict",
 #' Simulate from a staRVe_model.
 #'
 #' @param model A staRVe_model object.
+#' @param conditional logical. If true, only new observations are simulated.
+#'   If false, new random effects and new observations are simulated.
 #'
 #' @return A staRve_model object with simulated random effects and observations.
 #'
 #' @export
 setMethod(f = "staRVe_simulate",
           signature = "staRVe_model",
-          def = function(model,...) {
+          def = function(model,
+                         conditional = F,
+                         ...) {
   TMB_input<- TMB_in(model)
+  if( conditional ) {
+    TMB_input$data$conditional_sim<- conditional
+    TMB_input$map$resp_w<- factor(rep(NA,length(TMB_input$para$resp_w)))
+    TMB_input$map$proc_w<- factor(rep(NA,length(TMB_input$para$proc_w)))
+    TMB_input$map$pred_w<- factor(rep(NA,length(TMB_input$para$pred_w)))
+  } else {}
 
   obj<- TMB::MakeADFun(
     data = TMB_input$data,

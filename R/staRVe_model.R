@@ -440,7 +440,8 @@ setMethod(f = "TMB_in",
     ws_dists = distances(persistent_graph(process)),
     pred_w_time = numeric(0),
     pred_ws_edges = list(numeric(0)),
-    pred_ws_dists = list(matrix(0,nrow=0,ncol=0))
+    pred_ws_dists = list(matrix(0,nrow=0,ncol=0)),
+    conditional_sim = F
   )
 
   time_names<- c(

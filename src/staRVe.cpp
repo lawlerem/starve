@@ -41,6 +41,8 @@ Type objective_function<Type>::operator() () {
   DATA_STRUCT(pred_ws_edges,directed_graph);
   DATA_STRUCT(pred_ws_dists,dag_dists);
 
+  DATA_INTEGER(conditional_sim); // If true, don't simulate w
+
   PARAMETER(mu);
   PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
@@ -135,8 +137,10 @@ Type objective_function<Type>::operator() () {
             + obs.resp_w_loglikelihood()
             + obs.y_loglikelihood();
   SIMULATE{
-    proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
-    resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+    if( !conditional_sim) {
+      proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+      resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+    } else {}
     obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
   }
 
@@ -166,8 +170,10 @@ Type objective_function<Type>::operator() () {
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
     SIMULATE{
-      proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
-      resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+      if( !conditional_sim ) {
+        proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+        resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+      } else {}
       obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
     }
   }
