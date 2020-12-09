@@ -4,10 +4,13 @@
 \alias{staRVe_simulate,staRVe_model-method}
 \title{Simulate from a staRVe_model.}
 \usage{
-\S4method{staRVe_simulate}{staRVe_model}(model, ...)
+\S4method{staRVe_simulate}{staRVe_model}(model, conditional = F, ...)
 }
 \arguments{
 \item{model}{A staRVe_model object.}
+
+\item{conditional}{logical. If true, only new observations are simulated.
+If false, new random effects and new observations are simulated.}
 }
 \value{
 A staRve_model object with simulated random effects and observations.

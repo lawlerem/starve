@@ -59,6 +59,17 @@ NULL
   return(x)
 }
 
+.birdFit<- function() {
+  foo<- prepare_staRVe_model(
+    cnt~time(year),
+    bird_survey,
+    distribution="poisson",
+    link="log",
+    fit=T
+  )
+  return(foo)
+}
+
 .covariance_to_code<- function(covariance) {
   covar_code<- charmatch(covariance,get_staRVe_distributions("covariance"))
   if( is.na(covar_code) || covar_code == 0 ) {

@@ -440,7 +440,8 @@ setMethod(f = "TMB_in",
     ws_dists = distances(persistent_graph(process)),
     pred_w_time = numeric(0),
     pred_ws_edges = list(numeric(0)),
-    pred_ws_dists = list(matrix(0,nrow=0,ncol=0))
+    pred_ws_dists = list(matrix(0,nrow=0,ncol=0)),
+    conditional_sim = F
   )
 
   time_names<- c(
@@ -537,7 +538,7 @@ setMethod(f = "TMB_in",
     lognu = spatial_parameters(parameters(process))["nu","fixed"],
     logit_w_phi = time_parameters(parameters(process))["phi","fixed"],
     log_time_sd = time_parameters(parameters(process))["sd","fixed"],
-    proc_w = random_effects(process)[,"fixed",drop=T],
+    proc_w = logical(nrow(random_effects(process))),
     pred_w = logical(0)
   )
   map<- lapply(map,.logical_to_map)
