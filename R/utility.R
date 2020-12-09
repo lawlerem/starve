@@ -282,7 +282,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
                       "gamma", # 4
                       "lognormal", # 5
                       "binomial", # 6
-                      "atLeastOneBinomial") # 7
+                      "atLeastOneBinomial", # 7
+                      "compois") # 8
     names(distributions)<- rep("distribution",length(distributions))
   } else { distributions<- character(0) }
 

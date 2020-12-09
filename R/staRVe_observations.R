@@ -191,7 +191,8 @@ prepare_staRVe_observations<- function(data,
       gamma = numeric(1),
       lognormal = numeric(1),
       binomial = numeric(0),
-      atLeastOneBinomial = numeric(0)
+      atLeastOneBinomial = numeric(0),
+      compois = numeric(1)
     )),
     se = c(switch(distribution,
       gaussian = NA,
@@ -201,7 +202,8 @@ prepare_staRVe_observations<- function(data,
       gamma = NA,
       lognormal = NA,
       binomial = numeric(0),
-      atLeastOneBinomial = numeric(0)
+      atLeastOneBinomial = numeric(0),
+      compois = NA
     )),
     fixed = c(switch(distribution,
       gaussian = rep(F,1),
@@ -211,7 +213,8 @@ prepare_staRVe_observations<- function(data,
       gamma = rep(F,1),
       lognormal = rep(F,1),
       binomial = rep(F,0),
-      atLeastOneBinomial = rep(F,0)
+      atLeastOneBinomial = rep(F,0),
+      compois = rep(F,1)
     )),
     row.names = c(switch(distribution,
       gaussian = c("sd"),
@@ -221,7 +224,8 @@ prepare_staRVe_observations<- function(data,
       gamma = c("sd"),
       lognormal = c("sd"),
       binomial = c(),
-      atLeastOneBinomial = c()
+      atLeastOneBinomial = c(),
+      compois = ("dispersion")
     ))
   )
 

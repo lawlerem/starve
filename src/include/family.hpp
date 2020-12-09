@@ -29,6 +29,7 @@ struct response_density {
       case 7 : return (data == 0 ?
                         size*log(1-mean) :
                         log(1 - pow(1-mean,size)) ); // AtLeastOneBinomial
+      case 8 : return dcompois2(data,mean,pars(0),true); // Conway-Maxwell-Poisson
       default : return dnorm(data,mean,pars(0),true); // Normal
     }
   }
@@ -38,13 +39,14 @@ struct response_density {
     switch(distribution_code) {
       case 0 : return rnorm(mean,pars(0)); // Normal
       case 1 : return rpois(mean); // Poisson
-      case 2 : return rnbinom(mean,pars(0)*mean); // Neg. Binomial
+      case 2 : return rnbinom2(mean,pars(0)*mean); // Neg. Binomial
       case 3 : return rbinom(T(1),mean); // Bernoulli with p = mean
       case 4 : return rgamma(pow(mean/pars(0),2),pow(pars(0),2)/mean);
                                   // shape = mu^2/var,     scale = var/mu
       case 5 : return exp(rnorm(mean,pars(0))); // Log-normal
       case 6 : return rbinom(T(size),mean); // Binomial
       case 7 : return (rbinom(T(size),mean) == 0 ? 0 : 1); // AtLeastOneBinomial
+      case 8 : return rcompois2(mean,pars(0));
       default : return rnorm(mean,pars(0)); // Normal
     }
   }

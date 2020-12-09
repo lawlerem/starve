@@ -1,3 +1,4 @@
+
 #include <TMB.hpp>
 #include <iostream>
 using namespace density;
@@ -65,6 +66,7 @@ Type objective_function<Type>::operator() () {
     case 5 : response_pars(0) = exp(working_response_pars(0)); break; // Log-Normal
     case 6 : break; // Binomial
     case 7 : break; // AtLeastOneBinomai
+    case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson
     default : response_pars(0) = exp(working_response_pars(0)); break; // Normal
   }
   Type rho = exp(logrho);
@@ -219,6 +221,10 @@ Type objective_function<Type>::operator() () {
     // no extra pars
   } else if( distribution_code == 7 ) { // AtLeastOneBinomial
       // no extra pars
+  } else if ( distribution_code == 8 ) { // Conway-Maxwell-Poisson
+    Type par_dispersion = response_pars(0);
+    REPORT(par_dispersion);
+    ADREPORT(par_dispersion);
   } else {}
 
   Type par_scaleTau = exp(logScaleTau);

@@ -467,7 +467,7 @@ setMethod(f = "TMB_in",
       poisson = numeric(0), # Poisson; NA
       `negative binomial` = ifelse( # Neg. Binom.; overdispersion
         response_parameters(parameters(observations))["overdispersion","par"] >= 1 ||
-          reponse_parameters(parameters(observations))["overdispersion","fixed"] == T,
+          response_parameters(parameters(observations))["overdispersion","fixed"] == T,
         log(response_parameters(parameters(observations))["overdispersion","par"]-1),
         log(1)
       ),
@@ -485,7 +485,13 @@ setMethod(f = "TMB_in",
         log(1)
       ), # Log-normal; std. dev.
       binomial = numeric(0), # Binomial; NA
-      atLeastOneBinomial = numeric(0)# atLeastOneBinomial; NA
+      atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
+      compois = ifelse ( # Conway-Maxwell-Poisson; disperions
+        response_parameters(parameters(observations))["dispersion","par"] > 0 ||
+          response_parameters(parameters(observations))["dispersion","fixed"] == T,
+        log(response_parameters(parameters(observations))["dispersion","par"]),
+        log(1)
+      )
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],
     resp_w = numeric(
@@ -596,7 +602,7 @@ setMethod(f = "update_staRVe_model",
 
   response_parameters(parameters(observations(x)))<- within(
     response_parameters(parameters(observations(x))),{
-      par_names<<- c("par_sd","par_overdispersion")
+      par_names<<- c("par_sd","par_overdispersion","par_dispersion")
       par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }
