@@ -19,7 +19,7 @@ setMethod(
                         random_effects = sf::st_sf(
                           data.frame(
                             w = numeric(1),
-                            fixed = logical(1),
+                            se = numeric(1),
                             time = numeric(1)
                           ),
                           geometry = sf::st_sfc(sf::st_point())
@@ -136,10 +136,9 @@ prepare_staRVe_process<- function(nodes,
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
     df<- sf:::cbind.sf(data.frame(w = 0,
                                   se = NA,
-                                  fixed = F,
                                   time = t),
                        nodes)
-    colnames(df)[[4]]<- attr(time_form,"name")
+    colnames(df)[[3]]<- attr(time_form,"name")
     return(df)
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")

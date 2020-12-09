@@ -321,7 +321,7 @@ setMethod(f = "staRVe_simulate",
                            w_predictions,
                            covariates,
                            se = T) {
-  ### DON'T INCLUDE MU, it's already taken care of in predict_w
+  ### Set intercept design to 0 since it's already taken care of in predict_w
   if( identical(covariates,"missing") ) {
     design<- matrix(0,nrow = nrow(w_predictions))
     colnames(design)[[1]]<- "mu"

@@ -144,7 +144,6 @@ prepare_staRVe_observations<- function(data,
   dat(observations)<- sf:::cbind.sf(
     w = 0,
     w_se = NA,
-    fixed = F,
     linear = NA,
     linear_se = NA,
     response = NA,

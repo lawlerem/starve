@@ -537,7 +537,7 @@ setMethod(f = "TMB_in",
     lognu = spatial_parameters(parameters(process))["nu","fixed"],
     logit_w_phi = time_parameters(parameters(process))["phi","fixed"],
     log_time_sd = time_parameters(parameters(process))["sd","fixed"],
-    proc_w = random_effects(process)[,"fixed",drop=T],
+    proc_w = logical(nrow(random_effects(process))),
     pred_w = logical(0)
   )
   map<- lapply(map,.logical_to_map)
@@ -612,8 +612,8 @@ setMethod(f = "update_staRVe_model",
   for( i in seq(nrow(data)) ) {
     if( length(edges(obs_dag)[[i]]) == 1 ) {
       re<- random_effects(x)
-      w<- re[,c("w","se","fixed"),drop=T][re[,time_column,drop=T] == dat(x)[1,time_column,drop=T],]
-      data[i,c("w","w_se","fixed")]<- w[edges(obs_dag)[[i]],c("w","se","fixed")]
+      w<- re[,c("w","se"),drop=T][re[,time_column,drop=T] == dat(x)[1,time_column,drop=T],]
+      data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]],c("w","se")]
     } else {
       data[i,c("w","w_se")]<- resp_w[resp_w_idx,]
       resp_w_idx<- resp_w_idx+1
