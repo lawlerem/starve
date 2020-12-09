@@ -242,6 +242,8 @@ setMethod(f = "staRVe_simulate",
     }
   }
   dat(model)[,c("w_se","linear","linear_se","response","response_se")]<- NA
+  dat(model)[,c("linear")]<- .predict_linear(model,dat(model),dat(model),se=F)[,"linear",drop=T]
+  dat(model)[,c("response")]<- .predict_response(model,dat(model),se=F)[,c("response"),drop=T]
 
   dat(model)[,attr(.response_from_formula(formula(settings(model)),
                                           dat(model)),"name")]<- sims$obs_y
@@ -317,7 +319,8 @@ setMethod(f = "staRVe_simulate",
 
 .predict_linear<- function(x,
                            w_predictions,
-                           covariates) {
+                           covariates,
+                           se = T) {
   ### DON'T INCLUDE MU, it's already taken care of in predict_w
   if( identical(covariates,"missing") ) {
     design<- matrix(0,nrow = nrow(w_predictions))
@@ -349,25 +352,31 @@ setMethod(f = "staRVe_simulate",
   # beta<- opt(TMB_out(x))$par[names(opt(TMB_out(x))$par) %in% c("mu","mean_pars")]
   beta<- fixed_effects(parameters(x))[,"par"]
   names(beta)<- rownames(fixed_effects(parameters(x)))
-  par_cov<- matrix(0,ncol=length(beta),nrow=length(beta))
-  colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(parameters(x)))
-
-  parameter_covariance<- parameter_covariance(tracing(x))
-  par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
-  par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F]
-  par_idx<- names(beta)[fixed_effects(parameters(x))[,"fixed"] == F]
-  par_cov[par_idx,par_idx]<- par_sdreport
-
   linear<- design %*% beta + w_predictions$w
-  # The commented and uncommented methods are the same
-  # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
-  linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+
+  if( se ) {
+    par_cov<- matrix(0,ncol=length(beta),nrow=length(beta))
+    colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(parameters(x)))
+
+    parameter_covariance<- parameter_covariance(tracing(x))
+    par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
+    par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F]
+    par_idx<- names(beta)[fixed_effects(parameters(x))[,"fixed"] == F]
+    par_cov[par_idx,par_idx]<- par_sdreport
+
+    # The commented and uncommented methods are the same
+    # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
+    linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+  } else {
+    linear_se<- NA
+  }
 
   return(sf:::cbind.sf(linear,linear_se,w_predictions))
 }
 
 .predict_response<- function(x,
-                             linear_predictions) {
+                             linear_predictions,
+                             se = T) {
   data<- list(link_code = .link_to_code(
     link_function(parameters(observations(x)))
   ))
@@ -379,23 +388,29 @@ setMethod(f = "staRVe_simulate",
     silent = T
   )
 
-  second_order_mean<- function(linear,linear_se) {
-    mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
-    return(as.numeric(mean))
-  }
-  second_order_se<- function(linear,linear_se) {
-    se<- sqrt(link_function$gr(linear)^2*linear_se^2
-      + 0.5*link_function$he(linear)^2*linear_se^4)
-    return(as.numeric(se))
-  }
-  response<- sapply(seq(nrow(linear_predictions)),function(i) {
-    return(second_order_mean(linear_predictions[i,"linear",drop=T],
+  if( se ) {
+    second_order_mean<- function(linear,linear_se) {
+      mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
+      return(as.numeric(mean))
+    }
+    response<- sapply(seq(nrow(linear_predictions)),function(i) {
+      return(second_order_mean(linear_predictions[i,"linear",drop=T],
+                               linear_predictions[i,"linear_se",drop=T]))
+    })
+
+    second_order_se<- function(linear,linear_se) {
+      se<- sqrt(link_function$gr(linear)^2*linear_se^2
+        + 0.5*link_function$he(linear)^2*linear_se^4)
+      return(as.numeric(se))
+    }
+    response_se<- sapply(seq(nrow(linear_predictions)),function(i) {
+      return(second_order_se(linear_predictions[i,"linear",drop=T],
                              linear_predictions[i,"linear_se",drop=T]))
-  })
-  response_se<- sapply(seq(nrow(linear_predictions)),function(i) {
-    return(second_order_se(linear_predictions[i,"linear",drop=T],
-                           linear_predictions[i,"linear_se",drop=T]))
-  })
+    })
+  } else {
+    response<- sapply(linear_predictions$linear,link_function$fn)
+    response_se<- NA
+  }
   predictions<- sf:::cbind.sf(response,response_se,linear_predictions)
   return(predictions)
 }
