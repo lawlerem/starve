@@ -24,10 +24,9 @@ NULL
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       df<- sf:::cbind.sf(data.frame(w = 0,
                                     se = NA,
-                                    fixed = F,
                                     time = t),
                          nodes)
-      colnames(df)[[4]]<- attr(random_effects,"time_column")
+      colnames(df)[[3]]<- attr(random_effects,"time_column")
       return(df)
     }))
 
@@ -42,10 +41,9 @@ NULL
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       df<- sf:::cbind.sf(data.frame(w = 0,
                                     se = NA,
-                                    fixed = F,
                                     time = t),
                          nodes)
-      colnames(df)[[4]]<- attr(random_effects,"time_column")
+      colnames(df)[[3]]<- attr(random_effects,"time_column")
       return(df)
     }))
 

@@ -489,8 +489,8 @@ setMethod(f = "TMB_in",
       compois = ifelse ( # Conway-Maxwell-Poisson; disperions
         response_parameters(parameters(observations))["dispersion","par"] > 0 ||
           response_parameters(parameters(observations))["dispersion","fixed"] == T,
-        log(response_parameters(parameters(observations))["dispersion","par"]),
-        log(1)
+        -log(response_parameters(parameters(observations))["dispersion","par"]),
+        -log(1)
       )
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],

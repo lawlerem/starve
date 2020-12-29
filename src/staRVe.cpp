@@ -1,4 +1,3 @@
-
 #include <TMB.hpp>
 #include <iostream>
 using namespace density;
@@ -67,7 +66,7 @@ Type objective_function<Type>::operator() () {
     case 6 : break; // Binomial
     case 7 : break; // AtLeastOneBinomai
     case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson
-    default : response_pars(0) = exp(working_response_pars(0)); break; // Normal
+    default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal
   }
   Type rho = exp(logrho);
   Type nu = exp(lognu);

@@ -15,6 +15,7 @@ class covariance {
     covariance(Type tau, Type rho, Type nu, int covar_code);
     covariance() = default;
 
+    Type get_tau();
     template<typename T> T operator() (T d);
     template<typename T> vector<T> operator() (vector<T> d);
     template<typename T> matrix<T> operator() (matrix<T> D);
@@ -29,6 +30,13 @@ covariance<Type>::covariance(Type tau, Type rho, Type nu, int covar_code) :
   nu(nu),
   covar_code(covar_code) {
   this->sqtau = pow(tau,2);
+}
+
+
+// Access to tau
+template<class Type>
+Type covariance<Type>::get_tau() {
+  return tau;
 }
 
 
