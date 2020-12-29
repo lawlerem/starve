@@ -61,14 +61,10 @@ kriging<Type> nngp<Type>::fieldPred(vector<int> parents,
   matrix<Type> covMat = cov(dists);
   for(int i=0; i<parents.size(); i++) {
     if( ws_graph(parents(i)).size() == 0 ) {
-      Rcout << covMat << "\n\n";
       for(int j=0; j<covMat.rows(); j++) {
         covMat(i,j) *= time_sd/cov.get_tau();
         covMat(j,i) *= time_sd/cov.get_tau();
-        // covMat(i+1,j) = 0;
-        // covMat(j,i+1) = 0;
       }
-      Rcout << covMat << "\n\n\n\n\n";
     } else {}
   }
 
