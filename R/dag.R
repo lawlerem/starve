@@ -234,14 +234,20 @@ construct_dag<- function(x,
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
-  nn_list<- lapply(seq(nrow(x)), function(i) {
+  startupEdges<- seq(n_neighbours(settings))
+  startupDists<- units::set_units(sf::st_distance(x[startupEdges,]),"m")
+  startupDists<- units::set_units(parent_dists,
+                                  distance_units(settings),
+                                  mode="standard")
+
+  nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
     .get_one_dag_node(x = x[i,],
                       nodes = head(x,i-1),
                       settings = settings,
                       silent = silent)
   })
-  edge_list<- lapply(nn_list,`[[`,1)
-  dist_list<- lapply(nn_list,`[[`,2)
+  edge_list<- c(startupEdges,lapply(nn_list,`[[`,1))
+  dist_list<- c(startupDists,lapply(nn_list,`[[`,2))
   dag<- new("dag",
             edges = edge_list,
             distances = dist_list,
