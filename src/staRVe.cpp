@@ -51,6 +51,7 @@ Type objective_function<Type>::operator() () {
   PARAMETER(logScaleTau);
   PARAMETER(logrho);
   PARAMETER(lognu);
+  PARAMETER_VECTOR(time_effects);
   PARAMETER(logit_w_phi);
   PARAMETER(log_time_sd);
   PARAMETER_VECTOR(proc_w);
@@ -115,7 +116,7 @@ Type objective_function<Type>::operator() () {
   nngp<Type> process(cov,
                      time_sd,
                      proc_w.segment(w_segment(0),w_segment(1)),
-                     mu+0*proc_w.segment(w_segment(0),w_segment(1)), // vector of mu
+                     time_effects(0)+mu+0*proc_w.segment(w_segment(0),w_segment(1)), // vector of mu
                      ws_dag,
                      ws_dist);
 
@@ -135,11 +136,13 @@ Type objective_function<Type>::operator() () {
                     pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
                     pred_nll);
 
-  nll -= process.loglikelihood()
+  nll -= dnorm(time_effects(0),Type(0),time_sd,true)
+            + process.loglikelihood()
             + obs.resp_w_loglikelihood()
             + obs.y_loglikelihood();
   SIMULATE{
     if( !conditional_sim) {
+      time_effects(0) = rnorm(Type(0.0),time_sd);
       proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
       resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
     } else {}
@@ -153,7 +156,7 @@ Type objective_function<Type>::operator() () {
     pred_w_segment = get_time_segment(pred_w_time,time);
 
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
-                     (1-w_phi)*mu + w_phi*process.get_w());
+                     time_effects(time)+(1-w_phi)*mu + w_phi*process.get_w());
     obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
                  keep.segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
@@ -168,11 +171,13 @@ Type objective_function<Type>::operator() () {
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
                       pred_nll);
 
-    nll -= process.loglikelihood()
+    nll -= dnorm(time_effects(time),Type(0),time_sd,true)
+              + process.loglikelihood()
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
     SIMULATE{
       if( !conditional_sim ) {
+        time_effects(time) = rnorm(Type(0.0),time_sd);
         proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
         resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
@@ -181,6 +186,7 @@ Type objective_function<Type>::operator() () {
   }
 
   SIMULATE{
+    REPORT(time_effects);
     REPORT(proc_w);
     REPORT(resp_w);
     REPORT(obs_y);

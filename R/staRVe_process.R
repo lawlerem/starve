@@ -16,6 +16,11 @@ setMethod(
   f = "initialize",
   signature = "staRVe_process",
   definition = function(.Object,
+                        time_effects = data.frame(
+                          w = numeric(1),
+                          se = numeric(1),
+                          time = numeric(1)
+                        ),
                         random_effects = sf::st_sf(
                           data.frame(
                             w = numeric(1),
@@ -26,6 +31,7 @@ setMethod(
                         ),
                         persistent_graph = new("dag"),
                         parameters = new("staRVe_process_parameters")) {
+    time_effects(.Object)<- time_effects
     random_effects(.Object)<- random_effects
     if( !is.null(attr(random_effects(.Object),"active_time")) &&
         "time" %in% colnames(random_effects(.Object)) ) {
@@ -55,6 +61,21 @@ setMethod(
 #' @family access_staRVe_process
 #' @name access_staRVe_process
 NULL
+
+#' @export
+#' @rdname access_staRVe_process
+setMethod(f = "time_effects",
+          signature = "staRVe_process",
+          definition = function(x) return(x@time_effects)
+)
+#' @export
+#' @rdname access_staRVe_process
+setReplaceMethod(f = "time_effects",
+                 signature = "staRVe_process",
+                 definition = function(x,value) {
+  x@time_effects<- value
+  return(x)
+})
 
 #' @export
 #' @rdname access_staRVe_process
@@ -128,11 +149,20 @@ prepare_staRVe_process<- function(nodes,
 
   covariance<- .covariance_from_formula(formula(settings))
   time_form<- .time_from_formula(formula(settings),time)
+  time_seq<- seq(min(time),max(time))
+
+  # time_effects = "data.frame"
+  time_effects(process)<- data.frame(
+    w = 0,
+    se = NA,
+    time = time_seq
+  )
+  colnames(time_effects(process))[[3]]<- attr(time_form,"name")
+  attr(time_effects(process),"time_column")<- attr(time_form,"name")
 
   # random_effects = "sf",
   nodes<- nodes[,attr(nodes,"sf_column")] # Only need locations
   nodes<- order_by_location(unique(nodes))
-  time_seq<- seq(min(time),max(time))
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
     df<- sf:::cbind.sf(data.frame(w = 0,
                                   se = NA,

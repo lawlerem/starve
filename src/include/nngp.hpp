@@ -87,7 +87,7 @@ void nngp<Type>::update_w(vector<Type> new_w,
 template<class Type>
 Type nngp<Type>::loglikelihood() {
   matrix<Type> covMat = cov(ws_dists(0));
-  vector<Type> meanVec = covMat.cols());
+  vector<Type> meanVec = covMat.cols();
   vector<Type> wVec = meanVec.size();
   for(int i=0; i<meanVec.size(); i++) {
     meanVec(i) = mean(ws_graph(0)(i));
@@ -95,7 +95,7 @@ Type nngp<Type>::loglikelihood() {
   }
   Type ans = -MVNORM(covMat)(wVec-meanVec); // Times -1 because we want the positive log-likelihood
 
-  int offset = ws_graph(0).size(); // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
+  int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
   for(int i=1; i<ws_graph.size(); i++) {
     kriging<Type> krig = fieldPred(ws_graph(i),
                                    ws_dists(i),
@@ -126,16 +126,16 @@ vector<Type> nngp<Type>::predict_w(vector<vector<int> > into_edges,
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
   matrix<Type> covMat = cov(ws_dists(0));
-  vector<Type> meanVec = covMat.cols());
+  vector<Type> meanVec = covMat.cols();
   for(int i=0; i<meanVec.size(); i++) {
     meanVec(i) = mean(ws_graph(0)(i));
   }
   vector<Type> simW = MVNORM(covMat).simulate()+meanVec;
   for(int i=0; i<simW.size(); i++) {
-    w(ws_graph(0)(i)) = simW(i):
+    w(ws_graph(0)(i)) = simW(i);
   }
 
-  int offset = ws_graph(0).size(); // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
+  int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
   for(int i=1; i<ws_graph.size(); i++) {
     kriging<Type> krig = fieldPred(ws_graph(i),
                                    ws_dists(i),

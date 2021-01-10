@@ -34,6 +34,17 @@ NULL
       extra_effects,
       random_effects(process(x))
     )
+
+    extra_time_effects<- data.frame(
+      w = 0,
+      se = NA,
+      time = extra_times
+    )
+    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
+    time_effects(process(x))<- rbind(
+      extra_time_effects,
+      time_effects(process(x))
+    )
   } else {}
 
   if( max(times) > max(model_times) ) {
@@ -51,9 +62,21 @@ NULL
       random_effects(process(x)),
       extra_effects
     )
+
+    extra_time_effects<- data.frame(
+      w = 0,
+      se = NA,
+      time = extra_times
+    )
+    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
+    time_effects(process(x))<- rbind(
+      time_effects(process(x)),
+      extra_time_effects
+    )
   } else {}
 
   attr(random_effects(process(x)),"time_column")<- attr(random_effects,"time_column")
+  attr(time_effects(process(x)),"time_column")<- attr(random_effects,"time_column")
   return(x)
 }
 

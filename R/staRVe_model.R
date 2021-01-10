@@ -137,6 +137,22 @@ setReplaceMethod(f = "dat",
 
 #' @export
 #' @rdname access_staRVe_model
+setMethod(f = "time_effects",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(time_effects(process(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "time_effects",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  time_effects(process(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
 setMethod(f = "random_effects",
           signature = "staRVe_model",
           definition = function(x) {
@@ -515,6 +531,7 @@ setMethod(f = "TMB_in",
       log(spatial_parameters(parameters(process))["nu","par"]),
       log(0.5)
     ),
+    time_effects = c(time_effects(process)[,"w",drop=T]),
     logit_w_phi = ifelse(
       (time_parameters(parameters(process))["phi","par"] >= 0
         && time_parameters(parameters(process))["phi","par"] <= 1) ||
@@ -531,7 +548,7 @@ setMethod(f = "TMB_in",
     proc_w = c(random_effects(process)[,"w",drop=T]),
     pred_w = numeric(0)
   )
-  rand<- c("resp_w","proc_w","pred_w")
+  rand<- c("resp_w","time_effects","proc_w","pred_w")
   map<- list(
     mu = fixed_effects(parameters(observations))["mu","fixed"],
     working_response_pars = response_parameters(parameters(observations))[,"fixed"],
@@ -579,6 +596,14 @@ setMethod(f = "update_staRVe_model",
       par_names<<- c("par_w_phi","par_time_sd")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
+    }
+  )
+
+  time_effects(process(x))<- within(
+    time_effects(process(x)),{
+      par_names<<- c("time_effects")
+      w<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }
   )
 

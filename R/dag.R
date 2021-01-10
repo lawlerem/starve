@@ -236,9 +236,10 @@ construct_dag<- function(x,
 
   startupEdges<- seq(n_neighbours(settings))
   startupDists<- units::set_units(sf::st_distance(x[startupEdges,]),"m")
-  startupDists<- units::set_units(parent_dists,
+  startupDists<- units::set_units(startupDists,
                                   distance_units(settings),
                                   mode="standard")
+  startupDists<- units::drop_units(startupDists)
 
   nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
     .get_one_dag_node(x = x[i,],
@@ -246,8 +247,9 @@ construct_dag<- function(x,
                       settings = settings,
                       silent = silent)
   })
-  edge_list<- c(startupEdges,lapply(nn_list,`[[`,1))
-  dist_list<- c(startupDists,lapply(nn_list,`[[`,2))
+  edge_list<- c(list(startupEdges),lapply(nn_list,`[[`,1))
+  dist_list<- c(list(startupDists),lapply(nn_list,`[[`,2))
+
   dag<- new("dag",
             edges = edge_list,
             distances = dist_list,

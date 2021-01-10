@@ -77,6 +77,8 @@
 \alias{staRVe_tracing}
 \alias{symbolicAnalysis}
 \alias{symbolicAnalysis<-}
+\alias{time_effects}
+\alias{time_effects<-}
 \alias{time_parameters}
 \alias{time_parameters<-}
 \alias{timing}
@@ -239,6 +241,10 @@ staRVe_tracing(x, ...)
 symbolicAnalysis(x)
 
 symbolicAnalysis(x) <- value
+
+time_effects(x)
+
+time_effects(x) <- value
 
 time_parameters(x)
 
