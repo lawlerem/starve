@@ -27,6 +27,9 @@ class nngp {
                            vector<matrix<Type> > dists,
                            vector<Type> pred_w,
                            Type &nll);
+    vector<Type> simulate();
+    vector<Type> simulate_resp_w(vector<vector<int> > resp_w_edges,
+                                 vector<matrix<Type> > resp_w_dists);
 };
 
 
@@ -42,7 +45,11 @@ nngp<Type>::nngp(covariance<Type> cov,
   mean(mean),
   ws_graph(ws_graph),
   ws_dists(ws_dists) {
-  // Nothing left to initialize
+  Type initSD = fieldPred(ws_graph(0).segment(1,ws_graph(0).size()-1),
+                          ws_dists(0),
+                          Type(0.0),
+                          false).sd();
+  this->cov.update_tau(initSD);
 }
 
 
@@ -79,13 +86,22 @@ void nngp<Type>::update_w(vector<Type> new_w,
 
 template<class Type>
 Type nngp<Type>::loglikelihood() {
-  Type ans = dnorm(w(0), mean(0), sqrt(cov(Type(0))), true);
+  matrix<Type> covMat = cov(ws_dists(0));
+  vector<Type> meanVec(ws_graph(0).size());
+  vector<Type> wVec(ws_graph(0).size());
+  for(int i=0; i<meanVec.size(); i++) {
+    meanVec(i) = mean(ws_graph(0)(i));
+    wVec(i) = w(ws_graph(0)(i));
+  }
+  Type ans = -MVNORM(covMat)(wVec-meanVec); // Times -1 because we want the positive log-likelihood
+
+  int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
   for(int i=1; i<ws_graph.size(); i++) {
     kriging<Type> krig = fieldPred(ws_graph(i),
                                    ws_dists(i),
-                                   mean(i),
+                                   mean(i+offset),
                                    false);
-    ans += dnorm(w(i), krig.mean(), krig.sd(), true);
+    ans += dnorm(w(i+offset), krig.mean(), krig.sd(), true);
   }
   return ans;
 }
@@ -104,4 +120,45 @@ vector<Type> nngp<Type>::predict_w(vector<vector<int> > into_edges,
     nll -= dnorm(pred_w(i), krig.mean(), krig.sd(), true);
   }
   return pred_w;
+}
+
+
+template<class Type>
+vector<Type> nngp<Type>::simulate() {
+  matrix<Type> covMat = cov(ws_dists(0));
+  vector<Type> meanVec(ws_graph(0).size());
+  for(int i=0; i<meanVec.size(); i++) {
+    meanVec(i) = mean(ws_graph(0)(i));
+  }
+  vector<Type> simW = MVNORM(covMat).simulate()+meanVec;
+  for(int i=0; i<simW.size(); i++) {
+    w(ws_graph(0)(i)) = simW(i);
+  }
+
+  int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
+  for(int i=1; i<ws_graph.size(); i++) {
+    kriging<Type> krig = fieldPred(ws_graph(i),
+                                   ws_dists(i),
+                                   mean(i+offset),
+                                   false);
+    w(i+offset) = rnorm(krig.mean(), krig.sd());
+  }
+
+  return w;
+}
+
+
+template<class Type>
+vector<Type> nngp<Type>::simulate_resp_w(vector<vector<int> > resp_w_edges,
+                                         vector<matrix<Type> > resp_w_dists) {
+  vector<Type> sim_w(resp_w_edges.size());
+  for(int i=0; i<sim_w.size(); i++) {
+    kriging<Type> krig = fieldPred(resp_w_edges(i),
+                                   resp_w_dists(i),
+                                   Type(0), // This value doesn't matter since
+                                   true); // we interpolate it
+    sim_w(i) = rnorm(krig.mean(), krig.sd());
+  }
+
+  return sim_w;
 }

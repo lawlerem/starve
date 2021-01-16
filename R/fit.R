@@ -25,25 +25,37 @@ setMethod(f = "staRVe_fit",
   )
 
   system.time({
-    opt(TMB_out)<- nlminb(obj(TMB_out)$par,
-                          obj(TMB_out)$fn,
-                          obj(TMB_out)$gr)
+    if( length(obj(TMB_out)$par) > 0 ) {
+      opt(TMB_out)<- nlminb(obj(TMB_out)$par,
+                            obj(TMB_out)$fn,
+                            obj(TMB_out)$gr)
+    } else {
+      opt(TMB_out)<- list(
+        par = numeric(0),
+        objective = obj(TMB_out)$fn(),
+        convergence = 0,
+        iterations = 0,
+        evaluations = c("function"=0,gradient=0),
+        message = "No parameters to optimize (NA)"
+      )
+    }
   }) -> opt_time(tracing)
 
   system.time({
-    hess<- numDeriv::jacobian(
-      obj(TMB_out)$gr,
-      opt(TMB_out)$par,
-      method = "simple"
-    )
-    hess<- as.matrix(Matrix::forceSymmetric(hess))
-    par_cov<- solve(hess)
+    if( length(opt(TMB_out)$par) > 0 ) {
+      hess<- optimHess(opt(TMB_out)$par,
+                       obj(TMB_out)$fn,
+                       obj(TMB_out)$gr)
+      par_cov<- solve(hess)
 
-    rownames(hess)<-
-      colnames(hess)<-
-      rownames(par_cov)<-
-      colnames(par_cov)<-
-      names(opt(TMB_out)$par)
+      rownames(hess)<-
+        colnames(hess)<-
+        rownames(par_cov)<-
+        colnames(par_cov)<-
+        names(opt(TMB_out)$par)
+    } else {
+      hess<- par_cov<- matrix(0,nrow=0,ncol=0)
+    }
 
     parameter_hessian(tracing)<- hess
     parameter_covariance(tracing)<- par_cov
@@ -182,6 +194,77 @@ setMethod(f = "staRVe_predict",
   return(pred_raster_by_time)
 })
 
+
+
+#' Simulate from a staRVe_model.
+#'
+#' @param model A staRVe_model object.
+#' @param conditional logical. If true, only new observations are simulated.
+#'   If false, new random effects and new observations are simulated.
+#'
+#' @return A staRve_model object with simulated random effects and observations.
+#'
+#' @export
+setMethod(f = "staRVe_simulate",
+          signature = "staRVe_model",
+          def = function(model,
+                         conditional = F,
+                         ...) {
+  TMB_input<- TMB_in(model)
+  if( conditional ) {
+    TMB_input$data$conditional_sim<- conditional
+    TMB_input$map$time_effects<- factor(rep(NA,length(TMB_input$para$time_effects)))
+    TMB_input$map$resp_w<- factor(rep(NA,length(TMB_input$para$resp_w)))
+    TMB_input$map$proc_w<- factor(rep(NA,length(TMB_input$para$proc_w)))
+    TMB_input$map$pred_w<- factor(rep(NA,length(TMB_input$para$pred_w)))
+  } else {}
+
+  obj<- TMB::MakeADFun(
+    data = TMB_input$data,
+    para = TMB_input$para,
+    random = TMB_input$rand,
+    map = TMB_input$map,
+    DLL = "staRVe",
+    silent = T,
+    ...
+  )
+
+  spatial_parameters(parameters(process(model)))$se<- NA
+  time_parameters(parameters(process(model)))$se<- NA
+  response_parameters(parameters(observations(model)))$se<- rep(NA,nrow(response_parameters(parameters(observations(model)))))
+  fixed_effects(parameters(observations(model)))$se<- NA
+
+  sims<- obj$simulate()
+  random_effects(model)$w<- sims$proc_w
+  random_effects(model)$se<- NA
+  time_column<- attr(random_effects(model),"time_column")
+
+  time_effects(model)$w<- sims$time_effects
+  time_effects(model)$se<- NA
+
+  resp_w_idx<- 1
+  for( i in seq(nrow(dat(model))) ) {
+    if( length(edges(transient_graph(observations(model)))[[i]]) == 1 ) {
+      re<- random_effects(model)
+      w<- re[,"w",drop=T][re[,time_column,drop=T] == dat(model)[i,time_column,drop=T]]
+      dat(model)$w[[i]]<- w[[
+                             edges(transient_graph(observations(model)))[[i]]
+                           ]]
+    } else {
+      dat(model)$w[[i]]<- sims$resp_w[resp_w_idx]
+      resp_w_idx<- resp_w_idx+1
+    }
+  }
+  dat(model)[,c("w_se","linear","linear_se","response","response_se")]<- NA
+  dat(model)[,c("linear")]<- .predict_linear(model,dat(model),dat(model),se=F)[,"linear",drop=T]
+  dat(model)[,c("response")]<- .predict_response(model,dat(model),se=F)[,c("response"),drop=T]
+
+  dat(model)[,attr(.response_from_formula(formula(settings(model)),
+                                          dat(model)),"name")]<- sims$obs_y
+
+  return(model)
+})
+
 .predict_w<- function(x,
                       locations,
                       pred_times,
@@ -250,9 +333,12 @@ setMethod(f = "staRVe_predict",
 
 .predict_linear<- function(x,
                            w_predictions,
-                           covariates) {
+                           covariates,
+                           se = T) {
+  ### Set intercept design to 0 since it's already taken care of in predict_w
   if( identical(covariates,"missing") ) {
-    design<- matrix(1,nrow = nrow(w_predictions))
+    design<- matrix(0,nrow = nrow(w_predictions))
+    colnames(design)[[1]]<- "mu"
   } else {
     time_column<- attr(random_effects(process(x)),"time_column")
     covar_names<- .names_from_formula(formula(settings(x)))
@@ -273,25 +359,38 @@ setMethod(f = "staRVe_predict",
 
     design<- .mean_design_from_formula(formula(settings(x)),
                                        w_predictions)
-    design<- cbind(1,design)
+    design<- cbind(0,design)
+    colnames(design)[[1]]<- "mu"
   }
 
-  beta<- opt(TMB_out(x))$par[names(opt(TMB_out(x))$par) %in% c("mu","mean_pars")]
-
-  parameter_covariance<- parameter_covariance(tracing(x))
-  par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
-  par_cov<- as.matrix(parameter_covariance[par_idx,par_idx])
+  # beta<- opt(TMB_out(x))$par[names(opt(TMB_out(x))$par) %in% c("mu","mean_pars")]
+  beta<- fixed_effects(parameters(x))[,"par"]
+  names(beta)<- rownames(fixed_effects(parameters(x)))
   linear<- design %*% beta + w_predictions$w
 
-  # The commented and uncommented methods are the same
-  # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
-  linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+  if( se ) {
+    par_cov<- matrix(0,ncol=length(beta),nrow=length(beta))
+    colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(parameters(x)))
+
+    parameter_covariance<- parameter_covariance(tracing(x))
+    par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
+    par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F]
+    par_idx<- names(beta)[fixed_effects(parameters(x))[,"fixed"] == F]
+    par_cov[par_idx,par_idx]<- par_sdreport
+
+    # The commented and uncommented methods are the same
+    # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
+    linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+  } else {
+    linear_se<- NA
+  }
 
   return(sf:::cbind.sf(linear,linear_se,w_predictions))
 }
 
 .predict_response<- function(x,
-                             linear_predictions) {
+                             linear_predictions,
+                             se = T) {
   data<- list(link_code = .link_to_code(
     link_function(parameters(observations(x)))
   ))
@@ -303,23 +402,29 @@ setMethod(f = "staRVe_predict",
     silent = T
   )
 
-  second_order_mean<- function(linear,linear_se) {
-    mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
-    return(as.numeric(mean))
-  }
-  second_order_se<- function(linear,linear_se) {
-    se<- sqrt(link_function$gr(linear)^2*linear_se^2
-      + 0.5*link_function$he(linear)^2*linear_se^4)
-    return(as.numeric(se))
-  }
-  response<- sapply(seq(nrow(linear_predictions)),function(i) {
-    return(second_order_mean(linear_predictions[i,"linear",drop=T],
+  if( se ) {
+    second_order_mean<- function(linear,linear_se) {
+      mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
+      return(as.numeric(mean))
+    }
+    response<- sapply(seq(nrow(linear_predictions)),function(i) {
+      return(second_order_mean(linear_predictions[i,"linear",drop=T],
+                               linear_predictions[i,"linear_se",drop=T]))
+    })
+
+    second_order_se<- function(linear,linear_se) {
+      se<- sqrt(link_function$gr(linear)^2*linear_se^2
+        + 0.5*link_function$he(linear)^2*linear_se^4)
+      return(as.numeric(se))
+    }
+    response_se<- sapply(seq(nrow(linear_predictions)),function(i) {
+      return(second_order_se(linear_predictions[i,"linear",drop=T],
                              linear_predictions[i,"linear_se",drop=T]))
-  })
-  response_se<- sapply(seq(nrow(linear_predictions)),function(i) {
-    return(second_order_se(linear_predictions[i,"linear",drop=T],
-                           linear_predictions[i,"linear_se",drop=T]))
-  })
+    })
+  } else {
+    response<- sapply(linear_predictions$linear,link_function$fn)
+    response_se<- NA
+  }
   predictions<- sf:::cbind.sf(response,response_se,linear_predictions)
   return(predictions)
 }

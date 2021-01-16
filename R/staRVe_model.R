@@ -137,6 +137,22 @@ setReplaceMethod(f = "dat",
 
 #' @export
 #' @rdname access_staRVe_model
+setMethod(f = "time_effects",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(time_effects(process(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "time_effects",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  time_effects(process(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
 setMethod(f = "random_effects",
           signature = "staRVe_model",
           definition = function(x) {
@@ -159,6 +175,134 @@ setMethod(f = "graph",
   graph<- list(persistent_graph = persistent_graph(process(x)),
                transient_graph = transient_graph(observations(x)))
   return(graph)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "covariance_function",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(covariance_function(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "covariance_function",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  covariance_function(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "spatial_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(spatial_parmaeters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "spatial_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  spatial_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "spatial_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(spatial_parameters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "spatial_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  spatial_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "time_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(time_parameters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "time_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  time_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "response_distribution",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(response_distribution(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "response_distribution",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  response_distribution(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "response_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(response_parameters(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "response_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  response_parameters(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "link_function",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(link_function(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "link_function",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  link_function(parameters(x))<- value
+  return(x)
+})
+
+#' @export
+#' @rdname access_staRVe_model
+setMethod(f = "fixed_effects",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(fixed_effects(parameters(x)))
+})
+#' @export
+#' @rdname access_staRVe_model
+setReplaceMethod(f = "fixed_effects",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  fixed_effects(parameters(x))<- value
+  return(x)
 })
 
 
@@ -202,6 +346,8 @@ setMethod(f = "graph",
 #'  will be used for each year.
 #' @param n_neighbours An integer giving the number of parents for each node.
 #' @param p_far_neighbours What percent of neighbours should be randomly selected?
+#' @param persistent_graph If an object of class \code{dag} is supplied, that graph is used for the persistent graph.
+#' @param transient_graph If an object of class \code{dag} is supplied, that graph is used for the transient graph.
 #' @param distribution A character vector giving the response distribution. The
 #'  default is "gaussian". The "atLeastOneBinomial" distribution models the probability of at least one success in n trials. See \code{get_staRVe_distributions("distribution")}.
 #' @param link A character vector giving the response link function. The default
@@ -220,7 +366,9 @@ prepare_staRVe_model<- function(formula,
                                 data,
                                 nodes = data,
                                 n_neighbours = 10,
-                                p_far_neighbours = 0.2,
+                                p_far_neighbours = 0,
+                                persistent_graph = NA,
+                                transient_graph = NA,
                                 distribution = "gaussian",
                                 link = "identity",
                                 silent = T,
@@ -239,12 +387,14 @@ prepare_staRVe_model<- function(formula,
   )
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
+    persistent_graph = persistent_graph,
     time = as.data.frame(data)[,attr(time_form,"name"),drop=F],
     settings = settings(model)
   )
   observations(model)<- prepare_staRVe_observations(
     data = data,
     process = process(model),
+    transient_graph = transient_graph,
     settings = settings(model),
     distribution = distribution,
     link = link
@@ -306,7 +456,8 @@ setMethod(f = "TMB_in",
     ws_dists = distances(persistent_graph(process)),
     pred_w_time = numeric(0),
     pred_ws_edges = list(numeric(0)),
-    pred_ws_dists = list(matrix(0,nrow=0,ncol=0))
+    pred_ws_dists = list(matrix(0,nrow=0,ncol=0)),
+    conditional_sim = F
   )
 
   time_names<- c(
@@ -321,48 +472,89 @@ setMethod(f = "TMB_in",
 
   para<- list(
     mu = fixed_effects(parameters(observations))["mu","par"],
-    response_pars = response_parameters(parameters(observations))[,"par"],
+    # response_pars = response_parameters(parameters(observations))[,"par"],
+    working_response_pars = switch(response_distribution(parameters(observations)),
+      gaussian = ifelse( # Normal; std. dev.
+        response_parameters(parameters(observations))["sd","par"] > 0 ||
+          response_parameters(parameters(observations))["sd","fixed"] == T,
+        log(response_parameters(parameters(observations))["sd","par"]),
+        log(1)
+      ),
+      poisson = numeric(0), # Poisson; NA
+      `negative binomial` = ifelse( # Neg. Binom.; overdispersion
+        response_parameters(parameters(observations))["overdispersion","par"] >= 1 ||
+          response_parameters(parameters(observations))["overdispersion","fixed"] == T,
+        log(response_parameters(parameters(observations))["overdispersion","par"]-1),
+        log(1)
+      ),
+      bernoulli = numeric(0), # Bernoulli; NA
+      gamma = ifelse( # Gamma; std. dev.
+        response_parameters(parameters(observations))["sd","par"] > 0 ||
+          response_parameters(parameters(observations))["sd","fixed"] == T,
+        log(response_parameters(parameters(observations))["sd","par"]),
+        log(1)
+      ), # Gamma; std. dev.
+      lognormal = ifelse( # Log-Normal; std. dev.
+        response_parameters(parameters(observations))["sd","par"] > 0 ||
+          response_parameters(parameters(observations))["sd","fixed"] == T,
+        log(response_parameters(parameters(observations))["sd","par"]),
+        log(1)
+      ), # Log-normal; std. dev.
+      binomial = numeric(0), # Binomial; NA
+      atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
+      compois = ifelse ( # Conway-Maxwell-Poisson; disperions
+        response_parameters(parameters(observations))["dispersion","par"] > 0 ||
+          response_parameters(parameters(observations))["dispersion","fixed"] == T,
+        -log(response_parameters(parameters(observations))["dispersion","par"]),
+        -log(1)
+      )
+    ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],
     resp_w = numeric(
       sum(sapply(edges(transient_graph(observations)),length) > 1)
     ),
-    logtau = ifelse(
-      spatial_parameters(parameters(process))["tau","par"] > 0,
-      log(spatial_parameters(parameters(process))["tau","par"]),
+    log_space_sd = ifelse(
+      spatial_parameters(parameters(process))["sd","par"] > 0 ||
+        spatial_parameters(parameters(process))["sd","fixed"] == T,
+      log(spatial_parameters(parameters(process))["sd","par"]),
       log(1)
     ),
-    logrho = ifelse(
-      spatial_parameters(parameters(process))["rho","par"] > 0,
-      log(spatial_parameters(parameters(process))["rho","par"]),
-      log(1)
-    ),
-    lognu = ifelse(
-      spatial_parameters(parameters(process))["nu","par"] > 0,
+    log_space_nu = ifelse(
+      spatial_parameters(parameters(process))["nu","par"] > 0 ||
+        spatial_parameters(parameters(process))["nu","fixed"] == T,
       log(spatial_parameters(parameters(process))["nu","par"]),
       log(0.5)
     ),
-    logit_w_phi = ifelse(
-      time_parameters(parameters(process))["phi","par"] >= 0
-        && time_parameters(parameters(process))["phi","par"] <= 1,
+    time_effects = c(time_effects(process)[,"w",drop=T]),
+    logit_time_phi = ifelse(
+      (time_parameters(parameters(process))["phi","par"] >= 0
+        && time_parameters(parameters(process))["phi","par"] <= 1) ||
+        time_parameters(parameters(process))["phi","fixed"] == T,
       qlogis(time_parameters(parameters(process))["phi","par"]),
       qlogis(0)
+    ),
+    log_time_sd = ifelse(
+      time_parameters(parameters(process))["sd","par"] > 0 ||
+        time_parameters(parameters(process))["sd","fixed"] == T,
+      log(time_parameters(parameters(process))["sd","par"]),
+      log(1)
     ),
     proc_w = c(random_effects(process)[,"w",drop=T]),
     pred_w = numeric(0)
   )
-  rand<- c("resp_w","proc_w","pred_w")
+  rand<- c("resp_w","time_effects","proc_w","pred_w")
   map<- list(
     mu = fixed_effects(parameters(observations))["mu","fixed"],
-    response_pars = response_parameters(parameters(observations))[,"fixed"],
+    working_response_pars = response_parameters(parameters(observations))[,"fixed"],
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"fixed"],
     resp_w = logical(
       sum(sapply(edges(transient_graph(observations)),length) > 1)
     ),
-    logtau = spatial_parameters(parameters(process))["tau","fixed"],
-    logrho = spatial_parameters(parameters(process))["rho","fixed"],
-    lognu = spatial_parameters(parameters(process))["nu","fixed"],
-    logit_w_phi = time_parameters(parameters(process))["phi","fixed"],
-    proc_w = random_effects(process)[,"fixed",drop=T],
+    log_space_sd = spatial_parameters(parameters(process))["sd","fixed"],
+    log_space_nu = spatial_parameters(parameters(process))["nu","fixed"],
+    logit_time_phi = time_parameters(parameters(process))["phi","fixed"],
+    log_time_sd = time_parameters(parameters(process))["sd","fixed"],
+    proc_w = logical(nrow(random_effects(process))),
     pred_w = logical(0)
   )
   map<- lapply(map,.logical_to_map)
@@ -386,7 +578,7 @@ setMethod(f = "update_staRVe_model",
 
   spatial_parameters(parameters(process(x)))<- within(
     spatial_parameters(parameters(process(x))),{
-      par_names<<- c("par_rho","par_tau","par_nu")
+      par_names<<- c("par_space_sd","par_space_nu")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
     }
@@ -394,9 +586,17 @@ setMethod(f = "update_staRVe_model",
 
   time_parameters(parameters(process(x)))<- within(
     time_parameters(parameters(process(x))),{
-      par_names<<- c("par_w_phi")
+      par_names<<- c("par_time_phi","par_time_sd")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
+    }
+  )
+
+  time_effects(process(x))<- within(
+    time_effects(process(x)),{
+      par_names<<- c("time_effects")
+      w<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }
   )
 
@@ -420,7 +620,7 @@ setMethod(f = "update_staRVe_model",
 
   response_parameters(parameters(observations(x)))<- within(
     response_parameters(parameters(observations(x))),{
-      par_names<<- c("par_sd","par_overdispersion")
+      par_names<<- c("par_sd","par_overdispersion","par_dispersion")
       par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }
@@ -436,10 +636,9 @@ setMethod(f = "update_staRVe_model",
 
   for( i in seq(nrow(data)) ) {
     if( length(edges(obs_dag)[[i]]) == 1 ) {
-      w<- random_effects[
-        random_effects[,time_column,drop=T] == data[i,time_column,drop=T],
-      ]
-      data[i,c("w","w_se")]<- as.data.frame(w)[edges(obs_dag)[[i]],c("w","se")]
+      re<- random_effects(x)
+      w<- re[,c("w","se"),drop=T][re[,time_column,drop=T] == dat(x)[1,time_column,drop=T],]
+      data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]],c("w","se")]
     } else {
       data[i,c("w","w_se")]<- resp_w[resp_w_idx,]
       resp_w_idx<- resp_w_idx+1

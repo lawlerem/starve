@@ -7,6 +7,7 @@
 prepare_staRVe_observations(
   data,
   process,
+  transient_graph = NA,
   settings = new("staRVe_settings"),
   distribution = "gaussian",
   link = "identity"

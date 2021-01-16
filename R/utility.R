@@ -24,16 +24,26 @@ NULL
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       df<- sf:::cbind.sf(data.frame(w = 0,
                                     se = NA,
-                                    fixed = F,
                                     time = t),
                          nodes)
-      colnames(df)[[4]]<- attr(random_effects,"time_column")
+      colnames(df)[[3]]<- attr(random_effects,"time_column")
       return(df)
     }))
 
     random_effects(process(x))<- rbind(
       extra_effects,
       random_effects(process(x))
+    )
+
+    extra_time_effects<- data.frame(
+      w = 0,
+      se = NA,
+      time = extra_times
+    )
+    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
+    time_effects(process(x))<- rbind(
+      extra_time_effects,
+      time_effects(process(x))
     )
   } else {}
 
@@ -42,10 +52,9 @@ NULL
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       df<- sf:::cbind.sf(data.frame(w = 0,
                                     se = NA,
-                                    fixed = F,
                                     time = t),
                          nodes)
-      colnames(df)[[4]]<- attr(random_effects,"time_column")
+      colnames(df)[[3]]<- attr(random_effects,"time_column")
       return(df)
     }))
 
@@ -53,10 +62,33 @@ NULL
       random_effects(process(x)),
       extra_effects
     )
+
+    extra_time_effects<- data.frame(
+      w = 0,
+      se = NA,
+      time = extra_times
+    )
+    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
+    time_effects(process(x))<- rbind(
+      time_effects(process(x)),
+      extra_time_effects
+    )
   } else {}
 
   attr(random_effects(process(x)),"time_column")<- attr(random_effects,"time_column")
+  attr(time_effects(process(x)),"time_column")<- attr(random_effects,"time_column")
   return(x)
+}
+
+.birdFit<- function() {
+  foo<- prepare_staRVe_model(
+    cnt~time(year),
+    bird_survey,
+    distribution="poisson",
+    link="log",
+    fit=T
+  )
+  return(foo)
 }
 
 .covariance_to_code<- function(covariance) {
@@ -106,9 +138,9 @@ NULL
 #' @return A character vector giving the names of covariates used in a formula.
 .names_from_formula<- function(x) {
   # Remove response and time from formula
-  the_terms<- terms(x,specials=c("mean","time"))
+  the_terms<- terms(x,specials=c("mean","time","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("time",term.labels,value=T,invert=T) # Get rid of time(...)
+  the_call<- grep("mean",term.labels,value=T) # Pick out mean(...)
   if( length(the_call) == 0 ) {
     return(character(0))
   } else {}
@@ -203,8 +235,7 @@ NULL
     if( missing(nu) ) {
       nu<- NaN
     }
-    covariance<- cbind(covar,
-                       nu)
+    covariance<- cbind(covar,nu)
     colnames(covariance)<- c("covariance","nu")
 
     return(covariance)
@@ -272,7 +303,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
                       "gamma", # 4
                       "lognormal", # 5
                       "binomial", # 6
-                      "atLeastOneBinomial") # 7
+                      "atLeastOneBinomial", # 7
+                      "compois") # 8
     names(distributions)<- rep("distribution",length(distributions))
   } else { distributions<- character(0) }
 
@@ -286,7 +318,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   if( "covariance" %in% which ) {
     covars<- c("exponential", # 0
                "gaussian", # 1
-               "matern") # 2
+               "matern", # 2
+               "matern32") # 3
     names(covars)<- rep("covariance",length(covars))
   } else { covars<- character(0) }
 

@@ -9,7 +9,9 @@ prepare_staRVe_model(
   data,
   nodes = data,
   n_neighbours = 10,
-  p_far_neighbours = 0.2,
+  p_far_neighbours = 0,
+  persistent_graph = NA,
+  transient_graph = NA,
   distribution = "gaussian",
   link = "identity",
   silent = T,
@@ -35,8 +37,12 @@ will be used for each year.}
 
 \item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
 
+\item{persistent_graph}{If an object of class \code{dag} is supplied, that graph is used for the persistent graph.}
+
+\item{transient_graph}{If an object of class \code{dag} is supplied, that graph is used for the transient graph.}
+
 \item{distribution}{A character vector giving the response distribution. The
-default is "gaussian". See \code{get_staRVe_distributions("distribution")}.}
+default is "gaussian". The "atLeastOneBinomial" distribution models the probability of at least one success in n trials. See \code{get_staRVe_distributions("distribution")}.}
 
 \item{link}{A character vector giving the response link function. The default
 is "identity". See \code{get_staRVe_distributions("link")}.}
@@ -59,13 +65,15 @@ A staRVe_model object. If fit=T, a staRVe_fit object.
 }
 \details{
 The formula object should always be of the form
-  \code{y ~ mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
+  \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
 The variable y should be replaced with the desired response variable, and t
 should be replaced with the desired time index. There are currently three
 valid options for the `type' argument in \code{time(t,type="ar1")} -- "ar1" for
 an AR(1) structure, "rw" for a random walk, and "independent" for independent
 spatial fields each year. The \code{space(...)} term specifies the spatial covariance
 function.
+
+The sample.size(...) term is only used if the response distribution is \code{binomial} or \code{atLeastOneBinomial}. If it is missing the sample sizes are assumed to all be 1.
 
 If the \code{time(...)} term is missing, all observations are assumed to be
 at the same time. If the \code{space(...)} term is missing, the spatial

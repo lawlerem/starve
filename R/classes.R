@@ -66,6 +66,7 @@ setClass(
 setClass(
   Class = "staRVe_process",
   slots = c(
+    time_effects = "data.frame",
     random_effects = "sf",
     persistent_graph = "dag",
     parameters = "staRVe_process_parameters"

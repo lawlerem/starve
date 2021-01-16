@@ -41,21 +41,38 @@ Type objective_function<Type>::operator() () {
   DATA_STRUCT(pred_ws_edges,directed_graph);
   DATA_STRUCT(pred_ws_dists,dag_dists);
 
+  DATA_INTEGER(conditional_sim); // If true, don't simulate w
+
   PARAMETER(mu);
-  PARAMETER_VECTOR(response_pars); // Response distribution parameters except for mean
+  PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
-  PARAMETER(logtau);
-  PARAMETER(logrho);
-  PARAMETER(lognu);
-  PARAMETER(logit_w_phi);
+  PARAMETER(log_space_sd);
+  PARAMETER(log_space_nu);
+  PARAMETER_VECTOR(time_effects);
+  PARAMETER(logit_time_phi);
+  PARAMETER(log_time_sd);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
 
-  Type tau = exp(logtau);
-  Type rho = exp(logrho);
-  Type nu = exp(lognu);
-  Type w_phi = invlogit(logit_w_phi);
+  vector<Type> response_pars = working_response_pars;
+  switch(distribution_code) {
+    case 0 : response_pars(0) = exp(working_response_pars(0)); break; // Normal
+    case 1 : break; // Poisson
+    case 2 : response_pars(0) = exp(working_response_pars(0))+1; break; // Neg. Binom.
+    case 3 : break; // Bernoulli
+    case 4 : response_pars(0) = exp(working_response_pars(0)); break; // Gamma
+    case 5 : response_pars(0) = exp(working_response_pars(0)); break; // Log-Normal
+    case 6 : break; // Binomial
+    case 7 : break; // AtLeastOneBinomai
+    case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson
+    default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal
+  }
+  Type space_sd = exp(log_space_sd);
+  Type space_nu = exp(log_space_nu);
+
+  Type time_phi = invlogit(logit_time_phi);
+  Type time_sd = exp(log_time_sd);
 
   vector<vector<int> > ys_dag = ys_edges.dag;
   vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
@@ -66,12 +83,12 @@ Type objective_function<Type>::operator() () {
   vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
-  covariance<Type> cov(tau,rho,nu,covar_code);
+  covariance<Type> cov(space_sd,Type(1.0),space_nu,covar_code);
+
   inv_link_function inv_link = {link_code};
   response_density y_density = {distribution_code};
   glm<Type> family(inv_link,
                    y_density,
-                   mu,
                    mean_pars,
                    response_pars);
 
@@ -91,9 +108,26 @@ Type objective_function<Type>::operator() () {
   resp_w_segment = get_time_segment(resp_w_time,0);
   pred_w_segment = get_time_segment(pred_w_time,0);
 
+  if( time_effects.size() == 1 ) {
+    Type smallNumber = pow(10,-5);
+    nll -= dnorm(time_effects(0),mu,smallNumber,true);
+    // time_effects(0) = mu;
+  } else {
+    nll -= dnorm(time_effects(0),mu,time_sd,true);
+  }
+  SIMULATE{
+    if( !conditional_sim ) {
+      if( time_effects.size() == 1 ) {
+        time_effects(0) = mu;
+      } else {
+        time_effects(0) = rnorm(mu,time_sd);
+      }
+    }
+  }
+
   nngp<Type> process(cov,
                      proc_w.segment(w_segment(0),w_segment(1)),
-                     0*proc_w.segment(w_segment(0),w_segment(1)), // vector of zeros
+                     time_effects(0)+0*proc_w.segment(w_segment(0),w_segment(1)), // vector of mu
                      ws_dag,
                      ws_dist);
 
@@ -116,6 +150,13 @@ Type objective_function<Type>::operator() () {
   nll -= process.loglikelihood()
             + obs.resp_w_loglikelihood()
             + obs.y_loglikelihood();
+  SIMULATE{
+    if( !conditional_sim ) {
+      proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+      resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+    } else {}
+    obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+  }
 
   for(int time=1; time<n_time; time++) {
     w_segment = get_time_segment(w_time,time);
@@ -123,8 +164,19 @@ Type objective_function<Type>::operator() () {
     resp_w_segment = get_time_segment(resp_w_time,time);
     pred_w_segment = get_time_segment(pred_w_time,time);
 
+    nll -= dnorm(time_effects(time),
+                 (1-time_phi)*mu+time_phi*time_effects(time-1),
+                 sqrt(1-pow(time_phi,2))*time_sd,
+                 true);
+    SIMULATE{
+      if( !conditional_sim ) {
+        time_effects(time) = rnorm((1-time_phi)*mu+time_phi*time_effects(time-1),
+                                   (1-pow(time_phi,2))*time_sd);
+      }
+    }
+
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
-                     w_phi * process.get_w());
+                     time_effects(time) + time_phi*(process.get_w()-time_effects(time-1)));
     obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
                  keep.segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
@@ -142,6 +194,20 @@ Type objective_function<Type>::operator() () {
     nll -= process.loglikelihood()
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
+    SIMULATE{
+      if( !conditional_sim ) {
+        proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+        resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+      } else {}
+      obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+    }
+  }
+
+  SIMULATE{
+    REPORT(time_effects);
+    REPORT(proc_w);
+    REPORT(resp_w);
+    REPORT(obs_y);
   }
 
   REPORT(pred_nll);
@@ -156,58 +222,62 @@ Type objective_function<Type>::operator() () {
 
   // switch statement doesn't work with REPORT and ADREPORT for some reason
   if( distribution_code == 0 ) { // Normal
-    Type par_sd = exp(response_pars(0));
+    Type par_sd = response_pars(0);
     REPORT(par_sd);
     ADREPORT(par_sd);
   } else if( distribution_code == 1 ) { // Poisson
     // no extra pars
   } else if( distribution_code == 2 ) { // Neg. Binomial
-    Type par_overdispersion = exp(response_pars(0))+1;
+    Type par_overdispersion = response_pars(0);
     REPORT(par_overdispersion);
     ADREPORT(par_overdispersion);
   } else if( distribution_code == 3 ) { // Bernoulli
     // no extra pars
   } else if( distribution_code == 4 ) { // Gamma
-    Type par_sd = sqrt(exp(response_pars(0)));
+    Type par_sd = response_pars(0);
     REPORT(par_sd);
     ADREPORT(par_sd);
   } else if( distribution_code == 5 ) { // lognormal
-    Type par_sd = exp(response_pars(0));
+    Type par_sd = response_pars(0);
     REPORT(par_sd);
     ADREPORT(par_sd);
   } else if( distribution_code == 6 ) { // Binomial
     // no extra pars
   } else if( distribution_code == 7 ) { // AtLeastOneBinomial
       // no extra pars
+  } else if ( distribution_code == 8 ) { // Conway-Maxwell-Poisson
+    Type par_dispersion = response_pars(0);
+    REPORT(par_dispersion);
+    ADREPORT(par_dispersion);
   } else {}
 
-  Type par_tau = tau;
-  REPORT(par_tau);
-  ADREPORT(par_tau);
-  Type working_par_logtau = logtau;
-  REPORT(working_par_logtau);
-  ADREPORT(working_par_logtau);
+  Type par_space_sd = space_sd;
+  REPORT(par_space_sd);
+  ADREPORT(par_space_sd);
+  // Type working_par_log_space_sd = log_space_sd;
+  // REPORT(working_par_log_space_sd);
+  // ADREPORT(working_par_log_space_sd);
 
-  Type par_rho = rho;
-  REPORT(par_rho);
-  ADREPORT(par_rho);
-  Type working_par_logrho = logrho;
-  REPORT(working_par_logrho);
-  ADREPORT(working_par_logrho);
+  Type par_space_nu = space_nu;
+  REPORT(par_space_nu);
+  ADREPORT(par_space_nu);
+  // Type working_par_log_space_nu = log_space_nu;
+  // REPORT(working_par_log_space_nu);
+  // ADREPORT(working_par_log_space_nu);
 
-  Type par_nu = nu;
-  REPORT(par_nu);
-  ADREPORT(par_nu);
-  Type working_par_nu = nu;
-  REPORT(working_par_nu);
-  ADREPORT(working_par_nu);
+  Type par_time_phi = time_phi;
+  REPORT(par_time_phi);
+  ADREPORT(par_time_phi);
+  // Type working_par_logit_time_phi = logit_time_phi;
+  // REPORT(working_par_logit_time_phi);
+  // ADREPORT(working_par_logit_time_phi);
 
-  Type par_w_phi = w_phi;
-  REPORT(par_w_phi);
-  ADREPORT(par_w_phi);
-  Type working_par_logit_w_phi = logit_w_phi;
-  REPORT(working_par_logit_w_phi);
-  ADREPORT(working_par_logit_w_phi);
+  Type par_time_sd = time_sd;
+  REPORT(par_time_sd);
+  ADREPORT(par_time_sd);
+  // Type working_par_log_time_sd = log_time_sd;
+  // REPORT(working_par_log_time_sd);
+  // ADREPORT(working_par_log_time_sd);
 
   REPORT(obs_y);
 
@@ -216,5 +286,4 @@ Type objective_function<Type>::operator() () {
   // ADREPORT(resp_response);
 
   return(nll+pred_nll);
-
 }
