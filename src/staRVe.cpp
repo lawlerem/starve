@@ -1,4 +1,3 @@
-
 #include <TMB.hpp>
 #include <iostream>
 using namespace density;
@@ -48,11 +47,10 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
-  PARAMETER(logScaleTau);
-  PARAMETER(logrho);
-  PARAMETER(lognu);
+  PARAMETER(log_space_sd);
+  PARAMETER(log_space_nu);
   PARAMETER_VECTOR(time_effects);
-  PARAMETER(logit_w_phi);
+  PARAMETER(logit_time_phi);
   PARAMETER(log_time_sd);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
@@ -70,14 +68,10 @@ Type objective_function<Type>::operator() () {
     case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson
     default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal
   }
-  Type rho = exp(logrho);
-  Type nu = exp(lognu);
-  Type tau;
-  switch(covar_code) {
-    case 1 : tau = exp(logScaleTau); break;// Gaussian, nu=Inf
-    default : tau = exp(logScaleTau)*pow(rho,nu); break;
-  }
-  Type w_phi = invlogit(logit_w_phi);
+  Type space_sd = exp(log_space_sd);
+  Type space_nu = exp(log_space_nu);
+
+  Type time_phi = invlogit(logit_time_phi);
   Type time_sd = exp(log_time_sd);
 
   vector<vector<int> > ys_dag = ys_edges.dag;
@@ -89,7 +83,8 @@ Type objective_function<Type>::operator() () {
   vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
-  covariance<Type> cov(tau,rho,nu,covar_code);
+  covariance<Type> cov(space_sd,Type(1.0),space_nu,covar_code);
+
   inv_link_function inv_link = {link_code};
   response_density y_density = {distribution_code};
   glm<Type> family(inv_link,
@@ -113,10 +108,26 @@ Type objective_function<Type>::operator() () {
   resp_w_segment = get_time_segment(resp_w_time,0);
   pred_w_segment = get_time_segment(pred_w_time,0);
 
+  if( time_effects.size() == 1 ) {
+    Type smallNumber = pow(10,-5);
+    nll -= dnorm(time_effects(0),mu,smallNumber,true);
+    // time_effects(0) = mu;
+  } else {
+    nll -= dnorm(time_effects(0),mu,time_sd,true);
+  }
+  SIMULATE{
+    if( !conditional_sim ) {
+      if( time_effects.size() == 1 ) {
+        time_effects(0) = mu;
+      } else {
+        time_effects(0) = rnorm(mu,time_sd);
+      }
+    }
+  }
+
   nngp<Type> process(cov,
-                     time_sd,
                      proc_w.segment(w_segment(0),w_segment(1)),
-                     time_effects(0)+mu+0*proc_w.segment(w_segment(0),w_segment(1)), // vector of mu
+                     time_effects(0)+0*proc_w.segment(w_segment(0),w_segment(1)), // vector of mu
                      ws_dag,
                      ws_dist);
 
@@ -136,13 +147,11 @@ Type objective_function<Type>::operator() () {
                     pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
                     pred_nll);
 
-  nll -= dnorm(time_effects(0),Type(0),time_sd,true)
-            + process.loglikelihood()
+  nll -= process.loglikelihood()
             + obs.resp_w_loglikelihood()
             + obs.y_loglikelihood();
   SIMULATE{
-    if( !conditional_sim) {
-      time_effects(0) = rnorm(Type(0.0),time_sd);
+    if( !conditional_sim ) {
       proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
       resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
     } else {}
@@ -155,8 +164,19 @@ Type objective_function<Type>::operator() () {
     resp_w_segment = get_time_segment(resp_w_time,time);
     pred_w_segment = get_time_segment(pred_w_time,time);
 
+    nll -= dnorm(time_effects(time),
+                 (1-time_phi)*mu+time_phi*time_effects(time-1),
+                 sqrt(1-pow(time_phi,2))*time_sd,
+                 true);
+    SIMULATE{
+      if( !conditional_sim ) {
+        time_effects(time) = rnorm((1-time_phi)*mu+time_phi*time_effects(time-1),
+                                   (1-pow(time_phi,2))*time_sd);
+      }
+    }
+
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
-                     time_effects(time)+(1-w_phi)*mu + w_phi*process.get_w());
+                     time_effects(time) + time_phi*(process.get_w()-time_effects(time-1)));
     obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
                  keep.segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
@@ -171,13 +191,11 @@ Type objective_function<Type>::operator() () {
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
                       pred_nll);
 
-    nll -= dnorm(time_effects(time),Type(0),time_sd,true)
-              + process.loglikelihood()
+    nll -= process.loglikelihood()
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
     SIMULATE{
       if( !conditional_sim ) {
-        time_effects(time) = rnorm(Type(0.0),time_sd);
         proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
         resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
@@ -233,40 +251,33 @@ Type objective_function<Type>::operator() () {
     ADREPORT(par_dispersion);
   } else {}
 
-  Type par_scaleTau = exp(logScaleTau);
-  REPORT(par_scaleTau);
-  ADREPORT(par_scaleTau);
-  Type working_par_logScaleTau = logScaleTau;
-  REPORT(working_par_logScaleTau);
-  ADREPORT(working_par_logScaleTau);
+  Type par_space_sd = space_sd;
+  REPORT(par_space_sd);
+  ADREPORT(par_space_sd);
+  // Type working_par_log_space_sd = log_space_sd;
+  // REPORT(working_par_log_space_sd);
+  // ADREPORT(working_par_log_space_sd);
 
-  Type par_rho = rho;
-  REPORT(par_rho);
-  ADREPORT(par_rho);
-  Type working_par_logrho = logrho;
-  REPORT(working_par_logrho);
-  ADREPORT(working_par_logrho);
+  Type par_space_nu = space_nu;
+  REPORT(par_space_nu);
+  ADREPORT(par_space_nu);
+  // Type working_par_log_space_nu = log_space_nu;
+  // REPORT(working_par_log_space_nu);
+  // ADREPORT(working_par_log_space_nu);
 
-  Type par_nu = nu;
-  REPORT(par_nu);
-  ADREPORT(par_nu);
-  Type working_par_nu = nu;
-  REPORT(working_par_nu);
-  ADREPORT(working_par_nu);
-
-  Type par_w_phi = w_phi;
-  REPORT(par_w_phi);
-  ADREPORT(par_w_phi);
-  Type working_par_logit_w_phi = logit_w_phi;
-  REPORT(working_par_logit_w_phi);
-  ADREPORT(working_par_logit_w_phi);
+  Type par_time_phi = time_phi;
+  REPORT(par_time_phi);
+  ADREPORT(par_time_phi);
+  // Type working_par_logit_time_phi = logit_time_phi;
+  // REPORT(working_par_logit_time_phi);
+  // ADREPORT(working_par_logit_time_phi);
 
   Type par_time_sd = time_sd;
   REPORT(par_time_sd);
   ADREPORT(par_time_sd);
-  Type working_par_log_time_sd = log_time_sd;
-  REPORT(working_par_log_time_sd);
-  ADREPORT(working_par_log_time_sd);
+  // Type working_par_log_time_sd = log_time_sd;
+  // REPORT(working_par_log_time_sd);
+  // ADREPORT(working_par_log_time_sd);
 
   REPORT(obs_y);
 

@@ -2,7 +2,6 @@ template<class Type>
 class nngp {
   private:
     covariance<Type> cov; // Covariance Function
-    Type time_sd; // standard deviation for first random effect (no parents)
     vector<Type> w; // Field value at knots
     vector<Type> mean; // Field mean at knots
     vector<vector<int> > ws_graph; // dag as edge list
@@ -13,7 +12,6 @@ class nngp {
 
   public:
     nngp(covariance<Type> cov,
-         Type time_sd,
          vector<Type> w,
          vector<Type> mean,
          vector<vector<int> > ws_graph,
@@ -38,18 +36,20 @@ class nngp {
 
 template<class Type>
 nngp<Type>::nngp(covariance<Type> cov,
-                 Type time_sd,
                  vector<Type> w,
                  vector<Type> mean,
                  vector<vector<int> > ws_graph,
                  vector<matrix<Type> > ws_dists) :
   cov(cov),
-  time_sd(time_sd),
   w(w),
   mean(mean),
   ws_graph(ws_graph),
   ws_dists(ws_dists) {
-  // Nothing left to initialize
+  Type initSD = fieldPred(ws_graph(0).segment(1,ws_graph(0).size()-1),
+                          ws_dists(0),
+                          Type(0.0),
+                          false).sd();
+  this->cov.update_tau(initSD);
 }
 
 
@@ -87,8 +87,8 @@ void nngp<Type>::update_w(vector<Type> new_w,
 template<class Type>
 Type nngp<Type>::loglikelihood() {
   matrix<Type> covMat = cov(ws_dists(0));
-  vector<Type> meanVec = covMat.cols();
-  vector<Type> wVec = meanVec.size();
+  vector<Type> meanVec(ws_graph(0).size());
+  vector<Type> wVec(ws_graph(0).size());
   for(int i=0; i<meanVec.size(); i++) {
     meanVec(i) = mean(ws_graph(0)(i));
     wVec(i) = w(ws_graph(0)(i));
@@ -126,7 +126,7 @@ vector<Type> nngp<Type>::predict_w(vector<vector<int> > into_edges,
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
   matrix<Type> covMat = cov(ws_dists(0));
-  vector<Type> meanVec = covMat.cols();
+  vector<Type> meanVec(ws_graph(0).size());
   for(int i=0; i<meanVec.size(); i++) {
     meanVec(i) = mean(ws_graph(0)(i));
   }

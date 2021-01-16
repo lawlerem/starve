@@ -1,10 +1,10 @@
 template<class Type>
 class covariance {
   private:
-    Type tau;
+    Type scaleTau;
     Type rho;
-    Type sqtau;
     Type nu;
+    Type sqtau;
 
     int covar_code;
 
@@ -12,10 +12,11 @@ class covariance {
     template<typename T> T covFun(T d);
 
   public:
-    covariance(Type tau, Type rho, Type nu, int covar_code);
+    covariance(Type scaleTau, Type rho, Type nu, int covar_code);
     covariance() = default;
 
-    Type get_tau();
+    void update_tau(Type new_tau); // Updates marginal variance, NOT scaleTau
+
     template<typename T> T operator() (T d);
     template<typename T> vector<T> operator() (vector<T> d);
     template<typename T> matrix<T> operator() (matrix<T> D);
@@ -24,20 +25,28 @@ class covariance {
 
 // Initializer
 template<class Type>
-covariance<Type>::covariance(Type tau, Type rho, Type nu, int covar_code) :
-  tau(tau),
+covariance<Type>::covariance(Type scaleTau, Type rho, Type nu, int covar_code) :
+  scaleTau(scaleTau),
   rho(rho),
   nu(nu),
   covar_code(covar_code) {
-  this->sqtau = pow(tau,2);
+  switch(covar_code) {
+    case 1 : this->sqtau = pow(scaleTau,2); break;// Gaussian, nu=Inf
+    default : this->sqtau = pow(scaleTau*pow(rho,nu),2); break;
+  }
 }
 
 
-// Access to tau
+// Update tau
 template<class Type>
-Type covariance<Type>::get_tau() {
-  return tau;
+void covariance<Type>::update_tau(Type new_tau) {
+  switch(covar_code) {
+    case 1 : this->sqtau = pow(new_tau,2); break; // Gaussian, don't change rho
+    default : this->sqtau = pow(new_tau,2);
+              this->rho = pow(sqtau/pow(scaleTau,2),1/(2*nu)); break;
+  }
 }
+
 
 
 // Distance function -- private
@@ -54,11 +63,10 @@ template<typename T>
 T covariance<Type>::covFun(T d) {
   // return (T)sqtau * exp( -dist(d) /(T)rho ); // Exponential
   switch(covar_code) {
-    case 0 : return (T)sqtau * exp( -dist(d)/(T)rho ); // Exponential
-    case 1 : return (T)sqtau * exp( -pow(dist(d)/(T)rho,2) ); // Gaussian
-    case 2 : return (T)sqtau * matern(d, rho, nu); // Matern
-    case 3 : return (T)sqtau * (1 + sqrt(3)*dist(d)/(T)rho) * exp( -sqrt(3)*dist(d)/(T)rho ); // Matern32 (nu = 1.5)
-
+    case 0 : return (T) sqtau * exp( -dist(d)/(T)rho ); // Exponential
+    case 1 : return (T) sqtau * exp( -pow(dist(d)/(T)rho,2) ); // Gaussian
+    case 2 : return (T) sqtau * matern(d, rho, nu); // Matern
+    case 3 : return (T) sqtau * (1 + sqrt(3)*dist(d)/(T)rho) * exp( -sqrt(3)*dist(d)/(T)rho ); // Matern32 (nu = 1.5)
     default : return (T)sqtau * matern(d, rho, nu); // Matern
   }
 }

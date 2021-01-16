@@ -188,20 +188,20 @@ prepare_staRVe_process<- function(nodes,
   parameters<- new("staRVe_process_parameters")
   covariance_function(parameters)<- covariance$covariance
   spatial_parameters(parameters)<- data.frame(
-    par = c(0,0,switch(covariance$covariance,
+    par = c(0,switch(covariance$covariance,
                          exponential = 0.5,
                          gaussian = Inf,
                          matern = ifelse(is.nan(covariance$nu),0,covariance$nu),
                          matern32 = 1.5)
            ),
     se = NA,
-    fixed = c(F,F,switch(covariance$covariance,
+    fixed = c(F,switch(covariance$covariance,
                          exponential = T,
                          gaussian = T,
                          matern = ifelse(is.nan(covariance$nu),F,T),
                          matern32 = T)
              ),
-    row.names = c("rho","scaleTau","nu")
+    row.names = c("sd","nu")
   )
 
 
