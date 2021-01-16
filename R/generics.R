@@ -554,6 +554,17 @@ setGeneric(name = "symbolicAnalysis<-",
 
 #' @export
 #' @rdname staRVe_generics
+setGeneric(name = "time_effects",
+           def = function(x) standardGeneric("time_effects")
+)
+#' @export
+#' @rdname staRVe_generics
+setGeneric(name = "time_effects<-",
+           def = function(x,value) standardGeneric("time_effects<-")
+)
+
+#' @export
+#' @rdname staRVe_generics
 setGeneric(name = "time_parameters",
            def = function(x) standardGeneric("time_parameters")
 )

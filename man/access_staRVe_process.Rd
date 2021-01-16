@@ -2,6 +2,8 @@
 % Please edit documentation in R/staRVe_process.R
 \name{access_staRVe_process}
 \alias{access_staRVe_process}
+\alias{time_effects,staRVe_process-method}
+\alias{time_effects<-,staRVe_process-method}
 \alias{random_effects,staRVe_process-method}
 \alias{random_effects<-,staRVe_process-method}
 \alias{persistent_graph,staRVe_process-method}
@@ -10,6 +12,10 @@
 \alias{parameters<-,staRVe_process,ANY-method}
 \title{Get or set slots from an object of class \code{staRVe_process}.}
 \usage{
+\S4method{time_effects}{staRVe_process}(x)
+
+\S4method{time_effects}{staRVe_process}(x) <- value
+
 \S4method{random_effects}{staRVe_process}(x)
 
 \S4method{random_effects}{staRVe_process}(x) <- value

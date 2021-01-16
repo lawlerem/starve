@@ -213,6 +213,7 @@ setMethod(f = "staRVe_simulate",
   TMB_input<- TMB_in(model)
   if( conditional ) {
     TMB_input$data$conditional_sim<- conditional
+    TMB_input$map$time_effects<- factor(rep(NA,length(TMB_input$para$time_effects)))
     TMB_input$map$resp_w<- factor(rep(NA,length(TMB_input$para$resp_w)))
     TMB_input$map$proc_w<- factor(rep(NA,length(TMB_input$para$proc_w)))
     TMB_input$map$pred_w<- factor(rep(NA,length(TMB_input$para$pred_w)))
@@ -237,6 +238,9 @@ setMethod(f = "staRVe_simulate",
   random_effects(model)$w<- sims$proc_w
   random_effects(model)$se<- NA
   time_column<- attr(random_effects(model),"time_column")
+
+  time_effects(model)$w<- sims$time_effects
+  time_effects(model)$se<- NA
 
   resp_w_idx<- 1
   for( i in seq(nrow(dat(model))) ) {

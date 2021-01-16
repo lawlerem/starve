@@ -12,6 +12,8 @@
 \alias{parameters<-,staRVe_model,staRVe_parameters-method}
 \alias{dat,staRVe_model-method}
 \alias{dat<-,staRVe_model-method}
+\alias{time_effects,staRVe_model-method}
+\alias{time_effects<-,staRVe_model-method}
 \alias{random_effects,staRVe_model-method}
 \alias{random_effects<-,staRVe_model-method}
 \alias{graph,staRVe_model-method}
@@ -50,6 +52,10 @@
 \S4method{dat}{staRVe_model}(x)
 
 \S4method{dat}{staRVe_model}(x) <- value
+
+\S4method{time_effects}{staRVe_model}(x)
+
+\S4method{time_effects}{staRVe_model}(x) <- value
 
 \S4method{random_effects}{staRVe_model}(x)
 
