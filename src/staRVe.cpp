@@ -83,7 +83,8 @@ Type objective_function<Type>::operator() () {
   vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
-  covariance<Type> cov(space_sd,Type(1.0),space_nu,covar_code);
+  Type initRho = ws_dist(0).maxCoeff();
+  covariance<Type> cov(space_sd,initRho,space_nu,covar_code);
 
   inv_link_function inv_link = {link_code};
   response_density y_density = {distribution_code};
