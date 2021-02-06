@@ -4,7 +4,7 @@ class covariance {
     Type scaleTau;
     Type rho;
     Type nu;
-    Type sqtau;
+    Type marg_var;
 
     int covar_code;
 
@@ -15,7 +15,9 @@ class covariance {
     covariance(Type scaleTau, Type rho, Type nu, int covar_code);
     covariance() = default;
 
-    void update_tau(Type new_tau); // Updates marginal variance, NOT scaleTau
+    Type get_scaleTau();
+    void update_scaleTau(Type new_tau); // Updates scaleTau, NOT marginal variance
+    void update_marg_sd(Type new_marg_sd); // Updates marginal variance, NOT scaleTau
 
     template<typename T> T operator() (T d);
     template<typename T> vector<T> operator() (vector<T> d);
@@ -31,19 +33,36 @@ covariance<Type>::covariance(Type scaleTau, Type rho, Type nu, int covar_code) :
   nu(nu),
   covar_code(covar_code) {
   switch(covar_code) {
-    case 1 : this->sqtau = pow(scaleTau,2); break;// Gaussian, nu=Inf
-    default : this->sqtau = pow(scaleTau*pow(rho,nu),2); break;
+    case 1 : this->marg_var = pow(scaleTau,2); break;// Gaussian, nu=Inf
+    default : this->marg_var = pow(scaleTau*pow(rho,nu),2); break;
   }
 }
 
 
-// Update tau
+
 template<class Type>
-void covariance<Type>::update_tau(Type new_tau) {
+Type covariance<Type>::get_scaleTau() {
+  return this->scaleTau;
+}
+// Update scaleTau
+template<class Type>
+void covariance<Type>::update_scaleTau(Type new_tau) {
+  this->scaleTau = new_tau;
   switch(covar_code) {
-    case 1 : this->sqtau = pow(new_tau,2); break; // Gaussian, don't change rho
-    default : this->sqtau = pow(new_tau,2);
-              this->rho = pow(sqtau/pow(scaleTau,2),1/(2*nu)); break;
+    case 1 : this->marg_var = pow(new_tau,2); break; // Gaussian
+    default : this->marg_var = pow(new_tau*pow(rho,nu),2); break;
+  }
+}
+
+
+
+// Update marg_var
+template<class Type>
+void covariance<Type>::update_marg_sd(Type new_marg_sd) {
+  switch(covar_code) {
+    case 1 : this->marg_var = pow(new_marg_sd,2); break; // Gaussian, don't change rho
+    default : this->marg_var = pow(new_marg_sd,2);
+              this->rho = pow(marg_var/pow(scaleTau,2),1/(2*nu)); break;
   }
 }
 
@@ -61,13 +80,12 @@ T covariance<Type>::dist(T d) {
 template<class Type>
 template<typename T>
 T covariance<Type>::covFun(T d) {
-  // return (T)sqtau * exp( -dist(d) /(T)rho ); // Exponential
   switch(covar_code) {
-    case 0 : return (T) sqtau * exp( -dist(d)/(T)rho ); // Exponential
-    case 1 : return (T) sqtau * exp( -pow(dist(d)/(T)rho,2) ); // Gaussian
-    case 2 : return (T) sqtau * matern(d, rho, nu); // Matern
-    case 3 : return (T) sqtau * (1 + sqrt(3)*dist(d)/(T)rho) * exp( -sqrt(3)*dist(d)/(T)rho ); // Matern32 (nu = 1.5)
-    default : return (T)sqtau * matern(d, rho, nu); // Matern
+    case 0 : return (T) marg_var * exp( -dist(d)/(T)rho ); // Exponential
+    case 1 : return (T) marg_var * exp( -pow(dist(d)/(T)rho,2) ); // Gaussian
+    case 2 : return (T) marg_var * matern(d, rho, nu); // Matern
+    case 3 : return (T) marg_var * (1 + sqrt(3)*dist(d)/(T)rho) * exp( -sqrt(3)*dist(d)/(T)rho ); // Matern32 (nu = 1.5)
+    default : return (T) marg_var * matern(d, rho, nu); // Matern
   }
 }
 
