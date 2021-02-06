@@ -527,11 +527,11 @@ setMethod(f = "TMB_in",
     ),
     time_effects = c(time_effects(process)[,"w",drop=T]),
     logit_time_phi = ifelse(
-      (time_parameters(parameters(process))["phi","par"] >= 0
+      (time_parameters(parameters(process))["phi","par"] >= -1
         && time_parameters(parameters(process))["phi","par"] <= 1) ||
         time_parameters(parameters(process))["phi","fixed"] == T,
-      qlogis(time_parameters(parameters(process))["phi","par"]),
-      qlogis(0)
+      qlogis(0.5*(1+time_parameters(parameters(process))["phi","par"])),
+      qlogis(0.5*(1+0))
     ),
     log_time_sd = ifelse(
       time_parameters(parameters(process))["sd","par"] > 0 ||
@@ -545,7 +545,10 @@ setMethod(f = "TMB_in",
   rand<- c("resp_w","time_effects","proc_w","pred_w")
   map<- list(
     mu = fixed_effects(parameters(observations))["mu","fixed"],
-    working_response_pars = response_parameters(parameters(observations))[,"fixed"],
+    working_response_pars = switch((length(para$working_response_pars) > 0)+1,
+      logical(0),
+      response_parameters(parameters(observations))[,"fixed"]
+    ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"fixed"],
     resp_w = logical(
       sum(sapply(edges(transient_graph(observations)),length) > 1)
@@ -637,7 +640,7 @@ setMethod(f = "update_staRVe_model",
   for( i in seq(nrow(data)) ) {
     if( length(edges(obs_dag)[[i]]) == 1 ) {
       re<- random_effects(x)
-      w<- re[,c("w","se"),drop=T][re[,time_column,drop=T] == dat(x)[1,time_column,drop=T],]
+      w<- re[,c("w","se"),drop=T][re[,time_column,drop=T] == dat(x)[i,time_column,drop=T],]
       data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]],c("w","se")]
     } else {
       data[i,c("w","w_se")]<- resp_w[resp_w_idx,]

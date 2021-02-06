@@ -18,6 +18,8 @@ class nngp {
          vector<matrix<Type> > ws_dists);
     nngp() = default;
 
+    Type avg_forecast_sd;
+
     void update_w(vector<Type> new_w,
                   vector<Type> new_mean);
 
@@ -45,11 +47,34 @@ nngp<Type>::nngp(covariance<Type> cov,
   mean(mean),
   ws_graph(ws_graph),
   ws_dists(ws_dists) {
-  Type initSD = fieldPred(ws_graph(0).segment(1,ws_graph(0).size()-1),
+  // Calibrate scaleTau coefficient so that scaleTau gives average
+  // forecast variance
+  avg_forecast_sd = 0.0;
+  for( int i=1; i<ws_graph.size(); i++ ) {
+    avg_forecast_sd += fieldPred(ws_graph(i),
+                                 ws_dists(i),
+                                 Type(0.0),
+                                 false).sd();
+  }
+  avg_forecast_sd *= 1.0/(ws_graph.size()-1);
+  this->cov.update_scaleTau(cov.get_scaleTau()/(avg_forecast_sd/cov.get_scaleTau()));
+
+  avg_forecast_sd = 0.0;
+  for( int i=1; i<ws_graph.size(); i++ ) {
+    avg_forecast_sd += fieldPred(ws_graph(i),
+                                 ws_dists(i),
+                                 Type(0.0),
+                                 false).sd();
+  }
+  avg_forecast_sd *= 1.0/(ws_graph.size()-1);
+
+  // Calibrate initSD so that initial random effect has comparable
+  // variance to rest of random effects
+  Type init_sd = fieldPred(ws_graph(0).segment(1,ws_graph(0).size()-1),
                           ws_dists(0),
                           Type(0.0),
                           false).sd();
-  this->cov.update_tau(initSD);
+  this->cov.update_marg_sd(init_sd);
 }
 
 

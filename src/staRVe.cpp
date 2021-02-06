@@ -68,11 +68,11 @@ Type objective_function<Type>::operator() () {
     case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson
     default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal
   }
-  Type space_sd = exp(log_space_sd);
-  Type space_nu = exp(log_space_nu);
+  Type space_sd = exp(log_space_sd); // 0 to Inf
+  Type space_nu = exp(log_space_nu); // 0 to Inf
 
-  Type time_phi = invlogit(logit_time_phi);
-  Type time_sd = exp(log_time_sd);
+  Type time_phi = 2*invlogit(logit_time_phi)-1; // From -1 to +1
+  Type time_sd = exp(log_time_sd); // 0 to Inf
 
   vector<vector<int> > ys_dag = ys_edges.dag;
   vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
@@ -82,6 +82,21 @@ Type objective_function<Type>::operator() () {
 
   vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
+
+  // Standardize distances so rho doesn't scale with distance
+  Type mean_dist = 0.0;
+  for( int i=0; i<ws_dist.size(); i++ ) {
+    mean_dist += ws_dist(0).sum()/ws_dist.size();
+  }
+  for( int i=0; i<ys_dist.size(); i++ ) {
+    ys_dist(i) = ys_dist(i)/mean_dist;
+  }
+  for( int i=0; i<ws_dist.size(); i++ ) {
+    ws_dist(i) = ws_dist(i)/mean_dist;
+  }
+  for( int i=0; i<pred_ws_dist.size(); i++ ) {
+    pred_ws_dist(i) = pred_ws_dist(i)/mean_dist;
+  }
 
   Type initRho = ws_dist(0).maxCoeff();
   covariance<Type> cov(space_sd,initRho,space_nu,covar_code);
@@ -103,28 +118,30 @@ Type objective_function<Type>::operator() () {
   Type nll = 0.0;
   Type pred_nll = 0.0;
 
-  // Initial time
-  w_segment = get_time_segment(w_time,0);
-  y_segment = get_time_segment(y_time,0);
-  resp_w_segment = get_time_segment(resp_w_time,0);
-  pred_w_segment = get_time_segment(pred_w_time,0);
-
+  // AR1 process for time effects
   if( time_effects.size() == 1 ) {
-    Type smallNumber = pow(10,-5);
-    nll -= dnorm(time_effects(0),mu,smallNumber,true);
-    // time_effects(0) = mu;
+      Type smallNumber = pow(10,-5);
+      nll -= dnorm(time_effects(0),mu,smallNumber,true);
   } else {
-    nll -= dnorm(time_effects(0),mu,time_sd,true);
+    nll += SCALE(AR1(time_phi),time_sd/(1-pow(time_phi,2)))(time_effects-mu);
   }
   SIMULATE{
     if( !conditional_sim ) {
       if( time_effects.size() == 1 ) {
         time_effects(0) = mu;
       } else {
-        time_effects(0) = rnorm(mu,time_sd);
+        SCALE(AR1(time_phi),time_sd/(1-pow(time_phi,2))).simulate(time_effects);
+        time_effects = time_effects+mu;
       }
     }
   }
+
+  // Initial time
+  w_segment = get_time_segment(w_time,0);
+  y_segment = get_time_segment(y_time,0);
+  resp_w_segment = get_time_segment(resp_w_time,0);
+  pred_w_segment = get_time_segment(pred_w_time,0);
+
 
   nngp<Type> process(cov,
                      proc_w.segment(w_segment(0),w_segment(1)),
@@ -164,17 +181,6 @@ Type objective_function<Type>::operator() () {
     y_segment = get_time_segment(y_time,time);
     resp_w_segment = get_time_segment(resp_w_time,time);
     pred_w_segment = get_time_segment(pred_w_time,time);
-
-    nll -= dnorm(time_effects(time),
-                 (1-time_phi)*mu+time_phi*time_effects(time-1),
-                 sqrt(1-pow(time_phi,2))*time_sd,
-                 true);
-    SIMULATE{
-      if( !conditional_sim ) {
-        time_effects(time) = rnorm((1-time_phi)*mu+time_phi*time_effects(time-1),
-                                   (1-pow(time_phi,2))*time_sd);
-      }
-    }
 
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
                      time_effects(time) + time_phi*(process.get_w()-time_effects(time-1)));

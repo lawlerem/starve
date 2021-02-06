@@ -64,7 +64,6 @@ observations<Type>::observations(nngp<Type> &process,
   this->response = find_response();
 }
 
-
 template<class Type>
 void observations<Type>::update_y(vector<Type> new_y,
                                   data_indicator<vector<Type>,Type> new_keep,
