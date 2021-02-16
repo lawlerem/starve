@@ -28,8 +28,6 @@ NULL
 #'   nodes and parents.
 #' @slot distance_units The units used for distance calculation.  Must be compatible
 #'   with units::set_units.
-#'
-#' @name dag
 setClass(
   Class = "dag",
   slots = c(
@@ -45,8 +43,6 @@ setClass(
 #'   get_staRVe_distributions("covariance").
 #' @slot spatial_parameters A data.frame containing spatial parameters.
 #' @slot time_parameters A data.frame containing time parameters.
-#'
-#' @name staRVe_process_parameters
 setClass(
   Class = "staRVe_process_parameters",
   slots = c(
@@ -61,8 +57,6 @@ setClass(
 #' @slot random_effects An sf object containing random effects.
 #' @slot persistent graph A dag object describing the dependence graph of the process.
 #' @slot parameters An object of class staRVe_process_parameters.
-#'
-#' @name staRVe_process
 setClass(
   Class = "staRVe_process",
   slots = c(
@@ -82,8 +76,6 @@ setClass(
 #' @slot link_function The link function, must be one given by
 #'   get_staRVe_distributions("link").
 #' @slot fixed_effects A data.frame containing the fixed effect parameters.
-#'
-#' @name staRVe_observation_parameters
 setClass(
   Class = "staRVe_observation_parameters",
   slots = c(
@@ -100,8 +92,6 @@ setClass(
 #' @slot transient_graph A dag object describing the dependence of the data on
 #'   the process.
 #' @slot parameters An object of class staRVe_observation_parameters.
-#'
-#' @name staRVe_observations
 setClass(
   Class = "staRVe_observations",
   slots = c(
@@ -120,8 +110,6 @@ setClass(
 #'   with units::set_units.
 #' @slot max_distance The maximum distance to look for parents. Does not affect
 #'   parents coming from p_far_neighbours.
-#'
-#' @name staRVe_settings
 setClass(
   Class = "staRVe_settings",
   slots = c(
@@ -138,8 +126,6 @@ setClass(
 #' @slot A staRVe_process object.
 #' @slot A staRVe_observations object.
 #' @slot A staRVe_settings object.
-#'
-#' @name staRVe_model
 setClass(
   Class = "staRVe_model",
   slots = c(
@@ -156,8 +142,6 @@ setClass(
 #' @slot sdr_time A proc_time object. Time used to compute standard errors.
 #' @slot parameter_hessian The hessian matrix for parameter estimates.
 #' @slot parameter_covariance The covariance matrix for parameter estimates.
-#'
-#' @name staRVe_tracing
 setClass(
   Class = "staRVe_tracing",
   slots = c(
@@ -174,8 +158,6 @@ setClass(
 #' @slot obj The output of TMB::MakeADFun.
 #' @slot opt The output of nlminb.
 #' @slot sdr The output of TMB::sdreport.
-#'
-#' @name TMB_out
 setClass(
   Class = "TMB_out",
   slots = c(
@@ -189,8 +171,6 @@ setClass(
 #'
 #' @slot tracing A staRVe_tracing object.
 #' @slot TMB_out A TMB_out object.
-#'
-#' @name staRVe_fit
 setClass(
   Class = "staRVe_fit",
   slots = c(
@@ -209,8 +189,6 @@ setClass(
 ######################
 
 #' An S4 class to collect process and observations parameters.
-#'
-#' @name staRVe_parameters
 setClass(
   Class = "staRVe_parameters",
   contains = c("staRVe_process_parameters",

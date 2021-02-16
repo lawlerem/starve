@@ -2,7 +2,7 @@
 % Please edit documentation in R/dag.R
 \name{.get_one_dag_node}
 \alias{.get_one_dag_node}
-\title{Get parent nodes for a node of a directed acyclic graph.}
+\title{Find Parent Nodes for a Node of a Directed Acyclic Graph.}
 \usage{
 .get_one_dag_node(x, nodes, settings, silent = T, ...)
 }
@@ -20,10 +20,10 @@ be the possible parent nodes of \code{x}.}
 \value{
 A list with elements "parents" and "dists". The "parents" element
   is a vector giving the indices of the rows of \code{nodes} which are the
-  parents of \code{x}. The "dists" element is a matrix whose first row is the
-  distance between \code{x} and its parents, and the rest of the matrix gives
-  the distances between parent nodes.
+  parents of \code{x}. The "dists" element is a symmetric matrix whose first
+  row/column is the distance between \code{x} and its parents, and the rest
+  of the matrix gives the distances between parent nodes.
 }
 \description{
-Get parent nodes for a node of a directed acyclic graph.
+Find Parent Nodes for a Node of a Directed Acyclic Graph.
 }

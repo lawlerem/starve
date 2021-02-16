@@ -1,4 +1,4 @@
-#' @include classes.R generics.R utility.R
+#' @include classes.R getset.R generics.R utility.R
 NULL
 
 #####################
@@ -7,10 +7,6 @@ NULL
 ###               ###
 #####################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{dag} instead.
-#'
-#' @export
 #' @noRd
 setMethod(
   f = "initialize",
@@ -46,13 +42,13 @@ NULL
 
 
 #' @export
-#' @rdname access_dag
+#' @describeIn dag Retrieve edge list
 setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
 )
 #' @export
-#' @rdname access_dag
+#' @describeIn dag Set edge list
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -63,13 +59,13 @@ setReplaceMethod(f = "edges",
 
 
 #' @export
-#' @rdname access_dag
+#' @describeIn dag Get list of edge distances
 setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
 )
 #' @export
-#' @rdname access_dag
+#' @describeIn dag Set list of edge distances
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -80,13 +76,13 @@ setReplaceMethod(f = "distances",
 
 
 #' @export
-#' @rdname access_dag
+#' @describeIn dag Get distance units
 setMethod(f = "distance_units",
           signature = "dag",
           definition = function(x) return(x@distance_units)
 )
 #' @export
-#' @rdname access_dag
+#' @describeIn dag Set distance units
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
                  definition = function(x,value) {
@@ -102,7 +98,7 @@ setReplaceMethod(f = "distance_units",
 ###         ###
 ###############
 
-#' Get parent nodes for a node of a directed acyclic graph.
+#' Find Parent Nodes for a Node of a Directed Acyclic Graph.
 #'
 #' @param x An \code{sf} object containing one point geometry (if more than one
 #'   is present, only the first will be used).
@@ -113,48 +109,54 @@ setReplaceMethod(f = "distance_units",
 #'
 #' @return A list with elements "parents" and "dists". The "parents" element
 #'   is a vector giving the indices of the rows of \code{nodes} which are the
-#'   parents of \code{x}. The "dists" element is a matrix whose first row is the
-#'   distance between \code{x} and its parents, and the rest of the matrix gives
-#'   the distances between parent nodes.
+#'   parents of \code{x}. The "dists" element is a symmetric matrix whose first
+#'   row/column is the distance between \code{x} and its parents, and the rest
+#'   of the matrix gives the distances between parent nodes.
 .get_one_dag_node<- function(x,
                              nodes,
                              settings,
                              silent = T,
                              ...) {
   if( nrow(nodes) == 0 ) {
+    # Need at least one potential parent
     parents<- numeric(0)
     dists<- matrix(0)
     return(list(parents,dists))
   } else {}
 
   if( nrow(nodes) <= n_neighbours(settings) ) {
+    # Use all available vertices in graph
     n_far_neighbours<- 0
     m<- nrow(nodes)
   } else {
+    # Determine how many parents should be taken at random instead of nearest
     n_far_neighbours<- round(p_far_neighbours(settings)*n_neighbours(settings))
     m<- n_neighbours(settings) - n_far_neighbours
   }
   suppressMessages({
-  nn_obj<- nngeo::st_nn(x = x,
-                        y = nodes,
-                        returnDist = T,
-                        sparse = T,
-                        progress = !silent,
-                        k = m,
-                        maxdist = max_distance(settings))
+    nn_obj<- nngeo::st_nn(x = x,
+                          y = nodes,
+                          returnDist = T,
+                          sparse = T,
+                          progress = !silent,
+                          k = m,
+                          maxdist = max_distance(settings))
   })
   names(nn_obj)<- c("nn","dist")
 
   parents<- nn_obj$nn[[1]]
   if( length(parents) == 0) {
+    # No parents found
     parents<- numeric(0)
     dists<- matrix(0)
     return(list(parents,dists))
   } else {}
 
+  # If any parents are selected randomly, add them
   far_neighbours<- sample(seq(nrow(nodes))[-parents],size = n_far_neighbours)
   parents<- c(parents,far_neighbours)
 
+  # Group all relevant distances together, and ensure they use correct units
   nn_obj$dist<- matrix(nn_obj$dist[[1]],nrow=1)
   cross_dists<- cbind(nn_obj$dist, sf::st_distance(x,nodes[far_neighbours,]))
   cross_dists<- units::set_units(cross_dists,"m") # st_nn always returns meters
@@ -171,7 +173,7 @@ setReplaceMethod(f = "distance_units",
   return(list(parents,dists))
 }
 
-#' Get parent nodes for a node of a directed acyclic graph.
+#' Find Parent Nodes for a Node of a Directed Acyclic Graph
 #'
 #' @param x An \code{sf} object containing one point geometry (if more than one
 #'   is present, only the first will be used).
@@ -195,11 +197,13 @@ setReplaceMethod(f = "distance_units",
                                         silent) {
   intersection_idx<- sf::st_equals(x,nodes)[[1]]
   if( length(intersection_idx) == 0 ) {
+    # The location of x is not the location of any node
     node<- .get_one_dag_node(x = x,
                              nodes = nodes,
                              settings = settings,
                              silent = silent)
   } else {
+    # Pick out the node whose location is the location of x
     parents<- intersection_idx[[1]] # Don't want more than 1
     dists<- matrix(0)
     node<- list(parents,dists)
@@ -208,32 +212,43 @@ setReplaceMethod(f = "distance_units",
   return(node)
 }
 
-#' Construct a directed acyclic graph for an \code{sf} object with point geometry.
+
+
+#' Construct directed acyclic graphs
 #'
-#' The directed acyclic graph is stored as an ordered list. The i'th element of
-#'  the list is a vector containing indices j such that there is a directed edge
-#'  from node j to node i. In other words, each node j is a directed parent of node i.
+#' @description
+#' A directed acyclic graph is stored as an ordered list. The ith element of the
+#'   list is a vector containing indices j such that there is a directed edge
+#'   from node j to node i, or possibly node (i+k-1) as detailed below.
 #'
-#' There can only be an edge from vertex i to vertex j if i comes before j in
-#'  the rows of \code{x}.
-#'
-#' @param x An \code{sf} object containing point geometries, which will be the
-#'  nodes of the graph.
-#' @param settings An object of class \code{staRVe_settings}.
+#' @param x An \code{sf} object of point geometries
+#' @param y An \code{sf} object of point geometries containing possible parents
+#' @param settings An object of class \code{staRVe_settings}
+#' @param check_intersection Logical. If true, duplicated locations will be checked
 #' @param silent Should intermediate calculations be shown?
 #'
-#' @return An object of class \code{dag}.
+#' @return An object of class \code{dag}
+#'
+#' @name construct_dag
+NULL
+
+#' @describeIn construct_dag Construct a directed acyclic graph from a single
+#'   \code{sf} object. The first element of the ordered list contains the indices
+#'   for the first k rows, where k is the n_neighbours setting. The ith element
+#'   contains the parents for the (i+k-1)th row of x.
 #'
 #' @export
 construct_dag<- function(x,
                          settings = new("staRVe_settings"),
                          silent = T) {
+  # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(max_distance(settings),
                               distance_units(settings),
                               mode="standard")
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
+  # Get the edges and distances for the first k nodes
   startupEdges<- seq(n_neighbours(settings))
   startupDists<- units::set_units(sf::st_distance(x[startupEdges,]),"m")
   startupDists<- units::set_units(startupDists,
@@ -241,15 +256,17 @@ construct_dag<- function(x,
                                   mode="standard")
   startupDists<- units::drop_units(startupDists)
 
+  # Get the edges and distances for the remaining nodes
   nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
     .get_one_dag_node(x = x[i,],
                       nodes = head(x,i-1),
                       settings = settings,
                       silent = silent)
   })
+
+  # Store everything in a dag object
   edge_list<- c(list(startupEdges),lapply(nn_list,`[[`,1))
   dist_list<- c(list(startupDists),lapply(nn_list,`[[`,2))
-
   dag<- new("dag",
             edges = edge_list,
             distances = dist_list,
@@ -258,26 +275,9 @@ construct_dag<- function(x,
   return(dag)
 }
 
-#' Construct a directed acyclic graph between two \code{sf} objects with point geometry.
-#'
-#' The directed acyclic graph is stored as an ordered list. The i'th element of
-#'  the list is a vector containing indices j such that there is a directed edge
-#'  from node j (in y) to node i (in x). If any location in x is present in y,
-#'  there is only a single edge connecting the location in y to the same location in x.
-#'
-#' @param x An \code{sf} object containing point geometries. Directed edges will
-#'  enter nodes in x.
-#' @param y An \code{sf} objecy containing point geometries. Directed edges will
-#'  leave nodes in y.
-#' @param n_neighbours An integer giving the number of parents for each node.
-#' @param p_far_neighbours What percent of neighbours should be randomly selected?
-#' @param check_intersection Logical. If true, if any point in \code{x} is also
-#'   a point in \code{y}, then there will be exactly one edge into that point in
-#'   \code{x} coming from the same point in \code{y} (with a distance of 0).
-#' @param max_dist The maximum distance (in m) to search for parents.
-#' @param return_units Which units should be used for distances?
-#'
-#' @return An object of class \code{dag}.
+#' @describeIn construct_dag Construct a directed acyclic graph from one \code{sf}
+#'   object to another. The i'th element of the list is a vector containing
+#'   indices j such that there is a directed edge from node j (in y) to node i (in x).
 #'
 #' @export
 construct_obs_dag<- function(x,
@@ -285,12 +285,14 @@ construct_obs_dag<- function(x,
                              settings = new("staRVe_settings"),
                              check_intersection = T,
                              silent = T) {
+  # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(max_distance(settings),
                               distance_units(settings),
                               mode="standard")
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
+  # Find the parents for each node in x
   nn_list<- lapply(seq(nrow(x)), function(i) {
     args<- list(x = x[i,],
                 nodes = y,
@@ -303,6 +305,7 @@ construct_obs_dag<- function(x,
     }
   })
 
+  # Store everything in a dag object
   edge_list<- lapply(nn_list,`[[`,1)
   dist_list<- lapply(nn_list,`[[`,2)
   dag<- new("dag",
@@ -314,6 +317,8 @@ construct_obs_dag<- function(x,
 }
 
 
+#' @describeIn dag Add one to each integer in edges
+#' @export
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
@@ -322,6 +327,8 @@ setMethod(f = "idxC_to_R",
   })
   return(x)
 })
+#' @describeIn dag Subtract one from each integer in edges
+#' @export
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dag.R
 \name{.get_one_intersects_dag_node}
 \alias{.get_one_intersects_dag_node}
-\title{Get parent nodes for a node of a directed acyclic graph.}
+\title{Find Parent Nodes for a Node of a Directed Acyclic Graph}
 \usage{
 .get_one_intersects_dag_node(x, nodes, settings, silent)
 }
@@ -29,5 +29,5 @@ A list with elements "parents" and "dists". The "parents" element
   zero matrix.
 }
 \description{
-Get parent nodes for a node of a directed acyclic graph.
+Find Parent Nodes for a Node of a Directed Acyclic Graph
 }

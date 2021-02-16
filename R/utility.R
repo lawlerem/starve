@@ -83,7 +83,7 @@ NULL
 .birdFit<- function() {
   foo<- prepare_staRVe_model(
     cnt~time(year),
-    bird_survey,
+    staRVe::bird_survey,
     distribution="poisson",
     link="log",
     fit=T
