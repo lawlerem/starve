@@ -30,25 +30,13 @@ setMethod(
 ###            ###
 ##################
 
-#' Get or set slots from an object of class \code{dag}.
-#'
-#' @param x An object of class \code{dag}.
-#' @param value A replacement value.
-#'
-#' @family access_dag
-#' @name access_dag
-NULL
-
-
-
 #' @export
-#' @describeIn dag Retrieve edge list
+#' @describeIn dag Get/set edge list
 setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
 )
 #' @export
-#' @describeIn dag Set edge list
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -59,13 +47,12 @@ setReplaceMethod(f = "edges",
 
 
 #' @export
-#' @describeIn dag Get list of edge distances
+#' @describeIn dag Get/set list of edge distances
 setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
 )
 #' @export
-#' @describeIn dag Set list of edge distances
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -76,13 +63,12 @@ setReplaceMethod(f = "distances",
 
 
 #' @export
-#' @describeIn dag Get distance units
+#' @describeIn dag Get/set distance units
 setMethod(f = "distance_units",
           signature = "dag",
           definition = function(x) return(x@distance_units)
 )
 #' @export
-#' @describeIn dag Set distance units
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
                  definition = function(x,value) {
