@@ -1,4 +1,4 @@
-#' @include classes.R generics.R staRVe_tracing.R staRVe_model.R TMB_out.R
+#' @include classes.R getset.R generics.R staRVe_tracing.R staRVe_model.R TMB_out.R
 NULL
 
 #################
@@ -7,10 +7,6 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{staRVe_fit} instead.
-#'
-#' @export
 #' @noRd
 setMethod(
   f = "initialize",
@@ -35,23 +31,13 @@ setMethod(
 ###        ###
 ##############
 
-#' Get or set slots from an object of class \code{staRVe_fit}.
-#'
-#' @param x An object of class \code{staRVe_fit}.
-#' @param value A replacement value
-#'
-#' @family access_staRVe_fit
-#' @name access_staRVe_fit
-NULL
-
 #' @export
-#' @rdname access_staRVe_fit
+#' @describeIn staRVe_fit Get/set tracing information
 setMethod(f = "tracing",
           signature = "staRVe_fit",
           definition = function(x) return(x@tracing)
 )
 #' @export
-#' @rdname access_staRVe_fit
 setReplaceMethod(f = "tracing",
                  signature = "staRVe_fit",
                  definition = function(x,value) {
@@ -62,13 +48,12 @@ setReplaceMethod(f = "tracing",
 
 
 #' @export
-#' @rdname access_staRVe_fit
+#' @describeIn staRVe_fit Get/set TMB objects
 setMethod(f = "TMB_out",
           signature = "staRVe_fit",
           definition = function(x) return(x@TMB_out)
 )
 #' @export
-#' @rdname access_staRVe_fit
 setReplaceMethod(f = "TMB_out",
                  signature = "staRVe_fit",
                  definition = function(x,value) {
@@ -83,7 +68,7 @@ setReplaceMethod(f = "TMB_out",
 ###################
 
 #' @export
-#' @rdname access_staRVe_fit
+#' @describeIn staRVe_fit Get convergence message
 setMethod(f = "convergence",
           signature = "staRVe_fit",
           definition = function(x) {
@@ -91,7 +76,7 @@ setMethod(f = "convergence",
 })
 
 #' @export
-#' @rdname access_staRVe_fit
+#' @describeIn staRVe_fit Get timing information
 setMethod(f = "timing",
           signature = "staRVe_fit",
           definition = function(x) {

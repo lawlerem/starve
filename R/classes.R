@@ -167,7 +167,7 @@ setClass(
   )
 )
 
-#' An S4 class to hold an optimized staRVe model
+#' An S4 class to hold an optimized staRVe model, extends the staRVe_model class
 #'
 #' @slot tracing A staRVe_tracing object.
 #' @slot TMB_out A TMB_out object.
