@@ -1,4 +1,4 @@
-#' @include classes.R generics.R utility.R dag.R staRVe_process_parameters.R
+#' @include classes.R getset.R generics.R utility.R dag.R staRVe_process_parameters.R
 NULL
 
 #################
@@ -7,10 +7,6 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{staRVe_process} instead.
-#'
-#' @export
 #' @noRd
 setMethod(
   f = "initialize",
@@ -33,8 +29,10 @@ setMethod(
                         parameters = new("staRVe_process_parameters")) {
     time_effects(.Object)<- time_effects
     random_effects(.Object)<- random_effects
-    if( !is.null(attr(random_effects(.Object),"active_time")) &&
+    if( is.null(attr(random_effects(.Object),"active_time")) &&
         "time" %in% colnames(random_effects(.Object)) ) {
+      # If active_time attribute doesn't exist but "time" is a column
+      # make the active_time attribute to be "time"
       attr(random_effects(.Object),"active_time")<- "time"
     } else {}
 
@@ -53,23 +51,13 @@ setMethod(
 ###        ###
 ##############
 
-#' Get or set slots from an object of class \code{staRVe_process}.
-#'
-#' @param x An object of class \code{staRVe_process}.
-#' @param value A replacement value
-#'
-#' @family access_staRVe_process
-#' @name access_staRVe_process
-NULL
-
 #' @export
-#' @rdname access_staRVe_process
+#' @describeIn staRVe_process Get/set temporal random effects
 setMethod(f = "time_effects",
           signature = "staRVe_process",
           definition = function(x) return(x@time_effects)
 )
 #' @export
-#' @rdname access_staRVe_process
 setReplaceMethod(f = "time_effects",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -78,13 +66,12 @@ setReplaceMethod(f = "time_effects",
 })
 
 #' @export
-#' @rdname access_staRVe_process
+#' @describeIn staRVe_process Get/set spatio-temporal random effects
 setMethod(f = "random_effects",
           signature = "staRVe_process",
           definition = function(x) return(x@random_effects)
 )
 #' @export
-#' @rdname access_staRVe_process
 setReplaceMethod(f = "random_effects",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -95,13 +82,12 @@ setReplaceMethod(f = "random_effects",
 
 
 #' @export
-#' @rdname access_staRVe_process
+#' @describeIn staRVe_process Get/set persistent graph
 setMethod(f = "persistent_graph",
           signature = "staRVe_process",
           definition = function(x) return(x@persistent_graph)
 )
 #' @export
-#' @rdname access_staRVe_process
 setReplaceMethod(f = "persistent_graph",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -112,13 +98,12 @@ setReplaceMethod(f = "persistent_graph",
 
 
 #' @export
-#' @rdname access_staRVe_process
+#' @describeIn staRVe_process Get/set parameters
 setMethod(f = "parameters",
           signature = "staRVe_process",
           definition = function(x) return(x@parameters)
 )
 #' @export
-#' @rdname access_staRVe_process
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -136,18 +121,25 @@ setReplaceMethod(f = "parameters",
 
 #' Prepare the process part of a staRVe_model object.
 #'
-#' @param nodes An sf object containing the observations and covariates.
-#' @param time A staRVe_process object.
-#' @param settings A staRVe_settings object.
+#' @param nodes An sf object containing the persistent node locations
+#' @param persistent_graph An optionally supplied pre-computed persistent graph
+#' @param time A data.frame containing at least one column, which contains the
+#'   time index
+#' @param settings A staRVe_settings object
 #'
-#' @return A staRVe_process object.
+#' @return A staRVe_process object
+#'
+#' @noRd
 prepare_staRVe_process<- function(nodes,
                                   persistent_graph = NA,
                                   time = data.frame(time=0),
                                   settings = new("staRVe_settings") ) {
   process<- new("staRVe_process")
 
+  # Returns name of covariance function and value of nu
   covariance<- .covariance_from_formula(formula(settings))
+
+  # Return a time column with name and type (ar1/rw/etc) attributes
   time_form<- .time_from_formula(formula(settings),time)
   time_seq<- seq(min(time),max(time))
 
@@ -162,7 +154,7 @@ prepare_staRVe_process<- function(nodes,
 
   # random_effects = "sf",
   nodes<- nodes[,attr(nodes,"sf_column")] # Only need locations
-  nodes<- order_by_location(unique(nodes))
+  nodes<- .order_by_location(unique(nodes)) # Lexicographic ordering S->N/W->E
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
     df<- sf:::cbind.sf(data.frame(w = 0,
                                   se = NA,
@@ -176,11 +168,13 @@ prepare_staRVe_process<- function(nodes,
 
   # persistent_graph = "dag",
   if( identical(persistent_graph,NA) || class(persistent_graph) != "dag" ) {
+    # Create persistent graph
     persistent_graph(process)<- construct_dag(nodes,
       settings = settings,
       silent = T
     )
   } else {
+    # Use pre-supplied persistent_graph
     persistent_graph(process)<- persistent_graph
   }
 
@@ -189,17 +183,20 @@ prepare_staRVe_process<- function(nodes,
   covariance_function(parameters)<- covariance$covariance
   spatial_parameters(parameters)<- data.frame(
     par = c(0,switch(covariance$covariance,
-                         exponential = 0.5,
-                         gaussian = Inf,
-                         matern = ifelse(is.nan(covariance$nu),0,covariance$nu),
-                         matern32 = 1.5)
+                     exponential = 0.5,
+                     gaussian = Inf,
+                     # If nu is supplied, start it at that value,
+                     # otherwise start at exponential covariance
+                     matern = ifelse(is.nan(covariance$nu),0.5,covariance$nu),
+                     matern32 = 1.5)
            ),
     se = NA,
     fixed = c(F,switch(covariance$covariance,
-                         exponential = T,
-                         gaussian = T,
-                         matern = ifelse(is.nan(covariance$nu),F,T),
-                         matern32 = T)
+                       exponential = T,
+                       gaussian = T,
+                       # If nu is supplied, fix it at that value
+                       matern = ifelse(is.nan(covariance$nu),F,T),
+                       matern32 = T)
              ),
     row.names = c("sd","nu")
   )
@@ -207,19 +204,20 @@ prepare_staRVe_process<- function(nodes,
 
   time_parameters(parameters)<- data.frame(
     par = c(switch(attr(time_form,"type"),
-                   ar1 = 0.5,
+                   ar1 = 0,
                    independent = 0,
                    rw = 1),
             0),
     se = NA,
     fixed = c(switch(attr(time_form,"type"),
-                   ar1 = F,
-                   independent = T,
-                   rw = T),
+                     ar1 = F,
+                     independent = T,
+                     rw = T),
               F),
-    row.names = c("phi","sd")
+    row.names = c("ar1","sd")
   )
   if( length(unique(time_seq)) == 1 ) {
+    # If purely spatial data, we don't need time parameters
     time_parameters(parameters)$fixed<- c(T,T)
   } else {}
 

@@ -7,10 +7,6 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{staRVe_observations} instead.
-#'
-#' @export
 #' @noRd
 setMethod(
   f = "initialize",
@@ -25,8 +21,10 @@ setMethod(
                         transient_graph = new("dag"),
                         parameters = new("staRVe_observation_parameters")) {
     dat(.Object)<- data
-    if( !is.null(attr(dat(.Object),"active_time")) &&
+    if( is.null(attr(dat(.Object),"active_time")) &&
         "time" %in% colnames(dat(.Object)) ) {
+      # If active_time attribute doesn't exist but "time" is a column
+      # make the active_time attribute to be "time"
       attr(dat(.Object),"active_time")<- "time"
     } else {}
 
@@ -45,23 +43,14 @@ setMethod(
 ###        ###
 ##############
 
-#' Get or set slots from an object of class \code{staRVe_observations}.
-#'
-#' @param x An object of class \code{staRVe_observations}.
-#' @param value A replacement value
-#'
-#' @family access_staRVe_observations
-#' @name access_staRVe_observations
-NULL
 
 #' @export
-#' @rdname access_staRVe_observations
+#' @describeIn staRVe_observations Get/set data
 setMethod(f = "dat",
           signature = "staRVe_observations",
           definition = function(x) return(x@data)
 )
 #' @export
-#' @rdname access_staRVe_observations
 setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -72,13 +61,12 @@ setReplaceMethod(f = "dat",
 
 
 #' @export
-#' @rdname access_staRVe_observations
+#' @describeIn staRVe_observations Get/set transient graph
 setMethod(f = "transient_graph",
           signature = "staRVe_observations",
           definition = function(x) return(x@transient_graph)
 )
 #' @export
-#' @rdname access_staRVe_observations
 setReplaceMethod(f = "transient_graph",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -89,13 +77,12 @@ setReplaceMethod(f = "transient_graph",
 
 
 #' @export
-#' @rdname access_staRVe_observations
+#' @describeIn staRVe_observations Get/set parameters
 setMethod(f = "parameters",
           signature = "staRVe_observations",
           definition = function(x) return(x@parameters)
 )
 #' @export
-#' @rdname access_staRVe_observations
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -115,6 +102,7 @@ setReplaceMethod(f = "parameters",
 #'
 #' @param data An sf object containing the observations and covariates.
 #' @param process A staRVe_process object.
+#' @param transient_graph An optionally supplied pre-computed transient graph
 #' @param settings A staRVe_settings object.
 #' @param distribution The response distribution to use. must be one given by
 #'   get_staRVe_distributions("distribution").
@@ -122,6 +110,8 @@ setReplaceMethod(f = "parameters",
 #'   get_staRVe_distributions("link").
 #'
 #' @return A staRVe_observations object.
+#'
+#' @noRd
 prepare_staRVe_observations<- function(data,
                                        process,
                                        transient_graph = NA,
@@ -129,15 +119,22 @@ prepare_staRVe_observations<- function(data,
                                        distribution = "gaussian",
                                        link = "identity") {
   observations<- new("staRVe_observations")
+
+  # Return a time column with name and type (ar1/rw/etc) attributes
+  # Need it here for the name attribute
   time_form<- .time_from_formula(formula(settings),data)
 
   # data = "sf"
-  data<- order_by_location(data,time = data[[attr(time_form,"name")]])
+  # Put in lexicographic ordering by time, then S->N / W->E
+  data<- .order_by_location(data,time = data[[attr(time_form,"name")]])
+  # Returns response variable with a "name" attribute
   y<- .response_from_formula(formula(settings),data)
-  time_form<- .time_from_formula(formula(settings),data) #in order)
-  response<- data.frame(y = c(y),t = c(time_form))
+  # Return a time column with name and type (ar1/rw/etc) attributes
+  time_form<- .time_from_formula(formula(settings),data) #in order
+  response<- data.frame(y = c(y),t = c(time_form)) # c() removes attributes
   names(response)<- c(attr(y,"name"),attr(time_form,"name"))
 
+  # Get covariates, and sample size information if using a binomial response
   design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
   sample_size<- .sample_size_from_formula(formula(settings),data)
 
@@ -158,17 +155,20 @@ prepare_staRVe_observations<- function(data,
 
 
   # transient_graph = "dag"
+  # Random effect locations are the same each year, so only need first year
   random_effects<- split(
     random_effects(process),
     random_effects(process)[,attr(random_effects(process),"time_column"),drop=T]
   )[[1]]
   if( identical(transient_graph,NA) || class(transient_graph) != "dag" ) {
+    # Construct transient graph if not supplied
     transient_graph(observations)<- construct_obs_dag(
       x = data,
       y = random_effects,
       settings = new("staRVe_settings"),
     )
   } else {
+    # Use pre-supplied transient graph
     transient_graph(observations)<- transient_graph
   }
 
@@ -176,23 +176,25 @@ prepare_staRVe_observations<- function(data,
   # parameters = "staRVe_observation_parameters"
   parameters<- new("staRVe_observation_parameters")
 
+  # Match supplied response distribution to valid options
   response_distribution(parameters)<- unname(
     get_staRVe_distributions("distribution")[
       charmatch(distribution,get_staRVe_distributions("distribution"))
     ]
   )
 
+  # Set up response parameters depending on response distribution
   response_parameters(parameters)<- data.frame(
     par = c(switch(distribution,
-      gaussian = numeric(1),
-      poisson = numeric(0),
-      `negative binomial` = numeric(1),
-      bernoulli = numeric(0),
-      gamma = numeric(1),
-      lognormal = numeric(1),
-      binomial = numeric(0),
-      atLeastOneBinomial = numeric(0),
-      compois = numeric(1)
+      gaussian = numeric(1), # sd
+      poisson = numeric(0), # NA
+      `negative binomial` = numeric(1), # overdispersion
+      bernoulli = numeric(0), # NA
+      gamma = numeric(1), # sd
+      lognormal = numeric(1), # sd
+      binomial = numeric(0), # NA
+      atLeastOneBinomial = numeric(0), # NA
+      compois = numeric(1) # dispersion
     )),
     se = c(switch(distribution,
       gaussian = NA,
@@ -229,12 +231,14 @@ prepare_staRVe_observations<- function(data,
     ))
   )
 
+  # Match supplied link function with valid options
   link_function(parameters)<- unname(
     get_staRVe_distributions("link")[
       charmatch(link,get_staRVe_distributions("link"))
     ]
   )
 
+  # Set up fixed effects according to covariates formula
   design<- .mean_design_from_formula(formula(settings),data)
   fixed_effects(parameters)<- data.frame(
     par = c(0,numeric(ncol(design))),

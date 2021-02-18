@@ -1,4 +1,4 @@
-#' @include classes.R generics.R
+#' @include classes.R getset.R generics.R
 NULL
 
 #################
@@ -7,10 +7,6 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{staRVe_observation_parameters} instead.
-#'
-#' @export
 #' @noRd
 setMethod(
   f = "initialize",
@@ -38,23 +34,14 @@ setMethod(
 ###        ###
 ##############
 
-#' Get or set slots from an object of class \code{staRVe_observation_parameters}.
-#'
-#' @param x An object of class \code{staRVe_observation_parameters}.
-#' @param value A replacement value
-#'
-#' @family access_staRVe_observation_parameters
-#' @name access_staRVe_observation_parameters
-NULL
-
 #' @export
-#' @rdname access_staRVe_observation_parameters
+#' @describeIn staRVe_observation_parameters Get/set response distribution. Run
+#'   get_staRVe_distributions("distribution") for valid options.
 setMethod(f = "response_distribution",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@response_distribution)
 )
 #' @export
-#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "response_distribution",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -65,13 +52,12 @@ setReplaceMethod(f = "response_distribution",
 
 
 #' @export
-#' @rdname access_staRVe_observation_parameters
+#' @describeIn staRVe_observation_parameters Get/set response distribution parameters
 setMethod(f = "response_parameters",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@response_parameters)
 )
 #' @export
-#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "response_parameters",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -82,13 +68,13 @@ setReplaceMethod(f = "response_parameters",
 
 
 #' @export
-#' @rdname access_staRVe_observation_parameters
+#' @describeIn staRVe_observation_parameters Get/set link function.  Run
+#'   get_staRVe_distributions("link") for valid options.
 setMethod(f = "link_function",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@link_function)
 )
 #' @export
-#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "link_function",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -99,13 +85,12 @@ setReplaceMethod(f = "link_function",
 
 
 #' @export
-#' @rdname access_staRVe_observation_parameters
+#' @describeIn staRVe_observation_parameters Get/set fixed effects
 setMethod(f = "fixed_effects",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@fixed_effects)
 )
 #' @export
-#' @rdname access_staRVe_observation_parameters
 setReplaceMethod(f = "fixed_effects",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {

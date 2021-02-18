@@ -9,7 +9,7 @@ NULL
 
 
 
-# .
+# A
 
 .add_random_effects_by_time<- function(x,times) {
   random_effects<- random_effects(process(x))
@@ -80,6 +80,13 @@ NULL
   return(x)
 }
 
+
+
+
+
+
+# B
+
 .birdFit<- function() {
   foo<- prepare_staRVe_model(
     cnt~time(year),
@@ -91,128 +98,6 @@ NULL
   return(foo)
 }
 
-.covariance_to_code<- function(covariance) {
-  covar_code<- charmatch(covariance,get_staRVe_distributions("covariance"))
-  if( is.na(covar_code) || covar_code == 0 ) {
-    stop("Supplied covariance function is not implemented, or matches multiple covariance functions.")
-  } else {
-    covar_code<- covar_code - 1 # Convert to cpp
-  }
-}
-
-.distribution_to_code<- function(distribution) {
-  distribution_code<- charmatch(distribution,get_staRVe_distributions("distribution"))
-  if( is.na(distribution_code) || distribution_code == 0  ) {
-    stop("Supplied distribution is not implemented, or matches multiple distributions.")
-  } else {
-    distribution_code<- distribution_code - 1 # Convert to cpp
-  }
-
-  return(distribution_code)
-}
-
-.link_to_code<- function(link) {
-  link_code<- charmatch(link,get_staRVe_distributions("link"))
-  if( is.na(link_code) || link_code == 0 ) {
-    stop("Supplied link function is not implemented, or matches multiple link functions.")
-  } else {
-    link_code<- link_code - 1 # Convert to cpp
-  }
-
-  return(link_code)
-}
-
-# x should be a vector
-.logical_to_map<- function(x) {
-  y<- seq_along(x)
-  y[x]<- NA
-  y<- as.factor(y)
-
-  return(y)
-}
-
-#' Check which covariates are used in a staRVe formula
-#'
-#' @param x A formula object with terms grouped in a \code{mean(...)} function.
-#'
-#' @return A character vector giving the names of covariates used in a formula.
-.names_from_formula<- function(x) {
-  # Remove response and time from formula
-  the_terms<- terms(x,specials=c("mean","time","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("mean",term.labels,value=T) # Pick out mean(...)
-  if( length(the_call) == 0 ) {
-    return(character(0))
-  } else {}
-  new_formula<- paste(the_call,collapse=" + ")
-  new_formula<- paste("~",new_formula)
-  var_names<- all.vars(formula(new_formula))
-  return(var_names)
-}
-
-#' Reform a list of \code{Raster*} objects to an \code{sf} data.frame.
-#'
-#' @param x A list of \code{Raster*} objects.
-#' @param time_name A string giving the name of the time variable.
-#'
-#' @return An \code{sf} data.frame.
-.sf_from_raster_list<- function(x,time_name) {
-  sf_list<- lapply(x,function(raster_brick) {
-    layer_names<- names(raster_brick)
-    layer_list<- lapply(layer_names,function(name) {
-      numeric_name<- as.numeric(gsub("t","",name,ignore.case=T))
-      sf_layer<- sf::st_as_sf(raster::rasterToPoints(raster_brick[[name]],spatial=T))
-      sf_layer<- cbind(sf_layer[,name,drop=T],
-                       numeric_name,
-                       sf_layer[,attr(sf_layer,"st_geometry")])
-      colnames(sf_layer)[1:2]<- c("value",time_name)
-      return(sf_layer)
-    })
-    return(do.call(rbind,layer_list))
-  })
-  sf_list<- lapply(names(x), function(name) {
-    colnames(sf_list[[name]])[[1]]<- name
-    return(sf_list[[name]])
-  })
-  unique_times<- lapply(sf_list, function(x) {
-    return(unique(x[,time_name,drop=T]))
-  })
-  unique_times<- sort(unique(do.call(c,unique_times)))
-
-  unique_geoms<- unique(sf_list[[1]][,attr(sf_list[[1]],"st_geometry")])
-  # This assumes the initial rasters are the same.
-
-
-  sf_output<- lapply(unique_times,function(time) {
-    year_sf<- cbind(time,unique_geoms)
-    var_columns<- lapply(sf_list,function(var) {
-      var_year<- var[var[,time_name,drop=T]==time,]
-      var_year[,time_name]<- NULL
-      suppressMessages(var_year<- sf::st_join(unique_geoms,var_year))
-      var_year<- sf::st_drop_geometry(var_year)
-      return(var_year)
-    })
-    var_df<- do.call(cbind.data.frame,var_columns)
-    year_sf<- sf:::cbind.sf(var_df,year_sf)
-    return(year_sf)
-  })
-  sf_output<- do.call(rbind,sf_output)
-  colnames(sf_output)[colnames(sf_output)=="time"]<- time_name
-
-  return(sf_output)
-}
-
-
-
-
-
-# A
-
-
-
-
-
-# B
 
 
 
@@ -260,11 +145,33 @@ NULL
   return(x)
 }
 
+.covariance_to_code<- function(covariance) {
+  covar_code<- charmatch(covariance,get_staRVe_distributions("covariance"))
+  if( is.na(covar_code) || covar_code == 0 ) {
+    stop("Supplied covariance function is not implemented, or matches multiple covariance functions.")
+  } else {
+    covar_code<- covar_code - 1 # Convert to cpp
+  }
+}
+
+
 
 
 
 
 # D
+
+.distribution_to_code<- function(distribution) {
+  distribution_code<- charmatch(distribution,get_staRVe_distributions("distribution"))
+  if( is.na(distribution_code) || distribution_code == 0  ) {
+    stop("Supplied distribution is not implemented, or matches multiple distributions.")
+  } else {
+    distribution_code<- distribution_code - 1 # Convert to cpp
+  }
+
+  return(distribution_code)
+}
+
 
 
 
@@ -356,6 +263,27 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 # L
 
+.link_to_code<- function(link) {
+  link_code<- charmatch(link,get_staRVe_distributions("link"))
+  if( is.na(link_code) || link_code == 0 ) {
+    stop("Supplied link function is not implemented, or matches multiple link functions.")
+  } else {
+    link_code<- link_code - 1 # Convert to cpp
+  }
+
+  return(link_code)
+}
+
+# x should be a vector
+.logical_to_map<- function(x) {
+  y<- seq_along(x)
+  y[x]<- NA
+  y<- as.factor(y)
+
+  return(y)
+}
+
+
 
 
 
@@ -396,6 +324,26 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 # N
 
+#' Check which covariates are used in a staRVe formula
+#'
+#' @param x A formula object with terms grouped in a \code{mean(...)} function.
+#'
+#' @return A character vector giving the names of covariates used in a formula.
+.names_from_formula<- function(x) {
+  # Remove response and time from formula
+  the_terms<- terms(x,specials=c("mean","time","sample.size"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("mean",term.labels,value=T) # Pick out mean(...)
+  if( length(the_call) == 0 ) {
+    return(character(0))
+  } else {}
+  new_formula<- paste(the_call,collapse=" + ")
+  new_formula<- paste("~",new_formula)
+  var_names<- all.vars(formula(new_formula))
+  return(var_names)
+}
+
+
 
 
 
@@ -417,7 +365,9 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @return Either a copy of \code{x} whose rows as sorted (\code{return='sort'});
 #'  or an integer vector of sorted indices (\code{return='order'}).
-order_by_location<- function(x,time=NULL,return="sort") {
+#'
+#' @noRd
+.order_by_location<- function(x,time=NULL,return="sort") {
     coords<- as.data.frame(sf::st_coordinates(x))
     if( !is.null(time) ) {coords<- cbind(time,coords)} else {}
     the_order<- do.call(order,as.list(coords))
@@ -505,6 +455,59 @@ order_by_location<- function(x,time=NULL,return="sort") {
   return(the_df)
 }
 
+#' Reform a list of \code{Raster*} objects to an \code{sf} data.frame.
+#'
+#' @param x A list of \code{Raster*} objects.
+#' @param time_name A string giving the name of the time variable.
+#'
+#' @return An \code{sf} data.frame.
+.sf_from_raster_list<- function(x,time_name) {
+  sf_list<- lapply(x,function(raster_brick) {
+    layer_names<- names(raster_brick)
+    layer_list<- lapply(layer_names,function(name) {
+      numeric_name<- as.numeric(gsub("t","",name,ignore.case=T))
+      sf_layer<- sf::st_as_sf(raster::rasterToPoints(raster_brick[[name]],spatial=T))
+      sf_layer<- cbind(sf_layer[,name,drop=T],
+                       numeric_name,
+                       sf_layer[,attr(sf_layer,"st_geometry")])
+      colnames(sf_layer)[1:2]<- c("value",time_name)
+      return(sf_layer)
+    })
+    return(do.call(rbind,layer_list))
+  })
+  sf_list<- lapply(names(x), function(name) {
+    colnames(sf_list[[name]])[[1]]<- name
+    return(sf_list[[name]])
+  })
+  unique_times<- lapply(sf_list, function(x) {
+    return(unique(x[,time_name,drop=T]))
+  })
+  unique_times<- sort(unique(do.call(c,unique_times)))
+
+  unique_geoms<- unique(sf_list[[1]][,attr(sf_list[[1]],"st_geometry")])
+  # This assumes the initial rasters are the same.
+
+
+  sf_output<- lapply(unique_times,function(time) {
+    year_sf<- cbind(time,unique_geoms)
+    var_columns<- lapply(sf_list,function(var) {
+      var_year<- var[var[,time_name,drop=T]==time,]
+      var_year[,time_name]<- NULL
+      suppressMessages(var_year<- sf::st_join(unique_geoms,var_year))
+      var_year<- sf::st_drop_geometry(var_year)
+      return(var_year)
+    })
+    var_df<- do.call(cbind.data.frame,var_columns)
+    year_sf<- sf:::cbind.sf(var_df,year_sf)
+    return(year_sf)
+  })
+  sf_output<- do.call(rbind,sf_output)
+  colnames(sf_output)[colnames(sf_output)=="time"]<- time_name
+
+  return(sf_output)
+}
+
+
 
 
 
@@ -554,6 +557,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
 
   return(x)
 }
+
 
 
 

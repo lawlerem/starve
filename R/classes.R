@@ -123,9 +123,9 @@ setClass(
 
 #' An S4 class describing a staRVe model.
 #'
-#' @slot A staRVe_process object.
-#' @slot A staRVe_observations object.
-#' @slot A staRVe_settings object.
+#' @slot process A staRVe_process object.
+#' @slot observations A staRVe_observations object.
+#' @slot settings A staRVe_settings object.
 setClass(
   Class = "staRVe_model",
   slots = c(

@@ -79,6 +79,7 @@ setMethod(f = "staRVe_fit",
     x = as(fit,"staRVe_model"),
     y = TMB_out(fit)
   )
+
   predictions<- dat(observations(fit))
   predictions<- .predict_linear(fit,predictions,predictions)
   predictions<- .predict_response(fit,predictions)

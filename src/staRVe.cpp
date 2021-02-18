@@ -50,7 +50,7 @@ Type objective_function<Type>::operator() () {
   PARAMETER(log_space_sd);
   PARAMETER(log_space_nu);
   PARAMETER_VECTOR(time_effects);
-  PARAMETER(logit_time_phi);
+  PARAMETER(logit_time_ar1);
   PARAMETER(log_time_sd);
   PARAMETER_VECTOR(proc_w);
   PARAMETER_VECTOR(pred_w);
@@ -71,7 +71,7 @@ Type objective_function<Type>::operator() () {
   Type space_sd = exp(log_space_sd); // 0 to Inf
   Type space_nu = exp(log_space_nu); // 0 to Inf
 
-  Type time_phi = 2*invlogit(logit_time_phi)-1; // From -1 to +1
+  Type time_ar1 = 2*invlogit(logit_time_ar1)-1; // From -1 to +1
   Type time_sd = exp(log_time_sd); // 0 to Inf
 
   vector<vector<int> > ys_dag = ys_edges.dag;
@@ -123,14 +123,14 @@ Type objective_function<Type>::operator() () {
       Type smallNumber = pow(10,-5);
       nll -= dnorm(time_effects(0),mu,smallNumber,true);
   } else {
-    nll += SCALE(AR1(time_phi),time_sd/(1-pow(time_phi,2)))(time_effects-mu);
+    nll += SCALE(AR1(time_ar1),time_sd/(1-pow(time_ar1,2)))(time_effects-mu);
   }
   SIMULATE{
     if( !conditional_sim ) {
       if( time_effects.size() == 1 ) {
         time_effects(0) = mu;
       } else {
-        SCALE(AR1(time_phi),time_sd/(1-pow(time_phi,2))).simulate(time_effects);
+        SCALE(AR1(time_ar1),time_sd/(1-pow(time_ar1,2))).simulate(time_effects);
         time_effects = time_effects+mu;
       }
     }
@@ -183,7 +183,7 @@ Type objective_function<Type>::operator() () {
     pred_w_segment = get_time_segment(pred_w_time,time);
 
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
-                     time_effects(time) + time_phi*(process.get_w()-time_effects(time-1)));
+                     time_effects(time) + time_ar1*(process.get_w()-time_effects(time-1)));
     obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
                  keep.segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
@@ -261,30 +261,18 @@ Type objective_function<Type>::operator() () {
   Type par_space_sd = space_sd;
   REPORT(par_space_sd);
   ADREPORT(par_space_sd);
-  // Type working_par_log_space_sd = log_space_sd;
-  // REPORT(working_par_log_space_sd);
-  // ADREPORT(working_par_log_space_sd);
 
   Type par_space_nu = space_nu;
   REPORT(par_space_nu);
   ADREPORT(par_space_nu);
-  // Type working_par_log_space_nu = log_space_nu;
-  // REPORT(working_par_log_space_nu);
-  // ADREPORT(working_par_log_space_nu);
 
-  Type par_time_phi = time_phi;
-  REPORT(par_time_phi);
-  ADREPORT(par_time_phi);
-  // Type working_par_logit_time_phi = logit_time_phi;
-  // REPORT(working_par_logit_time_phi);
-  // ADREPORT(working_par_logit_time_phi);
+  Type par_time_ar1 = time_ar1;
+  REPORT(par_time_ar1);
+  ADREPORT(par_time_ar1);
 
   Type par_time_sd = time_sd;
   REPORT(par_time_sd);
   ADREPORT(par_time_sd);
-  // Type working_par_log_time_sd = log_time_sd;
-  // REPORT(working_par_log_time_sd);
-  // ADREPORT(working_par_log_time_sd);
 
   REPORT(obs_y);
 
