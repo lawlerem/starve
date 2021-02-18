@@ -1,4 +1,4 @@
-#' @include classes.R generics.R
+#' @include classes.R getset.R generics.R
 NULL
 
 #################
@@ -7,10 +7,6 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{staRVe_tracing} instead.
-#'
-#' @export
 #' @noRd
 setMethod(
   f = "initialize",
@@ -39,23 +35,12 @@ setMethod(
 ###        ###
 ##############
 
-#' Get or set slots from an object of class \code{staRVe_tracing}.
-#'
-#' @param x An object of class \code{staRVe_tracing}.
-#' @param value A replacement value
-#'
-#' @family access_staRVe_tracing
-#' @name access_staRVe_tracing
-NULL
-
 #' @export
-#' @rdname access_staRVe_tracing
+#' @describeIn staRVe_tracing Get optimization time
 setMethod(f = "opt_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@opt_time)
 )
-#' @export
-#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "opt_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -66,13 +51,12 @@ setReplaceMethod(f = "opt_time",
 
 
 #' @export
-#' @rdname access_staRVe_tracing
+#' @describeIn staRVe_tracing Get hessian computation time
 setMethod(f = "hess_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@hess_time)
 )
 #' @export
-#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "hess_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -83,13 +67,11 @@ setReplaceMethod(f = "hess_time",
 
 
 #' @export
-#' @rdname access_staRVe_tracing
+#' @describeIn staRVe_tracing Get standard error computation time
 setMethod(f = "sdr_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@sdr_time)
 )
-#' @export
-#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "sdr_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -100,13 +82,12 @@ setReplaceMethod(f = "sdr_time",
 
 
 #' @export
-#' @rdname access_staRVe_tracing
+#' @describeIn staRVe_tracing Get/set parameter hessian matrix
 setMethod(f = "parameter_hessian",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_hessian)
 )
 #' @export
-#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "parameter_hessian",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -117,13 +98,12 @@ setReplaceMethod(f = "parameter_hessian",
 
 
 #' @export
-#' @rdname access_staRVe_tracing
+#' @describeIn staRVe_tracing Get/set parameter covariance matrix
 setMethod(f = "parameter_covariance",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_covariance)
 )
 #' @export
-#' @rdname access_staRVe_tracing
 setReplaceMethod(f = "parameter_covariance",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -138,7 +118,7 @@ setReplaceMethod(f = "parameter_covariance",
 ###################
 
 #' @export
-#' @rdname access_staRVe_tracing
+#' @describeIn staRVe_tracing Get all timing information
 setMethod(f = "timing",
           signature = "staRVe_tracing",
           definition = function(x) {
