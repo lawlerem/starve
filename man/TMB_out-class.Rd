@@ -22,11 +22,11 @@ An S4 class to hold TMB-related objects
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{obj}: Get/set TMB::MakeADFun object
+\item \code{obj}: Get TMB::MakeADFun object
 
-\item \code{opt}: Get/set output of optimizer
+\item \code{opt}: Get output of optimizer
 
-\item \code{sdr}: Get/set output of TMB::sdreport
+\item \code{sdr}: Get output of TMB::sdreport
 
 \item \code{convergence}: Get convergence message
 }}

@@ -67,13 +67,11 @@ NULL
 
 # I
 
-#' @export
-#' @rdname staRVe_generics
+#' @noRd
 setGeneric(name = "idxC_to_R",
-def = function(x) standardGeneric("idxC_to_R")
+           def = function(x) standardGeneric("idxC_to_R")
 )
-#' @export
-#' @rdname staRVe_generics
+#' @noRd
 setGeneric(name = "idxR_to_C",
            def = function(x) standardGeneric("idxR_to_C")
 )
@@ -129,23 +127,11 @@ setGeneric(name = "idxR_to_C",
 
 # R
 
-#' @export
-#' @rdname staRVe_generics
-setGeneric(name = "report",
-           def = function(x) standardGeneric("report")
-)
-
 
 
 
 
 # S
-
-#' @export
-#' @rdname staRVe_generics
-setGeneric(name = "sdreport",
-           def = function(x) standardGeneric("sdreport")
-)
 
 #' @export
 #' @rdname staRVe_generics
@@ -172,8 +158,7 @@ setGeneric(name = "staRVe_simulate",
 
 # T
 
-#' @export
-#' @rdname staRVe_generics
+#' @noRd
 setGeneric(name = "TMB_in",
            def = function(x) standardGeneric("TMB_in")
 )
@@ -183,8 +168,7 @@ setGeneric(name = "TMB_in",
 
 # U
 
-#' @export
-#' @rdname staRVe_generics
+#' @noRd
 setGeneric(name = "update_staRVe_model",
            def = function(x,y) standardGeneric("update_staRVe_model")
 )

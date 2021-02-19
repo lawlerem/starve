@@ -2,34 +2,16 @@
 % Please edit documentation in R/generics.R
 \name{staRVe_generics}
 \alias{staRVe_generics}
-\alias{idxC_to_R}
-\alias{idxR_to_C}
-\alias{report}
-\alias{sdreport}
 \alias{staRVe_fit}
 \alias{staRVe_predict}
 \alias{staRVe_simulate}
-\alias{TMB_in}
-\alias{update_staRVe_model}
 \title{A list of generics for the staRVe package.}
 \usage{
-idxC_to_R(x)
-
-idxR_to_C(x)
-
-report(x)
-
-sdreport(x)
-
 staRVe_fit(x, ...)
 
 staRVe_predict(x, locations, ...)
 
 staRVe_simulate(model, ...)
-
-TMB_in(x)
-
-update_staRVe_model(x, y)
 }
 \description{
 To see a list of all methods available for a specific class,

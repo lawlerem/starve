@@ -32,12 +32,11 @@ setMethod(
 ##############
 
 #' @export
-#' @describeIn staRVe_fit Get/set tracing information
+#' @describeIn staRVe_fit Get tracing information
 setMethod(f = "tracing",
           signature = "staRVe_fit",
           definition = function(x) return(x@tracing)
 )
-#' @export
 setReplaceMethod(f = "tracing",
                  signature = "staRVe_fit",
                  definition = function(x,value) {
@@ -48,12 +47,11 @@ setReplaceMethod(f = "tracing",
 
 
 #' @export
-#' @describeIn staRVe_fit Get/set TMB objects
+#' @describeIn staRVe_fit Get TMB objects
 setMethod(f = "TMB_out",
           signature = "staRVe_fit",
           definition = function(x) return(x@TMB_out)
 )
-#' @export
 setReplaceMethod(f = "TMB_out",
                  signature = "staRVe_fit",
                  definition = function(x,value) {

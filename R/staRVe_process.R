@@ -81,13 +81,13 @@ setReplaceMethod(f = "random_effects",
 
 
 
-#' @export
-#' @describeIn staRVe_process Get/set persistent graph
+#' Get/set persistent graph
+#'
+#' @noRd
 setMethod(f = "persistent_graph",
           signature = "staRVe_process",
           definition = function(x) return(x@persistent_graph)
 )
-#' @export
 setReplaceMethod(f = "persistent_graph",
                  signature = "staRVe_process",
                  definition = function(x,value) {

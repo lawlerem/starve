@@ -34,9 +34,9 @@ An S4 class to hold optimization tracing for a staRVe model
 
 \item \code{sdr_time}: Get standard error computation time
 
-\item \code{parameter_hessian}: Get/set parameter hessian matrix
+\item \code{parameter_hessian}: Get parameter hessian matrix
 
-\item \code{parameter_covariance}: Get/set parameter covariance matrix
+\item \code{parameter_covariance}: Get parameter covariance matrix
 
 \item \code{timing}: Get all timing information
 }}

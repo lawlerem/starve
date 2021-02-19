@@ -5,15 +5,12 @@
 \alias{staRVe_process-class}
 \alias{time_effects,staRVe_process-method}
 \alias{random_effects,staRVe_process-method}
-\alias{persistent_graph,staRVe_process-method}
 \alias{parameters,staRVe_process-method}
 \title{An S4 class to hold the process information for a staRVe model.}
 \usage{
 \S4method{time_effects}{staRVe_process}(x)
 
 \S4method{random_effects}{staRVe_process}(x)
-
-\S4method{persistent_graph}{staRVe_process}(x)
 
 \S4method{parameters}{staRVe_process}(x)
 }
@@ -25,8 +22,6 @@ An S4 class to hold the process information for a staRVe model.
 \item \code{time_effects}: Get/set temporal random effects
 
 \item \code{random_effects}: Get/set spatio-temporal random effects
-
-\item \code{persistent_graph}: Get/set persistent graph
 
 \item \code{parameters}: Get/set parameters
 }}

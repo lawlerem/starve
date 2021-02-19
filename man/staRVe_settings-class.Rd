@@ -25,15 +25,15 @@ An S4 class to hold extra settings for a staRVe model
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{formula}: Get/set model formula
+\item \code{formula}: Get model formula
 
-\item \code{n_neighbours}: Get/set maximum number of neighbours
+\item \code{n_neighbours}: Get maximum number of neighbours
 
-\item \code{p_far_neighbours}: Get/set percentage of far neighbours
+\item \code{p_far_neighbours}: Get percentage of far neighbours
 
 \item \code{distance_units}: Get/set distance units
 
-\item \code{max_distance}: Get/set maximum distance for neighbours
+\item \code{max_distance}: Get maximum distance for neighbours
 }}
 
 \section{Slots}{

@@ -82,12 +82,11 @@ setReplaceMethod(f = "sdr_time",
 
 
 #' @export
-#' @describeIn staRVe_tracing Get/set parameter hessian matrix
+#' @describeIn staRVe_tracing Get parameter hessian matrix
 setMethod(f = "parameter_hessian",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_hessian)
 )
-#' @export
 setReplaceMethod(f = "parameter_hessian",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -98,12 +97,11 @@ setReplaceMethod(f = "parameter_hessian",
 
 
 #' @export
-#' @describeIn staRVe_tracing Get/set parameter covariance matrix
+#' @describeIn staRVe_tracing Get parameter covariance matrix
 setMethod(f = "parameter_covariance",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_covariance)
 )
-#' @export
 setReplaceMethod(f = "parameter_covariance",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {

@@ -32,12 +32,11 @@ setMethod(
 ##############
 
 #' @export
-#' @describeIn TMB_out Get/set TMB::MakeADFun object
+#' @describeIn TMB_out Get TMB::MakeADFun object
 setMethod(f = "obj",
           signature = "TMB_out",
           definition = function(x) return(x@obj)
 )
-#' @export
 setReplaceMethod(f = "obj",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -46,12 +45,11 @@ setReplaceMethod(f = "obj",
 })
 
 #' @export
-#' @describeIn TMB_out Get/set output of optimizer
+#' @describeIn TMB_out Get output of optimizer
 setMethod(f = "opt",
           signature = "TMB_out",
           definition = function(x) return(x@opt)
 )
-#' @export
 setReplaceMethod(f = "opt",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -60,12 +58,11 @@ setReplaceMethod(f = "opt",
 })
 
 #' @export
-#' @describeIn TMB_out Get/set output of TMB::sdreport
+#' @describeIn TMB_out Get output of TMB::sdreport
 setMethod(f = "sdr",
           signature = "TMB_out",
           definition = function(x) return(x@sdr)
 )
-#' @export
 setReplaceMethod(f = "sdr",
                  signature = "TMB_out",
                  definition = function(x,value) {

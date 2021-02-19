@@ -60,13 +60,13 @@ setReplaceMethod(f = "dat",
 
 
 
-#' @export
-#' @describeIn staRVe_observations Get/set transient graph
+#' Get/set transient graph
+#'
+#' @noRd
 setMethod(f = "transient_graph",
           signature = "staRVe_observations",
           definition = function(x) return(x@transient_graph)
 )
-#' @export
 setReplaceMethod(f = "transient_graph",
                  signature = "staRVe_observations",
                  definition = function(x,value) {

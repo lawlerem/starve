@@ -36,12 +36,11 @@ setMethod(
 ##############
 
 #' @export
-#' @describeIn staRVe_settings Get/set model formula
+#' @describeIn staRVe_settings Get model formula
 setMethod(f = "formula",
           signature = "staRVe_settings",
           definition = function(x) return(x@formula)
 )
-#' @export
 setReplaceMethod(f = "formula",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -52,12 +51,11 @@ setReplaceMethod(f = "formula",
 
 
 #' @export
-#' @describeIn staRVe_settings Get/set maximum number of neighbours
+#' @describeIn staRVe_settings Get maximum number of neighbours
 setMethod(f = "n_neighbours",
           signature = "staRVe_settings",
           definition = function(x) return(x@n_neighbours)
 )
-#' @export
 setReplaceMethod(f = "n_neighbours",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -68,12 +66,11 @@ setReplaceMethod(f = "n_neighbours",
 
 
 #' @export
-#' @describeIn staRVe_settings Get/set percentage of far neighbours
+#' @describeIn staRVe_settings Get percentage of far neighbours
 setMethod(f = "p_far_neighbours",
           signature = "staRVe_settings",
           definition = function(x) return(x@p_far_neighbours)
 )
-#' @export
 setReplaceMethod(f = "p_far_neighbours",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -100,12 +97,11 @@ setReplaceMethod(f = "distance_units",
 
 
 #' @export
-#' @describeIn staRVe_settings Get/set maximum distance for neighbours
+#' @describeIn staRVe_settings Get maximum distance for neighbours
 setMethod(f = "max_distance",
           signature = "staRVe_settings",
           definition = function(x) return(x@max_distance)
 )
-#' @export
 setReplaceMethod(f = "max_distance",
                  signature = "staRVe_settings",
                  definition = function(x,value) {

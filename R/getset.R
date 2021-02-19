@@ -68,12 +68,10 @@ setGeneric(name = "distance_units<-",
            def = function(x,value) standardGeneric("distance_units<-")
 )
 
-#' @export
 #' @noRd
 setGeneric(name = "distances",
            def = function(x) standardGeneric("distances")
 )
-#' @export
 #' @noRd
 setGeneric(name = "distances<-",
            def = function(x,value) standardGeneric("distances<-")
@@ -85,12 +83,10 @@ setGeneric(name = "distances<-",
 
 # E
 
-#' @export
 #' @noRd
 setGeneric(name = "edges",
            def = function(x) standardGeneric("edges")
 )
-#' @export
 #' @noRd
 setGeneric(name = "edges<-",
            def = function(x,value) standardGeneric("edges<-")
@@ -118,7 +114,6 @@ setGeneric(name = "fixed_effects<-",
 setGeneric(name = "formula",
            def = function(x) standardGeneric("formula")
 )
-#' @export
 #' @noRd
 setGeneric(name = "formula<-",
            def = function(x,value) standardGeneric("formula<-")
@@ -144,7 +139,6 @@ setGeneric(name = "graph",
 setGeneric(name = "hess_time",
            def = function(x) standardGeneric("hess_time")
 )
-#' @export
 #' @noRd
 setGeneric(name = "hess_time<-",
            def = function(x,value) standardGeneric("hess_time<-")
@@ -188,7 +182,6 @@ setGeneric(name = "link_function<-",
 setGeneric(name = "max_distance",
            def = function(x) standardGeneric("max_distance")
 )
-#' @export
 #' @noRd
 setGeneric(name = "max_distance<-",
            def = function(x,value) standardGeneric("max_distance<-")
@@ -204,7 +197,6 @@ setGeneric(name = "max_distance<-",
 setGeneric(name = "n_neighbours",
            def = function(x) standardGeneric("n_neighbours")
 )
-#' @export
 #' @noRd
 setGeneric(name = "n_neighbours<-",
            def = function(x,value) standardGeneric("n_neighbours<-")
@@ -220,7 +212,6 @@ setGeneric(name = "n_neighbours<-",
 setGeneric(name = "obj",
   def = function(x) standardGeneric("obj")
 )
-#' @export
 #' @noRd
 setGeneric(name = "obj<-",
   def = function(x,value) standardGeneric("obj<-")
@@ -231,7 +222,6 @@ setGeneric(name = "obj<-",
 setGeneric(name = "observations",
            def = function(x) standardGeneric("observations")
 )
-#' @export
 #' @noRd
 setGeneric(name = "observations<-",
            def = function(x,value) standardGeneric("observations<-")
@@ -242,7 +232,6 @@ setGeneric(name = "observations<-",
 setGeneric(name = "opt",
   def = function(x) standardGeneric("opt")
 )
-#' @export
 #' @noRd
 setGeneric(name = "opt<-",
   def = function(x,value) standardGeneric("opt<-")
@@ -253,7 +242,6 @@ setGeneric(name = "opt<-",
 setGeneric(name = "opt_time",
            def = function(x) standardGeneric("opt_time")
 )
-#' @export
 #' @noRd
 setGeneric(name = "opt_time<-",
            def = function(x,value) standardGeneric("opt_time<-")
@@ -269,7 +257,6 @@ setGeneric(name = "opt_time<-",
 setGeneric(name = "p_far_neighbours",
            def = function(x) standardGeneric("p_far_neighbours")
 )
-#' @export
 #' @noRd
 setGeneric(name = "p_far_neighbours<-",
            def = function(x,value) standardGeneric("p_far_neighbours<-")
@@ -280,7 +267,6 @@ setGeneric(name = "p_far_neighbours<-",
 setGeneric(name = "parameter_covariance",
            def = function(x) standardGeneric("parameter_covariance")
 )
-#' @export
 #' @noRd
 setGeneric(name = "parameter_covariance<-",
            def = function(x,value) standardGeneric("parameter_covariance<-")
@@ -291,7 +277,6 @@ setGeneric(name = "parameter_covariance<-",
 setGeneric(name = "parameter_hessian",
            def = function(x) standardGeneric("parameter_hessian")
 )
-#' @export
 #' @noRd
 setGeneric(name = "parameter_hessian<-",
            def = function(x,value) standardGeneric("parameter_hessian<-")
@@ -313,7 +298,6 @@ setGeneric(name = "parameters<-",
 setGeneric(name = "persistent_graph",
            def = function(x) standardGeneric("persistent_graph")
 )
-#' @export
 #' @noRd
 setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
@@ -324,7 +308,6 @@ setGeneric(name = "persistent_graph<-",
 setGeneric(name = "process",
            def = function(x) standardGeneric("process")
 )
-#' @export
 #' @noRd
 setGeneric(name = "process<-",
            def = function(x,value) standardGeneric("process<-")
@@ -382,7 +365,6 @@ setGeneric(name = "response_parameters<-",
 setGeneric(name = "sdr",
            def = function(x) standardGeneric("sdr")
 )
-#' @export
 #' @noRd
 setGeneric(name = "sdr<-",
            def = function(x,value) standardGeneric("sdr<-")
@@ -393,7 +375,6 @@ setGeneric(name = "sdr<-",
 setGeneric(name = "sdr_time",
            def = function(x) standardGeneric("sdr_time")
 )
-#' @export
 #' @noRd
 setGeneric(name = "sdr_time<-",
            def = function(x,value) standardGeneric("sdr_time<-")
@@ -404,7 +385,6 @@ setGeneric(name = "sdr_time<-",
 setGeneric(name = "settings",
            def = function(x) standardGeneric("settings")
 )
-#' @export
 #' @noRd
 setGeneric(name = "settings<-",
            def = function(x,value) standardGeneric("settings<-")
@@ -419,17 +399,6 @@ setGeneric(name = "spatial_parameters",
 #' @noRd
 setGeneric(name = "spatial_parameters<-",
            def = function(x,value) standardGeneric("spatial_parameters<-")
-)
-
-#' @export
-#' @noRd
-setGeneric(name = "symbolicAnalysis",
-           def = function(x) standardGeneric("symbolicAnalysis")
-)
-#' @export
-#' @noRd
-setGeneric(name = "symbolicAnalysis<-",
-           def = function(x,value) standardGeneric("symbolicAnalysis<-")
 )
 
 
@@ -470,7 +439,6 @@ setGeneric(name = "timing",
 setGeneric(name = "TMB_out",
            def = function(x) standardGeneric("TMB_out")
 )
-#' @export
 #' @noRd
 setGeneric(name = "TMB_out<-",
            def = function(x,value) standardGeneric("TMB_out<-")
@@ -481,7 +449,6 @@ setGeneric(name = "TMB_out<-",
 setGeneric(name = "tracing",
            def = function(x) standardGeneric("tracing")
 )
-#' @export
 #' @noRd
 setGeneric(name = "tracing<-",
            def = function(x,value) standardGeneric("tracing<-")
@@ -492,7 +459,6 @@ setGeneric(name = "tracing<-",
 setGeneric(name = "transient_graph",
            def = function(x) standardGeneric("transient_graph")
 )
-#' @export
 #' @noRd
 setGeneric(name = "transient_graph<-",
            def = function(x,value) standardGeneric("transient_graph<-")

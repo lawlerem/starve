@@ -6,8 +6,6 @@
 \alias{edges,dag-method}
 \alias{distances,dag-method}
 \alias{distance_units,dag-method}
-\alias{idxC_to_R,dag-method}
-\alias{idxR_to_C,dag-method}
 \title{An S4 class to hold a directed acyclic graph with distances.}
 \usage{
 \S4method{edges}{dag}(x)
@@ -15,25 +13,17 @@
 \S4method{distances}{dag}(x)
 
 \S4method{distance_units}{dag}(x)
-
-\S4method{idxC_to_R}{dag}(x)
-
-\S4method{idxR_to_C}{dag}(x)
 }
 \description{
 An S4 class to hold a directed acyclic graph with distances.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{edges}: Get/set edge list
+\item \code{edges}: Get edge list
 
-\item \code{distances}: Get/set list of edge distances
+\item \code{distances}: Get list of edge distances
 
 \item \code{distance_units}: Get/set distance units
-
-\item \code{idxC_to_R}: Add one to each integer in edges
-
-\item \code{idxR_to_C}: Subtract one from each integer in edges
 }}
 
 \section{Slots}{

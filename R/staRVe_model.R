@@ -31,13 +31,13 @@ setMethod(
 ###        ###
 ##############
 
-#' @export
-#' @describeIn staRVe_model Get/set process (staRVe_process)
+#' Get/set process (staRVe_process)
+#'
+#' @noRd
 setMethod(f = "process",
           signature = "staRVe_model",
           definition = function(x) return(x@process)
 )
-#' @export
 setReplaceMethod(f = "process",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -47,13 +47,13 @@ setReplaceMethod(f = "process",
 
 
 
-#' @export
-#' @describeIn staRVe_model Get/set observations (staRVe_observations)
+#' Get/set observations (staRVe_observations)
+#'
+#' @noRd
 setMethod(f = "observations",
           signature = "staRVe_model",
           definition = function(x) return(x@observations)
 )
-#' @export
 setReplaceMethod(f = "observations",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -64,12 +64,11 @@ setReplaceMethod(f = "observations",
 
 
 #' @export
-#' @describeIn staRVe_model Get/set settings
+#' @describeIn staRVe_model Get model settings
 setMethod(f = "settings",
           signature = "staRVe_model",
           definition = function(x) return(x@settings)
 )
-#' @export
 setReplaceMethod(f = "settings",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -116,14 +115,14 @@ setReplaceMethod(f = "random_effects",
   return(x)
 })
 
-#' @export
-#' @describeIn staRVe_model Get/set persistent graph
+#' Get/set persistent graph
+#'
+#' @noRd
 setMethod(f = "persistent_graph",
           signature = "staRVe_model",
           definition = function(x) {
   return(persistent_graph(process(x)))
 })
-#' @export
 setReplaceMethod(f = "persistent_graph",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -156,7 +155,7 @@ setReplaceMethod(f = "covariance_function",
 setMethod(f = "spatial_parameters",
           signature = "staRVe_model",
           definition = function(x) {
-  return(spatial_parmaeters(parameters(x)))
+  return(spatial_parameters(parameters(x)))
 })
 #' @export
 setReplaceMethod(f = "spatial_parameters",
@@ -200,18 +199,18 @@ setReplaceMethod(f = "dat",
   return(x)
 })
 
-#' @export
-#' @describeIn staRVe_model Get/set transient graph
+#' Get/set transient graph
+#'
+#' @noRd
 setMethod(f = "transient_graph",
           signature = "staRVe_model",
           definition = function(x) {
-  return(transient_graph(process(x)))
+  return(transient_graph(observations(x)))
 })
-#' @export
 setReplaceMethod(f = "transient_graph",
                  signature = "staRVe_model",
                  definition = function(x,value) {
-  transient_graph(process(x))<- value
+  transient_graph(observations(x))<- value
   return(x)
 })
 
@@ -639,8 +638,8 @@ setMethod(f = "update_staRVe_model",
   par_names<- character(0)
 
   # Spatial parameters
-  spatial_parameters(parameters(process(x)))<- within(
-    spatial_parameters(parameters(process(x))),{
+  spatial_parameters(x)<- within(
+    spatial_parameters(x),{
       par_names<<- c("par_space_sd","par_space_nu")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
@@ -648,8 +647,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Time parameters
-  time_parameters(parameters(process(x)))<- within(
-    time_parameters(parameters(process(x))),{
+  time_parameters(x)<- within(
+    time_parameters(x),{
       par_names<<- c("par_time_ar1","par_time_sd")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
@@ -657,8 +656,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Temporal random effects
-  time_effects(process(x))<- within(
-    time_effects(process(x)),{
+  time_effects(x)<- within(
+    time_effects(x),{
       par_names<<- c("time_effects")
       w<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
@@ -666,8 +665,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Spatio-temporal random effects
-  random_effects(process(x))<- within(
-    random_effects(process(x)),{
+  random_effects(x)<- within(
+    random_effects(x),{
       par_names<<- c("proc_w")
       w<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
@@ -675,8 +674,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Fixed effects; need to be careful if no covariates
-  fixed_effects(parameters(observations(x)))<- within(
-    fixed_effects(parameters(observations(x))),{
+  fixed_effects(x)<- within(
+    fixed_effects(x),{
       par_names<<- c("par_mu","par_mean_pars")
       par<- c(sdr_mat[par_names[[1]],1],
               sdr_mat[rownames(sdr_mat) %in% par_names[[2]],1])
@@ -686,8 +685,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Response distribution parameters; need to be careful if no parameters
-  response_parameters(parameters(observations(x)))<- within(
-    response_parameters(parameters(observations(x))),{
+  response_parameters(x)<- within(
+    response_parameters(x),{
       par_names<<- c("par_sd","par_overdispersion","par_dispersion")
       par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
@@ -697,8 +696,8 @@ setMethod(f = "update_staRVe_model",
   # Update the random effects corresponding to the observations
   data<- dat(x)
   re<- random_effects(x)
-  obs_dag<- transient_graph(observations(x))
-  random_effects<- random_effects(process(x))
+  obs_dag<- transient_graph(x)
+  random_effects<- random_effects(x)
   time_column<- attr(data,"time_column")
 
   resp_w_idx<- 1

@@ -3,17 +3,13 @@
 \docType{class}
 \name{staRVe_model-class}
 \alias{staRVe_model-class}
-\alias{process,staRVe_model-method}
-\alias{observations,staRVe_model-method}
 \alias{settings,staRVe_model-method}
 \alias{time_effects,staRVe_model-method}
 \alias{random_effects,staRVe_model-method}
-\alias{persistent_graph,staRVe_model-method}
 \alias{covariance_function,staRVe_model-method}
 \alias{spatial_parameters,staRVe_model-method}
 \alias{time_parameters,staRVe_model-method}
 \alias{dat,staRVe_model-method}
-\alias{transient_graph,staRVe_model-method}
 \alias{response_distribution,staRVe_model-method}
 \alias{response_parameters,staRVe_model-method}
 \alias{link_function,staRVe_model-method}
@@ -22,17 +18,11 @@
 \alias{graph,staRVe_model-method}
 \title{An S4 class describing a staRVe model.}
 \usage{
-\S4method{process}{staRVe_model}(x)
-
-\S4method{observations}{staRVe_model}(x)
-
 \S4method{settings}{staRVe_model}(x)
 
 \S4method{time_effects}{staRVe_model}(x)
 
 \S4method{random_effects}{staRVe_model}(x)
-
-\S4method{persistent_graph}{staRVe_model}(x)
 
 \S4method{covariance_function}{staRVe_model}(x)
 
@@ -41,8 +31,6 @@
 \S4method{time_parameters}{staRVe_model}(x)
 
 \S4method{dat}{staRVe_model}(x)
-
-\S4method{transient_graph}{staRVe_model}(x)
 
 \S4method{response_distribution}{staRVe_model}(x)
 
@@ -61,17 +49,11 @@ An S4 class describing a staRVe model.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{process}: Get/set process (staRVe_process)
-
-\item \code{observations}: Get/set observations (staRVe_observations)
-
-\item \code{settings}: Get/set settings
+\item \code{settings}: Get model settings
 
 \item \code{time_effects}: Get/set temporal random effects
 
 \item \code{random_effects}: Get/set spatio-temporal random effects
-
-\item \code{persistent_graph}: Get/set persistent graph
 
 \item \code{covariance_function}: Get/set the covariance function. Run
 get_staRVe_distributions("covariance") for valid covariance functions.
@@ -81,8 +63,6 @@ get_staRVe_distributions("covariance") for valid covariance functions.
 \item \code{time_parameters}: Get/set time parameters
 
 \item \code{dat}: Get/set data
-
-\item \code{transient_graph}: Get/set transient graph
 
 \item \code{response_distribution}: Get/set the response distribution. Run
 get_staRVe_distributions("distribution") for valid options.

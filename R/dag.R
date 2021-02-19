@@ -31,12 +31,11 @@ setMethod(
 ##################
 
 #' @export
-#' @describeIn dag Get/set edge list
+#' @describeIn dag Get edge list
 setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
 )
-#' @export
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -47,12 +46,11 @@ setReplaceMethod(f = "edges",
 
 
 #' @export
-#' @describeIn dag Get/set list of edge distances
+#' @describeIn dag Get list of edge distances
 setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
 )
-#' @export
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -98,6 +96,8 @@ setReplaceMethod(f = "distance_units",
 #'   parents of \code{x}. The "dists" element is a symmetric matrix whose first
 #'   row/column is the distance between \code{x} and its parents, and the rest
 #'   of the matrix gives the distances between parent nodes.
+#'
+#' @noRd
 .get_one_dag_node<- function(x,
                              nodes,
                              settings,
@@ -177,6 +177,8 @@ setReplaceMethod(f = "distance_units",
 #'   If \code{x} is a point in \code{nodes} then the "parents" element is a single
 #'   integer giving the row of the point in \code{nodes}, and "dists" is a 1x1
 #'   zero matrix.
+#'
+#' @noRd
 .get_one_intersects_dag_node<- function(x,
                                         nodes,
                                         settings,
@@ -303,8 +305,9 @@ construct_obs_dag<- function(x,
 }
 
 
-#' @describeIn dag Add one to each integer in edges
-#' @export
+#' Add one to each integer in edges
+#'
+#' @noRd
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
@@ -313,8 +316,9 @@ setMethod(f = "idxC_to_R",
   })
   return(x)
 })
-#' @describeIn dag Subtract one from each integer in edges
-#' @export
+#' Subtract one from each integer in edges
+#'
+#' @noRd
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {

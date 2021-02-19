@@ -22,9 +22,9 @@ An S4 class to hold an optimized staRVe model, extends the staRVe_model class
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{tracing}: Get/set tracing information
+\item \code{tracing}: Get tracing information
 
-\item \code{TMB_out}: Get/set TMB objects
+\item \code{TMB_out}: Get TMB objects
 
 \item \code{convergence}: Get convergence message
 

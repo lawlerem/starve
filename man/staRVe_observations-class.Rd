@@ -4,13 +4,10 @@
 \name{staRVe_observations-class}
 \alias{staRVe_observations-class}
 \alias{dat,staRVe_observations-method}
-\alias{transient_graph,staRVe_observations-method}
 \alias{parameters,staRVe_observations-method}
 \title{An S4 class to hold the observation information for a staRVe model.}
 \usage{
 \S4method{dat}{staRVe_observations}(x)
-
-\S4method{transient_graph}{staRVe_observations}(x)
 
 \S4method{parameters}{staRVe_observations}(x)
 }
@@ -20,8 +17,6 @@ An S4 class to hold the observation information for a staRVe model.
 \section{Methods (by generic)}{
 \itemize{
 \item \code{dat}: Get/set data
-
-\item \code{transient_graph}: Get/set transient graph
 
 \item \code{parameters}: Get/set parameters
 }}

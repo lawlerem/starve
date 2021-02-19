@@ -11,6 +11,7 @@ NULL
 
 # A
 
+#' @noRd
 .add_random_effects_by_time<- function(x,times) {
   random_effects<- random_effects(process(x))
   nodes<- split(
