@@ -629,6 +629,8 @@ setMethod(f = "TMB_in",
 
 #' Update staRVe_model parameters / random effects from a fitted TMB::MakeADFUn object
 #'
+#' @return A staRVe_model object with ML estimates
+#'
 #' @noRd
 setMethod(f = "update_staRVe_model",
           signature = c(x = "staRVe_model",

@@ -3,6 +3,7 @@
 \docType{class}
 \name{dag-class}
 \alias{dag-class}
+\alias{dag}
 \alias{edges,dag-method}
 \alias{distances,dag-method}
 \alias{distance_units,dag-method}

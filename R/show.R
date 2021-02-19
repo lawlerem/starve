@@ -125,12 +125,12 @@ setMethod(f = "show",
   return(invisible())
 })
 
-#' Print method for object of class \code{staRVe_fit}
+#' Print method for object of class \code{staRVe_model_fit}
 #'
 #' @export
 #' @noRd
 setMethod(f = "show",
-          signature = "staRVe_fit",
+          signature = "staRVe_model_fit",
           definition = function(object) {
   cat("\n")
   print(convergence(object))

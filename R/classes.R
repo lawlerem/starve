@@ -1,7 +1,9 @@
 #' A list of classes in the staRVe package.
 #'
-#' To see a list of all methods available for a specific class,
-#'   e.g. the staRVe_model class, run \code{methods(class="staRVe_model")}.
+#' To see documentation for a particular class, load the package and run e.g.
+#'   class?staRVe_model. To see a list of all methods available for a specific class,
+#'   see the help page or run \code{methods(class="staRVe_model")}.
+#'
 #'
 #' @section Classes:
 #' \itemize{
@@ -14,7 +16,7 @@
 #'   \item staRVe_model
 #'   \item staRVe_tracing
 #'   \item TMB_out
-#'   \item staRVe_fit
+#'   \item staRVe_model_fit
 #'   \item staRVe_parameters
 #' }
 #'
@@ -28,6 +30,8 @@ NULL
 #'   nodes and parents.
 #' @slot distance_units The units used for distance calculation.  Must be compatible
 #'   with units::set_units.
+#'
+#' @aliases dag
 setClass(
   Class = "dag",
   slots = c(
@@ -110,6 +114,8 @@ setClass(
 #'   with units::set_units.
 #' @slot max_distance The maximum distance to look for parents. Does not affect
 #'   parents coming from p_far_neighbours.
+#'
+#' @aliases staRVe_settings
 setClass(
   Class = "staRVe_settings",
   slots = c(
@@ -126,6 +132,8 @@ setClass(
 #' @slot process A staRVe_process object.
 #' @slot observations A staRVe_observations object.
 #' @slot settings A staRVe_settings object.
+#'
+#' @aliases staRVe_model
 setClass(
   Class = "staRVe_model",
   slots = c(
@@ -142,6 +150,8 @@ setClass(
 #' @slot sdr_time A proc_time object. Time used to compute standard errors.
 #' @slot parameter_hessian The hessian matrix for parameter estimates.
 #' @slot parameter_covariance The covariance matrix for parameter estimates.
+#'
+#' @aliases staRVe_tracing
 setClass(
   Class = "staRVe_tracing",
   slots = c(
@@ -171,8 +181,10 @@ setClass(
 #'
 #' @slot tracing A staRVe_tracing object.
 #' @slot TMB_out A TMB_out object.
+#'
+#' @aliases staRVe_model_fit
 setClass(
-  Class = "staRVe_fit",
+  Class = "staRVe_model_fit",
   slots = c(
     tracing = "staRVe_tracing",
     TMB_out = "TMB_out"

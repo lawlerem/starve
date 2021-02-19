@@ -3,6 +3,7 @@
 \docType{class}
 \name{staRVe_settings-class}
 \alias{staRVe_settings-class}
+\alias{staRVe_settings}
 \alias{formula,staRVe_settings-method}
 \alias{n_neighbours,staRVe_settings-method}
 \alias{p_far_neighbours,staRVe_settings-method}

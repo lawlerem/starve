@@ -3,6 +3,7 @@
 \docType{class}
 \name{staRVe_tracing-class}
 \alias{staRVe_tracing-class}
+\alias{staRVe_tracing}
 \alias{opt_time,staRVe_tracing-method}
 \alias{hess_time,staRVe_tracing-method}
 \alias{sdr_time,staRVe_tracing-method}
