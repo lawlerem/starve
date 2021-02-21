@@ -153,7 +153,7 @@ setMethod(f = "staRVe_predict",
     stop("Missing some covariates. Check the names of your raster covariates.")
   } else {
     covar_points<- .sf_from_raster_list(covariates,
-      time_name=attr(random_effects(process(x)),"time_column"))
+      time_name=attr(random_effects(x),"time_column"))
     pred<- staRVe_predict(x,prediction_points,covar_points,...)
   }
 

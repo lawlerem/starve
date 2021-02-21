@@ -167,7 +167,8 @@ setGeneric(name = "staRVe_fit",
 #'  contain data for one covariate, should have one layer for each time unit,
 #'  and should have the same raster geometry as the \code{locations} object. The
 #'  layer names of each raster layer should be of the form \code{T####}, where
-#'  \code{####} gives the specific time index.
+#'  \code{####} gives the specific time index. The geometry of all the
+#'  \code{Raster*} objects should be identical.
 #' @param time What time indices should predictions be made for? If set to "model",
 #'  predictions are made for every time present in the model.
 #'
