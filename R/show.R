@@ -104,9 +104,18 @@ setMethod(f = "show",
           signature = "staRVe_tracing",
           definition = function(object) {
   cat("\n")
-  cat("Tracing information for a staRVe_model fit.")
+  cat("Time elapsed while fitting the model:")
   cat("\n")
   print(timing(object))
+  cat("\n\n")
+  cat("Estimated parameter hessian matrix:")
+  cat("\n")
+  print(parameter_hessian(object))
+  cat("\n\n")
+  cat("Estimated parameter covariance matrix:")
+  cat("\n")
+  print(parameter_covariance(object))
+  cat("\n")
 
   return(invisible())
 })
