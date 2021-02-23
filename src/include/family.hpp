@@ -1,3 +1,6 @@
+// Link function
+//
+// evaluate x(...) to transform from the link scale to the response scale
 struct inv_link_function {
     int link_code;
 
@@ -12,6 +15,9 @@ struct inv_link_function {
     }
 };
 
+// Response distribution
+//
+// Evaluate x(...) to get the density function evaluated at a point (like dnorm)
 struct response_density {
   int distribution_code;
 
@@ -34,6 +40,7 @@ struct response_density {
     }
   }
 
+  // Simulate a single draw from the distribution
   template<class T>
   T simulate(T mean,int size,vector<T> pars) {
     switch(distribution_code) {

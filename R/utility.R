@@ -109,19 +109,28 @@ NULL
 #'
 #' Run by entering \code{staRVe:::.birdFit()}
 #'
-#' @return A staRVe_model_fit object, a model fitted to the bird_survey data
+#' @return A list with outputs from prepare_staRVe_model(...,fit=T), staRVe_simulate,
+#'   and staRVe_predict (with forecasts).
 #'
 #' @noRd
 .birdFit<- function() {
-  foo<- prepare_staRVe_model(
+  small_bird<- subset(staRVe::bird_survey,year %in% 1998:2000)
+  small_bird<- cbind(x=rnorm(nrow(small_bird)),
+                     small_bird)
+  fit<- prepare_staRVe_model(
     cnt~time(year)+mean(x),
-    cbind(x=rnorm(nrow(staRVe::bird_survey)),
-          staRVe::bird_survey),
+    small_bird,
     distribution="poisson",
     link="log",
     fit=T
   )
-  return(foo)
+  sim<- staRVe_simulate(fit)
+  pred_locs<- do.call(rbind,lapply(2000:2010, function(t) {
+    sf:::cbind.sf(data.frame(x=rnorm(1),year=t),
+          small_bird[1,"geom"])
+  }))
+  pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs,time=2000:2010)
+  return(list(fit=fit,sim=sim,pred=pred))
 }
 
 
