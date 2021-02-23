@@ -1,7 +1,7 @@
 Package: staRVe
 Title: Spatio-Temporal Analysis of Research Vessel data.
 Version: 0.13.0
-Authors@R: 
+Authors@R:
     person(given = "Ethan",
            family = "Lawler",
            role = c("aut", "cre"),
@@ -11,32 +11,24 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
-Imports: 
+Imports:
+    methods,
     TMB (>= 1.7.16),
-    Rcpp,
-    RcppEigen,
-    RANN,
-    dplyr,
-    geosphere,
     nngeo (>= 0.3.0),
     units,
-    raster,
-    parallel,
-    numDeriv,
-    mvtnorm
-LinkingTo: 
-    Rcpp,
-    TMB,
-    RcppEigen
+    raster
+LinkingTo:
+    TMB
 RoxygenNote: 7.1.1
-Suggests: 
+Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-Depends: 
+Depends:
     sf
-Collate: 
+Collate:
     'classes.R'
+    'getset.R'
     'generics.R'
     'TMB_out.R'
     'utility.R'
