@@ -350,12 +350,13 @@ setMethod(f = "staRVe_simulate",
                            w_predictions,
                            covariates,
                            se = T) {
-  ### Set intercept design to 0 since it's already taken care of in predict_w
+  ### No intercept since it's already taken care of in predict_w
   if( identical(covariates,"missing") ) {
-    design<- matrix(0,nrow = nrow(w_predictions))
-    colnames(design)[[1]]<- "mu"
+    # If there are no covariates, there's nothing to do
+    linear<- w_predictions$w
+    if( se ) { linear_se<- w_predictions$w_se } else { linear_se<- NA }
+    return(sf:::cbind.sf(linear,linear_se,w_predictions))
   } else {
-
     time_column<- attr(random_effects(x),"time_column")
     covar_names<- .names_from_formula(formula(settings(x)))
 
@@ -381,38 +382,35 @@ setMethod(f = "staRVe_simulate",
     # Create design matrix from covariates
     design<- .mean_design_from_formula(formula(settings(x)),
                                        w_predictions)
-    design<- cbind(0,design)
-    colnames(design)[[1]]<- "mu"
+
+    # Create linear predictions
+    beta<- fixed_effects(x)[,"par"]
+    names(beta)<- rownames(fixed_effects(x))
+    linear<- design %*% beta + w_predictions$w
+
+    if( se ) {
+      # Create parameter covariance estimate for fixed effects
+      par_cov<- matrix(0,ncol=length(beta),nrow=length(beta))
+      colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(x))
+
+      # Fill in the covariance matrix with the standard errors for fixed effect
+      # coefficients.
+      parameter_covariance<- parameter_covariance(tracing(x))
+      par_idx<- rownames(parameter_covariance) %in% c("mean_pars")
+      par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F] # Drop = F to keep matrix
+      # Keep fixed fixed effects with an standard error of 0
+      par_idx<- names(beta)[fixed_effects(parameters(x))[,"fixed"] == F]
+      par_cov[par_idx,par_idx]<- par_sdreport
+
+      # The commented and uncommented methods are the same
+      # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
+      linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+    } else {
+      linear_se<- NA
+    }
+
+    return(sf:::cbind.sf(linear,linear_se,w_predictions))
   }
-
-  # Create linear predictions
-  beta<- fixed_effects(x)[,"par"]
-  names(beta)<- rownames(fixed_effects(x))
-  linear<- design %*% beta + w_predictions$w
-
-  if( se ) {
-    # Create parameter covariance estimate for fixed effects
-    par_cov<- matrix(0,ncol=length(beta),nrow=length(beta))
-    colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(x))
-
-    # Fill in the covariance matrix with the standard errors for fixed effect
-    # coefficients. Keep standard errors for mu equal to 0 since it was taken
-    # care of in .predict_w
-    parameter_covariance<- parameter_covariance(tracing(x))
-    par_idx<- rownames(parameter_covariance) %in% c("mu","mean_pars")
-    par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F] # Drop = F to keep matrix
-    # Keep fixed fixed effects with an standard error of 0
-    par_idx<- names(beta)[fixed_effects(parameters(x))[,"fixed"] == F]
-    par_cov[par_idx,par_idx]<- par_sdreport
-
-    # The commented and uncommented methods are the same
-    # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
-    linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
-  } else {
-    linear_se<- NA
-  }
-
-  return(sf:::cbind.sf(linear,linear_se,w_predictions))
 }
 
 #' Update predictions on link scale to the response scale

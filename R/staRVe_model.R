@@ -520,7 +520,6 @@ setMethod(f = "TMB_in",
   ### but if they're fixed leave them as is.
   ### Need to convert the natural scale parameters to working scale as well
   para<- list(
-    mu = fixed_effects(parameters(observations))["mu","par"],
     working_response_pars = switch(response_distribution(parameters(observations)),
       gaussian = ifelse( # Normal; std. dev. > 0
             response_parameters(parameters(observations))["sd","par"] > 0 ||
@@ -574,6 +573,7 @@ setMethod(f = "TMB_in",
         log(0.5)
       ),
     time_effects = c(time_effects(process)[,"w",drop=T]),
+    time_mu = time_parameters(parameters(process))["mu","par"],
     logit_time_ar1 = ifelse( # -1 <= ar1 <= +1
           (time_parameters(parameters(process))["ar1","par"] >= -1
             && time_parameters(parameters(process))["ar1","par"] <= 1) ||
@@ -600,7 +600,6 @@ setMethod(f = "TMB_in",
   ### Which parameters should be fixed at their value and not estimated?
   ###
   map<- list(
-    mu = fixed_effects(parameters(observations))["mu","fixed"],
     working_response_pars = switch((length(para$working_response_pars) > 0)+1,
       logical(0),
       response_parameters(parameters(observations))[,"fixed"]
@@ -611,6 +610,7 @@ setMethod(f = "TMB_in",
     ),
     log_space_sd = spatial_parameters(parameters(process))["sd","fixed"],
     log_space_nu = spatial_parameters(parameters(process))["nu","fixed"],
+    time_mu = time_parameters(parameters(process))["mu","fixed"],
     logit_time_ar1 = time_parameters(parameters(process))["ar1","fixed"],
     log_time_sd = time_parameters(parameters(process))["sd","fixed"],
     proc_w = logical(nrow(random_effects(process))),
@@ -651,7 +651,7 @@ setMethod(f = "update_staRVe_model",
   # Time parameters
   time_parameters(x)<- within(
     time_parameters(x),{
-      par_names<<- c("par_time_ar1","par_time_sd")
+      par_names<<- c("par_time_mu","par_time_ar1","par_time_sd")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
     }
@@ -678,11 +678,9 @@ setMethod(f = "update_staRVe_model",
   # Fixed effects; need to be careful if no covariates
   fixed_effects(x)<- within(
     fixed_effects(x),{
-      par_names<<- c("par_mu","par_mean_pars")
-      par<- c(sdr_mat[par_names[[1]],1],
-              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],1])
-      se<- c(sdr_mat[par_names[[1]],2],
-              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],2])
+      par_names<<- c("par_mean_pars")
+      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<-  sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }
   )
 

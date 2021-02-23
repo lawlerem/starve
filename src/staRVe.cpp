@@ -44,13 +44,13 @@ Type objective_function<Type>::operator() () {
 
   DATA_INTEGER(conditional_sim); // If true, don't simulate w
 
-  PARAMETER(mu);
   PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
   PARAMETER(log_space_sd);
   PARAMETER(log_space_nu);
   PARAMETER_VECTOR(time_effects);
+  PARAMETER(time_mu);
   PARAMETER(logit_time_ar1);
   PARAMETER(log_time_sd);
   PARAMETER_VECTOR(proc_w);
@@ -146,10 +146,10 @@ Type objective_function<Type>::operator() () {
     // to mu
     Type smallNumber = pow(10,-5);
 
-    nll -= dnorm(time_effects(0),mu,smallNumber,true);
+    nll -= dnorm(time_effects(0),time_mu,smallNumber,true);
     SIMULATE{
       if( !conditional_sim ) {
-        time_effects(0) = mu;
+        time_effects(0) = time_mu;
       } else {}
     }
   } else {
@@ -164,11 +164,11 @@ Type objective_function<Type>::operator() () {
     // innovations, this coefficient is the marginal variance
     MVNORM_t<Type> time_dist(time_cov);
 
-    nll += time_dist(time_effects-mu);
+    nll += time_dist(time_effects-time_mu);
     SIMULATE{
       if( !conditional_sim ) {
         time_dist.simulate(time_effects);
-        time_effects = time_effects+mu;
+        time_effects = time_effects+time_mu;
       } else {}
     }
   }
@@ -290,10 +290,6 @@ Type objective_function<Type>::operator() () {
 
   // Rename parameters so they're easily found on the R side
   // ADREPORT lets you get standard errors
-  Type par_mu = mu;
-  REPORT(par_mu);
-  ADREPORT(par_mu);
-
   vector<Type> par_mean_pars = mean_pars;
   REPORT(par_mean_pars);
   ADREPORT(par_mean_pars);
@@ -337,6 +333,10 @@ Type objective_function<Type>::operator() () {
   Type par_space_nu = space_nu;
   REPORT(par_space_nu);
   ADREPORT(par_space_nu);
+
+  Type par_time_mu = time_mu;
+  REPORT(par_time_mu);
+  ADREPORT(par_time_mu);
 
   Type par_time_ar1 = time_ar1;
   REPORT(par_time_ar1);

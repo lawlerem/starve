@@ -241,10 +241,10 @@ prepare_staRVe_observations<- function(data,
   # Set up fixed effects according to covariates formula
   design<- .mean_design_from_formula(formula(settings),data)
   fixed_effects(parameters)<- data.frame(
-    par = c(0,numeric(ncol(design))),
-    se = NA,
-    fixed = rep(F,1+ncol(design)),
-    row.names = c("mu",colnames(design))
+    par = numeric(ncol(design)),
+    se = rep(NA,ncol(design)),
+    fixed = rep(F,ncol(design)),
+    row.names = colnames(design)
   )
   parameters(observations)<- parameters
 

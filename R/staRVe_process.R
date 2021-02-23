@@ -203,22 +203,24 @@ prepare_staRVe_process<- function(nodes,
 
 
   time_parameters(parameters)<- data.frame(
-    par = c(switch(attr(time_form,"type"),
+    par = c(0,
+            switch(attr(time_form,"type"),
                    ar1 = 0,
                    independent = 0,
                    rw = 1),
             0),
     se = NA,
-    fixed = c(switch(attr(time_form,"type"),
+    fixed = c(F,
+              switch(attr(time_form,"type"),
                      ar1 = F,
                      independent = T,
                      rw = T),
               F),
-    row.names = c("ar1","sd")
+    row.names = c("mu","ar1","sd")
   )
   if( length(unique(time_seq)) == 1 ) {
     # If purely spatial data, we don't need time parameters
-    time_parameters(parameters)$fixed<- c(T,T)
+    time_parameters(parameters)$fixed[c("ar1","sd")]<- c(T,T)
   } else {}
 
   parameters(process)<- parameters
