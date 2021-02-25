@@ -280,6 +280,26 @@ setReplaceMethod(f = "fixed_effects",
 })
 
 
+### From staRVE_settings
+
+#' @export
+#' @describeIn staRVe_model Get/set distance units used for the model
+setMethod(f = "distance_units",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(distance_units(settings(x)))
+})
+#' @export
+setReplaceMethod(f = "distance_units",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  distance_units(settings(x))<- value
+  distance_units(persistent_graph(process(x)))<- value
+  distance_units(transient_graph(observations(x)))<- value
+  return(x)
+})
+
+
 ### Extras
 
 #' @export
