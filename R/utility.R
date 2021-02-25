@@ -255,7 +255,63 @@ NULL
 
 # G
 
-#' Print a list of implemented response distributions and link functions.
+#' List of staRVe model options
+#'
+#' Print a list of implemented response distributions, link functions, and
+#'   covariance functions.
+#'
+#' @section Response Distributions:
+#' \describe{
+#'   \item{gaussian - }{Linear predictor determines the mean,
+#'     has a variance parameter.}
+#'   \item{gamma - }{Used for model strictly positive continuous data such as biomass,
+#'     linear predictor determines the mean, has a variance parameter.}
+#'   \item{lognormal - }{Used for modelling strictly positive continuous data such
+#'     as biomass, linear predictor determines the mean, has a variance parameter.}
+#'   \item{poisson - }{Typically used for count data, linear
+#'     predictor determines the intensity parameter.}
+#'   \item{negative binomial - }{Typically used for over-dispersed count data,
+#'     linear predictor determines the mean, has an overdispersion
+#'     parameter (>1 results in overdispersion).}
+#'   \item{compois - }{Used to model over- and under-dispersed count data, linear
+#'     predictor determines the mean, has a dispersion parameter. A dispersion <1
+#'     results in under-dispersion, while a dispersion >1 results in over-dispersion.}
+#'   \item{bernoulli - }{Used to model yes/no or presence/absence data, linear
+#'     predictor determines the probability of a yes.}
+#'   \item{binomial - }{Used to model the # of yesses in k yes/no trials, linear
+#'     predictor determines the probability of a yes in a single trial. The
+#'     sample size k for each observation can be supplied in the model formula
+#'     through the sample.size(...) term.}
+#'   \item{atLeastOneBinomial - }{Used to model the probability of observing at
+#'     least one yes in k yes/no trials, linear predictor determines the probability
+#'     of a yes in a single trial. The sample size k for each observation can be
+#'     supplied in the model formula through the sample.size(...) term.}
+#' }
+#'
+#' @section Link Functions:
+#' \describe{
+#'   \item{identity}{}
+#'   \item{log}{}
+#'   \item{logit}{}
+#' }
+#'
+#' @section Covariance Functions:
+#' \describe{
+#'   \item{exponential - }{Matern covariance with smoothness nu = 0.5. Results in
+#'     a non-differentiable Gaussian random field.}
+#'   \item{gaussian - }{Limiting function of the Matern covariance as smoothness nu
+#'     approaches infinity. Results in smooth (infinitely differentiable) Gaussian
+#'     random field. The variance parameter in this covariance function gives the
+#'     marginal variance of the spatial field.}
+#'   \item{matern - }{Matern covariance with arbitrary smoothness nu. Results in
+#'     Gaussian random fields that are floor(nu) times differentiable. The smoothness
+#'     parameter is hard to estimate, so fixing it to a set value is recommended.
+#'     This option will run much slower than other specific values of the Matern
+#'     covariance function (e.g. exponential).}
+#'   \item{matern32 - }{Matern covariance with smoothness nu = 1.5. Results in
+#'     a smooth (once differentiable) Gaussian random field.}
+#' }
+#'
 #'
 #' @param which A character vector containing "distribution", "link", and/or
 #'  "covariance". Defaults to all.
