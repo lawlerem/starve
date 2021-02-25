@@ -181,44 +181,32 @@ prepare_staRVe_process<- function(nodes,
   # parameters = "staRVe_process_parameters"
   parameters<- new("staRVe_process_parameters")
   covariance_function(parameters)<- covariance$covariance
-  spatial_parameters(parameters)<- data.frame(
-    par = c(0,switch(covariance$covariance,
-                     exponential = 0.5,
-                     gaussian = Inf,
-                     # If nu is supplied, start it at that value,
-                     # otherwise start at exponential covariance
-                     matern = ifelse(is.nan(covariance$nu),0.5,covariance$nu),
-                     matern32 = 1.5)
-           ),
-    se = NA,
-    fixed = c(F,switch(covariance$covariance,
-                       exponential = T,
-                       gaussian = T,
-                       # If nu is supplied, fix it at that value
-                       matern = ifelse(is.nan(covariance$nu),F,T),
-                       matern32 = T)
-             ),
-    row.names = c("sd","nu")
-  )
-
+  # covariance_function<- takes care of settings spatial parameters,
+  # but if nu is supplied for matern need to set nu
+  if( covariance$covariance == "matern" & !is.na(covariance$nu) ) {
+    spatial_parameters(parameters)["nu","par"]<- covariance$nu
+    spatial_parameters(parameters)["nu","fixed"]<- T
+  } else {}
 
   time_parameters(parameters)<- data.frame(
-    par = c(switch(attr(time_form,"type"),
+    par = c(0,
+            switch(attr(time_form,"type"),
                    ar1 = 0,
                    independent = 0,
                    rw = 1),
             0),
     se = NA,
-    fixed = c(switch(attr(time_form,"type"),
+    fixed = c(F,
+              switch(attr(time_form,"type"),
                      ar1 = F,
                      independent = T,
                      rw = T),
               F),
-    row.names = c("ar1","sd")
+    row.names = c("mu","ar1","sd")
   )
   if( length(unique(time_seq)) == 1 ) {
     # If purely spatial data, we don't need time parameters
-    time_parameters(parameters)$fixed<- c(T,T)
+    time_parameters(parameters)$fixed[c("ar1","sd")]<- c(T,T)
   } else {}
 
   parameters(process)<- parameters

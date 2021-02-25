@@ -4,7 +4,7 @@
 \alias{staRVe_predict}
 \title{Predict from a \code{staRVe_fit} object.}
 \usage{
-staRVe_predict(x, locations, ...)
+staRVe_predict(x, locations, covariates, time = "model", ...)
 }
 \arguments{
 \item{x}{An object of class \code{staRVe_fit}.}

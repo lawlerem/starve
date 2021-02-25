@@ -17,6 +17,7 @@
 \alias{response_parameters,staRVe_model-method}
 \alias{link_function,staRVe_model-method}
 \alias{fixed_effects,staRVe_model-method}
+\alias{distance_units,staRVe_model-method}
 \alias{parameters,staRVe_model-method}
 \alias{graph,staRVe_model-method}
 \title{An S4 class describing a staRVe model.}
@@ -46,6 +47,8 @@
 \S4method{link_function}{staRVe_model}(x)
 
 \S4method{fixed_effects}{staRVe_model}(x)
+
+\S4method{distance_units}{staRVe_model}(x)
 
 \S4method{parameters}{staRVe_model}(x)
 
@@ -85,6 +88,8 @@ get_staRVe_distributions("distribution") for valid options.
 get_staRVe_distributions("link") for valid covariance functions.
 
 \item \code{fixed_effects}: Get/set fixed effects
+
+\item \code{distance_units}: Get/set distance units used for the model
 
 \item \code{parameters}: Get/set parameters
 

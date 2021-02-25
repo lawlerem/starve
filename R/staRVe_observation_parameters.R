@@ -12,15 +12,11 @@ setMethod(
   f = "initialize",
   signature = "staRVe_observation_parameters",
   definition = function(.Object,
-                        response_distribution = character(0),
-                        response_parameters = data.frame(par = numeric(0),
-                                                         fixed = numeric(0)),
-                        link_function = character(0),
+                        response_distribution = "gaussian",
                         fixed_effects = data.frame(par = numeric(0),
                                                    fixed = numeric(0))) {
     response_distribution(.Object)<- response_distribution
-    response_parameters(.Object)<- response_parameters
-    link_function(.Object)<- link_function
+    # response distribution takes care of response parameters and link function
     fixed_effects(.Object)<- fixed_effects
 
     return(.Object)
@@ -46,6 +42,51 @@ setReplaceMethod(f = "response_distribution",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
   x@response_distribution<- value
+  response_parameters(x)<- switch(value,
+    gaussian = data.frame(par = 0,
+                          se = 0,
+                          fixed = F,
+                          row.names = "sd"),
+    poisson = data.frame(par = numeric(0),
+                         se = numeric(0),
+                         fixed = logical(0)),
+    `negative binomial` = data.frame(par = 0,
+                                     se = 0,
+                                     fixed = F,
+                                     row.names = "overdispersion"),
+    bernoulli = data.frame(par = numeric(0),
+                           se = numeric(0),
+                           fixed = logical(0)),
+    gamma = data.frame(par = 0,
+                       se = 0,
+                       fixed = F,
+                       row.names = "sd"),
+    lognormal = data.frame(par = 0,
+                           se = 0,
+                           fixed = F,
+                           row.names = "sd"),
+    binomial = data.frame(par = numeric(0),
+                          se = numeric(0),
+                          fixed = logical(0)),
+    atLeastOneBinomial = data.frame(par = numeric(0),
+                                    se = numeric(0),
+                                    fixed = logical(0)),
+    compois = data.frame(par = 0,
+                         se = 0,
+                         fixed = F,
+                         row.names = "dispersion"),
+  )
+  link_function(x)<- switch(value,
+    gaussian = "identity",
+    poisson = "log",
+    `negative binomial` = "log",
+    bernoulli = "logit",
+    gamma = "log",
+    lognormal = "log",
+    binomial = "logit",
+    atLeastOneBinomial = "logit",
+    compois = "log"
+  )
   return(x)
 })
 

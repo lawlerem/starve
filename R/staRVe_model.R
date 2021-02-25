@@ -280,6 +280,26 @@ setReplaceMethod(f = "fixed_effects",
 })
 
 
+### From staRVE_settings
+
+#' @export
+#' @describeIn staRVe_model Get/set distance units used for the model
+setMethod(f = "distance_units",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(distance_units(settings(x)))
+})
+#' @export
+setReplaceMethod(f = "distance_units",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  distance_units(settings(x))<- value
+  distance_units(persistent_graph(process(x)))<- value
+  distance_units(transient_graph(observations(x)))<- value
+  return(x)
+})
+
+
 ### Extras
 
 #' @export
@@ -372,7 +392,8 @@ setMethod(f = "graph",
 #' @param distribution Which response distribution to use. See
 #'   \code{get_staRVe_distributions}.
 #' @param link A character vector giving the response link function. See
-#'   \code{get_staRVe_distributions}.
+#'   \code{get_staRVe_distributions}. If not supplied a default option is used
+#'   based on the response distribution.
 #' @param silent Should intermediate calculations be printed?
 #' @param max_dist The maximum distance used to search for parents.
 #'  Unless this has a units attribute, units are assumed to be the same as
@@ -391,7 +412,7 @@ prepare_staRVe_model<- function(formula,
                                 persistent_graph = NA,
                                 transient_graph = NA,
                                 distribution = "gaussian",
-                                link = "identity",
+                                link = "default",
                                 silent = T,
                                 max_dist = Inf,
                                 distance_units = "km",
@@ -520,7 +541,6 @@ setMethod(f = "TMB_in",
   ### but if they're fixed leave them as is.
   ### Need to convert the natural scale parameters to working scale as well
   para<- list(
-    mu = fixed_effects(parameters(observations))["mu","par"],
     working_response_pars = switch(response_distribution(parameters(observations)),
       gaussian = ifelse( # Normal; std. dev. > 0
             response_parameters(parameters(observations))["sd","par"] > 0 ||
@@ -574,6 +594,7 @@ setMethod(f = "TMB_in",
         log(0.5)
       ),
     time_effects = c(time_effects(process)[,"w",drop=T]),
+    time_mu = time_parameters(parameters(process))["mu","par"],
     logit_time_ar1 = ifelse( # -1 <= ar1 <= +1
           (time_parameters(parameters(process))["ar1","par"] >= -1
             && time_parameters(parameters(process))["ar1","par"] <= 1) ||
@@ -600,7 +621,6 @@ setMethod(f = "TMB_in",
   ### Which parameters should be fixed at their value and not estimated?
   ###
   map<- list(
-    mu = fixed_effects(parameters(observations))["mu","fixed"],
     working_response_pars = switch((length(para$working_response_pars) > 0)+1,
       logical(0),
       response_parameters(parameters(observations))[,"fixed"]
@@ -611,6 +631,7 @@ setMethod(f = "TMB_in",
     ),
     log_space_sd = spatial_parameters(parameters(process))["sd","fixed"],
     log_space_nu = spatial_parameters(parameters(process))["nu","fixed"],
+    time_mu = time_parameters(parameters(process))["mu","fixed"],
     logit_time_ar1 = time_parameters(parameters(process))["ar1","fixed"],
     log_time_sd = time_parameters(parameters(process))["sd","fixed"],
     proc_w = logical(nrow(random_effects(process))),
@@ -651,7 +672,7 @@ setMethod(f = "update_staRVe_model",
   # Time parameters
   time_parameters(x)<- within(
     time_parameters(x),{
-      par_names<<- c("par_time_ar1","par_time_sd")
+      par_names<<- c("par_time_mu","par_time_ar1","par_time_sd")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
     }
@@ -678,11 +699,9 @@ setMethod(f = "update_staRVe_model",
   # Fixed effects; need to be careful if no covariates
   fixed_effects(x)<- within(
     fixed_effects(x),{
-      par_names<<- c("par_mu","par_mean_pars")
-      par<- c(sdr_mat[par_names[[1]],1],
-              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],1])
-      se<- c(sdr_mat[par_names[[1]],2],
-              sdr_mat[rownames(sdr_mat) %in% par_names[[2]],2])
+      par_names<<- c("par_mean_pars")
+      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
+      se<-  sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }
   )
 

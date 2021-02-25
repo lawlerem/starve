@@ -14,7 +14,7 @@
 \usage{
 \S4method{staRVe_predict}{staRVe_model_fit,sf}(x, locations, covariates, time = "model", ...)
 
-\S4method{staRVe_predict}{staRVe_model_fit,RasterLayer}(x, locations, covariates, ...)
+\S4method{staRVe_predict}{staRVe_model_fit,RasterLayer}(x, locations, covariates, time = "model", ...)
 
 \S4method{tracing}{staRVe_model_fit}(x)
 
