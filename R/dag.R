@@ -70,6 +70,17 @@ setMethod(f = "distance_units",
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
                  definition = function(x,value) {
+  if( length(distance_units(x)) > 0 ) {
+    # Only convert units if units were previously set
+    dists<- distances(x)
+    dists<- lapply(dists,function(mat) {
+      mat<- units::set_units(mat,distance_units(x),mode="standard")
+      mat<- units::set_units(mat,value,mode="standard")
+      mat<- units::set_units(mat,NULL)
+      return(mat)
+    })
+    distances(x)<- dists
+  } else {}
   x@distance_units<- value
   return(x)
 })
