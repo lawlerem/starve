@@ -179,7 +179,7 @@ setGeneric(name = "staRVe_fit",
 #'
 #' @export
 setGeneric(name = "staRVe_predict",
-           def = function(x,locations,...) standardGeneric("staRVe_predict")
+           def = function(x,locations,covariates,time="model",...) standardGeneric("staRVe_predict")
 )
 
 #' Simulate from a staRVe_model.
