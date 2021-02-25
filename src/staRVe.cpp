@@ -80,7 +80,7 @@ Type objective_function<Type>::operator() () {
   Type time_sd = exp(log_time_sd); // sd>0
 
 
-  // Get graphs and standardize distances
+  // Get graphs
 
   // Transient graph
   vector<vector<int> > ys_dag = ys_edges.dag;
@@ -95,6 +95,7 @@ Type objective_function<Type>::operator() () {
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
   // Standardize distances (based on persistent graph) so rho doesn't scale with distance
+  // i.e. distance units don't matter
   Type mean_dist = 0.0;
   for( int i=0; i<ws_dist.size(); i++ ) {
     mean_dist += ws_dist(0).sum()/ws_dist.size();
