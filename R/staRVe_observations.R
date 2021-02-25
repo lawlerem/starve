@@ -117,7 +117,7 @@ prepare_staRVe_observations<- function(data,
                                        transient_graph = NA,
                                        settings = new("staRVe_settings"),
                                        distribution = "gaussian",
-                                       link = "identity") {
+                                       link = "default") {
   observations<- new("staRVe_observations")
 
   # Return a time column with name and type (ar1/rw/etc) attributes
@@ -186,7 +186,7 @@ prepare_staRVe_observations<- function(data,
   )
 
   # Match supplied link function with valid options
-  if( !missing(link) ) {
+  if( !identical(link,"default") ) {
     link_function(parameters)<- unname(
       get_staRVe_distributions("link")[
         charmatch(link,get_staRVe_distributions("link"))

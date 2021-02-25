@@ -13,7 +13,7 @@ prepare_staRVe_model(
   persistent_graph = NA,
   transient_graph = NA,
   distribution = "gaussian",
-  link = "identity",
+  link = "default",
   silent = T,
   max_dist = Inf,
   distance_units = "km",
@@ -48,7 +48,8 @@ graph is used for the transient graph.}
 \code{get_staRVe_distributions}.}
 
 \item{link}{A character vector giving the response link function. See
-\code{get_staRVe_distributions}.}
+\code{get_staRVe_distributions}. If not supplied a default option is used
+based on the response distribution.}
 
 \item{silent}{Should intermediate calculations be printed?}
 

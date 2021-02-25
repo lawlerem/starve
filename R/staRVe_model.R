@@ -372,7 +372,8 @@ setMethod(f = "graph",
 #' @param distribution Which response distribution to use. See
 #'   \code{get_staRVe_distributions}.
 #' @param link A character vector giving the response link function. See
-#'   \code{get_staRVe_distributions}.
+#'   \code{get_staRVe_distributions}. If not supplied a default option is used
+#'   based on the response distribution.
 #' @param silent Should intermediate calculations be printed?
 #' @param max_dist The maximum distance used to search for parents.
 #'  Unless this has a units attribute, units are assumed to be the same as
@@ -391,7 +392,7 @@ prepare_staRVe_model<- function(formula,
                                 persistent_graph = NA,
                                 transient_graph = NA,
                                 distribution = "gaussian",
-                                link = "identity",
+                                link = "default",
                                 silent = T,
                                 max_dist = Inf,
                                 distance_units = "km",
