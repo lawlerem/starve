@@ -1,3 +1,4 @@
+#define TMB_LIB_INIT R_init_staRVe
 #include <TMB.hpp>
 using namespace density;
 
