@@ -449,14 +449,15 @@ setMethod(f = "staRVe_simulate",
   # Just need to specify which link function is used
   # Will get the function and gradient from TMB, evaluated at
   # linear and linear_se
-  data<- list(link_code = .link_to_code(
-    link_function(parameters(observations(x)))
-  ))
+  data<- list(
+    model = "family",
+    link_code = .link_to_code(link_function(x))
+  )
   para<- list(x = 0)
   link_function<- TMB::MakeADFun(
     data = data,
     para = para,
-    DLL = "family",
+    DLL = "staRVe",
     silent = T
   )
 

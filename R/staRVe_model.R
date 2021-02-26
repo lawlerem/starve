@@ -566,6 +566,7 @@ setMethod(f = "TMB_in",
   ### Things input as data
   ###
   data<- list(
+    model = "staRVe_model",
     n_time = length(unique(random_effects(process)[,time_column,drop=T])),
     # Convert distribution and link (char) to (int)
     distribution_code = .distribution_to_code(
