@@ -1,10 +1,10 @@
-#' @include classes.R generics.R
+#' @include classes.R getset.R generics.R
 NULL
 
-#' Print method for objects of class \code{dag}.
+#' @param object An object
 #'
 #' @export
-#' @noRd
+#' @describeIn dag Print method
 setMethod(f = "show",
           signature = "dag",
           definition = function(object) {
@@ -20,65 +20,40 @@ setMethod(f = "show",
   return(invisible())
 })
 
-#' Print method for object of class \code{staRVe_process_parameters}
-#'
-#' @export
-#' @noRd
-NULL
 # setMethod(f = "show",
 #           signature = "staRVe_process_parameters",
 #           definition = function(object) {
 # Default is fine
 # })
 
-#' Print method for object of class \code{staRVe_process}
-#'
-#' @export
-#' @noRd
-NULL
 # setMethod(f = "show",
 #           signature = "staRVe_process",
 #           definition = function(object) {
 # Default is fine
 # })
 
-#' Print method for object of class \code{staRVe_observation_parameters}
-#'
-#' @export
-#' @noRd
-NULL
 # setMethod(f = "show",
 #           signature = "staRVe_observation_parameters",
 #           definition = function(object) {
 # Default is fine
 # })
 
-#' Print method for object of class \code{staRVe_observations}
-#'
-#' @export
-#' @noRd
-NULL
 # setMethod(f = "show",
 #           signature = "staRVe_observations",
 #           definition = function(object) {
 # Default is fine
 # })
 
-#' Print method for object of class \code{staRVe_settings}
-#'
-#' @export
-#' @noRd
-NULL
 # setMethod(f = "show",
 #           signature = "staRVe_settings",
 #           definition = function(object) {
 # Default is fine
 # })
 
-#' Print method for object of class \code{staRVe_model}
+#' @param object An object
 #'
 #' @export
-#' @noRd
+#' @describeIn staRVe_model Print method
 setMethod(f = "show",
           signature = "staRVe_model",
           definition = function(object) {
@@ -96,10 +71,10 @@ setMethod(f = "show",
   return(invisible())
 })
 
-#' Print method for object of class \code{staRVe_tracing}
+#' @param object An object
 #'
 #' @export
-#' @noRd
+#' @describeIn staRVe_tracing Print method
 setMethod(f = "show",
           signature = "staRVe_tracing",
           definition = function(object) {
@@ -120,10 +95,10 @@ setMethod(f = "show",
   return(invisible())
 })
 
-#' Print method for object of class \code{TMB_out}
+#' @param object An object
 #'
 #' @export
-#' @noRd
+#' @describeIn TMB_out Print method
 setMethod(f = "show",
           signature = "TMB_out",
           definition = function(object) {
@@ -134,10 +109,10 @@ setMethod(f = "show",
   return(invisible())
 })
 
-#' Print method for object of class \code{staRVe_model_fit}
+#' @param object An object
 #'
 #' @export
-#' @noRd
+#' @describeIn staRVe_model_fit Print method
 setMethod(f = "show",
           signature = "staRVe_model_fit",
           definition = function(object) {
@@ -148,11 +123,6 @@ setMethod(f = "show",
   return(invisible())
 })
 
-#' Print method for object of class \code{staRVe_parameters}
-#'
-#' @export
-#' @noRd
-NULL
 # setMethod(f = "show",
 #           signature = "staRVe_parameters",
 #           definition = function(object) {

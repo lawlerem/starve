@@ -9,7 +9,7 @@ staRVe_fit(x, ...)
 \arguments{
 \item{x}{A staRVe_model object.}
 
-\item{silent}{Should tracing information be printed?}
+\item{...}{Extra options}
 }
 \value{
 A staRVe_fit object.

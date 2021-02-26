@@ -131,7 +131,7 @@ setGeneric(name = "idxR_to_C",
 #'   and random effects.
 #'
 #' @param x A staRVe_model object.
-#' @param silent Should tracing information be printed?
+#' @param ... Extra options
 #'
 #' @return A staRVe_fit object.
 #'
@@ -171,6 +171,7 @@ setGeneric(name = "staRVe_fit",
 #'  \code{Raster*} objects should be identical.
 #' @param time What time indices should predictions be made for? If set to "model",
 #'  predictions are made for every time present in the model.
+#' @param ... Extra options
 #'
 #' @return Either a \code{sf} object or a list of \code{Raster*} objects,
 #'  containing predictions (with standard errors) for the spatial field, and the linear
@@ -191,9 +192,7 @@ setGeneric(name = "staRVe_predict",
 #' \code{random_effects(model)}.
 #'
 #' @param model A staRVe_model object.
-#' @param conditional logical. If true, new observations are simulated conditional
-#'   on the random effect values in \code{random_effects(model)}.
-#'   If false, new random effects and new observations are simulated.
+#' @param ... Extra options
 #'
 #' @return A staRve_model object with simulated random effects and observations.
 #'

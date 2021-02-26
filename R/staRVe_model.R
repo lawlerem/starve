@@ -7,7 +7,11 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param process A staRVe_process object
+#' @param observations A staRVe_observations object
+#' @param settings A staRVe_settings object
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_model",
@@ -33,6 +37,8 @@ setMethod(
 
 #' Get/set process (staRVe_process)
 #'
+#' @param x An object
+#'
 #' @noRd
 setMethod(f = "process",
           signature = "staRVe_model",
@@ -49,6 +55,8 @@ setReplaceMethod(f = "process",
 
 #' Get/set observations (staRVe_observations)
 #'
+#' @param x An object
+#'
 #' @noRd
 setMethod(f = "observations",
           signature = "staRVe_model",
@@ -63,6 +71,8 @@ setReplaceMethod(f = "observations",
 
 
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_model Get model settings
 setMethod(f = "settings",
@@ -85,14 +95,20 @@ setReplaceMethod(f = "settings",
 
 ### From staRVe_process
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set temporal random effects
+#' @describeIn staRVe_model Get temporal random effects
 setMethod(f = "time_effects",
           signature = "staRVe_model",
           definition = function(x) {
   return(time_effects(process(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set temporal random effects
 setReplaceMethod(f = "time_effects",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -100,14 +116,20 @@ setReplaceMethod(f = "time_effects",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set spatio-temporal random effects
+#' @describeIn staRVe_model Get spatio-temporal random effects
 setMethod(f = "random_effects",
           signature = "staRVe_model",
           definition = function(x) {
   return(random_effects(process(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set spatio-temporal random effects
 setReplaceMethod(f = "random_effects",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -116,6 +138,8 @@ setReplaceMethod(f = "random_effects",
 })
 
 #' Get/set persistent graph
+#'
+#' @param x An object
 #'
 #' @noRd
 setMethod(f = "persistent_graph",
@@ -134,15 +158,22 @@ setReplaceMethod(f = "persistent_graph",
 
 ### From staRVe_process_parameters
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set the covariance function. Run
-#'   get_staRVe_distributions("covariance") for valid covariance functions.
+#' @describeIn staRVe_model Get covariance function
 setMethod(f = "covariance_function",
           signature = "staRVe_model",
           definition = function(x) {
   return(covariance_function(parameters(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set covariance function. Run
+#'   get_staRVe_distributions("covariance") for valid covariance functions.
+#'   Setting the covariance function also overwrites the spatial parameters.
 setReplaceMethod(f = "covariance_function",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -150,14 +181,20 @@ setReplaceMethod(f = "covariance_function",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set spatial parameters
+#' @describeIn staRVe_model Get spatial parameters
 setMethod(f = "spatial_parameters",
           signature = "staRVe_model",
           definition = function(x) {
   return(spatial_parameters(parameters(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Get spatial parameters
 setReplaceMethod(f = "spatial_parameters",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -165,14 +202,20 @@ setReplaceMethod(f = "spatial_parameters",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set time parameters
+#' @describeIn staRVe_model Get time parameters
 setMethod(f = "time_parameters",
           signature = "staRVe_model",
           definition = function(x) {
   return(time_parameters(parameters(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set time parameters
 setReplaceMethod(f = "time_parameters",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -184,14 +227,20 @@ setReplaceMethod(f = "time_parameters",
 
 ### From staRVe_observations
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set data
+#' @describeIn staRVe_model Get data
 setMethod(f = "dat",
           signature = "staRVe_model",
           definition = function(x) {
   return(dat(observations(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set data
 setReplaceMethod(f = "dat",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -200,6 +249,8 @@ setReplaceMethod(f = "dat",
 })
 
 #' Get/set transient graph
+#'
+#' @param x An object
 #'
 #' @noRd
 setMethod(f = "transient_graph",
@@ -217,15 +268,23 @@ setReplaceMethod(f = "transient_graph",
 
 ### From staRVe_observation_parameters
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set the response distribution. Run
-#'   get_staRVe_distributions("distribution") for valid options.
+#' @describeIn staRVe_model Get the response distribution.
 setMethod(f = "response_distribution",
           signature = "staRVe_model",
           definition = function(x) {
   return(response_distribution(parameters(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set the response distribution. Run
+#'   get_staRVe_distributions("distribution") for valid options.
+#'   Setting the response distribution also overwrites the response
+#'   parameters and link function.
 setReplaceMethod(f = "response_distribution",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -233,14 +292,20 @@ setReplaceMethod(f = "response_distribution",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set response parameters
+#' @describeIn staRVe_model Get response parameters
 setMethod(f = "response_parameters",
           signature = "staRVe_model",
           definition = function(x) {
   return(response_parameters(parameters(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set response parameters
 setReplaceMethod(f = "response_parameters",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -248,15 +313,21 @@ setReplaceMethod(f = "response_parameters",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set the link function. Run
-#'   get_staRVe_distributions("link") for valid covariance functions.
+#' @describeIn staRVe_model Get the link function
 setMethod(f = "link_function",
           signature = "staRVe_model",
           definition = function(x) {
   return(link_function(parameters(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set the link function. Run
+#'   get_staRVe_distributions("link") for valid covariance functions.
 setReplaceMethod(f = "link_function",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -264,14 +335,20 @@ setReplaceMethod(f = "link_function",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set fixed effects
+#' @describeIn staRVe_model Get fixed effects
 setMethod(f = "fixed_effects",
           signature = "staRVe_model",
           definition = function(x) {
   return(fixed_effects(parameters(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set fixed effects
 setReplaceMethod(f = "fixed_effects",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -280,16 +357,22 @@ setReplaceMethod(f = "fixed_effects",
 })
 
 
-### From staRVE_settings
+### From staRVe_settings
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set distance units used for the model
+#' @describeIn staRVe_model Get distance units used for the model
 setMethod(f = "distance_units",
           signature = "staRVe_model",
           definition = function(x) {
   return(distance_units(settings(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set distance units used for the model
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -302,8 +385,10 @@ setReplaceMethod(f = "distance_units",
 
 ### Extras
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_model Get/set parameters
+#' @describeIn staRVe_model Get parameters
 setMethod(f = "parameters",
           signature = "staRVe_model",
           definition = function(x) {
@@ -312,7 +397,11 @@ setMethod(f = "parameters",
                    observation_parameters = parameters(observations(x)))
   return(parameters)
 })
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_model Set parameters
 setReplaceMethod(f = "parameters",
                  signature = c("staRVe_model","staRVe_parameters"),
                  definition = function(x,value) {
@@ -322,6 +411,8 @@ setReplaceMethod(f = "parameters",
 })
 
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_model Get a list containing the persistent and transient graphs
 setMethod(f = "graph",
@@ -400,6 +491,7 @@ setMethod(f = "graph",
 #'  the supplied \code{distance_units}.
 #' @param distance_units Which units should be used for distances?
 #' @param fit Should the model be fit in this call? If true, returns a fitted model.
+#' @param ... Extra options to pass to staRVe_fit if fit=T
 #'
 #' @return A staRVe_model object. If fit=T, a staRVe_fit object.
 #'

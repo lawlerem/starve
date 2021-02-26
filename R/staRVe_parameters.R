@@ -7,11 +7,10 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{staRVe_parameters} instead.
+#' @param process_parameters A staRVe_process_parameters object
+#' @param observation_parameters A staRVe_observation_parameters object
 #'
-#' @export
-#' @noRd
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_parameters",

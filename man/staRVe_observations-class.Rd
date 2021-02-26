@@ -4,21 +4,36 @@
 \name{staRVe_observations-class}
 \alias{staRVe_observations-class}
 \alias{dat,staRVe_observations-method}
+\alias{dat<-,staRVe_observations-method}
 \alias{parameters,staRVe_observations-method}
+\alias{parameters<-,staRVe_observations,ANY-method}
 \title{An S4 class to hold the observation information for a staRVe model.}
 \usage{
 \S4method{dat}{staRVe_observations}(x)
 
+\S4method{dat}{staRVe_observations}(x) <- value
+
 \S4method{parameters}{staRVe_observations}(x)
+
+\S4method{parameters}{staRVe_observations,ANY}(x) <- value
+}
+\arguments{
+\item{x}{An object}
+
+\item{value}{A replacement value}
 }
 \description{
 An S4 class to hold the observation information for a staRVe model.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{dat}: Get/set data
+\item \code{dat}: Get data
 
-\item \code{parameters}: Get/set parameters
+\item \code{dat<-}: Set data
+
+\item \code{parameters}: Get parameters
+
+\item \code{parameters<-}: Set parameters
 }}
 
 \section{Slots}{

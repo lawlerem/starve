@@ -7,7 +7,10 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param response_distribution Which response distribution to use
+#' @param fixed_effects A data.frame
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_observation_parameters",
@@ -30,14 +33,22 @@ setMethod(
 ###        ###
 ##############
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_observation_parameters Get/set response distribution. Run
-#'   get_staRVe_distributions("distribution") for valid options.
+#' @describeIn staRVe_observation_parameters Get response distribution
 setMethod(f = "response_distribution",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@response_distribution)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_observation_parameters Get/set response distribution. Run
+#'   get_staRVe_distributions("distribution") for valid options. Setting the
+#'   the response distribution also overwrites the response parameters and
+#'   link function.
 setReplaceMethod(f = "response_distribution",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -92,13 +103,19 @@ setReplaceMethod(f = "response_distribution",
 
 
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_observation_parameters Get/set response distribution parameters
+#' @describeIn staRVe_observation_parameters Get response distribution parameters
 setMethod(f = "response_parameters",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@response_parameters)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_observation_parameters Set response distribution parameters
 setReplaceMethod(f = "response_parameters",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -108,14 +125,20 @@ setReplaceMethod(f = "response_parameters",
 
 
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_observation_parameters Get/set link function.  Run
-#'   get_staRVe_distributions("link") for valid options.
+#' @describeIn staRVe_observation_parameters Get link function.
 setMethod(f = "link_function",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@link_function)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_observation_parameters set link function.  Run
+#'   get_staRVe_distributions("link") for valid options.
 setReplaceMethod(f = "link_function",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
@@ -124,14 +147,19 @@ setReplaceMethod(f = "link_function",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_observation_parameters Get/set fixed effects
+#' @describeIn staRVe_observation_parameters Get fixed effects
 setMethod(f = "fixed_effects",
           signature = "staRVe_observation_parameters",
           definition = function(x) return(x@fixed_effects)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_observation_parameters Set fixed effects
 setReplaceMethod(f = "fixed_effects",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {

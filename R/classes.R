@@ -23,6 +23,18 @@
 #' @name staRVe_classes
 NULL
 
+#' Constructors for the staRVe package
+#'
+#' @param .Object The object to create
+#'
+#' @name  staRVe-construct
+NULL
+
+
+setOldClass("proc_time")
+setOldClass("sdreport")
+setOldClass("sf")
+
 #' An S4 class to hold a directed acyclic graph with distances.
 #'
 #' @slot edges A list of integer vector, indexing the parents of each node.
@@ -30,8 +42,6 @@ NULL
 #'   nodes and parents.
 #' @slot distance_units The units used for distance calculation.  Must be compatible
 #'   with units::set_units.
-#'
-#' @aliases dag
 setClass(
   Class = "dag",
   slots = c(
@@ -168,6 +178,9 @@ setClass(
 #' @slot obj The output of TMB::MakeADFun.
 #' @slot opt The output of nlminb.
 #' @slot sdr The output of TMB::sdreport.
+#'
+#' @param x An object
+#' @param object An object
 setClass(
   Class = "TMB_out",
   slots = c(

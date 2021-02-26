@@ -7,7 +7,11 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param data An sf object
+#' @param transient_graph A dag object
+#' @param parameters A staRVe_observation_parameters object
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_observations",
@@ -44,13 +48,19 @@ setMethod(
 ##############
 
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_observations Get/set data
+#' @describeIn staRVe_observations Get data
 setMethod(f = "dat",
           signature = "staRVe_observations",
           definition = function(x) return(x@data)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_observations Set data
 setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -75,14 +85,19 @@ setReplaceMethod(f = "transient_graph",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_observations Get/set parameters
+#' @describeIn staRVe_observations Get parameters
 setMethod(f = "parameters",
           signature = "staRVe_observations",
           definition = function(x) return(x@parameters)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_observations Set parameters
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -138,7 +153,7 @@ prepare_staRVe_observations<- function(data,
   design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
   sample_size<- .sample_size_from_formula(formula(settings),data)
 
-  dat(observations)<- sf:::cbind.sf(
+  dat(observations)<- sf::st_sf(data.frame(
     w = 0,
     w_se = NA,
     linear = NA,
@@ -149,7 +164,7 @@ prepare_staRVe_observations<- function(data,
     sample_size,
     response,
     data[,attr(data,"sf_column")]
-  )
+  ))
   attr(dat(observations),"time_column")<- attr(time_form,"name")
 
 

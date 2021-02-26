@@ -8,6 +8,7 @@
 \alias{n_neighbours,staRVe_settings-method}
 \alias{p_far_neighbours,staRVe_settings-method}
 \alias{distance_units,staRVe_settings-method}
+\alias{distance_units<-,staRVe_settings-method}
 \alias{max_distance,staRVe_settings-method}
 \title{An S4 class to hold extra settings for a staRVe model}
 \usage{
@@ -19,7 +20,14 @@
 
 \S4method{distance_units}{staRVe_settings}(x)
 
+\S4method{distance_units}{staRVe_settings}(x) <- value
+
 \S4method{max_distance}{staRVe_settings}(x)
+}
+\arguments{
+\item{x}{An object}
+
+\item{value}{A replacement value}
 }
 \description{
 An S4 class to hold extra settings for a staRVe model
@@ -32,7 +40,9 @@ An S4 class to hold extra settings for a staRVe model
 
 \item \code{p_far_neighbours}: Get percentage of far neighbours
 
-\item \code{distance_units}: Get/set distance units
+\item \code{distance_units}: Get distance units
+
+\item \code{distance_units<-}: Set distance units
 
 \item \code{max_distance}: Get maximum distance for neighbours
 }}

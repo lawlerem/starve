@@ -37,6 +37,8 @@ be made at every cell. Raster predictions are made at the midpoint of each cell.
 
 \item{time}{What time indices should predictions be made for? If set to "model",
 predictions are made for every time present in the model.}
+
+\item{...}{Extra options}
 }
 \value{
 Either a \code{sf} object or a list of \code{Raster*} objects,

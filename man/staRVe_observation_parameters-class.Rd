@@ -4,33 +4,60 @@
 \name{staRVe_observation_parameters-class}
 \alias{staRVe_observation_parameters-class}
 \alias{response_distribution,staRVe_observation_parameters-method}
+\alias{response_distribution<-,staRVe_observation_parameters-method}
 \alias{response_parameters,staRVe_observation_parameters-method}
+\alias{response_parameters<-,staRVe_observation_parameters-method}
 \alias{link_function,staRVe_observation_parameters-method}
+\alias{link_function<-,staRVe_observation_parameters-method}
 \alias{fixed_effects,staRVe_observation_parameters-method}
+\alias{fixed_effects<-,staRVe_observation_parameters-method}
 \title{An S4 class to hold observation parameters for a staRVe model.}
 \usage{
 \S4method{response_distribution}{staRVe_observation_parameters}(x)
 
+\S4method{response_distribution}{staRVe_observation_parameters}(x) <- value
+
 \S4method{response_parameters}{staRVe_observation_parameters}(x)
+
+\S4method{response_parameters}{staRVe_observation_parameters}(x) <- value
 
 \S4method{link_function}{staRVe_observation_parameters}(x)
 
+\S4method{link_function}{staRVe_observation_parameters}(x) <- value
+
 \S4method{fixed_effects}{staRVe_observation_parameters}(x)
+
+\S4method{fixed_effects}{staRVe_observation_parameters}(x) <- value
+}
+\arguments{
+\item{x}{An object}
+
+\item{value}{A replacement value}
 }
 \description{
 An S4 class to hold observation parameters for a staRVe model.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{response_distribution}: Get/set response distribution. Run
-get_staRVe_distributions("distribution") for valid options.
+\item \code{response_distribution}: Get response distribution
 
-\item \code{response_parameters}: Get/set response distribution parameters
+\item \code{response_distribution<-}: Get/set response distribution. Run
+get_staRVe_distributions("distribution") for valid options. Setting the
+the response distribution also overwrites the response parameters and
+link function.
 
-\item \code{link_function}: Get/set link function.  Run
+\item \code{response_parameters}: Get response distribution parameters
+
+\item \code{response_parameters<-}: Set response distribution parameters
+
+\item \code{link_function}: Get link function.
+
+\item \code{link_function<-}: set link function.  Run
 get_staRVe_distributions("link") for valid options.
 
-\item \code{fixed_effects}: Get/set fixed effects
+\item \code{fixed_effects}: Get fixed effects
+
+\item \code{fixed_effects<-}: Set fixed effects
 }}
 
 \section{Slots}{

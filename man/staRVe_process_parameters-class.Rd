@@ -4,27 +4,48 @@
 \name{staRVe_process_parameters-class}
 \alias{staRVe_process_parameters-class}
 \alias{covariance_function,staRVe_process_parameters-method}
+\alias{covariance_function<-,staRVe_process_parameters-method}
 \alias{spatial_parameters,staRVe_process_parameters-method}
+\alias{spatial_parameters<-,staRVe_process_parameters-method}
 \alias{time_parameters,staRVe_process_parameters-method}
+\alias{time_parameters<-,staRVe_process_parameters-method}
 \title{An S4 class to hold process parameters for a staRVe model.}
 \usage{
 \S4method{covariance_function}{staRVe_process_parameters}(x)
 
+\S4method{covariance_function}{staRVe_process_parameters}(x) <- value
+
 \S4method{spatial_parameters}{staRVe_process_parameters}(x)
 
+\S4method{spatial_parameters}{staRVe_process_parameters}(x) <- value
+
 \S4method{time_parameters}{staRVe_process_parameters}(x)
+
+\S4method{time_parameters}{staRVe_process_parameters}(x) <- value
+}
+\arguments{
+\item{x}{An object}
+
+\item{value}{A replacement value}
 }
 \description{
 An S4 class to hold process parameters for a staRVe model.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{covariance_function}: Get/set covariance function. Run
+\item \code{covariance_function}: Get covariance function
+
+\item \code{covariance_function<-}: Set covariance function. Run
 get_staRVe_distributions("covariance") for valid covariance functions.
+Setting the covariance function also overwrites the spatial parameters.
 
-\item \code{spatial_parameters}: Get/set spatial parameters
+\item \code{spatial_parameters}: Get spatial parameters
 
-\item \code{time_parameters}: Get/set time parameters
+\item \code{spatial_parameters<-}: Set spatial parameters
+
+\item \code{time_parameters}: Get time parameters
+
+\item \code{time_parameters<-}: Set time parameters
 }}
 
 \section{Slots}{
