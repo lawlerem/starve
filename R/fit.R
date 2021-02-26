@@ -1,3 +1,7 @@
+#' @param x An object
+#' @param silent Should intermediate calculations be printed?
+#' @param ... Extra options to supply to TMB::MakeADFun or TMB::sdreport
+#'
 #' @export
 #' @describeIn staRVe_model Find maximum likelihood estimate of parameters
 #'   and random effects
@@ -91,6 +95,10 @@ setMethod(f = "staRVe_fit",
   return(fit)
 })
 
+#' @param locations An sf object
+#' @param covariates An sf object with covariates
+#' @param time Which times to predict at?
+#'
 #' @export
 #' @describeIn staRVe_model_fit Predict/forecast at specific locations
 setMethod(f = "staRVe_predict",
@@ -98,8 +106,7 @@ setMethod(f = "staRVe_predict",
           definition = function(x,
                                 locations,
                                 covariates,
-                                time = "model",
-                                ...) {
+                                time = "model") {
   ### Check that we have all covariates, if there are covariates in the model
   covar_names<- .names_from_formula(formula(settings(x)))
   if( missing(covariates) && (length(covar_names) == 0) ) {
@@ -133,6 +140,8 @@ setMethod(f = "staRVe_predict",
 
   return(predictions)
 })
+#' @param ... Extra options
+#'
 #' @export
 #' @describeIn staRVe_model_fit Predict/forecast over an entire raster
 setMethod(f = "staRVe_predict",
@@ -171,6 +180,10 @@ setMethod(f = "staRVe_predict",
 
 
 
+#' @param model A staRVe_model
+#' @param conditional logical. If true, new observations are simulated conditional
+#'   on the random effect values in \code{random_effects(model)}.
+#'   If false, new random effects and new observations are simulated.
 #' @export
 #' @describeIn staRVe_model Simulate from the model
 setMethod(f = "staRVe_simulate",
@@ -268,10 +281,10 @@ setMethod(f = "staRVe_simulate",
   locations<- unique(locations[,attr(locations,"sf_column")])
   pred_times<- unique(pred_times)
   predictions<- do.call(rbind,lapply(pred_times,function(t) {
-    df<- sf:::cbind.sf(data.frame(w = 0,
-                                  w_se = NA,
-                                  time = t),
-                       locations)
+    df<- sf::st_sf(data.frame(w = 0,
+                              w_se = NA,
+                              time = t,
+                              locations))
     colnames(df)[[3]]<- time_column
     return(df)
   }))
@@ -355,7 +368,9 @@ setMethod(f = "staRVe_simulate",
     # If there are no covariates, there's nothing to do
     linear<- w_predictions$w
     if( se ) { linear_se<- w_predictions$w_se } else { linear_se<- NA }
-    return(sf:::cbind.sf(linear,linear_se,w_predictions))
+    return(sf::st_sf(data.frame(linear,
+                                linear_se,
+                                w_predictions)))
   } else {
     time_column<- attr(random_effects(x),"time_column")
     covar_names<- .names_from_formula(formula(settings(x)))
@@ -409,7 +424,9 @@ setMethod(f = "staRVe_simulate",
       linear_se<- NA
     }
 
-    return(sf:::cbind.sf(linear,linear_se,w_predictions))
+    return(sf::st_sf(data.frame(linear,
+                                linear_se,
+                                w_predictions)))
   }
 }
 
@@ -432,14 +449,15 @@ setMethod(f = "staRVe_simulate",
   # Just need to specify which link function is used
   # Will get the function and gradient from TMB, evaluated at
   # linear and linear_se
-  data<- list(link_code = .link_to_code(
-    link_function(parameters(observations(x)))
-  ))
+  data<- list(
+    model = "family",
+    link_code = .link_to_code(link_function(x))
+  )
   para<- list(x = 0)
   link_function<- TMB::MakeADFun(
     data = data,
     para = para,
-    DLL = "family",
+    DLL = "staRVe",
     silent = T
   )
 
@@ -469,6 +487,8 @@ setMethod(f = "staRVe_simulate",
     response<- sapply(linear_predictions$linear,link_function$fn)
     response_se<- NA
   }
-  predictions<- sf:::cbind.sf(response,response_se,linear_predictions)
+  predictions<- sf::st_sf(data.frame(response,
+                                     response_se,
+                                     linear_predictions))
   return(predictions)
 }

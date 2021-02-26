@@ -7,7 +7,11 @@ NULL
 ###               ###
 #####################
 
-#' @noRd
+#' @param edges A list of edges
+#' @param distances A list of distances
+#' @param distance_units Which distance units to use
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "dag",
@@ -30,6 +34,8 @@ setMethod(
 ###            ###
 ##################
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn dag Get edge list
 setMethod(f = "edges",
@@ -45,6 +51,8 @@ setReplaceMethod(f = "edges",
 
 
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn dag Get list of edge distances
 setMethod(f = "distances",
@@ -60,13 +68,19 @@ setReplaceMethod(f = "distances",
 
 
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn dag Get/set distance units
+#' @describeIn dag Get distance units
 setMethod(f = "distance_units",
           signature = "dag",
           definition = function(x) return(x@distance_units)
 )
+#' @param x An object
+#' @param value A replacement value
 #' @export
+#' @describeIn dag Set distance units. Distances are automatically converted
+#'   to the new units.
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
                  definition = function(x,value) {

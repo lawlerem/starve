@@ -7,7 +7,12 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param time_effects A data.frame
+#' @param random_effects An sf object
+#' @param persistent_graph A dag object
+#' @param parameters A staRVe_process_parameters object
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_process",
@@ -51,13 +56,19 @@ setMethod(
 ###        ###
 ##############
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_process Get/set temporal random effects
+#' @describeIn staRVe_process Get temporal random effects
 setMethod(f = "time_effects",
           signature = "staRVe_process",
           definition = function(x) return(x@time_effects)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_process Set temporal random effects
 setReplaceMethod(f = "time_effects",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -65,13 +76,19 @@ setReplaceMethod(f = "time_effects",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_process Get/set spatio-temporal random effects
+#' @describeIn staRVe_process Get spatio-temporal random effects
 setMethod(f = "random_effects",
           signature = "staRVe_process",
           definition = function(x) return(x@random_effects)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_process Set spatio-temporal random effects
 setReplaceMethod(f = "random_effects",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -96,14 +113,19 @@ setReplaceMethod(f = "persistent_graph",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_process Get/set parameters
+#' @describeIn staRVe_process Set parameters
 setMethod(f = "parameters",
           signature = "staRVe_process",
           definition = function(x) return(x@parameters)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
+#' @describeIn staRVe_process Set parameters
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_process",
                  definition = function(x,value) {
@@ -156,10 +178,10 @@ prepare_staRVe_process<- function(nodes,
   nodes<- nodes[,attr(nodes,"sf_column")] # Only need locations
   nodes<- .order_by_location(unique(nodes)) # Lexicographic ordering S->N/W->E
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
-    df<- sf:::cbind.sf(data.frame(w = 0,
-                                  se = NA,
-                                  time = t),
-                       nodes)
+    df<- sf::st_sf(data.frame(w = 0,
+                              se = NA,
+                              time = t,
+                              nodes))
     colnames(df)[[3]]<- attr(time_form,"name")
     return(df)
   }))

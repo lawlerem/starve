@@ -1,5 +1,5 @@
 Package: staRVe
-Title: Spatio-Temporal Analysis of Research Vessel data.
+Title: Spatio-Temporal Analysis of Research Vessel data
 Version: 0.13.0
 Authors@R:
     person(given = "Ethan",
@@ -18,14 +18,16 @@ Imports:
     units,
     raster
 LinkingTo:
-    TMB
+    TMB,
+    RcppEigen
 RoxygenNote: 7.1.1
 Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
 Depends:
-    sf
+    sf,
+    R (>= 2.10)
 Collate:
     'classes.R'
     'getset.R'
@@ -35,6 +37,7 @@ Collate:
     'dag.R'
     'data.R'
     'fit.R'
+    'imports.R'
     'show.R'
     'src.R'
     'staRVe_settings.R'

@@ -60,6 +60,8 @@ the supplied \code{distance_units}.}
 \item{distance_units}{Which units should be used for distances?}
 
 \item{fit}{Should the model be fit in this call? If true, returns a fitted model.}
+
+\item{...}{Extra options to pass to staRVe_fit if fit=T}
 }
 \value{
 A staRVe_model object. If fit=T, a staRVe_fit object.

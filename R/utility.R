@@ -47,10 +47,10 @@ NULL
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       # Random effects for each new time, just replicating
       # the locations from the original random effects
-      df<- sf:::cbind.sf(data.frame(w = 0,
-                                    se = NA,
-                                    time = t),
-                         nodes)
+      df<- sf::st_sf(data.frame(w = 0,
+                                se = NA,
+                                time = t,
+                                nodes))
       colnames(df)[[3]]<- attr(random_effects,"time_column")
       return(df)
     }))
@@ -79,10 +79,10 @@ NULL
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       # Random effects for each new time, just replicating
       # the locations from the original random effects
-      df<- sf:::cbind.sf(data.frame(w = 0,
-                                    se = NA,
-                                    time = t),
-                         nodes)
+      df<- sf::st_sf(data.frame(w = 0,
+                                se = NA,
+                                time = t,
+                                nodes))
       colnames(df)[[3]]<- attr(random_effects,"time_column")
       return(df)
     }))
@@ -114,7 +114,7 @@ NULL
 #'
 #' @noRd
 .birdFit<- function() {
-  small_bird<- subset(staRVe::bird_survey,year %in% 1998:2000)
+  small_bird<- staRVe::bird_survey[staRVe::bird_survey$year %in% 1998:2000,]
   small_bird<- cbind(x=rnorm(nrow(small_bird)),
                      small_bird)
   fit<- prepare_staRVe_model(
@@ -126,8 +126,9 @@ NULL
   )
   sim<- staRVe_simulate(fit)
   pred_locs<- do.call(rbind,lapply(2000:2010, function(t) {
-    sf:::cbind.sf(data.frame(x=rnorm(1),year=t),
-          small_bird[1,"geom"])
+    sf::st_sf(data.frame(x=rnorm(1),
+                         year=t,
+                         small_bird[1,"geom"]))
   }))
   pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs,time=2000:2010)
   return(list(fit=fit,sim=sim,pred=pred))
@@ -698,7 +699,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     })
     # Combine all the covariates together (by column) and add back the geometry
     var_df<- do.call(cbind.data.frame,var_columns)
-    time_sf<- sf:::cbind.sf(var_df,time_sf)
+    time_sf<- sf::st_sf(data.frame(var_df,time_sf))
     return(time_sf)
   })
   # Combine all the different times together (by row)

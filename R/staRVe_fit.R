@@ -7,7 +7,11 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param staRVe_model A staRVe_model object
+#' @param tracing A staRVe_tracing object
+#' @param TMB_out A TMB_out object
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_model_fit",
@@ -31,6 +35,8 @@ setMethod(
 ###        ###
 ##############
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_model_fit Get tracing information
 setMethod(f = "tracing",
@@ -45,7 +51,8 @@ setReplaceMethod(f = "tracing",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_model_fit Get TMB objects
 setMethod(f = "TMB_out",
@@ -65,6 +72,8 @@ setReplaceMethod(f = "TMB_out",
 ### Meta-Access ###
 ###################
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_model_fit Get convergence message
 setMethod(f = "convergence",
@@ -73,6 +82,8 @@ setMethod(f = "convergence",
   return(convergence(TMB_out(x)))
 })
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_model_fit Get timing information
 setMethod(f = "timing",

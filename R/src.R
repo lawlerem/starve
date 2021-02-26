@@ -1,3 +1,2 @@
-#' @useDynLib staRVe
-#' @useDynLib family
+#' @useDynLib staRVe, .registration=TRUE
 NULL

@@ -7,7 +7,11 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param obj Output of TMB::MakeADFun
+#' @param opt Output of nlminb
+#' @param sdr Output of TMB::sdreport
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "TMB_out",
@@ -31,6 +35,8 @@ setMethod(
 ###        ###
 ##############
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn TMB_out Get TMB::MakeADFun object
 setMethod(f = "obj",
@@ -44,6 +50,8 @@ setReplaceMethod(f = "obj",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn TMB_out Get output of optimizer
 setMethod(f = "opt",
@@ -57,6 +65,8 @@ setReplaceMethod(f = "opt",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn TMB_out Get output of TMB::sdreport
 setMethod(f = "sdr",
@@ -76,6 +86,8 @@ setReplaceMethod(f = "sdr",
 ### Meta-Access ###
 ###################
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn TMB_out Get convergence message
 setMethod(f = "convergence",

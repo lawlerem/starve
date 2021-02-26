@@ -9,9 +9,7 @@ staRVe_simulate(model, ...)
 \arguments{
 \item{model}{A staRVe_model object.}
 
-\item{conditional}{logical. If true, new observations are simulated conditional
-on the random effect values in \code{random_effects(model)}.
-If false, new random effects and new observations are simulated.}
+\item{...}{Extra options}
 }
 \value{
 A staRve_model object with simulated random effects and observations.

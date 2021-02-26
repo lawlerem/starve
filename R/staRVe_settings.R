@@ -7,7 +7,13 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param formula A formula
+#' @param n_neighbours An integer
+#' @param p_far_neighbours A number between 0 and 1
+#' @param distance_units Which distance units to use
+#' @param max_distance A positive number
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_settings",
@@ -35,6 +41,8 @@ setMethod(
 ###        ###
 ##############
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_settings Get model formula
 setMethod(f = "formula",
@@ -49,7 +57,8 @@ setReplaceMethod(f = "formula",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_settings Get maximum number of neighbours
 setMethod(f = "n_neighbours",
@@ -64,7 +73,8 @@ setReplaceMethod(f = "n_neighbours",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_settings Get percentage of far neighbours
 setMethod(f = "p_far_neighbours",
@@ -79,14 +89,19 @@ setReplaceMethod(f = "p_far_neighbours",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
-#' @describeIn staRVe_settings Get/set distance units
+#' @describeIn staRVe_settings Get distance units
 setMethod(f = "distance_units",
           signature = "staRVe_settings",
           definition = function(x) return(x@distance_units)
 )
+#' @param x An object
+#' @param value A replacement value
+#"
 #' @export
+#' @describeIn staRVe_settings Set distance units
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -95,7 +110,8 @@ setReplaceMethod(f = "distance_units",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_settings Get maximum distance for neighbours
 setMethod(f = "max_distance",

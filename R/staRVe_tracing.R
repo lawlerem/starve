@@ -7,7 +7,13 @@ NULL
 ###           ###
 #################
 
-#' @noRd
+#' @param opt_time A proc_time object
+#' @param hess_time A proc_time object
+#' @param sdr_time A proc_time object
+#' @param parameter_hessian A matrix
+#' @param parameter_covariance A matrix
+#'
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_tracing",
@@ -35,6 +41,8 @@ setMethod(
 ###        ###
 ##############
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_tracing Get optimization time
 setMethod(f = "opt_time",
@@ -50,13 +58,14 @@ setReplaceMethod(f = "opt_time",
 
 
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_tracing Get hessian computation time
 setMethod(f = "hess_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@hess_time)
 )
-#' @export
 setReplaceMethod(f = "hess_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -65,7 +74,8 @@ setReplaceMethod(f = "hess_time",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_tracing Get standard error computation time
 setMethod(f = "sdr_time",
@@ -80,7 +90,8 @@ setReplaceMethod(f = "sdr_time",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_tracing Get parameter hessian matrix
 setMethod(f = "parameter_hessian",
@@ -95,7 +106,8 @@ setReplaceMethod(f = "parameter_hessian",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_tracing Get parameter covariance matrix
 setMethod(f = "parameter_covariance",
@@ -115,6 +127,8 @@ setReplaceMethod(f = "parameter_covariance",
 ### Meta-Access ###
 ###################
 
+#' @param x An object
+#'
 #' @export
 #' @describeIn staRVe_tracing Get all timing information
 setMethod(f = "timing",
