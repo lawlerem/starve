@@ -6,9 +6,16 @@ Authors@R:
            family = "Lawler",
            role = c("aut", "cre"),
            email = "lawlerem@dal.ca")
-Description: What the package does (one paragraph).
+Description: Fits hierarchical spatio-temporal generalized linear mixed models to
+    point-referenced data in discrete time. Models are fit using maximum likelihood
+    inference via the TMB (Template Model Builder) package. This package interfaces
+    with the sf (simple features) spatial data package for ease of use. In
+    addition to inference, models can be used to simulate data or predict at
+    unobserved locations and/or at unobserved times.
 License: GPL-3
 Encoding: UTF-8
+URL: https://github.com/lawlerem/staRVe
+BugReports: https://github.com/lawlerem/staRVe/issues
 LazyData: true
 ByteCompile: true
 Imports:
