@@ -1,4 +1,4 @@
-#' @include classes.R generics.R
+#' @include classes.R getset.R generics.R
 NULL
 
 #################
@@ -7,22 +7,21 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{staRVe_process_parameters} instead.
+#' @param covariance_function Which covariance function to use
+#' @param time_parameters A data.frame
 #'
-#' @export
-#' @noRd
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "staRVe_process_parameters",
   definition = function(.Object,
-                        covariance_function = character(0),
-                        spatial_parameters = data.frame(par = numeric(0),
-                                                        fixed = numeric(0)),
-                        time_parameters = data.frame(par = numeric(0),
-                                                     fixed = numeric(0))) {
+                        covariance_function = "exponential",
+                        time_parameters = data.frame(par = c(0,0,0),
+                                                     se = c(0,0,0),
+                                                     fixed = c(F,F,F),
+                                                     row.names = c("mu","ar1","sd"))) {
     covariance_function(.Object)<- covariance_function
-    spatial_parameters(.Object)<- spatial_parameters
+    # covariance function takes care of spatial parameters
     time_parameters(.Object)<- time_parameters
 
     return(.Object)
@@ -36,40 +35,60 @@ setMethod(
 ###        ###
 ##############
 
-#' Get or set slots from an object of class \code{staRVe_process_parameters}.
+#' @param x An object
 #'
-#' @param x An object of class \code{staRVe_process_parameters}.
-#' @param value A replacement value
-#'
-#' @family access_staRVe_process_parameters
-#' @name access_staRVe_process_parameters
-NULL
-
 #' @export
-#' @rdname access_staRVe_process_parameters
+#' @describeIn staRVe_process_parameters Get covariance function
 setMethod(f = "covariance_function",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@covariance_function)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
-#' @rdname access_staRVe_process_parameters
+#' @describeIn staRVe_process_parameters Set covariance function. Run
+#'   get_staRVe_distributions("covariance") for valid covariance functions.
+#'   Setting the covariance function also overwrites the spatial parameters.
 setReplaceMethod(f = "covariance_function",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {
   x@covariance_function<- value
+  spatial_parameters(x)<- switch(value,
+    exponential = data.frame(par = c(0,0.5),
+                             se = c(0,0),
+                             fixed = c(F,T),
+                             row.names = c("sd","nu")),
+    gaussian = data.frame(par = c(0,Inf),
+                             se = c(0,0),
+                             fixed = c(F,T),
+                             row.names = c("sd","nu")),
+    matern = data.frame(par = c(0,0.5),
+                        se = c(0,0),
+                        fixed = c(F,F),
+                        row.names = c("sd","nu")),
+    matern32 = data.frame(par = c(0,1.5),
+                          se = c(0,0),
+                          fixed = c(F,T),
+                          row.names = c("sd","nu")),
+  )
   return(x)
 })
 
 
-
+#' @param x An object
+#'
 #' @export
-#' @rdname access_staRVe_process_parameters
+#' @describeIn staRVe_process_parameters Get spatial parameters
 setMethod(f = "spatial_parameters",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@spatial_parameters)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
-#' @rdname access_staRVe_process_parameters
+#' @describeIn staRVe_process_parameters Set spatial parameters
 setReplaceMethod(f = "spatial_parameters",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {
@@ -78,15 +97,19 @@ setReplaceMethod(f = "spatial_parameters",
 })
 
 
-
+#' @param x An object
+#'
 #' @export
-#' @rdname access_staRVe_process_parameters
+#' @describeIn staRVe_process_parameters Get time parameters
 setMethod(f = "time_parameters",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@time_parameters)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
 #' @export
-#' @rdname access_staRVe_process_parameters
+#' @describeIn staRVe_process_parameters Set time parameters
 setReplaceMethod(f = "time_parameters",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {

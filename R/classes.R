@@ -1,7 +1,9 @@
 #' A list of classes in the staRVe package.
 #'
-#' To see a list of all methods available for a specific class,
-#'   e.g. the staRVe_model class, run \code{methods(class="staRVe_model")}.
+#' To see documentation for a particular class, load the package and run e.g.
+#'   class?staRVe_model. To see a list of all methods available for a specific class,
+#'   see the help page or run \code{methods(class="staRVe_model")}.
+#'
 #'
 #' @section Classes:
 #' \itemize{
@@ -14,12 +16,24 @@
 #'   \item staRVe_model
 #'   \item staRVe_tracing
 #'   \item TMB_out
-#'   \item staRVe_fit
+#'   \item staRVe_model_fit
 #'   \item staRVe_parameters
 #' }
 #'
 #' @name staRVe_classes
 NULL
+
+#' Constructors for the staRVe package
+#'
+#' @param .Object The object to create
+#'
+#' @name  staRVe-construct
+NULL
+
+
+setOldClass("proc_time")
+setOldClass("sdreport")
+setOldClass("sf")
 
 #' An S4 class to hold a directed acyclic graph with distances.
 #'
@@ -28,8 +42,6 @@ NULL
 #'   nodes and parents.
 #' @slot distance_units The units used for distance calculation.  Must be compatible
 #'   with units::set_units.
-#'
-#' @name dag
 setClass(
   Class = "dag",
   slots = c(
@@ -45,8 +57,6 @@ setClass(
 #'   get_staRVe_distributions("covariance").
 #' @slot spatial_parameters A data.frame containing spatial parameters.
 #' @slot time_parameters A data.frame containing time parameters.
-#'
-#' @name staRVe_process_parameters
 setClass(
   Class = "staRVe_process_parameters",
   slots = c(
@@ -61,8 +71,6 @@ setClass(
 #' @slot random_effects An sf object containing random effects.
 #' @slot persistent graph A dag object describing the dependence graph of the process.
 #' @slot parameters An object of class staRVe_process_parameters.
-#'
-#' @name staRVe_process
 setClass(
   Class = "staRVe_process",
   slots = c(
@@ -82,8 +90,6 @@ setClass(
 #' @slot link_function The link function, must be one given by
 #'   get_staRVe_distributions("link").
 #' @slot fixed_effects A data.frame containing the fixed effect parameters.
-#'
-#' @name staRVe_observation_parameters
 setClass(
   Class = "staRVe_observation_parameters",
   slots = c(
@@ -100,8 +106,6 @@ setClass(
 #' @slot transient_graph A dag object describing the dependence of the data on
 #'   the process.
 #' @slot parameters An object of class staRVe_observation_parameters.
-#'
-#' @name staRVe_observations
 setClass(
   Class = "staRVe_observations",
   slots = c(
@@ -121,7 +125,7 @@ setClass(
 #' @slot max_distance The maximum distance to look for parents. Does not affect
 #'   parents coming from p_far_neighbours.
 #'
-#' @name staRVe_settings
+#' @aliases staRVe_settings
 setClass(
   Class = "staRVe_settings",
   slots = c(
@@ -135,11 +139,11 @@ setClass(
 
 #' An S4 class describing a staRVe model.
 #'
-#' @slot A staRVe_process object.
-#' @slot A staRVe_observations object.
-#' @slot A staRVe_settings object.
+#' @slot process A staRVe_process object.
+#' @slot observations A staRVe_observations object.
+#' @slot settings A staRVe_settings object.
 #'
-#' @name staRVe_model
+#' @aliases staRVe_model
 setClass(
   Class = "staRVe_model",
   slots = c(
@@ -157,7 +161,7 @@ setClass(
 #' @slot parameter_hessian The hessian matrix for parameter estimates.
 #' @slot parameter_covariance The covariance matrix for parameter estimates.
 #'
-#' @name staRVe_tracing
+#' @aliases staRVe_tracing
 setClass(
   Class = "staRVe_tracing",
   slots = c(
@@ -175,7 +179,8 @@ setClass(
 #' @slot opt The output of nlminb.
 #' @slot sdr The output of TMB::sdreport.
 #'
-#' @name TMB_out
+#' @param x An object
+#' @param object An object
 setClass(
   Class = "TMB_out",
   slots = c(
@@ -185,14 +190,14 @@ setClass(
   )
 )
 
-#' An S4 class to hold an optimized staRVe model
+#' An S4 class to hold an optimized staRVe model, extends the staRVe_model class
 #'
 #' @slot tracing A staRVe_tracing object.
 #' @slot TMB_out A TMB_out object.
 #'
-#' @name staRVe_fit
+#' @aliases staRVe_model_fit
 setClass(
-  Class = "staRVe_fit",
+  Class = "staRVe_model_fit",
   slots = c(
     tracing = "staRVe_tracing",
     TMB_out = "TMB_out"
@@ -209,8 +214,6 @@ setClass(
 ######################
 
 #' An S4 class to collect process and observations parameters.
-#'
-#' @name staRVe_parameters
 setClass(
   Class = "staRVe_parameters",
   contains = c("staRVe_process_parameters",

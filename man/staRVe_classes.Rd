@@ -4,8 +4,9 @@
 \alias{staRVe_classes}
 \title{A list of classes in the staRVe package.}
 \description{
-To see a list of all methods available for a specific class,
-  e.g. the staRVe_model class, run \code{methods(class="staRVe_model")}.
+To see documentation for a particular class, load the package and run e.g.
+  class?staRVe_model. To see a list of all methods available for a specific class,
+  see the help page or run \code{methods(class="staRVe_model")}.
 }
 \section{Classes}{
 
@@ -19,7 +20,7 @@ To see a list of all methods available for a specific class,
   \item staRVe_model
   \item staRVe_tracing
   \item TMB_out
-  \item staRVe_fit
+  \item staRVe_model_fit
   \item staRVe_parameters
 }
 }

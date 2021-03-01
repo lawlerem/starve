@@ -2,27 +2,47 @@
 % Please edit documentation in R/dag.R
 \name{construct_dag}
 \alias{construct_dag}
-\title{Construct a directed acyclic graph for an \code{sf} object with point geometry.}
+\alias{construct_obs_dag}
+\title{Construct directed acyclic graphs}
 \usage{
 construct_dag(x, settings = new("staRVe_settings"), silent = T)
+
+construct_obs_dag(
+  x,
+  y,
+  settings = new("staRVe_settings"),
+  check_intersection = T,
+  silent = T
+)
 }
 \arguments{
-\item{x}{An \code{sf} object containing point geometries, which will be the
-nodes of the graph.}
+\item{x}{An \code{sf} object of point geometries}
 
-\item{settings}{An object of class \code{staRVe_settings}.}
+\item{settings}{An object of class \code{staRVe_settings}}
 
 \item{silent}{Should intermediate calculations be shown?}
+
+\item{y}{An \code{sf} object of point geometries containing possible parents}
+
+\item{check_intersection}{Logical. If true, duplicated locations will be checked}
 }
 \value{
-An object of class \code{dag}.
+An object of class \code{dag}
 }
 \description{
-The directed acyclic graph is stored as an ordered list. The i'th element of
- the list is a vector containing indices j such that there is a directed edge
- from node j to node i. In other words, each node j is a directed parent of node i.
+A directed acyclic graph is stored as an ordered list. The ith element of the
+  list is a vector containing indices j such that there is a directed edge
+  from node j to node i, or possibly node (i+k-1) as detailed below.
 }
-\details{
-There can only be an edge from vertex i to vertex j if i comes before j in
- the rows of \code{x}.
-}
+\section{Functions}{
+\itemize{
+\item \code{construct_dag}: Construct a directed acyclic graph from a single
+\code{sf} object. The first element of the ordered list contains the indices
+for the first k rows, where k is the n_neighbours setting. The ith element
+contains the parents for the (i+k-1)th row of x.
+
+\item \code{construct_obs_dag}: Construct a directed acyclic graph from one \code{sf}
+object to another. The i'th element of the list is a vector containing
+indices j such that there is a directed edge from node j (in y) to node i (in x).
+}}
+

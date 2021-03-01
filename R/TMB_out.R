@@ -1,4 +1,4 @@
-#' @include classes.R generics.R
+#' @include classes.R getset.R generics.R
 NULL
 
 #################
@@ -7,11 +7,11 @@ NULL
 ###           ###
 #################
 
-#' @details The \code{initialize} function is not mean to be used by the user,
-#'   use \code{TMB_out} instead.
+#' @param obj Output of TMB::MakeADFun
+#' @param opt Output of nlminb
+#' @param sdr Output of TMB::sdreport
 #'
-#' @export
-#' @noRd
+#' @rdname staRVe-construct
 setMethod(
   f = "initialize",
   signature = "TMB_out",
@@ -35,23 +35,14 @@ setMethod(
 ###        ###
 ##############
 
-#' Get or set slots from an object of class \code{TMB_out}.
+#' @param x An object
 #'
-#' @param x An object of class \code{TMB_out}.
-#' @param value A replacement value
-#'
-#' @family access_TMB_out
-#' @name access_TMB_out
-NULL
-
 #' @export
-#' @rdname access_TMB_out
+#' @describeIn TMB_out Get TMB::MakeADFun object
 setMethod(f = "obj",
           signature = "TMB_out",
           definition = function(x) return(x@obj)
 )
-#' @export
-#' @rdname access_TMB_out
 setReplaceMethod(f = "obj",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -59,14 +50,14 @@ setReplaceMethod(f = "obj",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @rdname access_TMB_out
+#' @describeIn TMB_out Get output of optimizer
 setMethod(f = "opt",
           signature = "TMB_out",
           definition = function(x) return(x@opt)
 )
-#' @export
-#' @rdname access_TMB_out
 setReplaceMethod(f = "opt",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -74,14 +65,14 @@ setReplaceMethod(f = "opt",
   return(x)
 })
 
+#' @param x An object
+#'
 #' @export
-#' @rdname access_TMB_out
+#' @describeIn TMB_out Get output of TMB::sdreport
 setMethod(f = "sdr",
           signature = "TMB_out",
           definition = function(x) return(x@sdr)
 )
-#' @export
-#' @rdname access_TMB_out
 setReplaceMethod(f = "sdr",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -95,8 +86,10 @@ setReplaceMethod(f = "sdr",
 ### Meta-Access ###
 ###################
 
+#' @param x An object
+#'
 #' @export
-#' @rdname access_TMB_out
+#' @describeIn TMB_out Get convergence message
 setMethod(f = "convergence",
           signature = "TMB_out",
           definition = function(x) {

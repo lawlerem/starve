@@ -1,4 +1,2 @@
-#' @useDynLib staRVe
-#' @useDynLib family
-#' @importFrom Rcpp sourceCpp
+#' @useDynLib staRVe, .registration=TRUE
 NULL

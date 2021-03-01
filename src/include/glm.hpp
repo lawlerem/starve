@@ -1,3 +1,4 @@
+// A class to hold a generalized linear model and provide related functionality
 template<class Type>
 class glm {
   private:
@@ -14,9 +15,14 @@ class glm {
         vector<Type> distribution_pars);
     glm() = default;
 
+    // Add together random effects and covariate effects, and convert
+    // to response scale for conditional mean
     Type inv_link(vector<Type> fixed_predictors,
                   Type random_predictor);
+    // Evaluate the density for an observation x with conditional mean x
+    // sample_size is the sample size related to a single binomial observation
     Type log_density(Type x, Type mean, int sample_size);
+    // Simulated a single draw from the response distribution
     Type simulate(Type mean, int sample_size);
 };
 

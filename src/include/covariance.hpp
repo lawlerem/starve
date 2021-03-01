@@ -1,31 +1,39 @@
+// Class that computes covariances and covariance matrices
+//
+// Evaluate x(...) to compute covariances from distances
 template<class Type>
 class covariance {
   private:
-    Type scaleTau;
-    Type rho;
-    Type nu;
-    Type marg_var;
+    Type scaleTau; // Identifiable ratio of variance to range (= marg_var / rho^(2*nu))
+    Type rho; // Spatial range
+    Type nu; // Smoothness parameter
+    Type marg_var; // Marginal variance
 
-    int covar_code;
+    int covar_code; // Which covariance function to use?
 
-    template<typename T> T dist(T d);
-    template<typename T> T covFun(T d);
+    template<typename T> T dist(T d); // Compute distances (can update later for anisotropy)
+    template<typename T> T covFun(T d); // Compute covariance given distance
 
   public:
+    // Constructor
     covariance(Type scaleTau, Type rho, Type nu, int covar_code);
     covariance() = default;
 
-    Type get_scaleTau();
-    void update_scaleTau(Type new_tau); // Updates scaleTau, NOT marginal variance
-    void update_marg_sd(Type new_marg_sd); // Updates marginal variance, NOT scaleTau
+    Type get_scaleTau() { return this->scaleTau; } // Get scale tau
 
+    // Set value for scaleTau, range held constat, marg_var re-computed
+    void update_scaleTau(Type new_tau);
+    // Set value for marginal variance, scaleTau held constant, range re-computed
+    void update_marg_sd(Type new_marg_sd);
+
+    // Compute covariances
     template<typename T> T operator() (T d);
     template<typename T> vector<T> operator() (vector<T> d);
     template<typename T> matrix<T> operator() (matrix<T> D);
 };
 
 
-// Initializer
+// Constructor
 template<class Type>
 covariance<Type>::covariance(Type scaleTau, Type rho, Type nu, int covar_code) :
   scaleTau(scaleTau),
@@ -33,42 +41,32 @@ covariance<Type>::covariance(Type scaleTau, Type rho, Type nu, int covar_code) :
   nu(nu),
   covar_code(covar_code) {
   switch(covar_code) {
-    case 1 : this->marg_var = pow(scaleTau,2); break;// Gaussian, nu=Inf
+    case 1 : this->marg_var = pow(scaleTau,2); break; // Gaussian, nu=Inf so let marg_var=scaleTau
     default : this->marg_var = pow(scaleTau*pow(rho,nu),2); break;
   }
 }
 
-
-
-template<class Type>
-Type covariance<Type>::get_scaleTau() {
-  return this->scaleTau;
-}
-// Update scaleTau
 template<class Type>
 void covariance<Type>::update_scaleTau(Type new_tau) {
   this->scaleTau = new_tau;
   switch(covar_code) {
     case 1 : this->marg_var = pow(new_tau,2); break; // Gaussian
-    default : this->marg_var = pow(new_tau*pow(rho,nu),2); break;
+    default : this->marg_var = pow(new_tau*pow(rho,nu),2); break; // Matern
   }
 }
 
-
-
-// Update marg_var
 template<class Type>
 void covariance<Type>::update_marg_sd(Type new_marg_sd) {
   switch(covar_code) {
     case 1 : this->marg_var = pow(new_marg_sd,2); break; // Gaussian, don't change rho
-    default : this->marg_var = pow(new_marg_sd,2);
+    default : this->marg_var = pow(new_marg_sd,2); // Matern
               this->rho = pow(marg_var/pow(scaleTau,2),1/(2*nu)); break;
   }
 }
 
 
 
-// Distance function -- private
+// Distance function
 template<class Type>
 template<typename T>
 T covariance<Type>::dist(T d) {
@@ -76,7 +74,7 @@ T covariance<Type>::dist(T d) {
   return ans;
 }
 
-// Covariance function -- private
+// Covariance function
 template<class Type>
 template<typename T>
 T covariance<Type>::covFun(T d) {

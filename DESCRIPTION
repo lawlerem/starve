@@ -1,48 +1,50 @@
 Package: staRVe
-Title: Spatio-Temporal Analysis of Research Vessel data.
-Version: 0.13.0
-Authors@R: 
+Title: Spatio-Temporal Analysis of Research Vessel data
+Version: 0.14.0
+Authors@R:
     person(given = "Ethan",
            family = "Lawler",
            role = c("aut", "cre"),
            email = "lawlerem@dal.ca")
-Description: What the package does (one paragraph).
+Description: Fits hierarchical spatio-temporal generalized linear mixed models to
+    point-referenced data in discrete time. Models are fit using maximum likelihood
+    inference via the TMB (Template Model Builder) package. This package interfaces
+    with the sf (simple features) spatial data package for ease of use. In
+    addition to inference, models can be used to simulate data or predict at
+    unobserved locations and/or at unobserved times.
 License: GPL-3
 Encoding: UTF-8
+URL: https://github.com/lawlerem/staRVe
+BugReports: https://github.com/lawlerem/staRVe/issues
 LazyData: true
 ByteCompile: true
-Imports: 
+Imports:
+    methods,
     TMB (>= 1.7.16),
-    Rcpp,
-    RcppEigen,
-    RANN,
-    dplyr,
-    geosphere,
     nngeo (>= 0.3.0),
     units,
-    raster,
-    parallel,
-    numDeriv,
-    mvtnorm
-LinkingTo: 
-    Rcpp,
+    raster
+LinkingTo:
     TMB,
     RcppEigen
 RoxygenNote: 7.1.1
-Suggests: 
+Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-Depends: 
-    sf
-Collate: 
+Depends:
+    sf,
+    R (>= 2.10)
+Collate:
     'classes.R'
+    'getset.R'
     'generics.R'
     'TMB_out.R'
     'utility.R'
     'dag.R'
     'data.R'
     'fit.R'
+    'imports.R'
     'show.R'
     'src.R'
     'staRVe_settings.R'
