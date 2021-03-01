@@ -212,10 +212,10 @@ setMethod(f = "staRVe_simulate",
   )
 
   # Parameters are simulated from, not estimated, so get rid of standard errors
-  spatial_parameters(parameters(process(model)))$se<- NA
-  time_parameters(parameters(process(model)))$se<- NA
-  response_parameters(parameters(observations(model)))$se<- rep(NA,nrow(response_parameters(parameters(observations(model)))))
-  fixed_effects(parameters(observations(model)))$se<- NA
+  spatial_parameters(model)$se<- NA
+  time_parameters(model)$se<- NA
+  response_parameters(model)$se<- rep(NA,nrow(response_parameters(model)))
+  fixed_effects(model)$se<- rep(NA,nrow(fixed_effects(model)))
 
   # Simulated random effects
   sims<- obj$simulate()

@@ -228,7 +228,7 @@ prepare_staRVe_process<- function(nodes,
   )
   if( length(unique(time_seq)) == 1 ) {
     # If purely spatial data, we don't need time parameters
-    time_parameters(parameters)$fixed[c("ar1","sd")]<- c(T,T)
+    time_parameters(parameters)[c("ar1","sd"),"fixed"]<- c(T,T)
   } else {}
 
   parameters(process)<- parameters
