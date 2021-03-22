@@ -5,9 +5,7 @@ template<class Type>
 class covariance {
   private:
     Type scaleTau; // Identifiable ratio of variance to range (= marg_var / rho^(2*nu))
-    Type rho; // Spatial range
     Type nu; // Smoothness parameter
-    Type marg_var; // Marginal variance
 
     int covar_code; // Which covariance function to use?
 
@@ -19,6 +17,8 @@ class covariance {
     covariance(Type scaleTau, Type rho, Type nu, int covar_code);
     covariance() = default;
 
+    Type marg_var; // Marginal variance
+    Type rho; // Spatial range
     Type get_scaleTau() { return this->scaleTau; } // Get scale tau
 
     // Set value for scaleTau, range held constat, marg_var re-computed
@@ -55,12 +55,19 @@ void covariance<Type>::update_scaleTau(Type new_tau) {
   }
 }
 
+/*
+var = pow(tau*pow(rho,nu),2)
+sd = tau*pow(rho,nu)
+sd / tau = rho^nu
+rho = nu-rt(sd / tau)
+*/
+
 template<class Type>
 void covariance<Type>::update_marg_sd(Type new_marg_sd) {
+  this->marg_var = pow(new_marg_sd,2);
   switch(covar_code) {
-    case 1 : this->marg_var = pow(new_marg_sd,2); break; // Gaussian, don't change rho
-    default : this->marg_var = pow(new_marg_sd,2); // Matern
-              this->rho = pow(marg_var/pow(scaleTau,2),1/(2*nu)); break;
+    case 1 : break; // Gaussian, don't change rho
+    default : this->rho = pow(sqrt(marg_var)/scaleTau,1/nu); break; // Matern
   }
 }
 

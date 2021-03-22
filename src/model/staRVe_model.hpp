@@ -85,9 +85,12 @@ Type staRVe_model(objective_function<Type>* obj) {
   // Standardize distances (based on persistent graph) so rho doesn't scale with distance
   // i.e. distance units don't matter
   Type mean_dist = 0.0;
+  Type n = 0.0;
   for( int i=0; i<ws_dist.size(); i++ ) {
-    mean_dist += ws_dist(0).sum()/ws_dist.size();
+    mean_dist += ws_dist(i).sum();
+    n += ws_dist(i).size();
   }
+  mean_dist *= 1/n;
   for( int i=0; i<ys_dist.size(); i++ ) {
     ys_dist(i) = ys_dist(i)/mean_dist;
   }
@@ -104,8 +107,11 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   // Just need to choose a large enough initial value for rho so that the
   // resulting correlation matrix isn't approximately diagonal, choosing
-  // rho:=max distance ensures that it isn't diagonal
-  Type initRho = ws_dist(0).maxCoeff();
+  // rho:=100.0 works since distances are standardized
+  //
+  // Might need to put more effort into a better starting value
+  // (distance between bounding box corners? multiple of max distance?)
+  Type initRho = 100.0;
   covariance<Type> cov(space_sd,initRho,space_nu,covar_code);
 
   // Set up the response distribution and link function
@@ -149,7 +155,8 @@ Type staRVe_model(objective_function<Type>* obj) {
         time_cov(i,j) = pow(time_ar1,abs(i-j));
       }
     }
-    time_cov *= pow(time_sd,2)/(1-pow(time_ar1,2)); // time_sd gives sd of
+    time_cov *= pow(time_sd,2);
+    // time_cov *= pow(time_sd,2)/(1-pow(time_ar1,2)); // time_sd gives sd of
     // innovations, this coefficient is the marginal variance
     MVNORM_t<Type> time_dist(time_cov);
 

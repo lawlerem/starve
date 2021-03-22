@@ -76,16 +76,15 @@ nngp<Type>::nngp(covariance<Type> cov,
   // range held constant, marginal variance re-computed
   this->cov.update_scaleTau(cov.get_scaleTau()/(avg_forecast_sd/cov.get_scaleTau()));
 
-  // Calibrate marginal variance so that initial random effect has comparable
-  // variance to rest of random effects -- need to manually set variance because
-  // it affects the distribution of the first few random effects but is unidentifiable.
-  // So we just set it to a reasonable value
-  Type init_sd = fieldPred(ws_graph(0).segment(1,ws_graph(0).size()-1),
-                           ws_dists(0),
-                           Type(0.0),
-                           false).sd();
-  // scaleTau held constant, range re-computed
-  this->cov.update_marg_sd(init_sd);
+  // For starting random effects, we'll need to recompute avg_forecast_sd
+  avg_forecast_sd = 0.0;
+  for( int i=1; i<ws_graph.size(); i++ ) {
+    avg_forecast_sd += fieldPred(ws_graph(i),
+                                 ws_dists(i),
+                                 Type(0.0),
+                                 false).sd();
+  }
+  avg_forecast_sd *= 1.0/(ws_graph.size()-1);
 }
 
 
@@ -132,6 +131,9 @@ void nngp<Type>::update_w(vector<Type> new_w,
 template<class Type>
 Type nngp<Type>::loglikelihood() {
   // Joint Gaussian distribution for first few random effects
+  Type old_sd = sqrt(cov(Type(0.0)));
+  this->cov.update_marg_sd(avg_forecast_sd); // Make sure marginal variance
+  // is in line with forecast std. dev. so the initial random effects aren't crazy
   matrix<Type> covMat = cov(ws_dists(0));
   vector<Type> meanVec(ws_graph(0).size());
   vector<Type> wVec(ws_graph(0).size());
@@ -140,6 +142,8 @@ Type nngp<Type>::loglikelihood() {
     wVec(i) = w(ws_graph(0)(i));
   }
   Type ans = -MVNORM(covMat)(wVec-meanVec); // Times -1 because we want the positive log-likelihood
+  this->cov.update_marg_sd(old_sd);
+
 
   // Conditional Gaussian for remaining random effects
   int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
@@ -156,6 +160,8 @@ Type nngp<Type>::loglikelihood() {
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
   // Joint Gaussian distribution for first few random effects
+  Type old_sd = sqrt(cov(Type(0.0)));
+  this->cov.update_marg_sd(avg_forecast_sd);
   matrix<Type> covMat = cov(ws_dists(0));
   vector<Type> meanVec(ws_graph(0).size());
   for(int i=0; i<meanVec.size(); i++) {
@@ -165,6 +171,8 @@ vector<Type> nngp<Type>::simulate() {
   for(int i=0; i<simW.size(); i++) {
     w(ws_graph(0)(i)) = simW(i);
   }
+
+  this->cov.update_marg_sd(old_sd);
 
   // Conditional Gaussian for remaining random effects
   int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
