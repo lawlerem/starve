@@ -262,15 +262,18 @@ construct_dag<- function(x,
   ### st_nn expects meters.
 
   # Get the edges and distances for the first k nodes
-  startupEdges<- seq(n_neighbours(settings))
+  n_startup<- n_neighbours(settings)
+  startupEdges<- seq(n_startup) # Neg. tells C++ to use joint distribution
   startupDists<- units::set_units(sf::st_distance(x[startupEdges,]),"m")
   startupDists<- units::set_units(startupDists,
                                   distance_units(settings),
                                   mode="standard")
   startupDists<- units::drop_units(startupDists)
+  startupEdges<- -1*startupEdges
 
   # Get the edges and distances for the remaining nodes
-  nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
+  # nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
+  nn_list<- lapply(seq(nrow(x))[-seq(n_startup)], function(i) {
     .get_one_dag_node(x = x[i,],
                       nodes = head(x,i-1),
                       settings = settings,
@@ -337,7 +340,11 @@ setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
   edges(x)<- lapply(edges(x),function(parents) {
-    return(parents+1)
+    if( any(parents < 0) ) {
+      return(parents-1) # Want 0 -1 -2 to turn int -1 -2 -3
+    } else {
+      return(parents+1)
+    }
   })
   return(x)
 })
@@ -348,7 +355,60 @@ setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {
   edges(x)<- lapply(edges(x),function(parents) {
-    return(parents-1)
+    if( any(parents < 0) ) {
+      return(parents+1) # Want -1 -2 -3 to turn into 0 -1 -2
+    } else {
+      return(parents-1)
+    }
   })
   return(x)
 })
+
+
+
+
+
+#' Convert an R-INLA mesh to a dag
+#'
+#' @param x An inla.mesh object. I.e., output from INLA::inla.mesh.2d
+#' @param crs The coordinate system used. If missing, taken from x
+#'
+#' @export
+staRVe_inla.mesh_to_dag<- function(x,crs) {
+  locs<- sf::st_as_sf(as.data.frame(x$loc[,c(1,2)]),coords=c(1,2))
+  if( missing(crs) ) {
+    sf::st_crs(locs)<- x$crs
+  } else {
+    sf::st_crs(locs)<- crs
+  }
+  the_order<- .order_by_location(locs,return="order")
+  locs<- locs[the_order,]
+
+  edge_list<- x$graph$vv[the_order,the_order]
+  edge_list[lower.tri(edge_list,diag=T)]<- 0 # Only want upper triangle,
+  # each non-zero element in column j gives the parents of node j
+  edge_list<- split(edge_list@i,edge_list@j)
+  names(edge_list)<- NULL
+  edge_list[[1]]<- c(edge_list[[1]],1)
+  edge_list<- lapply(edge_list,`+`,1)
+
+  dist_list<- lapply(seq_along(edge_list),function(i) {
+    if( i == 1 ) {
+      # Original vertex already included
+      return(sf::st_distance(locs[edge_list[[i]],]))
+    } else {
+      # Original vertex not already included
+      return(sf::st_distance(locs[c(i+length(edge_list[[1]])-1,
+                                    edge_list[[i]]),]))
+    }
+  })
+
+  distance_units<- units(dist_list[[1]])$numerator
+  dist_list<- lapply(dist_list,units::drop_units)
+
+  return(list(locs = locs,
+              dag = new("dag",
+                        edges = edge_list,
+                        distances = dist_list,
+                        distance_units = distance_units)))
+}

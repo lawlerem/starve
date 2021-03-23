@@ -1,3 +1,10 @@
+template<class Type>
+struct mvnorm {
+  matrix<Type> cov;
+  vector<Type> w;
+  vector<Type> mu;
+};
+
 // A class to represent a nearest-neighbour Gaussian process
 //
 // Used to compute likelihood for a spatial field, predict at new locations, and
@@ -10,6 +17,10 @@ class nngp {
     vector<Type> mean; // Mean of spatial
     vector<vector<int> > ws_graph; // Edge list for persistent graph
     vector<matrix<Type> > ws_dists; // Distances for persistent graph
+
+    // Get covariance matrix, random effects, and mean vector
+    mvnorm<Type> joint(vector<int> nodes,
+                       matrix<Type> dists);
 
     // Compute kriging predictor given list of edges, distances, and magrinal
     // mean for new location
@@ -127,61 +138,69 @@ void nngp<Type>::update_w(vector<Type> new_w,
 }
 
 
+// Get covariance matrix, random effects, and mean
+template<class Type>
+mvnorm<Type> nngp<Type>::joint(vector<int> nodes,
+                               matrix<Type> dists) {
+  matrix<Type> covMat = cov(dists);
+  vector<Type> meanVec(nodes.size());
+  vector<Type> wVec(nodes.size());
+  for(int i=0; i<meanVec.size(); i++) {
+    meanVec(i) = mean(nodes(i));
+    wVec(i) = w(nodes(i));
+  }
+  mvnorm<Type> ans = {covMat, wVec, meanVec};
+  return ans;
+}
+
+
+
 // Compute log-likelihood for random effects
 template<class Type>
 Type nngp<Type>::loglikelihood() {
-  // Joint Gaussian distribution for first few random effects
+  Type ans = 0.0;
+  int offset = 0;
   Type old_sd = sqrt(cov(Type(0.0)));
-  this->cov.update_marg_sd(avg_forecast_sd); // Make sure marginal variance
-  // is in line with forecast std. dev. so the initial random effects aren't crazy
-  matrix<Type> covMat = cov(ws_dists(0));
-  vector<Type> meanVec(ws_graph(0).size());
-  vector<Type> wVec(ws_graph(0).size());
-  for(int i=0; i<meanVec.size(); i++) {
-    meanVec(i) = mean(ws_graph(0)(i));
-    wVec(i) = w(ws_graph(0)(i));
+  for(int i=0; i<ws_graph.size(); i++) {
+    if( i == 0 | ws_graph(i)(0) < 0 ) {
+      offset += ws_graph(i).size()-1;
+      cov.update_marg_sd(avg_forecast_sd);
+      mvnorm<Type> mvn = joint(abs(ws_graph(i)), ws_dists(i));
+      ans += -1*MVNORM(mvn.cov)(mvn.w-mvn.mu); // MVNORM calculates neg. log lik.
+      cov.update_marg_sd(old_sd);
+    } else {
+      kriging<Type> krig = fieldPred(ws_graph(i),
+                                     ws_dists(i),
+                                     mean(i+offset),
+                                     false);
+      ans += dnorm(w(i+offset), krig.mean(), krig.sd(), true);
+    }
   }
-  Type ans = -MVNORM(covMat)(wVec-meanVec); // Times -1 because we want the positive log-likelihood
-  this->cov.update_marg_sd(old_sd);
 
-
-  // Conditional Gaussian for remaining random effects
-  int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
-  for(int i=1; i<ws_graph.size(); i++) {
-    kriging<Type> krig = fieldPred(ws_graph(i),
-                                   ws_dists(i),
-                                   mean(i+offset),
-                                   false);
-    ans += dnorm(w(i+offset), krig.mean(), krig.sd(), true);
-  }
   return ans;
 }
 
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
-  // Joint Gaussian distribution for first few random effects
+  int offset = 0;
   Type old_sd = sqrt(cov(Type(0.0)));
-  this->cov.update_marg_sd(avg_forecast_sd);
-  matrix<Type> covMat = cov(ws_dists(0));
-  vector<Type> meanVec(ws_graph(0).size());
-  for(int i=0; i<meanVec.size(); i++) {
-    meanVec(i) = mean(ws_graph(0)(i));
-  }
-  vector<Type> simW = MVNORM(covMat).simulate()+meanVec;
-  for(int i=0; i<simW.size(); i++) {
-    w(ws_graph(0)(i)) = simW(i);
-  }
-
-  this->cov.update_marg_sd(old_sd);
-
-  // Conditional Gaussian for remaining random effects
-  int offset = ws_graph(0).size()-1; // ws_graph[[1]] is for the k'th random effect (k = ws_graph(0).size())
-  for(int i=1; i<ws_graph.size(); i++) {
-    kriging<Type> krig = fieldPred(ws_graph(i),
-                                   ws_dists(i),
-                                   mean(i+offset),
-                                   false);
-    w(i+offset) = rnorm(krig.mean(), krig.sd());
+  for(int i=0; i<ws_graph.size(); i++) {
+    if( i == 0 | ws_graph(i)(0) < 0 ) {
+      offset += ws_graph(i).size()-1;
+      cov.update_marg_sd(avg_forecast_sd);
+      mvnorm<Type> mvn = joint(abs(ws_graph(i)), ws_dists(i));
+      vector<Type> simW = MVNORM(mvn.cov).simulate()+mvn.mu;
+      for(int j=0; j<simW.size(); j++) {
+        w(abs(ws_graph(i)(j))) = simW(j);
+      }
+      cov.update_marg_sd(old_sd);
+    } else {
+      kriging<Type> krig = fieldPred(ws_graph(i),
+                                     ws_dists(i),
+                                     mean(i+offset),
+                                     false);
+      w(i+offset) = rnorm(krig.mean(), krig.sd());
+    }
   }
 
   return w;
