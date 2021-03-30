@@ -297,6 +297,7 @@ setMethod(f = "staRVe_simulate",
       random_effects,
       random_effects[,time_column,drop=T]
     )[[1]],
+    time = 0, # Use the same graph every year
     settings = settings(x)
   )
   # If prediction location is same as random effect location, then prediction

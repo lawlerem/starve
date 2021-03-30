@@ -263,21 +263,24 @@ construct_dag<- function(x,
 
   # Get the edges and distances for the first k nodes
   n_startup<- n_neighbours(settings)
-  startupEdges<- seq(n_startup) # Neg. tells C++ to use joint distribution
-  startupDists<- units::set_units(sf::st_distance(x[startupEdges,]),"m")
+  startupEdges<- list(to = seq(n_startup),
+                      from = integer(0))
+  startupDists<- units::set_units(sf::st_distance(x[do.call(c,startupEdges),]),"m")
   startupDists<- units::set_units(startupDists,
                                   distance_units(settings),
                                   mode="standard")
   startupDists<- units::drop_units(startupDists)
-  startupEdges<- -1*startupEdges
 
   # Get the edges and distances for the remaining nodes
   # nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
   nn_list<- lapply(seq(nrow(x))[-seq(n_startup)], function(i) {
-    .get_one_dag_node(x = x[i,],
-                      nodes = head(x,i-1),
-                      settings = settings,
-                      silent = silent)
+    foo<- .get_one_dag_node(x = x[i,],
+                            nodes = head(x,i-1),
+                            settings = settings,
+                            silent = silent)
+    return(list(edges = list(to = i,
+                             from = foo[[1]]),
+                distances = foo[[2]]))
   })
 
   # Store everything in a dag object
@@ -298,6 +301,7 @@ construct_dag<- function(x,
 #' @export
 construct_obs_dag<- function(x,
                              y,
+                             time = 0,
                              settings = new("staRVe_settings"),
                              check_intersection = T,
                              silent = T) {
@@ -308,6 +312,10 @@ construct_obs_dag<- function(x,
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
+  runs<- rle(time)
+  runs$values<- cumsum(head(c(0,runs$lengths),-1))
+  resets<- inverse.rle(runs)
+
   # Find the parents for each node in x
   nn_list<- lapply(seq(nrow(x)), function(i) {
     args<- list(x = x[i,],
@@ -315,10 +323,13 @@ construct_obs_dag<- function(x,
                 settings = settings,
                 silent = silent)
     if( check_intersection == T ) {
-      do.call(.get_one_intersects_dag_node,args)
+      foo<- do.call(.get_one_intersects_dag_node,args)
     } else {
-      do.call(.get_one_dag_node,args)
+      foo<- do.call(.get_one_dag_node,args)
     }
+    return(list(edges = list(to = i-resets[[i]], # Make sure new years start at 0
+                             from = foo[[1]]),
+                distances = foo[[2]]))
   })
 
   # Store everything in a dag object
@@ -328,6 +339,9 @@ construct_obs_dag<- function(x,
             edges = edge_list,
             distances = dist_list,
             distance_units = distance_units(settings))
+
+
+  ### Need to make sure that that "to" list starts at 0 each year
 
   return(dag)
 }
@@ -339,12 +353,10 @@ construct_obs_dag<- function(x,
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
-  edges(x)<- lapply(edges(x),function(parents) {
-    if( any(parents < 0) ) {
-      return(parents-1) # Want 0 -1 -2 to turn int -1 -2 -3
-    } else {
-      return(parents+1)
-    }
+  edges(x)<- lapply(edges(x),function(e) {
+    e[["to"]]<- e[["to"]]+1
+    e[["from"]]<- e[["from"]]+1
+    return(e)
   })
   return(x)
 })
@@ -354,12 +366,10 @@ setMethod(f = "idxC_to_R",
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {
-  edges(x)<- lapply(edges(x),function(parents) {
-    if( any(parents < 0) ) {
-      return(parents+1) # Want -1 -2 -3 to turn into 0 -1 -2
-    } else {
-      return(parents-1)
-    }
+  edges(x)<- lapply(edges(x),function(e) {
+    e[["to"]]<- e[["to"]]-1
+    e[["from"]]<- e[["from"]]-1
+    return(e)
   })
   return(x)
 })
@@ -374,7 +384,7 @@ setMethod(f = "idxR_to_C",
 #' @param crs The coordinate system used. If missing, taken from x
 #'
 #' @export
-staRVe_inla.mesh_to_dag<- function(x,crs) {
+staRVe_inla.mesh_to_dag<- function(x,crs,min_parents=1,n_joint=5) {
   locs<- sf::st_as_sf(as.data.frame(x$loc[,c(1,2)]),coords=c(1,2))
   if( missing(crs) ) {
     sf::st_crs(locs)<- x$crs

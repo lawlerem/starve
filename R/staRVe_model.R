@@ -610,8 +610,8 @@ setMethod(f = "TMB_in",
     ws_dists = distances(persistent_graph(process)),
     # Pred_* only used for predictions
     pred_w_time = numeric(0),
-    pred_ws_edges = list(numeric(0)),
-    pred_ws_dists = list(matrix(0,nrow=0,ncol=0)),
+    pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
+    pred_ws_dists = vector(mode="list",length=0),
     # conditional_sim only used in simulations
     conditional_sim = F
   )

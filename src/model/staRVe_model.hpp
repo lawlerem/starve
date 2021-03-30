@@ -71,15 +71,15 @@ Type staRVe_model(objective_function<Type>* obj) {
   // Get graphs
 
   // Transient graph
-  vector<vector<int> > ys_dag = ys_edges.dag;
+  vector<vector<vector<int> > > ys_dag = ys_edges.dag;
   vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
 
   // Persistent graph
-  vector<vector<int> > ws_dag = ws_edges.dag;
+  vector<vector<vector<int> > > ws_dag = ws_edges.dag;
   vector<matrix<Type> > ws_dist = ws_dists.dag_dist;
 
   // Graph for predictions
-  vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
+  vector<vector<vector<int> > > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
   // Standardize distances (based on persistent graph) so rho doesn't scale with distance
@@ -197,16 +197,16 @@ Type staRVe_model(objective_function<Type>* obj) {
   // resp_w = additional spatio-temporal random effects needed for transient graph
   // mean_design = covariate data
   // sample.size = sample size info for binomial distribution
-  // family = repsonse distribution and link function
-  observations<Type> obs(process,
-                         obs_y.segment(y_segment(0),y_segment(1)),
-                         keep.segment(y_segment(0),y_segment(1)),
-                         ys_dag.segment(y_segment(0),y_segment(1)),
-                         ys_dist.segment(y_segment(0),y_segment(1)),
-                         resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
-                         matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-                         sample_size.segment(y_segment(0),y_segment(1)),
-                         family);
+  // family = response distribution and link function
+  // observations<Type> obs(process,
+  //                        obs_y.segment(y_segment(0),y_segment(1)),
+  //                        keep.segment(y_segment(0),y_segment(1)),
+  //                        ys_dag.segment(y_segment(0),y_segment(1)),
+  //                        ys_dist.segment(y_segment(0),y_segment(1)),
+  //                        resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+  //                        matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+  //                        sample_size.segment(y_segment(0),y_segment(1)),
+  //                        family);
 
   // pred_ws_dag = edge list for predictions
   // pred_ws_dist = distances for predictions
@@ -219,17 +219,17 @@ Type staRVe_model(objective_function<Type>* obj) {
                     pred_nll);
 
   // Add likelihood components to joint likelihood
-  nll -= process.loglikelihood()
-            + obs.resp_w_loglikelihood()
-            + obs.y_loglikelihood();
+  nll -= process.loglikelihood();
+  //           + obs.resp_w_loglikelihood()
+  //           + obs.y_loglikelihood();
   SIMULATE{
     if( !conditional_sim ) {
       // Simulate new random effects, if desired
       proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
-      resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+      // resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
     } else {}
     // Simulate new response data
-    obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+    // obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
   }
 
 
@@ -246,32 +246,32 @@ Type staRVe_model(objective_function<Type>* obj) {
     // the mean function here ensures a marginal AR(1) process at each location
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
                      time_effects(time) + time_ar1*(process.get_w()-time_effects(time-1)));
-    // Update the data, covariates, transient graph, and extra random effects
-    obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
-                 keep.segment(y_segment(0),y_segment(1)),
-                 ys_dag.segment(y_segment(0),y_segment(1)),
-                 ys_dist.segment(y_segment(0),y_segment(1)),
-                 resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
-                 matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-                 sample_size.segment(y_segment(0),y_segment(1)));
-
+  //   // Update the data, covariates, transient graph, and extra random effects
+  //   obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
+  //                keep.segment(y_segment(0),y_segment(1)),
+  //                ys_dag.segment(y_segment(0),y_segment(1)),
+  //                ys_dist.segment(y_segment(0),y_segment(1)),
+  //                resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+  //                matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+  //                sample_size.segment(y_segment(0),y_segment(1)));
+  //
     // Likelihood component for predictions
     process.predict_w(pred_ws_dag,
                       pred_ws_dist,
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
                       pred_nll);
-
-    nll -= process.loglikelihood()
-              + obs.resp_w_loglikelihood()
-              + obs.y_loglikelihood();
+  //
+    nll -= process.loglikelihood();
+  //             + obs.resp_w_loglikelihood()
+  //             + obs.y_loglikelihood();
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effecst
         proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
-        resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+        // resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
-      obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+      // obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
     }
   }
 
