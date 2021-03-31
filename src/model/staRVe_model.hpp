@@ -198,38 +198,40 @@ Type staRVe_model(objective_function<Type>* obj) {
   // mean_design = covariate data
   // sample.size = sample size info for binomial distribution
   // family = response distribution and link function
-  // observations<Type> obs(process,
-  //                        obs_y.segment(y_segment(0),y_segment(1)),
-  //                        keep.segment(y_segment(0),y_segment(1)),
-  //                        ys_dag.segment(y_segment(0),y_segment(1)),
-  //                        ys_dist.segment(y_segment(0),y_segment(1)),
-  //                        resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
-  //                        matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-  //                        sample_size.segment(y_segment(0),y_segment(1)),
-  //                        family);
+  observations<Type> obs(process,
+                         obs_y.segment(y_segment(0),y_segment(1)),
+                         keep.segment(y_segment(0),y_segment(1)),
+                         ys_dag.segment(y_segment(0),y_segment(1)),
+                         ys_dist.segment(y_segment(0),y_segment(1)),
+                         resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+                         matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+                         sample_size.segment(y_segment(0),y_segment(1)),
+                         family);
 
   // pred_ws_dag = edge list for predictions
   // pred_ws_dist = distances for predictions
   // pred_w = spatio-temporal random effects for predictions
   // pred_nll = likelihood component for predictions, passed by reference
   //   so it's updated by calling predict_w
-  process.predict_w(pred_ws_dag,
-                    pred_ws_dist,
-                    pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                    pred_nll);
+  if( pred_w_segment(1) > 0 ) {
+    process.predict_w(pred_ws_dag,
+                      pred_ws_dist,
+                      pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                      pred_nll);
+  } else {}
 
   // Add likelihood components to joint likelihood
-  nll -= process.loglikelihood();
-  //           + obs.resp_w_loglikelihood()
-  //           + obs.y_loglikelihood();
+  nll -= process.loglikelihood()
+            + obs.resp_w_loglikelihood()
+            + obs.y_loglikelihood();
   SIMULATE{
     if( !conditional_sim ) {
       // Simulate new random effects, if desired
       proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
-      // resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+      resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
     } else {}
     // Simulate new response data
-    // obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+    obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
   }
 
 
@@ -246,32 +248,34 @@ Type staRVe_model(objective_function<Type>* obj) {
     // the mean function here ensures a marginal AR(1) process at each location
     process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
                      time_effects(time) + time_ar1*(process.get_w()-time_effects(time-1)));
-  //   // Update the data, covariates, transient graph, and extra random effects
-  //   obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
-  //                keep.segment(y_segment(0),y_segment(1)),
-  //                ys_dag.segment(y_segment(0),y_segment(1)),
-  //                ys_dist.segment(y_segment(0),y_segment(1)),
-  //                resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
-  //                matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-  //                sample_size.segment(y_segment(0),y_segment(1)));
-  //
+    // Update the data, covariates, transient graph, and extra random effects
+    obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
+                 keep.segment(y_segment(0),y_segment(1)),
+                 ys_dag.segment(y_segment(0),y_segment(1)),
+                 ys_dist.segment(y_segment(0),y_segment(1)),
+                 resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+                 matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+                 sample_size.segment(y_segment(0),y_segment(1)));
+
     // Likelihood component for predictions
+    if( pred_w_segment(1) > 0 ) {
     process.predict_w(pred_ws_dag,
                       pred_ws_dist,
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
                       pred_nll);
-  //
-    nll -= process.loglikelihood();
-  //             + obs.resp_w_loglikelihood()
-  //             + obs.y_loglikelihood();
+    } else {}
+
+    nll -= process.loglikelihood()
+              + obs.resp_w_loglikelihood()
+              + obs.y_loglikelihood();
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effecst
         proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
-        // resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+        resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
-      // obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+      obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
     }
   }
 

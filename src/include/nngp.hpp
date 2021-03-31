@@ -224,12 +224,8 @@ vector<Type> nngp<Type>::predict_w(vector<vector<vector<int> > > pred_graph,
                                    vector<Type> pred_w,
                                    Type &nll) {
   for(int i=0; i<pred_graph.size(); i++) {
-    vector<Type> this_w(pred_graph(i)(0).size());
-    for(int j=0; j<ws_graph(i)(0).size(); j++) {
-      this_w(j) = pred_w(pred_graph(i)(0)(j));
-      pred_graph(i)(0)(j) = 0; // Set to 0 so we don't have an index error
-      // when we put the graph into fieldPred
-    }
+    vector<Type> this_w = pred_w(pred_graph(i)(0));
+    pred_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
     kriging<Type> krig = fieldPred(pred_graph(i),
                                    dists(i),
                                    true); // Interpolate the mean
@@ -244,9 +240,7 @@ vector<Type> nngp<Type>::simulate_resp_w(vector<vector<vector<int> > > resp_w_gr
   vector<Type> sim_w(resp_w_graph.size());
   for(int i=0; i<resp_w_graph.size(); i++) {
     vector<int> this_w = resp_w_graph(i)(0);
-    for(int j=0; j<resp_w_graph(i)(0).size(); j++) {
-      resp_w_graph(i)(0)(j) = 0;
-    }
+    resp_w_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
     kriging<Type> krig = fieldPred(resp_w_graph(i),
                                    resp_w_dists(i),
                                    true); // Interpolate the mean

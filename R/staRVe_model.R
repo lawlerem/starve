@@ -586,7 +586,7 @@ setMethod(f = "TMB_in",
     # Get time index of random effects in transient graph
     # If length>0, need an additional random effect
     resp_w_time = c(dat(observations)[
-        sapply(edges(transient_graph(observations)),length) > 1,
+        sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1,
         time_column,
         drop=T
       ]),
@@ -672,7 +672,7 @@ setMethod(f = "TMB_in",
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],
     resp_w = numeric(
-        sum(sapply(edges(transient_graph(observations)),length) > 1)
+        sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
       ),
     log_space_sd = ifelse( # std. dev. > 0
         spatial_parameters(parameters(process))["sd","par"] > 0 ||
@@ -720,7 +720,7 @@ setMethod(f = "TMB_in",
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"fixed"],
     resp_w = logical(
-      sum(sapply(edges(transient_graph(observations)),length) > 1)
+      sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
     ),
     log_space_sd = spatial_parameters(parameters(process))["sd","fixed"],
     log_space_nu = spatial_parameters(parameters(process))["nu","fixed"],
@@ -818,12 +818,12 @@ setMethod(f = "update_staRVe_model",
   resp_w<- sdr_mat[rownames(sdr_mat) == "resp_w",]
 
   for( i in seq(nrow(data)) ) {
-    if( length(edges(obs_dag)[[i]]) == 1 ) {
+    if( length(edges(obs_dag)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effect from persistent graph
       this_year<- re[,time_column,drop=T] == data[i,time_column,drop=T]
       w<- re[,c("w","se"),drop=T][this_year,] # Putting this_year in first `[`
       # makes it really slow because sf checks spatial bounds
-      data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]],c("w","se")]
+      data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]][["from"]],c("w","se")]
     } else {
       # if length > 1, take random effect from resp_w
       data[i,c("w","w_se")]<- resp_w[resp_w_idx,]

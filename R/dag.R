@@ -312,9 +312,14 @@ construct_obs_dag<- function(x,
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
-  runs<- rle(time)
-  runs$values<- cumsum(head(c(0,runs$lengths),-1))
-  resets<- inverse.rle(runs)
+  if( length(time) == 1 ) {
+    time<- rep(0,nrow(x))
+  } else if( length(time) != nrow(x) ) {
+    stop("Time needs to be the same length as x.")
+  }
+    runs<- rle(time)
+    runs$values<- cumsum(head(c(0,runs$lengths),-1))
+    resets<- inverse.rle(runs)
 
   # Find the parents for each node in x
   nn_list<- lapply(seq(nrow(x)), function(i) {
@@ -339,9 +344,6 @@ construct_obs_dag<- function(x,
             edges = edge_list,
             distances = dist_list,
             distance_units = distance_units(settings))
-
-
-  ### Need to make sure that that "to" list starts at 0 each year
 
   return(dag)
 }
