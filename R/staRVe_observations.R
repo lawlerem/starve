@@ -185,6 +185,7 @@ prepare_staRVe_observations<- function(data,
     )
   } else {
     # Use pre-supplied transient graph
+    distance_units(transient_graph)<- distance_units(settings)
     transient_graph(observations)<- transient_graph
   }
 

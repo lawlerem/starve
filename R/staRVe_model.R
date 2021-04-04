@@ -470,10 +470,12 @@ setMethod(f = "graph",
 #'   given later in the `Details' section.
 #' @param data An object of class `sf` containing point geometries. Data
 #'  used for the `formula' object will be found here.
-#' @param nodes An object of class `sf` containing point geometries.
-#'  The default value uses the same locations as the observations. These
-#'  locations will be used as the nodes for the random effects. All locations
-#'  will be used for each year.
+#' @param nodes Either an object of class `sf` containing point geometries, or
+#'  an inla.mesh object (e.g.~from the output of INLA::inla.mesh.2d).
+#'  The default value uses the same locations as the observations. The locations
+#'  will be used as the nodes for the random effects. All locations will be used
+#'  for each year. If an inla.mesh is supplied, the edges of the mesh are used
+#'  to create the persistent graph.
 #' @param n_neighbours An integer giving the (maximum) number of parents for each node.
 #' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param persistent_graph If an object of class \code{dag} is supplied, that
@@ -524,6 +526,12 @@ prepare_staRVe_model<- function(formula,
   )
 
   # Set up the staRVe_process
+  if( class(nodes) == "inla.mesh" ) {
+    mesh<- .inla.mesh_to_dag(nodes,crs=sf::st_crs(data))
+    nodes<- mesh$nodes
+    persistent_graph<- mesh$persistent_graph
+    distance_units(persistent_graph)<- distance_units
+  } else {}
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
     persistent_graph = persistent_graph,
