@@ -384,43 +384,118 @@ setMethod(f = "idxR_to_C",
 #'
 #' @param x An inla.mesh object. I.e., output from INLA::inla.mesh.2d
 #' @param crs The coordinate system used. If missing, taken from x
+#' @param n_init How many vertices should be used to start the graph?
+#'   Using at least 10 is recommended.
 #'
 #' @export
-staRVe_inla.mesh_to_dag<- function(x,crs,min_parents=1,n_joint=5) {
+inla.mesh_to_dag<- function(
+  x,
+  crs = NA,
+  n_init = 10) {
   locs<- sf::st_as_sf(as.data.frame(x$loc[,c(1,2)]),coords=c(1,2))
-  if( missing(crs) ) {
-    sf::st_crs(locs)<- x$crs
-  } else {
-    sf::st_crs(locs)<- crs
+  sf::st_crs(locs)<- crs
+  m<- x$graph$vv
+  parents<- function(m,v) {
+    all_parents<- do.call(c,lapply(v,function(j) {
+      which( m[,j] == 1 )
+    }))
+    all_parents<- unique(all_parents[!(all_parents%in% v)])
+    return(all_parents)
   }
-  the_order<- .order_by_location(locs,return="order")
-  locs<- locs[the_order,]
-
-  edge_list<- x$graph$vv[the_order,the_order]
-  edge_list[lower.tri(edge_list,diag=T)]<- 0 # Only want upper triangle,
-  # each non-zero element in column j gives the parents of node j
-  edge_list<- split(edge_list@i,edge_list@j)
-  names(edge_list)<- NULL
-  edge_list[[1]]<- c(edge_list[[1]],1)
-  edge_list<- lapply(edge_list,`+`,1)
-
-  dist_list<- lapply(seq_along(edge_list),function(i) {
-    if( i == 1 ) {
-      # Original vertex already included
-      return(sf::st_distance(locs[edge_list[[i]],]))
-    } else {
-      # Original vertex not already included
-      return(sf::st_distance(locs[c(i+length(edge_list[[1]])-1,
-                                    edge_list[[i]]),]))
+  children<- function(m,v) {
+    all_children<- do.call(c,lapply(v,function(i) {
+      which( m[i,] == 1 )
+    }))
+    all_children<- unique(all_children[!(all_children %in% v)])
+    return(all_children)
+  }
+  reorder_inla_matrix<- function(
+    m,
+    locs,
+    n_init=5,
+    start=1) {
+    put_v_at_k<- function(m,v,k) {
+      order<- c(v,setdiff(k:nrow(m),v))
+      m[k:nrow(m),]<- m[order,]
+      if( ncol(m) == nrow(m) ) { # Quick check for adjacency matrix
+        m[,k:nrow(m)]<- m[,order]
+      } else {}
+        return(m)
     }
+    m0<- m; m0[lower.tri(m0)]<- 0
+    if( start == 1 ) {
+      ### Starting vertices
+      joint<- 1
+      cntr<- length(joint)
+      while( length(joint) < n_init ) {
+        joint<- c(joint,children(m0,joint))
+        joint<- c(joint,parents(m0,joint))
+        if( length(joint) == cntr ) {
+          warning(paste("Could not find",n_joint,"nodes to start."))
+          break
+        } else { }
+        cntr<- length(joint)
+      }
+      joint<- head(joint,n_init)
+      m<- put_v_at_k(m,v=joint,k=start)
+      locs<- put_v_at_k(locs,v=joint,k=start)
+      return(reorder_inla_matrix(
+        m=m,
+        locs=locs,
+        n_init=n_init,
+        start=start+length(joint)))
+    } else if(  1 < start && start < ncol(m) ) {
+      ### First child of 1:start with maximum # of parents
+      parent_length<- sapply(start:ncol(m), function(v) {
+        p<- parents(m0,v)
+        p<- intersect(p,1:(start-1))
+        return(length(p))
+      })
+      v<- start-1+which.max(parent_length)
+      m<- put_v_at_k(m,v=v,k=start)
+      locs<- put_v_at_k(locs,v=v,k=start)
+      return(reorder_inla_matrix(
+        m=m,
+        locs=locs,
+        n_init=n_init,
+        start=start+1))
+    } else if( start == ncol(m) ) {
+      # If we've gone through the whole matrix, we're done
+        return(list(locs = locs,
+                    mat = m))
+    }
+  }
+  m_locs<- reorder_inla_matrix(m=m,locs=locs,n_init=n_init)
+  m_locs$mat[lower.tri(m_locs$mat,diag=T)]<- 0
+
+  edge_list<- vector(mode="list",length=nrow(m_locs$locs)-n_init+1)
+  edge_list[[1]]<- list(to = seq(n_init),
+                        from = numeric(0))
+
+  edge_list[2:length(edge_list)]<- lapply((n_init+1):nrow(m_locs$locs),function(i) {
+    return(list(to = i,
+                from = parents(m_locs$mat,i)))
   })
 
-  distance_units<- units(dist_list[[1]])$numerator
-  dist_list<- lapply(dist_list,units::drop_units)
+  dist_list<- lapply(edge_list,function(edges) {
+    all_v<- c(edges$to,edges$from)
+    dists<- sf::st_distance(m_locs$locs[all_v,])
+    return(dists)
+  })
 
-  return(list(locs = locs,
-              dag = new("dag",
-                        edges = edge_list,
-                        distances = dist_list,
-                        distance_units = distance_units)))
+  if( "units" %in% class(dist_list[[1]]) ) {
+    distance_units<- as.character(units(dist_list[[1]]))
+    dist_list<- lapply(dist_list,units::drop_units)
+  } else {
+    warning("Could not infer distance units, assuming meters. Supply a coordinate reference system if available")
+    distance_units<- "m"
+  }
+
+  return(list(nodes = m_locs$locs,
+              persistent_graph = new("dag",
+                edges = edge_list,
+                distances = dist_list,
+                distance_units = distance_units),
+              edge_list = edge_list,
+              dist_list = dist_list))
 }
