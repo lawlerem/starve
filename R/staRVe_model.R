@@ -526,7 +526,7 @@ prepare_staRVe_model<- function(formula,
   )
 
   # Set up the staRVe_process
-  if( class(nodes) == "inla.mesh" ) {
+  if( "inla.mesh" %in% class(nodes) ) {
     mesh<- .inla.mesh_to_dag(nodes,crs=sf::st_crs(data))
     nodes<- mesh$nodes
     persistent_graph<- mesh$persistent_graph

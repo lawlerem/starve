@@ -384,12 +384,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   x,
   crs = NA,
   n_init = 10) {
-  locs<- sf::st_as_sf(as.data.frame(x$loc[,c(1,2)]),coords=c(1,2))
-  if( !is.null(x$crs) ) {
-    sf::st_crs(locs)<- x$crs
-  }
-  sf::st_crs(locs)<- crs
-  m<- x$graph$vv
+  locs<- as.data.frame(x$loc[,c(1,2)])
+  m<- as.matrix(x$graph$vv)
   parents<- function(m,v) {
     all_parents<- do.call(c,lapply(v,function(j) {
       which( m[,j] == 1 )
@@ -404,77 +400,68 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     all_children<- unique(all_children[!(all_children %in% v)])
     return(all_children)
   }
-  reorder_inla_matrix<- function(
-    m,
-    locs,
-    n_init=5,
-    start=1) {
-    put_v_at_k<- function(m,v,k) {
-      order<- c(v,setdiff(k:nrow(m),v))
-      m[k:nrow(m),]<- m[order,]
-      if( ncol(m) == nrow(m) ) { # Quick check for adjacency matrix
-        m[,k:nrow(m)]<- m[,order]
-      } else {}
-        return(m)
-    }
-    m0<- m; m0[lower.tri(m0)]<- 0
-    if( start == 1 ) {
-      ### Starting vertices
-      joint<- 1
-      cntr<- length(joint)
-      while( length(joint) < n_init ) {
-        joint<- c(joint,children(m0,joint))
-        joint<- c(joint,parents(m0,joint))
-        if( length(joint) == cntr ) {
-          warning(paste("Could not find",n_joint,"nodes to start."))
-          break
-        } else { }
-        cntr<- length(joint)
-      }
-      joint<- head(joint,n_init)
-      m<- put_v_at_k(m,v=joint,k=start)
-      locs<- put_v_at_k(locs,v=joint,k=start)
-      return(reorder_inla_matrix(
-        m=m,
-        locs=locs,
-        n_init=n_init,
-        start=start+length(joint)))
-    } else if(  1 < start && start < ncol(m) ) {
-      ### First child of 1:start with maximum # of parents
-      parent_length<- sapply(start:ncol(m), function(v) {
-        p<- parents(m0,v)
-        p<- intersect(p,1:(start-1))
-        return(length(p))
-      })
-      v<- start-1+which.max(parent_length)
-      m<- put_v_at_k(m,v=v,k=start)
-      locs<- put_v_at_k(locs,v=v,k=start)
-      return(reorder_inla_matrix(
-        m=m,
-        locs=locs,
-        n_init=n_init,
-        start=start+1))
-    } else if( start == ncol(m) ) {
-      # If we've gone through the whole matrix, we're done
-        return(list(locs = locs,
-                    mat = m))
-    }
+  put_v_at_k<- function(m,v,k) {
+    order<- c(v,setdiff(k:nrow(m),v))
+    m[k:nrow(m),]<- m[order,]
+    if( ncol(m) == nrow(m) ) { # Quick check for adjacency matrix
+      m[,k:nrow(m)]<- m[,order]
+    } else {}
+      return(m)
   }
-  m_locs<- reorder_inla_matrix(m=m,locs=locs,n_init=n_init)
-  m_locs$mat[lower.tri(m_locs$mat,diag=T)]<- 0
 
-  edge_list<- vector(mode="list",length=nrow(m_locs$locs)-n_init+1)
+  ### Starting vertices
+  start<- 1
+  m0<- m; m0[lower.tri(m0)]<- 0
+  joint<- 1
+  cntr<- length(joint)
+  while( length(joint) < n_init ) {
+    joint<- c(joint,children(m0,joint))
+    joint<- c(joint,parents(m0,joint))
+    if( length(joint) == cntr ) {
+      warning(paste("Could not find",n_joint,"nodes to start."))
+      break
+    } else { }
+    cntr<- length(joint)
+  }
+  joint<- head(joint,n_init)
+  m<- put_v_at_k(m,v=joint,k=start)
+  locs<- put_v_at_k(locs,v=joint,k=start)
+  start<- start+length(joint)
+
+  while( start < nrow(m) ) {
+    ### First child of 1:start with maximum # of parents
+    m0<- m; m0[lower.tri(m0)]<- 0
+    parent_length<- sapply(start:ncol(m), function(v) {
+      p<- parents(m0,v)
+      p<- intersect(p,1:(start-1))
+      return(length(p))
+    })
+    v<- start-1+which.max(parent_length)
+    m<- put_v_at_k(m,v=v,k=start)
+    locs<- put_v_at_k(locs,v=v,k=start)
+    start<- start+1
+  }
+  m0<- m; m0[lower.tri(m0)]<- 0
+
+
+  locs<- sf::st_as_sf(locs,coords=c(1,2))
+  if( !is.null(x$crs) ) {
+    sf::st_crs(locs)<- x$crs
+  }
+  sf::st_crs(locs)<- crs
+
+  edge_list<- vector(mode="list",length=nrow(m)-n_init+1)
   edge_list[[1]]<- list(to = seq(n_init),
                         from = numeric(0))
 
-  edge_list[2:length(edge_list)]<- lapply((n_init+1):nrow(m_locs$locs),function(i) {
+  edge_list[2:length(edge_list)]<- lapply((n_init+1):nrow(m),function(i) {
     return(list(to = i,
-                from = parents(m_locs$mat,i)))
+                from = parents(m0,i)))
   })
 
   dist_list<- lapply(edge_list,function(edges) {
     all_v<- c(edges$to,edges$from)
-    dists<- sf::st_distance(m_locs$locs[all_v,])
+    dists<- sf::st_distance(locs[all_v,])
     return(dists)
   })
 
@@ -486,7 +473,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     distance_units<- "m"
   }
 
-  return(list(nodes = m_locs$locs,
+  return(list(nodes = locs,
               persistent_graph = new("dag",
                 edges = edge_list,
                 distances = dist_list,
