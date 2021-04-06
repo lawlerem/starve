@@ -228,12 +228,12 @@ setMethod(f = "staRVe_simulate",
   # Update random effects used for observations
   resp_w_idx<- 1
   for( i in seq(nrow(dat(model))) ) {
-    if( length(edges(transient_graph(observations(model)))[[i]]) == 1 ) {
+    if( length(edges(transient_graph(observations(model)))[[i]][[2]]) == 1 ) {
       # If length == 1, use random effects from persistent graph
       re<- random_effects(model)
       w<- re[,"w",drop=T][re[,time_column,drop=T] == dat(model)[i,time_column,drop=T]]
       dat(model)$w[[i]]<- w[[
-                             edges(transient_graph(observations(model)))[[i]]
+                             edges(transient_graph(observations(model)))[[i]][[2]]
                            ]]
     } else {
       # If length > 1, use random effects from resp_w
@@ -297,6 +297,7 @@ setMethod(f = "staRVe_simulate",
       random_effects,
       random_effects[,time_column,drop=T]
     )[[1]],
+    time = 0, # Use the same graph every year
     settings = settings(x)
   )
   # If prediction location is same as random effect location, then prediction
@@ -323,6 +324,8 @@ setMethod(f = "staRVe_simulate",
 
   TMB_input$para$pred_w<- predictions$w
   TMB_input$map$pred_w<- NULL
+
+  # stop("Breakpoint!")
 
   # Create the TMB object and evaluate it at the ML estimates
   obj<- TMB::MakeADFun(

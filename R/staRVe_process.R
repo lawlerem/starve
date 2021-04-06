@@ -197,6 +197,7 @@ prepare_staRVe_process<- function(nodes,
     )
   } else {
     # Use pre-supplied persistent_graph
+    distance_units(persistent_graph)<- distance_units(settings)
     persistent_graph(process)<- persistent_graph
   }
 

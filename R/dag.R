@@ -262,19 +262,25 @@ construct_dag<- function(x,
   ### st_nn expects meters.
 
   # Get the edges and distances for the first k nodes
-  startupEdges<- seq(n_neighbours(settings))
-  startupDists<- units::set_units(sf::st_distance(x[startupEdges,]),"m")
+  n_startup<- n_neighbours(settings)
+  startupEdges<- list(to = seq(n_startup),
+                      from = integer(0))
+  startupDists<- units::set_units(sf::st_distance(x[do.call(c,startupEdges),]),"m")
   startupDists<- units::set_units(startupDists,
                                   distance_units(settings),
                                   mode="standard")
   startupDists<- units::drop_units(startupDists)
 
   # Get the edges and distances for the remaining nodes
-  nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
-    .get_one_dag_node(x = x[i,],
-                      nodes = head(x,i-1),
-                      settings = settings,
-                      silent = silent)
+  # nn_list<- lapply(seq(nrow(x))[-seq(n_neighbours(settings))], function(i) {
+  nn_list<- lapply(seq(nrow(x))[-seq(n_startup)], function(i) {
+    foo<- .get_one_dag_node(x = x[i,],
+                            nodes = head(x,i-1),
+                            settings = settings,
+                            silent = silent)
+    return(list(edges = list(to = i,
+                             from = foo[[1]]),
+                distances = foo[[2]]))
   })
 
   # Store everything in a dag object
@@ -295,6 +301,7 @@ construct_dag<- function(x,
 #' @export
 construct_obs_dag<- function(x,
                              y,
+                             time = 0,
                              settings = new("staRVe_settings"),
                              check_intersection = T,
                              silent = T) {
@@ -305,6 +312,15 @@ construct_obs_dag<- function(x,
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
+  if( length(time) == 1 ) {
+    time<- rep(0,nrow(x))
+  } else if( length(time) != nrow(x) ) {
+    stop("Time needs to be the same length as x.")
+  }
+    runs<- rle(time)
+    runs$values<- cumsum(head(c(0,runs$lengths),-1))
+    resets<- inverse.rle(runs)
+
   # Find the parents for each node in x
   nn_list<- lapply(seq(nrow(x)), function(i) {
     args<- list(x = x[i,],
@@ -312,10 +328,13 @@ construct_obs_dag<- function(x,
                 settings = settings,
                 silent = silent)
     if( check_intersection == T ) {
-      do.call(.get_one_intersects_dag_node,args)
+      foo<- do.call(.get_one_intersects_dag_node,args)
     } else {
-      do.call(.get_one_dag_node,args)
+      foo<- do.call(.get_one_dag_node,args)
     }
+    return(list(edges = list(to = i-resets[[i]], # Make sure new years start at 0
+                             from = foo[[1]]),
+                distances = foo[[2]]))
   })
 
   # Store everything in a dag object
@@ -336,8 +355,10 @@ construct_obs_dag<- function(x,
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
-  edges(x)<- lapply(edges(x),function(parents) {
-    return(parents+1)
+  edges(x)<- lapply(edges(x),function(e) {
+    e[["to"]]<- e[["to"]]+1
+    e[["from"]]<- e[["from"]]+1
+    return(e)
   })
   return(x)
 })
@@ -347,8 +368,10 @@ setMethod(f = "idxC_to_R",
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {
-  edges(x)<- lapply(edges(x),function(parents) {
-    return(parents-1)
+  edges(x)<- lapply(edges(x),function(e) {
+    e[["to"]]<- e[["to"]]-1
+    e[["from"]]<- e[["from"]]-1
+    return(e)
   })
   return(x)
 })

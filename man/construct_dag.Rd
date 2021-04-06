@@ -10,6 +10,7 @@ construct_dag(x, settings = new("staRVe_settings"), silent = T)
 construct_obs_dag(
   x,
   y,
+  time = 0,
   settings = new("staRVe_settings"),
   check_intersection = T,
   silent = T

@@ -5,18 +5,8 @@
 template<class Type>
 class kriging {
   private:
-    Type marginal_covariance; // Marginal variance of prediction point
-    vector<Type> cross_covariance; // Covariance between prediction point and predictors
-    matrix<Type> predictor_covariance; // Covariance matrix for predictors
-    matrix<Type> predictor_precision; // Inverse of predictor_covariancce
-
-    Type marginal_mean; // Marginal mean of prediction point
-    vector<Type> predictor_means; // Marginal mean of predictors
-
-    vector<Type> predictor_vals; // Realized value of predictors
-
-    Type ans_mean; // Conditional mean of prediction point given predictors
-    Type ans_sd; // Conditiona std.dev. of prediction point given predictors
+    vector<Type> krig_mean; // Conditional mean of prediction points given predictors
+    matrix<Type> krig_cov; // Conditional covariance of prediction points given predictors
   public:
     // Constructor
     kriging(matrix<Type> full_covariance,
@@ -26,17 +16,17 @@ class kriging {
     kriging() = default;
 
     // Accessors
-    Type mean() { return this->ans_mean; }
-    Type sd() { return this->ans_sd; }
-    Type var() { return pow(this->ans_sd,2); }
+    vector<Type> mean() { return this->krig_mean; }
+    // Type sd() { return this->ans_sd; }
+    matrix<Type> cov() { return this->krig_cov; }
 };
 
 // Some utility functions for kriging
 namespace krig_funs {
   template<class Type> matrix<Type> get_inv(matrix<Type> mat);
-  template<class Type> Type interpolate_mean(vector<Type> predictor_means,
-                                             vector<Type> cross_covariance,
-                                             matrix<Type> predictor_precision);
+  template<class Type> vector<Type> interpolate_mean(vector<Type> predictor_means,
+                                                     matrix<Type> cross_covariance,
+                                                     matrix<Type> predictor_precision);
 }
 
 
@@ -51,34 +41,32 @@ template<class Type>
 kriging<Type>::kriging(matrix<Type> full_covariance,
                        vector<Type> full_mean,
                        vector<Type> predictor_vals,
-                       bool interpolate_mean) :
-  predictor_vals(predictor_vals) {
+                       bool interpolate_mean) {
+  int n_predictor = predictor_vals.size();
+  int n_predictee = full_mean.size()-n_predictor;
 
   // Get different blocks of the joint covariance matrix
-  int nrow = full_covariance.rows();
-  int ncol = full_covariance.cols();
-  this->marginal_covariance = full_covariance(0,0);
-  this->cross_covariance = full_covariance.row(0).segment(1,ncol-1);
-  this->predictor_covariance = full_covariance.bottomRightCorner(nrow-1,ncol-1);
-  this->predictor_precision = krig_funs::get_inv(this->predictor_covariance);
+  matrix<Type> pred_covariance = full_covariance.topLeftCorner(n_predictee,n_predictee);
+  matrix<Type> cross_covariance = full_covariance.topRightCorner(n_predictee,n_predictor);
+  matrix<Type> predictor_covariance = full_covariance.bottomRightCorner(n_predictor,n_predictor);
+  matrix<Type> predictor_precision = krig_funs::get_inv(predictor_covariance);
 
   // Get different blocks of the marginal mean vector, interpolating the prediction mean if desired
-  this->predictor_means = full_mean.segment(1,ncol-1);
+  vector<Type> predictor_means = full_mean.segment(n_predictee,n_predictor);
+  vector<Type> pred_means(n_predictee);
   if( interpolate_mean ) {
-    this->marginal_mean = krig_funs::interpolate_mean(predictor_means,
-                                                      cross_covariance,
-                                                      predictor_precision);
+    pred_means = krig_funs::interpolate_mean(predictor_means,
+                                             cross_covariance,
+                                             predictor_precision);
   } else {
-    this->marginal_mean = full_mean(0);
-  }
+    pred_means = full_mean.segment(0,n_predictee);
+  };
 
   // Compute kriging (gaussian conditional) mean and standard deviation
-  // krig. mean = mu + c^T * Sigma^-1 * ( w-mu )
-  this->ans_mean = marginal_mean +
-    (cross_covariance.matrix().transpose() * predictor_precision * (predictor_vals - predictor_means).matrix())(0,0);
-  // krig. var = sd^2 - c^T * Sigma^-1 * c
-  this->ans_sd = sqrt(marginal_covariance -
-    (cross_covariance.matrix().transpose() * predictor_precision * cross_covariance.matrix() )(0,0));
+  // krig. mean = mu + Sigma_12 * Sigma_22^-1 * ( w-mu )
+  this->krig_mean = pred_means + vector<Type>(cross_covariance * predictor_precision * (predictor_vals - predictor_means).matrix());
+  // krig. var = Sigma_11 - Sigma_12 * Sigma_22^-1 * Sigma_12^T
+  this->krig_cov = pred_covariance - cross_covariance * predictor_precision * cross_covariance.transpose();
 }
 
 
@@ -98,25 +86,25 @@ matrix<Type> krig_funs::get_inv(matrix<Type> mat)  {
 // Compute a weighted average of predictor means based on covariance matrix
 // Gives a (local) BLU estimate of the mean in ordinary kriging
 template<class Type>
-Type krig_funs::interpolate_mean(vector<Type> predictor_means,
-                                 vector<Type> cross_covariance,
-                                 matrix<Type> predictor_precision) {
-  Type ans;
-  // numerator = c^T * Sigma^-1 * mu; kriging predictor applied to mean
-  Type num = (cross_covariance.matrix().transpose() * predictor_precision *
-                predictor_means.matrix())(0,0); // Need (0,0) because it returns a 1x1 matrix and we want the entry
+vector<Type> krig_funs::interpolate_mean(vector<Type> predictor_means,
+                                         matrix<Type> cross_covariance,
+                                         matrix<Type> predictor_precision) {
+  // numerator = Sigma_12 * Sigma^-1 * mu; kriging predictor applied to mean
+  vector<Type> num = vector<Type>(cross_covariance * predictor_precision * predictor_means.matrix());
 
   vector<Type> ones(predictor_means.size());
   for(int i=0; i<ones.size(); i++) {
     ones(i) = Type(1);
   }
-  // denom = c^T * Sigma^-1 * 1; ensures weights (coefficients of pred_means) sum to one
-  Type denom = (cross_covariance.matrix().transpose() * predictor_precision *
-                  ones.matrix() )(0,0);
-  if( denom == 0 ) {
-    ans = 0; // denom == 0 if there are no neighbours found
-  } else {
-    ans = num/denom;
+  // denom = Sigma_12 * Sigma^-1 * 1; ensures weights (coefficients of pred_means) sum to one
+  vector<Type> denom = vector<Type>(cross_covariance * predictor_precision * ones.matrix());
+  vector<Type> ans(denom.size());
+  for(int i=0; i<ans.size(); i++) {
+    if( denom(i) == 0 ) {
+      ans(i) = 0; // denom == 0 if there are no neighbours found
+    } else {
+      ans(i) = num(i)/denom(i);
+    }
   }
 
   return ans;

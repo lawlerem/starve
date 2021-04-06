@@ -470,10 +470,12 @@ setMethod(f = "graph",
 #'   given later in the `Details' section.
 #' @param data An object of class `sf` containing point geometries. Data
 #'  used for the `formula' object will be found here.
-#' @param nodes An object of class `sf` containing point geometries.
-#'  The default value uses the same locations as the observations. These
-#'  locations will be used as the nodes for the random effects. All locations
-#'  will be used for each year.
+#' @param nodes Either an object of class `sf` containing point geometries, or
+#'  an inla.mesh object (e.g.~from the output of INLA::inla.mesh.2d).
+#'  The default value uses the same locations as the observations. The locations
+#'  will be used as the nodes for the random effects. All locations will be used
+#'  for each year. If an inla.mesh is supplied, the edges of the mesh are used
+#'  to create the persistent graph.
 #' @param n_neighbours An integer giving the (maximum) number of parents for each node.
 #' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param persistent_graph If an object of class \code{dag} is supplied, that
@@ -524,6 +526,12 @@ prepare_staRVe_model<- function(formula,
   )
 
   # Set up the staRVe_process
+  if( "inla.mesh" %in% class(nodes) ) {
+    mesh<- .inla.mesh_to_dag(nodes,crs=sf::st_crs(data))
+    nodes<- mesh$nodes
+    persistent_graph<- mesh$persistent_graph
+    distance_units(persistent_graph)<- distance_units
+  } else {}
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
     persistent_graph = persistent_graph,
@@ -586,7 +594,7 @@ setMethod(f = "TMB_in",
     # Get time index of random effects in transient graph
     # If length>0, need an additional random effect
     resp_w_time = c(dat(observations)[
-        sapply(edges(transient_graph(observations)),length) > 1,
+        sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1,
         time_column,
         drop=T
       ]),
@@ -610,8 +618,8 @@ setMethod(f = "TMB_in",
     ws_dists = distances(persistent_graph(process)),
     # Pred_* only used for predictions
     pred_w_time = numeric(0),
-    pred_ws_edges = list(numeric(0)),
-    pred_ws_dists = list(matrix(0,nrow=0,ncol=0)),
+    pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
+    pred_ws_dists = vector(mode="list",length=0),
     # conditional_sim only used in simulations
     conditional_sim = F
   )
@@ -672,7 +680,7 @@ setMethod(f = "TMB_in",
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],
     resp_w = numeric(
-        sum(sapply(edges(transient_graph(observations)),length) > 1)
+        sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
       ),
     log_space_sd = ifelse( # std. dev. > 0
         spatial_parameters(parameters(process))["sd","par"] > 0 ||
@@ -720,7 +728,7 @@ setMethod(f = "TMB_in",
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"fixed"],
     resp_w = logical(
-      sum(sapply(edges(transient_graph(observations)),length) > 1)
+      sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
     ),
     log_space_sd = spatial_parameters(parameters(process))["sd","fixed"],
     log_space_nu = spatial_parameters(parameters(process))["nu","fixed"],
@@ -818,12 +826,12 @@ setMethod(f = "update_staRVe_model",
   resp_w<- sdr_mat[rownames(sdr_mat) == "resp_w",]
 
   for( i in seq(nrow(data)) ) {
-    if( length(edges(obs_dag)[[i]]) == 1 ) {
+    if( length(edges(obs_dag)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effect from persistent graph
       this_year<- re[,time_column,drop=T] == data[i,time_column,drop=T]
       w<- re[,c("w","se"),drop=T][this_year,] # Putting this_year in first `[`
       # makes it really slow because sf checks spatial bounds
-      data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]],c("w","se")]
+      data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]][["from"]],c("w","se")]
     } else {
       # if length > 1, take random effect from resp_w
       data[i,c("w","w_se")]<- resp_w[resp_w_idx,]

@@ -71,15 +71,15 @@ Type staRVe_model(objective_function<Type>* obj) {
   // Get graphs
 
   // Transient graph
-  vector<vector<int> > ys_dag = ys_edges.dag;
+  vector<vector<vector<int> > > ys_dag = ys_edges.dag;
   vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
 
   // Persistent graph
-  vector<vector<int> > ws_dag = ws_edges.dag;
+  vector<vector<vector<int> > > ws_dag = ws_edges.dag;
   vector<matrix<Type> > ws_dist = ws_dists.dag_dist;
 
   // Graph for predictions
-  vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
+  vector<vector<vector<int> > > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
   // Standardize distances (based on persistent graph) so rho doesn't scale with distance
@@ -197,7 +197,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   // resp_w = additional spatio-temporal random effects needed for transient graph
   // mean_design = covariate data
   // sample.size = sample size info for binomial distribution
-  // family = repsonse distribution and link function
+  // family = response distribution and link function
   observations<Type> obs(process,
                          obs_y.segment(y_segment(0),y_segment(1)),
                          keep.segment(y_segment(0),y_segment(1)),
@@ -213,10 +213,12 @@ Type staRVe_model(objective_function<Type>* obj) {
   // pred_w = spatio-temporal random effects for predictions
   // pred_nll = likelihood component for predictions, passed by reference
   //   so it's updated by calling predict_w
-  process.predict_w(pred_ws_dag,
-                    pred_ws_dist,
-                    pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                    pred_nll);
+  if( pred_w_segment(1) > 0 ) {
+    process.predict_w(pred_ws_dag,
+                      pred_ws_dist,
+                      pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                      pred_nll);
+  } else {}
 
   // Add likelihood components to joint likelihood
   nll -= process.loglikelihood()
@@ -256,10 +258,12 @@ Type staRVe_model(objective_function<Type>* obj) {
                  sample_size.segment(y_segment(0),y_segment(1)));
 
     // Likelihood component for predictions
+    if( pred_w_segment(1) > 0 ) {
     process.predict_w(pred_ws_dag,
                       pred_ws_dist,
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
                       pred_nll);
+    } else {}
 
     nll -= process.loglikelihood()
               + obs.resp_w_loglikelihood()
