@@ -17,6 +17,8 @@ class nngp {
     vector<Type> mean; // Mean of spatial
     vector<vector<vector<int> > > ws_graph; // Edge list for persistent graph
     vector<matrix<Type> > ws_dists; // Distances for persistent graph
+    
+    vector<MVNORM_t<Type> > ws_joints; // Store MVNORM_t object for nodes w/o parents
 
     Type avg_forecast_sd; // Average kriging standard deviation for random effects
 
@@ -108,6 +110,17 @@ nngp<Type>::nngp(covariance<Type> cov,
     } else {}
   }
   avg_forecast_sd *= 1.0/n;
+
+  ws_joints.resizeLike(ws_graph);
+  Type old_sd = sqrt(cov(Type(0.0)));
+  cov.update_marg_sd(avg_forecast_sd);
+  for(int i=0; i<ws_graph.size(); i++) {
+    if( ws_graph(i)(1).size() == 0 ) { // If there are no parents
+      MVNORM_t<Type> mvn(cov(ws_dists(i)));
+      ws_joints(i) = mvn;
+    } else {}
+  }
+  cov.update_marg_sd(old_sd);
 }
 
 
@@ -169,13 +182,10 @@ mvnorm<Type> nngp<Type>::joint(vector<int> nodes,
 template<class Type>
 Type nngp<Type>::loglikelihood() {
   Type ans = 0.0;
-  Type old_sd = sqrt(cov(Type(0.0)));
   for(int i=0; i<ws_graph.size(); i++) {
     if( ws_graph(i)(1).size() == 0 ) { // If no parents
-      cov.update_marg_sd(avg_forecast_sd);
       mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
-      ans += -1*MVNORM(mvn.cov)(mvn.w-mvn.mu); // MVNORM calculates neg. log lik.
-      cov.update_marg_sd(old_sd);
+      ans += -1*ws_joints(i)(mvn.w-mvn.mu);
     } else {
       vector<Type> this_w(ws_graph(i)(0).size());
       for(int j=0; j<ws_graph(i)(0).size(); j++) {
@@ -193,16 +203,14 @@ Type nngp<Type>::loglikelihood() {
 
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
-  Type old_sd = sqrt(cov(Type(0.0)));
+  Type ans = 0.0;
   for(int i=0; i<ws_graph.size(); i++) {
     if( ws_graph(i)(1).size() == 0 ) { // If no parents
-      cov.update_marg_sd(avg_forecast_sd);
       mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
-      vector<Type> simW = MVNORM(mvn.cov).simulate()+mvn.mu;
+      vector<Type> simW = ws_joints(i).simulate()+mvn.mu;
       for(int j=0; j<simW.size(); j++) {
         w(ws_graph(i)(0)(j)) = simW(j);
       }
-      cov.update_marg_sd(old_sd);
     } else {
       kriging<Type> krig = fieldPred(ws_graph(i),
                                      ws_dists(i),
