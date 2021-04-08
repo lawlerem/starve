@@ -22,6 +22,7 @@ class nngp {
     vector<kriging<Type> > ws_krigs; // Store kriging objects for nodes w/ parents
 
     Type avg_forecast_sd; // Average kriging standard deviation for random effects
+    vector<kriging<Type> > pred_krigs; // Store kriging objects for predictions
 
     // Get covariance matrix, random effects, and mean vector
     mvnorm<Type> joint(vector<int> nodes,
@@ -59,7 +60,9 @@ class nngp {
     vector<Type> predict_w(vector<vector<vector<int> > > pred_graph,
                            vector<matrix<Type> > dists,
                            vector<Type> pred_w,
-                           Type &nll);
+                           Type &nll,
+                           bool use_cache=false,
+                           bool overwrite_cache=false);
 
     // Simulate random effects for random effects not part of persistent graph
     vector<Type> simulate_resp_w(vector<vector<vector<int> > > resp_w_graph,
@@ -239,13 +242,34 @@ template<class Type>
 vector<Type> nngp<Type>::predict_w(vector<vector<vector<int> > > pred_graph,
                                    vector<matrix<Type> > dists,
                                    vector<Type> pred_w,
-                                   Type &nll) {
+                                   Type &nll,
+                                   bool use_cache,
+                                   bool overwrite_cache) {
   for(int i=0; i<pred_graph.size(); i++) {
     vector<Type> this_w = pred_w(pred_graph(i)(0));
     pred_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
-    kriging<Type> krig = fieldPred(pred_graph(i),
-                                   dists(i),
-                                   true); // Interpolate the mean
+    kriging<Type> krig;
+    if( use_cache ) {
+      vector<int> all_nodes(pred_graph(i)(0).size()+pred_graph(i)(1).size());
+      for(int j=0; j<all_nodes.size(); j++) {
+        if( j<pred_graph(i)(0).size() ) {
+          all_nodes(j)=pred_graph(i)(0)(j); // "To" nodes
+        } else {
+          all_nodes(j)=pred_graph(i)(1)(j-pred_graph(i)(0).size()); // "From" nodes
+        }
+      }
+      krig = pred_krigs(i);
+      krig.update_mean(w(pred_graph(i)(1)),
+                       mean(all_nodes));
+    } else {
+      krig = fieldPred(pred_graph(i),
+                       dists(i),
+                       true); // Interpolate the mean
+    }
+    if( overwrite_cache ) {
+      pred_krigs.resizeLike(pred_graph);
+      pred_krigs(i) = krig;
+    } else {}
     nll += MVNORM(krig.cov())(this_w-krig.mean());
   }
   return pred_w;

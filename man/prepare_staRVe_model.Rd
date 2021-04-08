@@ -8,7 +8,7 @@ prepare_staRVe_model(
   formula,
   data,
   nodes = data,
-  n_neighbours = 10,
+  n_neighbours = 15,
   p_far_neighbours = 0,
   persistent_graph = NA,
   transient_graph = NA,
