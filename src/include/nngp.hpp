@@ -18,7 +18,11 @@ class nngp {
     vector<vector<vector<int> > > ws_graph; // Edge list for persistent graph
     vector<matrix<Type> > ws_dists; // Distances for persistent graph
 
+    vector<MVNORM_t<Type> > ws_joints; // Store MVNORM_t object for nodes w/o parents
+    vector<kriging<Type> > ws_krigs; // Store kriging objects for nodes w/ parents
+
     Type avg_forecast_sd; // Average kriging standard deviation for random effects
+    vector<kriging<Type> > pred_krigs; // Store kriging objects for predictions
 
     // Get covariance matrix, random effects, and mean vector
     mvnorm<Type> joint(vector<int> nodes,
@@ -56,7 +60,9 @@ class nngp {
     vector<Type> predict_w(vector<vector<vector<int> > > pred_graph,
                            vector<matrix<Type> > dists,
                            vector<Type> pred_w,
-                           Type &nll);
+                           Type &nll,
+                           bool use_cache=false,
+                           bool overwrite_cache=false);
 
     // Simulate random effects for random effects not part of persistent graph
     vector<Type> simulate_resp_w(vector<vector<vector<int> > > resp_w_graph,
@@ -95,19 +101,30 @@ nngp<Type>::nngp(covariance<Type> cov,
   // // range held constant, marginal variance re-computed
   this->cov.update_scaleTau(cov.get_scaleTau()/(avg_forecast_sd/cov.get_scaleTau()));
 
-  // // For starting random effects, we'll need to recompute avg_forecast_sd
+  ws_krigs.resizeLike(ws_graph);
   avg_forecast_sd = 0.0;
   for( int i=0; i<ws_graph.size(); i++ ) {
-    if( ws_graph(i)(1).size() > 0 ) {
-      kriging<Type> krig = fieldPred(ws_graph(i),
-                                      ws_dists(i),
-                                      false);
-      for(int j=0; j<krig.cov().rows(); j++) {
-        avg_forecast_sd += sqrt(krig.cov()(j,j));
+    if( ws_graph(i)(1).size() > 1 ) {
+      ws_krigs(i) = fieldPred(ws_graph(i),
+                              ws_dists(i),
+                              false);
+      for(int j=0; j<ws_krigs(i).cov().rows(); j++) {
+        avg_forecast_sd += sqrt(ws_krigs(i).cov()(j,j));
       }
     } else {}
   }
   avg_forecast_sd *= 1.0/n;
+
+  ws_joints.resizeLike(ws_graph);
+  Type old_sd = sqrt(cov(Type(0.0)));
+  cov.update_marg_sd(avg_forecast_sd);
+  for(int i=0; i<ws_graph.size(); i++) {
+    if( ws_graph(i)(1).size() == 0 ) { // If there are no parents
+      MVNORM_t<Type> mvn(cov(ws_dists(i)));
+      ws_joints(i) = mvn;
+    } else {}
+  }
+  cov.update_marg_sd(old_sd);
 }
 
 
@@ -145,6 +162,20 @@ void nngp<Type>::update_w(vector<Type> new_w,
                           vector<Type> new_mean) {
   w = new_w; // Don't need to resizeLike(new_w) since same number every time
   mean = new_mean;
+  for( int i=0; i<ws_graph.size(); i++ ) {
+    if( ws_graph(i)(1).size() > 1 ) {
+      vector<int> all_nodes(ws_graph(i)(0).size()+ws_graph(i)(1).size());
+      for(int j=0; j<all_nodes.size(); j++) {
+        if( j<ws_graph(i)(0).size() ) {
+          all_nodes(j)=ws_graph(i)(0)(j); // "To" nodes
+        } else {
+          all_nodes(j)=ws_graph(i)(1)(j-ws_graph(i)(0).size()); // "From" nodes
+        }
+      }
+      ws_krigs(i).update_mean(new_w(ws_graph(i)(1)),
+                              new_mean(all_nodes));
+    } else {}
+  }
 }
 
 
@@ -169,22 +200,16 @@ mvnorm<Type> nngp<Type>::joint(vector<int> nodes,
 template<class Type>
 Type nngp<Type>::loglikelihood() {
   Type ans = 0.0;
-  Type old_sd = sqrt(cov(Type(0.0)));
   for(int i=0; i<ws_graph.size(); i++) {
     if( ws_graph(i)(1).size() == 0 ) { // If no parents
-      cov.update_marg_sd(avg_forecast_sd);
       mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
-      ans += -1*MVNORM(mvn.cov)(mvn.w-mvn.mu); // MVNORM calculates neg. log lik.
-      cov.update_marg_sd(old_sd);
+      ans += -1*ws_joints(i)(mvn.w-mvn.mu);
     } else {
       vector<Type> this_w(ws_graph(i)(0).size());
       for(int j=0; j<ws_graph(i)(0).size(); j++) {
         this_w(j) = w(ws_graph(i)(0)(j));
       }
-      kriging<Type> krig = fieldPred(ws_graph(i),
-                                     ws_dists(i),
-                                     false);
-      ans += -1*MVNORM(krig.cov())(this_w-krig.mean());
+      ans += -1*MVNORM(ws_krigs(i).cov())(this_w-ws_krigs(i).mean());
     }
   }
 
@@ -193,21 +218,26 @@ Type nngp<Type>::loglikelihood() {
 
 template<class Type>
 vector<Type> nngp<Type>::simulate() {
-  Type old_sd = sqrt(cov(Type(0.0)));
+  Type ans = 0.0;
   for(int i=0; i<ws_graph.size(); i++) {
     if( ws_graph(i)(1).size() == 0 ) { // If no parents
-      cov.update_marg_sd(avg_forecast_sd);
       mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
-      vector<Type> simW = MVNORM(mvn.cov).simulate()+mvn.mu;
+      vector<Type> simW = ws_joints(i).simulate()+mvn.mu;
       for(int j=0; j<simW.size(); j++) {
         w(ws_graph(i)(0)(j)) = simW(j);
       }
-      cov.update_marg_sd(old_sd);
     } else {
-      kriging<Type> krig = fieldPred(ws_graph(i),
-                                     ws_dists(i),
-                                     false);
-      vector<Type> simW = MVNORM(krig.cov()).simulate()+krig.mean();
+      vector<int> all_nodes(ws_graph(i)(0).size()+ws_graph(i)(1).size());
+      for(int j=0; j<all_nodes.size(); j++) {
+        if( j<ws_graph(i)(0).size() ) {
+          all_nodes(j)=ws_graph(i)(0)(j); // "To" nodes
+        } else {
+          all_nodes(j)=ws_graph(i)(1)(j-ws_graph(i)(0).size()); // "From" nodes
+        }
+      }
+      ws_krigs(i).update_mean(w(ws_graph(i)(1)),
+                              mean(all_nodes));
+      vector<Type> simW = MVNORM(ws_krigs(i).cov()).simulate()+ws_krigs(i).mean();
       for(int j=0; j<simW.size(); j++) {
         w(ws_graph(i)(0)(j)) = simW(j);
       }
@@ -222,13 +252,34 @@ template<class Type>
 vector<Type> nngp<Type>::predict_w(vector<vector<vector<int> > > pred_graph,
                                    vector<matrix<Type> > dists,
                                    vector<Type> pred_w,
-                                   Type &nll) {
+                                   Type &nll,
+                                   bool use_cache,
+                                   bool overwrite_cache) {
   for(int i=0; i<pred_graph.size(); i++) {
     vector<Type> this_w = pred_w(pred_graph(i)(0));
     pred_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
-    kriging<Type> krig = fieldPred(pred_graph(i),
-                                   dists(i),
-                                   true); // Interpolate the mean
+    kriging<Type> krig;
+    if( use_cache ) {
+      vector<int> all_nodes(pred_graph(i)(0).size()+pred_graph(i)(1).size());
+      for(int j=0; j<all_nodes.size(); j++) {
+        if( j<pred_graph(i)(0).size() ) {
+          all_nodes(j)=pred_graph(i)(0)(j); // "To" nodes
+        } else {
+          all_nodes(j)=pred_graph(i)(1)(j-pred_graph(i)(0).size()); // "From" nodes
+        }
+      }
+      krig = pred_krigs(i);
+      krig.update_mean(w(pred_graph(i)(1)),
+                       mean(all_nodes));
+    } else {
+      krig = fieldPred(pred_graph(i),
+                       dists(i),
+                       true); // Interpolate the mean
+    }
+    if( overwrite_cache ) {
+      pred_krigs.resizeLike(pred_graph);
+      pred_krigs(i) = krig;
+    } else {}
     nll += MVNORM(krig.cov())(this_w-krig.mean());
   }
   return pred_w;

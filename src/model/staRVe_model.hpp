@@ -213,11 +213,15 @@ Type staRVe_model(objective_function<Type>* obj) {
   // pred_w = spatio-temporal random effects for predictions
   // pred_nll = likelihood component for predictions, passed by reference
   //   so it's updated by calling predict_w
+  bool have_set_pred_cache = false;
   if( pred_w_segment(1) > 0 ) {
     process.predict_w(pred_ws_dag,
                       pred_ws_dist,
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                      pred_nll);
+                      pred_nll,
+                      have_set_pred_cache, // Don't use cache (doesn't exist yet)
+                      not have_set_pred_cache); // Write the cache
+    // have_set_pred_cache = true;
   } else {}
 
   // Add likelihood components to joint likelihood
@@ -262,7 +266,10 @@ Type staRVe_model(objective_function<Type>* obj) {
     process.predict_w(pred_ws_dag,
                       pred_ws_dist,
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                      pred_nll);
+                      pred_nll,
+                      have_set_pred_cache, // Use cache
+                      not have_set_pred_cache); // Don't overwrite cache
+      // have_set_pred_cache = true;
     } else {}
 
     nll -= process.loglikelihood()

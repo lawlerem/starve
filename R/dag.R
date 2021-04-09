@@ -305,6 +305,8 @@ construct_obs_dag<- function(x,
                              settings = new("staRVe_settings"),
                              check_intersection = T,
                              silent = T) {
+  colnames(y)[colnames(y) == attr(y,"sf_column")]<- attr(x,"sf_column")
+  st_geometry(y)<- attr(x,"sf_column")
   # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(max_distance(settings),
                               distance_units(settings),
@@ -322,28 +324,57 @@ construct_obs_dag<- function(x,
     resets<- inverse.rle(runs)
 
   # Find the parents for each node in x
-  nn_list<- lapply(seq(nrow(x)), function(i) {
-    args<- list(x = x[i,],
-                nodes = y,
-                settings = settings,
-                silent = silent)
-    if( check_intersection == T ) {
-      foo<- do.call(.get_one_intersects_dag_node,args)
+  if( check_intersection ) {
+    edge_list<- st_equals(x,y)
+    edge_list<- lapply(seq_along(edge_list),function(i) {
+      return(list(to = i,
+                  from = edge_list[[i]]))
+    })
+  } else {
+    edge_list<- vector(nrow(x),mode="list")
+    edge_list<- lapply(seq_along(edge_list),function(i) {
+      return(list(to = i,
+                  from = numeric(0)))
+    })
+  }
+  nn_idx<- which(do.call(c,lapply(edge_list,function(e) return(length(e$from))) ) == 0)
+  suppressMessages({
+    nn_list<- nngeo::st_nn(x = x,
+                           y = y,
+                           returnDist = F,
+                           sparse = T,
+                           progress = !silent,
+                           k = n_neighbours(settings),
+                          maxdist = max_distance(settings))
+  })
+  for( i in seq_along(nn_idx) ) {
+    edge_list[[nn_idx[[i]]]]$from<- nn_list[[i]]
+  }
+
+  dist_list<- lapply(edge_list,function(e) {
+    if( length(e$from) == 1 ) {
+      matrix(0)
     } else {
-      foo<- do.call(.get_one_dag_node,args)
+      dists<- sf::st_distance(rbind(x[e$to,attr(x,"sf_column")],
+                                    y[e$from,attr(y,"sf_column")]))
+      dists<- units::set_units(dists,
+                               "m", # Set to m to line up with nngeo default
+                               mode="standard")
+      dists<- units::set_units(dists,
+                               distance_units(settings),
+                               mode="standard")
+      return(units::drop_units(dists))
     }
-    return(list(edges = list(to = i-resets[[i]], # Make sure new years start at 0
-                             from = foo[[1]]),
-                distances = foo[[2]]))
   })
 
-  # Store everything in a dag object
-  edge_list<- lapply(nn_list,`[[`,1)
-  dist_list<- lapply(nn_list,`[[`,2)
+  edge_list<- lapply(edge_list,function(e) {
+    e$to<- e$to-resets[[e$to]]
+    return(e)
+  })
   dag<- new("dag",
-            edges = edge_list,
-            distances = dist_list,
-            distance_units = distance_units(settings))
+    edges = edge_list,
+    distances = dist_list,
+    distance_units = distance_units(settings))
 
   return(dag)
 }
