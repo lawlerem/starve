@@ -298,9 +298,13 @@ setMethod(f = "staRVe_simulate",
       random_effects[,time_column,drop=T]
     )[[1]],
     time = 0, # Use the same graph every year
-    check_intersection = F,
+    check_intersection = T,
     settings = settings(x)
   )
+  intersection_idx<- do.call(c,lapply(edges(dag),function(e) {
+    return( length(e$from) )
+  })) == 1
+  intersection_all_idx<- rep(intersection_idx,length(pred_times))
   # If prediction location is same as random effect location, then prediction
   # covariance matrix will be singular and TMB object will crash
   distances(dag)<- lapply(distances(dag),function(x) {
@@ -319,14 +323,12 @@ setMethod(f = "staRVe_simulate",
   # except pred_w is already declared as a random effect
   TMB_input<- TMB_in(x)
   TMB_input$data$pred_w_time<- c(predictions[,time_column,drop=T]
-    - min(random_effects(process(x))[,time_column,drop=T]))
-  TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))
-  TMB_input$data$pred_ws_dists<- distances(dag)
+    - min(random_effects(process(x))[,time_column,drop=T]))[!intersection_all_idx]
+  TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))[!intersection_idx]
+  TMB_input$data$pred_ws_dists<- distances(dag)[!intersection_idx]
 
-  TMB_input$para$pred_w<- predictions$w
+  TMB_input$para$pred_w<- predictions$w[!intersection_all_idx]
   TMB_input$map$pred_w<- NULL
-
-  # stop("Breakpoint!")
 
   # Create the TMB object and evaluate it at the ML estimates
   obj<- TMB::MakeADFun(
@@ -345,7 +347,19 @@ setMethod(f = "staRVe_simulate",
                               par.fixed = opt(TMB_out(x))$par,
                               hessian.fixed = parameter_hessian(tracing(x)),
                               getReportCovariance = F))
-  predictions[,c("w","w_se")] <- sdr[rownames(sdr) == "pred_w",]
+
+  intersection_w_idx<- do.call(c,lapply(edges(dag)[intersection_idx],function(e) {
+    return(e$from)
+  }))
+
+  intersection_w<- as.data.frame(sdr[rownames(sdr) == "proc_w",])
+  intersection_w<- split(intersection_w,random_effects(x)[,time_column,drop=T])
+  intersection_w<- lapply(intersection_w,`[`,i=intersection_w_idx,j=T)
+  intersection_w<- intersection_w[names(intersection_w) %in% pred_times]
+  intersection_w<- do.call(rbind,intersection_w)
+
+  predictions[intersection_all_idx,c("w","w_se")]<- intersection_w
+  predictions[!intersection_idx,c("w","w_se")] <- sdr[rownames(sdr) == "pred_w",]
 
   return(predictions)
 }
