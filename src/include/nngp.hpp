@@ -227,6 +227,16 @@ vector<Type> nngp<Type>::simulate() {
         w(ws_graph(i)(0)(j)) = simW(j);
       }
     } else {
+      vector<int> all_nodes(ws_graph(i)(0).size()+ws_graph(i)(1).size());
+      for(int j=0; j<all_nodes.size(); j++) {
+        if( j<ws_graph(i)(0).size() ) {
+          all_nodes(j)=ws_graph(i)(0)(j); // "To" nodes
+        } else {
+          all_nodes(j)=ws_graph(i)(1)(j-ws_graph(i)(0).size()); // "From" nodes
+        }
+      }
+      ws_krigs(i).update_mean(w(ws_graph(i)(1)),
+                              mean(all_nodes));
       vector<Type> simW = MVNORM(ws_krigs(i).cov()).simulate()+ws_krigs(i).mean();
       for(int j=0; j<simW.size(); j++) {
         w(ws_graph(i)(0)(j)) = simW(j);
