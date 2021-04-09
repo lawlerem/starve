@@ -324,11 +324,19 @@ construct_obs_dag<- function(x,
     resets<- inverse.rle(runs)
 
   # Find the parents for each node in x
-  edge_list<- st_equals(x,y)
-  edge_list<- lapply(seq_along(edge_list),function(i) {
-    return(list(to = i,
-                from = edge_list[[i]]))
-  })
+  if( check_intersection ) {
+    edge_list<- st_equals(x,y)
+    edge_list<- lapply(seq_along(edge_list),function(i) {
+      return(list(to = i,
+                  from = edge_list[[i]]))
+    })
+  } else {
+    edge_list<- vector(nrow(x),mode="list")
+    edge_list<- lapply(seq_along(edge_list),function(i) {
+      return(list(to = i,
+                  from = numeric(0)))
+    })
+  }
   nn_idx<- which(do.call(c,lapply(edge_list,function(e) return(length(e$from))) ) == 0)
   suppressMessages({
     nn_list<- nngeo::st_nn(x = x,
@@ -350,8 +358,11 @@ construct_obs_dag<- function(x,
       dists<- sf::st_distance(rbind(x[e$to,attr(x,"sf_column")],
                                     y[e$from,attr(y,"sf_column")]))
       dists<- units::set_units(dists,
-                                     distance_units(settings),
-                                     mode="standard")
+                               "m", # Set to m to line up with nngeo default
+                               mode="standard")
+      dists<- units::set_units(dists,
+                               distance_units(settings),
+                               mode="standard")
       return(units::drop_units(dists))
     }
   })
