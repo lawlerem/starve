@@ -374,7 +374,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @param x An inla.mesh object. I.e., output from INLA::inla.mesh.2d
 #' @param crs The coordinate system used. If missing, taken from x
-#' @param n_init How many vertices should be used to start the graph?
+#' @param n_neighbours How many vertices should be used to start the graph?
 #'   Using at least 10 is recommended.
 #'
 #' @return A list containing node locations and a persistent graph.
@@ -383,7 +383,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 .inla.mesh_to_dag<- function(
   x,
   crs = NA,
-  n_init = 10) {
+  n_neighbours) {
   locs<- as.data.frame(x$loc[,c(1,2)])
   m<- as.matrix(x$graph$vv)
   parents<- function(m,v) {
@@ -414,16 +414,16 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   m0<- m; m0[lower.tri(m0)]<- 0
   joint<- 1
   cntr<- length(joint)
-  while( length(joint) < n_init ) {
+  while( length(joint) < n_neighbours ) {
     joint<- c(joint,children(m0,joint))
     joint<- c(joint,parents(m0,joint))
     if( length(joint) == cntr ) {
-      warning(paste("Could not find",n_joint,"nodes to start."))
+      warning(paste("Could not find",n_neighbours,"nodes to start."))
       break
     } else { }
     cntr<- length(joint)
   }
-  joint<- head(joint,n_init)
+  joint<- head(joint,n_neighbours)
   m<- put_v_at_k(m,v=joint,k=start)
   locs<- put_v_at_k(locs,v=joint,k=start)
   start<- start+length(joint)
@@ -450,24 +450,57 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   }
   sf::st_crs(locs)<- crs
 
-  edge_list<- vector(mode="list",length=nrow(m)-n_init+1)
-  edge_list[[1]]<- list(to = seq(n_init),
+  # Make sure each vertex has at least n_neighbour parents
+  edge_list<- vector(mode="list",length=nrow(m)-n_neighbours+1)
+  edge_list[[1]]<- list(to = seq(n_neighbours),
                         from = numeric(0))
 
-  edge_list[2:length(edge_list)]<- lapply((n_init+1):nrow(m),function(i) {
+  edge_list[2:length(edge_list)]<- lapply((n_neighbours+1):nrow(m),function(i) {
+    m1<- m0[1:i,1:i] # Make sure you don't use any nodes past node i, ensures acyclicality
+    pars<- parents(m1,i)
+    cntr<- length(pars)
+    while( cntr < n_neighbours ) {
+      pars<- unique(c(pars,parents(m1,c(pars,i)),children(m1,c(pars,i))))
+      if( length(pars) == cntr ) {
+        warning(paste("Could not find",n_neighbours,"parents for node",i))
+        break
+      } else {
+        cntr<- length(pars)
+      }
+    }
+
     return(list(to = i,
-                from = parents(m0,i)))
+                from = head(pars,n_neighbours)))
   })
+
+  # Convert mesh adjacency matrix to weighted adjacency matrix
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    stop("Package igraph needed to use inla.mesh for nodes. Please install it.",
+      call. = FALSE)
+  }
+
+  dist_matrix<- apply(expand.grid(seq(nrow(m)),seq(ncol(m))),MARGIN=1,function(rc) {
+    row<- rc[[1]]
+    col<- rc[[2]]
+    if( m[row,col] == 0 ) {
+      ans<- Inf
+    } else {
+      ans<- sf::st_distance(locs[row,],locs[col,])[1,1]
+    }
+  })
+  dist_matrix<- matrix(dist_matrix,nrow=nrow(m))
+  igraph<- igraph::graph_from_adjacency_matrix(dist_matrix,weighted=T)
+  dist_matrix<- igraph::distances(igraph)
 
   dist_list<- lapply(edge_list,function(edges) {
     all_v<- c(edges$to,edges$from)
-    dists<- sf::st_distance(locs[all_v,])
+    dists<- dist_matrix[all_v,all_v]
     return(dists)
   })
 
-  if( "units" %in% class(dist_list[[1]]) ) {
-    distance_units<- as.character(units(dist_list[[1]]))
-    dist_list<- lapply(dist_list,units::drop_units)
+  a_dist<- sf::st_distance(locs[1,],locs[2,])
+  if( "units" %in% class(a_dist) ) {
+    distance_units<- as.character(units(a_dist))
   } else {
     warning("Could not infer distance units, assuming meters. Supply a coordinate reference system if available")
     distance_units<- "m"
