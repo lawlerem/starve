@@ -26,6 +26,22 @@ construct_obs_dag(
 \item{y}{An \code{sf} object of point geometries containing possible parents}
 
 \item{check_intersection}{Logical. If true, duplicated locations will be checked}
+
+\item{method}{What method should be used to construct the graph? If "standard",
+  the parents are taken to be the nearest neighbours according to geographic
+  distance.
+
+  If "mesh", additional \code{adjacency_matrix} and \code{distance_matrix}
+  arguments need to be supplied.
+  The 3 nearest neighbours according to geographic distance are taken to be
+  the initial parents, then additional parents are added by traversing the edges
+  of the supplied graph. The distance between a location and its parents is the
+  sum of the path lengths along the graph from the location to that parent.}
+
+\item{adjacency_matrix}{An adjacency matrix for the locations y.}
+
+\item{distance_matrix}{A distance matrix giving the length of the shortest
+paths to/from each node in y, following the edges given by adjacency_matrix}
 }
 \value{
 An object of class \code{dag}

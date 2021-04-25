@@ -443,7 +443,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   }
   m0<- m; m0[lower.tri(m0)]<- 0
 
-
   locs<- sf::st_as_sf(locs,coords=c(1,2))
   if( !is.null(x$crs) ) {
     sf::st_crs(locs)<- x$crs
@@ -479,6 +478,14 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
       call. = FALSE)
   }
 
+  dist_matrix<- matrix(Inf,nrow=nrow(m),ncol=ncol(m))
+  for( i in 1:nrow(m) ) {
+    for( j in 1:ncol(m) ) {
+      if( m[i,j] == 1 ) {
+        dist_matrix[i,j]<- sf::st_distance(locs[i,],locs[j,])
+      } else {}
+    }
+  }
   dist_matrix<- apply(expand.grid(seq(nrow(m)),seq(ncol(m))),MARGIN=1,function(rc) {
     row<- rc[[1]]
     col<- rc[[2]]
@@ -495,22 +502,33 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   dist_list<- lapply(edge_list,function(edges) {
     all_v<- c(edges$to,edges$from)
     dists<- dist_matrix[all_v,all_v]
-    return(dists)
+    dists<-  dist(MASS::isoMDS(dists,trace=F)$points,
+                  diag = T,
+                  upper = T)
+    return(as.matrix(dists))
   })
 
   a_dist<- sf::st_distance(locs[1,],locs[2,])
   if( "units" %in% class(a_dist) ) {
+    dist_matrix<- units::set_units(dist_matrix,
+                                   units(a_dist),
+                                   mode = "standard")
     distance_units<- as.character(units(a_dist))
   } else {
     warning("Could not infer distance units, assuming meters. Supply a coordinate reference system if available")
     distance_units<- "m"
+    dist_matrix<- units::set_units(dist_matrix,
+                                   "m",
+                                   mode = "standard")
   }
 
   return(list(nodes = locs,
               persistent_graph = new("dag",
                 edges = edge_list,
                 distances = dist_list,
-                distance_units = distance_units)))
+                distance_units = distance_units),
+              adjacency_matrix = m,
+              distance_matrix = dist_matrix))
 }
 
 

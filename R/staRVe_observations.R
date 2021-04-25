@@ -181,7 +181,7 @@ prepare_staRVe_observations<- function(data,
       x = data,
       y = random_effects,
       time = c(time_form),
-      settings = new("staRVe_settings"),
+      settings = settings,
     )
   } else {
     # Use pre-supplied transient graph
