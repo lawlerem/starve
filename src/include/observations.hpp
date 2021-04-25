@@ -142,7 +142,7 @@ Type observations<Type>::resp_w_loglikelihood() {
   }
 
   // Compute the likelihood for extra random effects
-  process.predict_w(resp_w_edges,resp_w_dists,resp_w,ans);
+  process.predict_w(resp_w_edges,resp_w_dists,resp_w,ans,false,false);
   return -1*ans;
 }
 

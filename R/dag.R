@@ -298,6 +298,20 @@ construct_dag<- function(x,
 #'   object to another. The i'th element of the list is a vector containing
 #'   indices j such that there is a directed edge from node j (in y) to node i (in x).
 #'
+#' @param method What method should be used to construct the graph? If "standard",
+#'   the parents are taken to be the nearest neighbours according to geographic
+#'   distance.
+#'
+#'   If "mesh", additional \code{adjacency_matrix} and \code{distance_matrix}
+#'   arguments need to be supplied.
+#'   The 3 nearest neighbours according to geographic distance are taken to be
+#'   the initial parents, then additional parents are added by traversing the edges
+#'   of the supplied graph. The distance between a location and its parents is the
+#'   sum of the path lengths along the graph from the location to that parent.
+#' @param adjacency_matrix An adjacency matrix for the locations y.
+#' @param distance_matrix A distance matrix giving the length of the shortest
+#'   paths to/from each node in y, following the edges given by adjacency_matrix
+#'
 #' @export
 construct_obs_dag<- function(x,
                              y,
@@ -338,34 +352,93 @@ construct_obs_dag<- function(x,
     })
   }
   nn_idx<- which(do.call(c,lapply(edge_list,function(e) return(length(e$from))) ) == 0)
-  suppressMessages({
-    nn_list<- nngeo::st_nn(x = x,
-                           y = y,
-                           returnDist = F,
-                           sparse = T,
-                           progress = !silent,
-                           k = n_neighbours(settings),
-                          maxdist = max_distance(settings))
-  })
-  for( i in seq_along(nn_idx) ) {
-    edge_list[[nn_idx[[i]]]]$from<- nn_list[[i]]
-  }
-
-  dist_list<- lapply(edge_list,function(e) {
-    if( length(e$from) == 1 ) {
-      matrix(0)
-    } else {
-      dists<- sf::st_distance(rbind(x[e$to,attr(x,"sf_column")],
-                                    y[e$from,attr(y,"sf_column")]))
-      dists<- units::set_units(dists,
-                               "m", # Set to m to line up with nngeo default
-                               mode="standard")
-      dists<- units::set_units(dists,
-                               distance_units(settings),
-                               mode="standard")
-      return(units::drop_units(dists))
+  if( length(nn_idx) > 0 ) {
+    suppressMessages({
+      nn_list<- nngeo::st_nn(x = x[nn_idx,],
+                             y = y,
+                             returnDist = F,
+                             sparse = T,
+                             progress = !silent,
+                             k = switch(obs_dag_method(settings),
+                                        standard = n_neighbours(settings),
+                                        mesh = 3,
+                                        n_neighbours(settings)),
+                            maxdist = max_distance(settings))
+    })
+    for( i in seq_along(nn_idx) ) {
+      edge_list[[nn_idx[[i]]]]$from<- nn_list[[i]]
     }
-  })
+  } else {}
+
+  if( obs_dag_method(settings) == "mesh" &&  n_neighbours(settings) > 3 ) {
+    adjacency_matrix<- extras(settings)$adjacency_matrix
+    edge_list[nn_idx]<- lapply(edge_list[nn_idx],function(e) {
+      to<- e$to
+      from<- e$from
+      while( length(from) < n_neighbours(settings) ) {
+        all_neighbours<- do.call(c,lapply(from,function(j) {
+          which( adjacency_matrix[,j] == 1 )
+        }))
+        from<- unique(c(from,all_neighbours))
+      }
+      return(list(to = to,
+                  from = head(from,n_neighbours(settings))))
+    })
+  } else {}
+
+  if( obs_dag_method(settings) == "standard" ) {
+    dist_list<- lapply(edge_list,function(e) {
+      if( length(e$from) == 1 ) {
+        matrix(0)
+      } else {
+        dists<- sf::st_distance(rbind(x[e$to,attr(x,"sf_column")],
+                                      y[e$from,attr(y,"sf_column")]))
+        dists<- units::set_units(dists,
+                                 "m", # Set to m to line up with nngeo default
+                                 mode="standard")
+        dists<- units::set_units(dists,
+                                 distance_units(settings),
+                                 mode="standard")
+        return(units::drop_units(dists))
+      }
+    })
+  } else if( obs_dag_method(settings) == "mesh" ) {
+    distance_matrix<- extras(settings)$distance_matrix
+    dist_list<- lapply(edge_list,function(e) {
+      if( length(e$from) == 1 ) {
+        matrix(0)
+      } else {
+        dists<- matrix(0,
+                       nrow=length(e$to)+length(e$from),
+                       ncol=length(e$to)+length(e$from))
+        dists[-1,-1]<- distance_matrix[e$from,e$from]
+        parent_dists<- sf::st_distance(x[e$to,],y[e$from[1:3],])
+        parent_dists<- units::set_units(parent_dists,
+                                        "m",
+                                        mode="standard")
+        parent_dists<- units::set_units(parent_dists,
+                                        distance_units(settings),
+                                        mode="standard")
+        dists[1,2:4]<- units::drop_units(parent_dists)
+        dists[1,5:nrow(dists)]<- sapply(5:nrow(dists),function(i) {
+          path_distances<- sapply(2:4,function(j) {
+            return( dists[1,j] + dists[j,i] )
+          })
+          return(min(path_distances))
+        })
+        dists[,1]<- dists[1,]
+
+        if( !requireNamespace("MASS",quietly=T) ) {
+          stop("Package MASS needed to use inla.mesh for nodes. Please install it.",
+            call. = FALSE)
+        } else {}
+        dists<-  dist(MASS::isoMDS(dists,trace=F)$points,
+                      diag = T,
+                      upper = T)
+        return(as.matrix(dists))
+      }
+    })
+  }
 
   edge_list<- lapply(edge_list,function(e) {
     e$to<- e$to-resets[[e$to]]

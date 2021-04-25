@@ -124,6 +124,9 @@ setClass(
 #'   with units::set_units.
 #' @slot max_distance The maximum distance to look for parents. Does not affect
 #'   parents coming from p_far_neighbours.
+#' @slot obs_dag_method Which method should be used for constructing the transient graph?
+#' @slot extras Any additional settings that aren't essential for the model. E.g.
+#'   could hold an inla.mesh object.
 #'
 #' @aliases staRVe_settings
 setClass(
@@ -133,7 +136,9 @@ setClass(
     n_neighbours = "numeric",
     p_far_neighbours = "numeric",
     distance_units = "character",
-    max_distance = "numeric"
+    max_distance = "numeric",
+    obs_dag_method = "character",
+    extras = "list"
   )
 )
 

@@ -275,6 +275,7 @@ Type staRVe_model(objective_function<Type>* obj) {
     nll -= process.loglikelihood()
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
+
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effecst

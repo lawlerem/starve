@@ -527,11 +527,20 @@ prepare_staRVe_model<- function(formula,
 
   # Set up the staRVe_process
   if( "inla.mesh" %in% class(nodes) ) {
-    mesh<- .inla.mesh_to_dag(nodes,crs=sf::st_crs(data))
+    mesh<- .inla.mesh_to_dag(nodes,crs=sf::st_crs(data),n_neighbours=n_neighbours)
     nodes<- mesh$nodes
     persistent_graph<- mesh$persistent_graph
     distance_units(persistent_graph)<- distance_units
+    obs_dag_method(settings(model))<- "mesh"
+
+    mesh$distance_matrix<- units::set_units(mesh$distance_matrix,
+                                            distance_units,
+                                            mode="standard")
+    extras(settings(model))<- c(extras(settings(model)),
+                                list(adjacency_matrix = mesh$adjacency_matrix,
+                                     distance_matrix = mesh$distance_matrix))
   } else {}
+
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
     persistent_graph = persistent_graph,

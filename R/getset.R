@@ -103,6 +103,18 @@ setGeneric(name = "edges<-",
            def = function(x,value) standardGeneric("edges<-")
 )
 
+#' @describeIn staRVe-access Get extra settings
+#' @export
+setGeneric(name = "extras",
+           def = function(x) standardGeneric("extras")
+)
+#' @describeIn staRVe-access Set extra settings
+#' @export
+setGeneric(name = "extras<-",
+           def = function(x,value) standardGeneric("extras<-")
+)
+
+
 
 
 
@@ -229,6 +241,18 @@ setGeneric(name = "obj",
 setGeneric(name = "obj<-",
   def = function(x,value) standardGeneric("obj<-")
 )
+
+#' @describeIn staRVe-access Get obs_dag_method
+#' @export
+setGeneric(name = "obs_dag_method",
+           def = function(x) standardGeneric("obs_dag_method")
+)
+#' @describeIn staRVe-access Set obs_dag_method
+#' @export
+setGeneric(name = "obs_dag_method<-",
+           def = function(x,value) standardGeneric("obs_dag_method<-")
+)
+
 
 #' @noRd
 setGeneric(name = "observations",

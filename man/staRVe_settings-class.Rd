@@ -10,6 +10,8 @@
 \alias{distance_units,staRVe_settings-method}
 \alias{distance_units<-,staRVe_settings-method}
 \alias{max_distance,staRVe_settings-method}
+\alias{obs_dag_method,staRVe_settings-method}
+\alias{extras,staRVe_settings-method}
 \title{An S4 class to hold extra settings for a staRVe model}
 \usage{
 \S4method{formula}{staRVe_settings}(x)
@@ -23,6 +25,10 @@
 \S4method{distance_units}{staRVe_settings}(x) <- value
 
 \S4method{max_distance}{staRVe_settings}(x)
+
+\S4method{obs_dag_method}{staRVe_settings}(x)
+
+\S4method{extras}{staRVe_settings}(x)
 }
 \arguments{
 \item{x}{An object}
@@ -45,6 +51,10 @@ An S4 class to hold extra settings for a staRVe model
 \item \code{distance_units<-}: Set distance units
 
 \item \code{max_distance}: Get maximum distance for neighbours
+
+\item \code{obs_dag_method}: Get obs_dag_method
+
+\item \code{extras}: Get extra settings
 }}
 
 \section{Slots}{
@@ -61,5 +71,10 @@ with units::set_units.}
 
 \item{\code{max_distance}}{The maximum distance to look for parents. Does not affect
 parents coming from p_far_neighbours.}
+
+\item{\code{obs_dag_method}}{Which method should be used for constructing the transient graph?}
+
+\item{\code{extras}}{Any additional settings that aren't essential for the model. E.g.
+could hold an inla.mesh object.}
 }}
 
