@@ -427,6 +427,11 @@ construct_obs_dag<- function(x,
           return(min(path_distances))
         })
         dists[,1]<- dists[1,]
+
+        if( !requireNamespace("MASS",quietly=T) ) {
+          stop("Package MASS needed to use inla.mesh for nodes. Please install it.",
+            call. = FALSE)
+        } else {}
         dists<-  dist(MASS::isoMDS(dists,trace=F)$points,
                       diag = T,
                       upper = T)

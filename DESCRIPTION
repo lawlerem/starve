@@ -31,7 +31,8 @@ RoxygenNote: 7.1.1
 Suggests:
     MASS,
     knitr,
-    rmarkdown
+    rmarkdown,
+    igraph
 VignetteBuilder: knitr
 Depends:
     sf,

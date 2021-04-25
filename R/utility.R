@@ -473,7 +473,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   })
 
   # Convert mesh adjacency matrix to weighted adjacency matrix
-  if (!requireNamespace("igraph", quietly = TRUE)) {
+  if(!requireNamespace("igraph", quietly = TRUE)) {
     stop("Package igraph needed to use inla.mesh for nodes. Please install it.",
       call. = FALSE)
   }
@@ -499,6 +499,10 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   igraph<- igraph::graph_from_adjacency_matrix(dist_matrix,weighted=T)
   dist_matrix<- igraph::distances(igraph)
 
+  if( !requireNamespace("MASS",quietly=T) ) {
+    stop("Package MASS needed to use inla.mesh for nodes. Please install it.",
+      call. = FALSE)
+  } else {}
   dist_list<- lapply(edge_list,function(edges) {
     all_v<- c(edges$to,edges$from)
     dists<- dist_matrix[all_v,all_v]
