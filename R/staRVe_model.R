@@ -527,6 +527,7 @@ prepare_staRVe_model<- function(formula,
 
   # Set up the staRVe_process
   if( "inla.mesh" %in% class(nodes) ) {
+    warning("Supplying an inla.mesh is still an experimental feature and has not been thoroughly tested.")
     mesh<- .inla.mesh_to_dag(nodes,crs=sf::st_crs(data),n_neighbours=n_neighbours)
     nodes<- mesh$nodes
     persistent_graph<- mesh$persistent_graph
