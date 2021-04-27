@@ -1,6 +1,6 @@
 Package: staRVe
 Title: Spatio-Temporal Analysis of Research Vessel data
-Version: 0.14.0
+Version: 0.15.0
 Authors@R:
     person(given = "Ethan",
            family = "Lawler",
@@ -29,8 +29,10 @@ LinkingTo:
     RcppEigen
 RoxygenNote: 7.1.1
 Suggests:
+    MASS,
     knitr,
-    rmarkdown
+    rmarkdown,
+    igraph
 VignetteBuilder: knitr
 Depends:
     sf,

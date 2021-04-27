@@ -11,6 +11,8 @@
 \alias{distance_units<-}
 \alias{distances}
 \alias{edges}
+\alias{extras}
+\alias{extras<-}
 \alias{fixed_effects}
 \alias{fixed_effects<-}
 \alias{formula}
@@ -21,6 +23,8 @@
 \alias{max_distance}
 \alias{n_neighbours}
 \alias{obj}
+\alias{obs_dag_method}
+\alias{obs_dag_method<-}
 \alias{opt}
 \alias{opt_time}
 \alias{p_far_neighbours}
@@ -66,6 +70,10 @@ distances(x)
 
 edges(x)
 
+extras(x)
+
+extras(x) <- value
+
 fixed_effects(x)
 
 fixed_effects(x) <- value
@@ -85,6 +93,10 @@ max_distance(x)
 n_neighbours(x)
 
 obj(x)
+
+obs_dag_method(x)
+
+obs_dag_method(x) <- value
 
 opt(x)
 
@@ -166,6 +178,10 @@ Access methods for the staRVe package
 
 \item \code{edges}: Get edges
 
+\item \code{extras}: Get extra settings
+
+\item \code{extras<-}: Set extra settings
+
 \item \code{fixed_effects}: Get fixed effects
 
 \item \code{fixed_effects<-}: Set fixed effects
@@ -185,6 +201,10 @@ Access methods for the staRVe package
 \item \code{n_neighbours}: Get n neighbours
 
 \item \code{obj}: Get obj
+
+\item \code{obs_dag_method}: Get obs_dag_method
+
+\item \code{obs_dag_method<-}: Set obs_dag_method
 
 \item \code{opt}: Get opt
 

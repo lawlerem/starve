@@ -71,23 +71,26 @@ Type staRVe_model(objective_function<Type>* obj) {
   // Get graphs
 
   // Transient graph
-  vector<vector<int> > ys_dag = ys_edges.dag;
+  vector<vector<vector<int> > > ys_dag = ys_edges.dag;
   vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
 
   // Persistent graph
-  vector<vector<int> > ws_dag = ws_edges.dag;
+  vector<vector<vector<int> > > ws_dag = ws_edges.dag;
   vector<matrix<Type> > ws_dist = ws_dists.dag_dist;
 
   // Graph for predictions
-  vector<vector<int> > pred_ws_dag = pred_ws_edges.dag;
+  vector<vector<vector<int> > > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
   // Standardize distances (based on persistent graph) so rho doesn't scale with distance
   // i.e. distance units don't matter
   Type mean_dist = 0.0;
+  Type n = 0.0;
   for( int i=0; i<ws_dist.size(); i++ ) {
-    mean_dist += ws_dist(0).sum()/ws_dist.size();
+    mean_dist += ws_dist(i).sum();
+    n += ws_dist(i).size();
   }
+  mean_dist *= 1/n;
   for( int i=0; i<ys_dist.size(); i++ ) {
     ys_dist(i) = ys_dist(i)/mean_dist;
   }
@@ -104,8 +107,11 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   // Just need to choose a large enough initial value for rho so that the
   // resulting correlation matrix isn't approximately diagonal, choosing
-  // rho:=max distance ensures that it isn't diagonal
-  Type initRho = ws_dist(0).maxCoeff();
+  // rho:=100.0 works since distances are standardized
+  //
+  // Might need to put more effort into a better starting value
+  // (distance between bounding box corners? multiple of max distance?)
+  Type initRho = 100.0;
   covariance<Type> cov(space_sd,initRho,space_nu,covar_code);
 
   // Set up the response distribution and link function
@@ -149,7 +155,8 @@ Type staRVe_model(objective_function<Type>* obj) {
         time_cov(i,j) = pow(time_ar1,abs(i-j));
       }
     }
-    time_cov *= pow(time_sd,2)/(1-pow(time_ar1,2)); // time_sd gives sd of
+    time_cov *= pow(time_sd,2);
+    // time_cov *= pow(time_sd,2)/(1-pow(time_ar1,2)); // time_sd gives sd of
     // innovations, this coefficient is the marginal variance
     MVNORM_t<Type> time_dist(time_cov);
 
@@ -190,7 +197,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   // resp_w = additional spatio-temporal random effects needed for transient graph
   // mean_design = covariate data
   // sample.size = sample size info for binomial distribution
-  // family = repsonse distribution and link function
+  // family = response distribution and link function
   observations<Type> obs(process,
                          obs_y.segment(y_segment(0),y_segment(1)),
                          keep.segment(y_segment(0),y_segment(1)),
@@ -206,10 +213,16 @@ Type staRVe_model(objective_function<Type>* obj) {
   // pred_w = spatio-temporal random effects for predictions
   // pred_nll = likelihood component for predictions, passed by reference
   //   so it's updated by calling predict_w
-  process.predict_w(pred_ws_dag,
-                    pred_ws_dist,
-                    pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                    pred_nll);
+  bool have_set_pred_cache = false;
+  if( pred_w_segment(1) > 0 ) {
+    process.predict_w(pred_ws_dag,
+                      pred_ws_dist,
+                      pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                      pred_nll,
+                      have_set_pred_cache, // Don't use cache (doesn't exist yet)
+                      not have_set_pred_cache); // Write the cache
+    // have_set_pred_cache = true;
+  } else {}
 
   // Add likelihood components to joint likelihood
   nll -= process.loglikelihood()
@@ -249,14 +262,20 @@ Type staRVe_model(objective_function<Type>* obj) {
                  sample_size.segment(y_segment(0),y_segment(1)));
 
     // Likelihood component for predictions
+    if( pred_w_segment(1) > 0 ) {
     process.predict_w(pred_ws_dag,
                       pred_ws_dist,
                       pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                      pred_nll);
+                      pred_nll,
+                      have_set_pred_cache, // Use cache
+                      not have_set_pred_cache); // Don't overwrite cache
+      // have_set_pred_cache = true;
+    } else {}
 
     nll -= process.loglikelihood()
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
+
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effecst

@@ -176,7 +176,9 @@ prepare_staRVe_process<- function(nodes,
 
   # random_effects = "sf",
   nodes<- nodes[,attr(nodes,"sf_column")] # Only need locations
-  nodes<- .order_by_location(unique(nodes)) # Lexicographic ordering S->N/W->E
+  if( obs_dag_method(settings) == "standard" ) {
+    nodes<- .order_by_location(unique(nodes)) # Lexicographic ordering S->N/W->E
+  } else {}
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
     df<- sf::st_sf(data.frame(w = 0,
                               se = NA,
@@ -197,6 +199,7 @@ prepare_staRVe_process<- function(nodes,
     )
   } else {
     # Use pre-supplied persistent_graph
+    distance_units(persistent_graph)<- distance_units(settings)
     persistent_graph(process)<- persistent_graph
   }
 

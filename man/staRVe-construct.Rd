@@ -34,7 +34,9 @@
   n_neighbours = 10,
   p_far_neighbours = 0,
   distance_units = "km",
-  max_distance = Inf
+  max_distance = Inf,
+  obs_dag_method = "standard",
+  extras = vector(mode = "list", length = 0)
 )
 
 \S4method{initialize}{staRVe_observation_parameters}(

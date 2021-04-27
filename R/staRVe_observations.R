@@ -180,10 +180,12 @@ prepare_staRVe_observations<- function(data,
     transient_graph(observations)<- construct_obs_dag(
       x = data,
       y = random_effects,
-      settings = new("staRVe_settings"),
+      time = c(time_form),
+      settings = settings,
     )
   } else {
     # Use pre-supplied transient graph
+    distance_units(transient_graph)<- distance_units(settings)
     transient_graph(observations)<- transient_graph
   }
 

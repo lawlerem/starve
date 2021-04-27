@@ -22,12 +22,16 @@ setMethod(
                         n_neighbours = 10,
                         p_far_neighbours = 0,
                         distance_units = "km",
-                        max_distance = Inf) {
+                        max_distance = Inf,
+                        obs_dag_method = "standard",
+                        extras = vector(mode="list",length=0)) {
     formula(.Object)<- formula
     n_neighbours(.Object)<- n_neighbours
     p_far_neighbours(.Object)<- p_far_neighbours
     distance_units(.Object)<- distance_units
     max_distance(.Object)<- max_distance
+    obs_dag_method(.Object)<- obs_dag_method
+    extras<- extras
 
     return(.Object)
   }
@@ -122,5 +126,37 @@ setReplaceMethod(f = "max_distance",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
   x@max_distance<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_settings Get obs_dag_method
+setMethod(f = "obs_dag_method",
+          signature = "staRVe_settings",
+          definition = function(x) return(x@obs_dag_method)
+)
+setReplaceMethod(f = "obs_dag_method",
+                 signature = "staRVe_settings",
+                 definition = function(x,value) {
+  x@obs_dag_method<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_settings Get extra settings
+setMethod(f = "extras",
+          signature = "staRVe_settings",
+          definition = function(x) return(x@extras)
+)
+setReplaceMethod(f = "extras",
+                 signature = "staRVe_settings",
+                 definition = function(x,value) {
+  x@extras<- value
   return(x)
 })

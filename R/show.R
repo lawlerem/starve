@@ -9,7 +9,7 @@ setMethod(f = "show",
           signature = "dag",
           definition = function(object) {
   n_nodes<- length(edges(object))
-  avg_deg<- median(do.call(c,lapply(edges(object),length)))
+  avg_deg<- median(do.call(c,lapply(edges(object),function(x) length(x[[2]]))))
   avg_dist<- mean(do.call(c,lapply(distances(object),c)))
   cat("\n")
   print(paste0("A directed acyclic graph with ",n_nodes,

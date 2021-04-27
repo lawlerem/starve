@@ -8,7 +8,7 @@ prepare_staRVe_model(
   formula,
   data,
   nodes = data,
-  n_neighbours = 10,
+  n_neighbours = 15,
   p_far_neighbours = 0,
   persistent_graph = NA,
   transient_graph = NA,
@@ -29,10 +29,12 @@ given later in the `Details' section.}
 \item{data}{An object of class `sf` containing point geometries. Data
 used for the `formula' object will be found here.}
 
-\item{nodes}{An object of class `sf` containing point geometries.
-The default value uses the same locations as the observations. These
-locations will be used as the nodes for the random effects. All locations
-will be used for each year.}
+\item{nodes}{Either an object of class `sf` containing point geometries, or
+an inla.mesh object (e.g.~from the output of INLA::inla.mesh.2d).
+The default value uses the same locations as the observations. The locations
+will be used as the nodes for the random effects. All locations will be used
+for each year. If an inla.mesh is supplied, the edges of the mesh are used
+to create the persistent graph.}
 
 \item{n_neighbours}{An integer giving the (maximum) number of parents for each node.}
 
