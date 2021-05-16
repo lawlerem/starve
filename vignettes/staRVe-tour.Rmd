@@ -1,0 +1,249 @@
+---
+title: "staRVe-tour"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{staRVe-tour}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(staRVe)
+```
+
+
+
+# Data
+
+```
+data(bird_survey)
+bird_survey
+```
+
+
+
+# The staRVe model object
+
+## Creating and fitting a model
+
+```
+bird_model<- prepare_staRVe_model(
+  cnt ~ time(year),
+  data = bird_survey,
+  distribution = "poisson"
+)
+```
+
+Starting values for the optimizer are the values of the parameters held in the staRVe model object at the time that staRVe_fit is called. Details for changing these values is later in section ###.
+```
+bird_model<- staRVe_fit(
+  bird_model,
+  silent=T
+)
+```
+
+
+
+## Parameter estimates
+
+```
+convergence(bird_model)
+```
+
+```
+parameters(bird_model)
+```
+
+```
+spatial_parameters(bird_model)
+```
+
+```
+time_parameters(bird_model)
+```
+
+```
+response_parameters(bird_model)
+```
+
+```
+fixed_effects(bird_model)
+```
+
+## Random effect predictions
+
+```
+time_effects(bird_model)
+```
+
+```
+random_effects(bird_model)
+```
+
+## Data
+
+```
+dat(bird_model)
+```
+
+## Settings
+
+```
+settings(bird_model)
+```
+
+## Modifying a staRVe model
+
+```
+time_parameters(bird_model)[c("mu","ar1"),"par"]<- c(10,0.75)
+spatial_parameters(bird_model)["sd","par"]<- 0.5
+```
+
+```
+response_distribution(bird_model)<- "gaussian"
+```
+
+```
+link_function(bird_model)<- "logit"
+```
+
+```
+covariance_function(bird_model)<- "matern32"
+```
+
+```
+distance_units(bird_model)<- "ft"
+```
+
+## (Advanced)
+
+(INLA mesh, TMB object, graph, pre-computed graphs, optimizer settings)
+
+
+
+
+
+# Predictions
+
+## Point predictions
+
+```
+staRVe_predict(
+  bird_model,
+  bird_survey
+)
+```
+
+```
+staRVe_predict(
+  bird_model,
+  bird_survey,
+  time = 2015:2019
+)
+```
+
+## Raster predictions
+
+Raster predictions extract the centroid of each cell and then gives predictions at those point locations.
+Raster predictions are not predictions of the average value within the cell.
+```
+raster_area<- raster(
+  bird_survey,
+  nrow = 10,
+  ncol = 10
+)
+staRVe_predict(
+  bird_model,
+  raster_area
+)
+```
+
+```
+staRVe_predict(
+  bird_model,
+  raster_area,
+  time = 2015:2019
+)
+```
+
+
+
+
+
+# Simulation
+
+Mention residual analysis here
+
+## Simulating random effects and observations
+
+```
+sim_model<- staRVe_simulate(
+  bird_model
+)
+```
+
+## Simulating only observations
+
+```
+sim_model<- staRVe_simulate(
+  bird_model,
+  conditional = T
+)
+```
+
+
+
+
+
+# Including covariates
+
+## Creating a model
+
+## Point predictions
+
+## Raster predictions
+
+
+
+
+# Options
+
+## Response distribution
+
+(Make sure to describe each distribution)
+
+```
+get_staRVe_distributions("distribution")
+```
+
+## Link functions
+
+```
+get_staRVe_distribution("link")
+```
+
+## Spatial covariance function
+
+```
+get_staRVe_distributions("covariance")
+```
+
+## Holding parameters fixed
+
+```
+time_parameters(bird_model(["ar1","par"]<- 0
+time_parameters(bird_model)["ar1","fixed"]<- T
+```
+
+
+
+# Common problems
+
+# Need more neighbours / fewer nodes
