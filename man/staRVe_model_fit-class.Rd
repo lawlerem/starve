@@ -15,7 +15,7 @@
 \usage{
 \S4method{staRVe_predict}{staRVe_model_fit,sf}(x, locations, covariates, time = "model")
 
-\S4method{staRVe_predict}{staRVe_model_fit,RasterLayer}(x, locations, covariates, time = "model", ...)
+\S4method{staRVe_predict}{staRVe_model_fit,RasterLayer}(x, locations, covariates, time = "model")
 
 \S4method{show}{staRVe_model_fit}(object)
 
@@ -36,9 +36,9 @@
 
 \item{time}{Which times to predict at?}
 
-\item{...}{Extra options}
-
 \item{object}{An object}
+
+\item{...}{Extra options}
 }
 \description{
 An S4 class to hold an optimized staRVe model, extends the staRVe_model class

@@ -22,9 +22,13 @@ library(staRVe)
 
 # Data
 
-```
+```{r data}
 data(bird_survey)
 bird_survey
+```
+
+```{r}
+bird_survey<- subset(bird_survey,year >= 2005)
 ```
 
 
@@ -33,7 +37,7 @@ bird_survey
 
 ## Creating and fitting a model
 
-```
+```{r create-model}
 bird_model<- prepare_staRVe_model(
   cnt ~ time(year),
   data = bird_survey,
@@ -42,85 +46,107 @@ bird_model<- prepare_staRVe_model(
 ```
 
 Starting values for the optimizer are the values of the parameters held in the staRVe model object at the time that staRVe_fit is called. Details for changing these values is later in section ###.
-```
+```{r fit-model}
 bird_model<- staRVe_fit(
   bird_model,
   silent=T
 )
 ```
 
+```{r cache-model,include=F}
+cache_model<- bird_model
+```
+
 
 
 ## Parameter estimates
 
-```
+```{r convergence}
 convergence(bird_model)
 ```
 
-```
+```{r parameters}
 parameters(bird_model)
 ```
 
-```
+```{r spatial-parameters}
 spatial_parameters(bird_model)
 ```
 
-```
+```{r time-parameters}
 time_parameters(bird_model)
 ```
 
-```
+```{r response-distribution}
 response_parameters(bird_model)
 ```
 
-```
+```{r fixed-effects}
 fixed_effects(bird_model)
 ```
 
 ## Random effect predictions
 
-```
+```{r time-effects}
 time_effects(bird_model)
 ```
 
-```
+```{r random-effects}
 random_effects(bird_model)
 ```
 
 ## Data
 
-```
+```{r dat}
 dat(bird_model)
 ```
 
 ## Settings
 
-```
+```{r settings}
 settings(bird_model)
 ```
 
 ## Modifying a staRVe model
 
-```
+```{r change-pars}
+parameters(bird_model)
+
 time_parameters(bird_model)[c("mu","ar1"),"par"]<- c(10,0.75)
 spatial_parameters(bird_model)["sd","par"]<- 0.5
+
+parameters(bird_model)
 ```
 
-```
+```{r change-distribution}
+parameters(bird_model)
 response_distribution(bird_model)<- "gaussian"
+parameters(bird_model)
 ```
 
-```
+```{r change-link}
+parameters(bird_model)
 link_function(bird_model)<- "logit"
+parameters(bird_model)
 ```
 
-```
+```{r change-covariance}
+parameters(bird_model)
 covariance_function(bird_model)<- "matern32"
+parameters(bird_model)
 ```
 
-```
+```{r change-units}
+graph(bird_model)
 distance_units(bird_model)<- "ft"
+graph(bird_model)
 ```
+
+```{r include = F}
+bird_model<- cache_model
+```
+
+
 
 ## (Advanced)
 
@@ -134,14 +160,14 @@ distance_units(bird_model)<- "ft"
 
 ## Point predictions
 
-```
+```{r predict-sf}
 staRVe_predict(
   bird_model,
   bird_survey
 )
 ```
 
-```
+```{r forecast-sf}
 staRVe_predict(
   bird_model,
   bird_survey,
@@ -151,21 +177,25 @@ staRVe_predict(
 
 ## Raster predictions
 
-Raster predictions extract the centroid of each cell and then gives predictions at those point locations.
-Raster predictions are not predictions of the average value within the cell.
-```
+```{r}
+library(raster)
 raster_area<- raster(
   bird_survey,
-  nrow = 10,
-  ncol = 10
+  nrow = 5,
+  ncol = 5
 )
+```
+
+Raster predictions extract the centroid of each cell and then gives predictions at those point locations.
+Raster predictions are not predictions of the average value within the cell.
+```{r predict-raster}
 staRVe_predict(
   bird_model,
   raster_area
 )
 ```
 
-```
+```{r forecast-raster}
 staRVe_predict(
   bird_model,
   raster_area,
@@ -183,7 +213,7 @@ Mention residual analysis here
 
 ## Simulating random effects and observations
 
-```
+```{r simulate-all}
 sim_model<- staRVe_simulate(
   bird_model
 )
@@ -191,7 +221,7 @@ sim_model<- staRVe_simulate(
 
 ## Simulating only observations
 
-```
+```{r simulate-obs}
 sim_model<- staRVe_simulate(
   bird_model,
   conditional = T
@@ -219,26 +249,26 @@ sim_model<- staRVe_simulate(
 
 (Make sure to describe each distribution)
 
-```
+```{r staRVe-distributions}
 get_staRVe_distributions("distribution")
 ```
 
 ## Link functions
 
-```
-get_staRVe_distribution("link")
+```{r staRVe-links}
+get_staRVe_distributions("link")
 ```
 
 ## Spatial covariance function
 
-```
+```{r staRVe-covariances}
 get_staRVe_distributions("covariance")
 ```
 
 ## Holding parameters fixed
 
-```
-time_parameters(bird_model(["ar1","par"]<- 0
+```{r fixed-parameters}
+time_parameters(bird_model)["ar1","par"]<- 0
 time_parameters(bird_model)["ar1","fixed"]<- T
 ```
 
@@ -247,3 +277,17 @@ time_parameters(bird_model)["ar1","fixed"]<- T
 # Common problems
 
 # Need more neighbours / fewer nodes
+
+If the estimated time_effects are approximately constant (the same value each year), you should consider setting n_neighbours to a higher value or using a less dense set of nodes.
+
+```{r flat-time-effects, eval=F}
+data(bird_survey)
+bird_survey<- subset(bird_survey,year >= 2005)
+bird_model<- prepare_staRVe_model(
+  cnt ~ time(year),
+  data = bird_survey,
+  distribution = "poisson",
+  fit = T
+)
+time_effects(bird_model)
+```

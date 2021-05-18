@@ -146,7 +146,7 @@ setMethod(f = "staRVe_predict",
 #' @describeIn staRVe_model_fit Predict/forecast over an entire raster
 setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","RasterLayer"),
-          definition = function(x,locations,covariates,...) {
+          definition = function(x,locations,covariates,time="model") {
   # Convert raster to sf
   prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
   prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
@@ -155,7 +155,7 @@ setMethod(f = "staRVe_predict",
   # if they are supplied
   covar_names<- .names_from_formula(formula(settings(x)))
   if( missing(covariates) && (length(covar_names) == 0) ) {
-    pred<- staRVe_predict(x,prediction_points,...)
+    pred<- staRVe_predict(x,prediction_points,time=time)
   } else if( missing(covariates) && (length(covar_names) != 0) ) {
     stop("Missing covariates, please supply them.")
   } else if( !all(covar_names %in% names(covariates)) ) {
@@ -163,7 +163,7 @@ setMethod(f = "staRVe_predict",
   } else {
     covar_points<- .sf_from_raster_list(covariates,
       time_name=attr(random_effects(x),"time_column"))
-    pred<- staRVe_predict(x,prediction_points,covar_points,...)
+    pred<- staRVe_predict(x,prediction_points,covar_points,time=time)
   }
 
   # Convert sf predictions to raster list
