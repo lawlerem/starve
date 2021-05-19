@@ -602,13 +602,14 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @param x A formula object with terms grouped in a \code{mean(...)} function.
 #' @param data A data.frame containing the covariate data.
-#' @param return Either "model.matrix"  or "model.frame"
+#' @param return Either "model.matrix", "model.frame", "var.names"
 #'
 #' @return The design matrix for the covariates. If return is set to "model.matrix",
 #'   factors, interaction terms, etc. are expanded to their own variables.
 #'
 #' @noRd
 .mean_design_from_formula<- function(x,data,return = "model.matrix") {
+  data<- as.data.frame(data)
   # Get out just the "mean" term from the formula (as a character string)
   the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
@@ -632,7 +633,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     model.matrix = model.matrix(new_terms,data=data),
     # model.frame returns just the covariates needed to eventually
     # create the model.matrix (no expansion)
-    model.frame = model.frame(new_terms,data=data)
+    model.frame = model.frame(new_terms,data=data),
+    all.vars = data[,all.vars(formula(new_formula)),drop=F]
   )
   attr(the_df,"assign")<- NULL
   rownames(the_df)<- NULL

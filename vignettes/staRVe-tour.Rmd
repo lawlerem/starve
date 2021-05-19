@@ -160,26 +160,36 @@ bird_model<- cache_model
 
 ## Point predictions
 
+```{r predict-points}
+pred_points<- st_sample(
+  st_as_sfc(st_bbox(bird_survey)),
+  size = 5
+)
+pred_points<- st_sf(geom = pred_points)
+```
+
 ```{r predict-sf}
 staRVe_predict(
   bird_model,
-  bird_survey
+  pred_points
 )
 ```
 
 ```{r forecast-sf}
 staRVe_predict(
   bird_model,
-  bird_survey,
+  pred_points,
   time = 2015:2019
 )
 ```
 
 ## Raster predictions
 
+(Add in how to mask rasters for prediction)
+
 ```{r}
 library(raster)
-raster_area<- raster(
+pred_raster<- raster(
   bird_survey,
   nrow = 5,
   ncol = 5
@@ -191,14 +201,14 @@ Raster predictions are not predictions of the average value within the cell.
 ```{r predict-raster}
 staRVe_predict(
   bird_model,
-  raster_area
+  pred_raster
 )
 ```
 
 ```{r forecast-raster}
 staRVe_predict(
   bird_model,
-  raster_area,
+  pred_raster,
   time = 2015:2019
 )
 ```
@@ -236,9 +246,113 @@ sim_model<- staRVe_simulate(
 
 ## Creating a model
 
+```{r data-covar}
+bird_survey$elev<- rnorm(
+  nrow(bird_survey)
+)
+bird_survey$temp<- rnorm(
+  nrow(bird_survey)
+)
+```
+
+```{r covar-fit-elev}
+bird_model<- prepare_staRVe_model(
+  cnt ~ time(year) + mean(poly(elev,2)),
+  bird_survey,
+  distribution = "poisson",
+  fit = T
+)
+```
+
+```{r}
+fixed_effects(bird_model)
+dat(bird_model)
+```
+
+```{r covar-fit-elev-temp}
+bird_model<- prepare_staRVe_model(
+  cnt ~ time(year) + mean(elev*temp+I(elev^2)),
+  bird_survey,
+  distribution = "poisson",
+  fit = T
+)
+```
+
+```{r}
+fixed_effects(bird_model)
+dat(bird_model)
+```
+
 ## Point predictions
 
+You do not need to remove extra years of covariates.
+The predict function will automatically remove the extra covariate observations.
+
+```{r covar-points}
+pred_covar<- do.call(rbind,lapply(min(bird_survey$year):2019,function(year) {
+  return(st_sf(data.frame(year=year,pred_points)))
+}))
+pred_covar$elev<- rnorm(nrow(pred_covar))
+pred_covar$temp<- rnorm(nrow(pred_covar))
+pred_covar
+```
+
+```{r pred-covar-sf}
+staRVe_predict(
+  bird_model,
+  pred_points,
+  pred_covar
+)
+```
+
+```{r forecast-covar-sf}
+staRVe_predict(
+  bird_model,
+  pred_points,
+  pred_covar,
+  time = 2015:2019
+)
+```
+
+
 ## Raster predictions
+
+```{r covar-raster}
+raster_elev<- stack(lapply(min(bird_survey$year):2019,function(year) {
+  band<- pred_raster
+  band[]<- rnorm(ncell(band))
+  names(band)<- paste0("T",year)
+  return(band)
+}))
+raster_temp<- stack(lapply(min(bird_survey$year):2019,function(year) {
+  band<- pred_raster
+  band[]<- rnorm(ncell(band))
+  names(band)<- paste0("T",year)
+  return(band)
+}))
+pred_covar<- list(
+  elev = raster_elev,
+  temp = raster_temp
+)
+pred_covar
+```
+
+```{r pred-covar-raster}
+staRVe_predict(
+  bird_model,
+  pred_raster,
+  pred_covar
+)
+```
+
+```{r forecast-covar-raster}
+staRVe_predict(
+  bird_model,
+  pred_raster,
+  pred_covar,
+  time = 2015:2019
+)
+```
 
 
 
