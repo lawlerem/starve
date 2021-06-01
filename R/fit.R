@@ -167,11 +167,11 @@ setMethod(f = "staRVe_predict",
   }
 
   # Convert sf predictions to raster list
-  pred_by_time<- split(pred,pred[,attr(random_effects(process(x)),"time_column"),drop=T])
+  pred_by_time<- split(pred,pred[,attr(random_effects(x),"time_column"),drop=T])
   pred_raster_by_time<- lapply(pred_by_time,raster::rasterize,locations)
   pred_raster_by_time<- lapply(pred_raster_by_time,function(raster_time) {
     ID_layer<- 1
-    time_layer<- raster::nlayers(raster_time)
+    time_layer<- which(names(pred_raster_by_time[[1]]) == attr(random_effects(x),"time_column"))
     return(raster_time[[-c(ID_layer,time_layer)]])
   }) # Remove ID and time layer
 

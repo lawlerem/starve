@@ -382,6 +382,39 @@ setReplaceMethod(f = "distance_units",
   return(x)
 })
 
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_model Get formula used for model
+setMethod(f = "formula",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(formula(settings(x)))
+})
+#' @param x An object
+#' @param value A replace value
+#'
+#' @export
+#' @describeIn staRVe_model Set formula used for the model
+setReplaceMethod(f = "formula",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  if( !all(all.vars(value) %in% colnames(dat(x))) ) {
+    stop("Not changing formula. Some variables present in new formula which are not available in dat(x)")
+  } else {}
+  formula(settings(x))<- value
+
+  design<- .mean_design_from_formula(value,dat(x))
+  fixed_effects(x)<- data.frame(
+    par = numeric(ncol(design)),
+    se = rep(NA,ncol(design)),
+    fixed = rep(F,ncol(design)),
+    row.names = colnames(design)
+  )
+
+  return(x)
+})
+
 
 ### Extras
 
