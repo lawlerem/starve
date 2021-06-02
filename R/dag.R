@@ -262,7 +262,7 @@ construct_dag<- function(x,
   ### st_nn expects meters.
 
   # Get the edges and distances for the first k nodes
-  n_startup<- n_neighbours(settings)
+  n_startup<- min(n_neighbours(settings),nrow(x))
   startupEdges<- list(to = seq(n_startup),
                       from = integer(0))
   startupDists<- units::set_units(sf::st_distance(x[do.call(c,startupEdges),]),"m")

@@ -98,6 +98,7 @@ nngp<Type>::nngp(covariance<Type> cov,
     } else {}
   }
   avg_forecast_sd *= 1.0/n;
+
   // // range held constant, marginal variance re-computed
   this->cov.update_scaleTau(cov.get_scaleTau()/(avg_forecast_sd/cov.get_scaleTau()));
 
