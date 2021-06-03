@@ -30,6 +30,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_STRUCT(pred_ws_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(pred_ws_dists,dag_dists); // See data_in.hpp
 
+  DATA_SCALAR(init_rho); // starting value for spatial range
   DATA_INTEGER(conditional_sim); // If true, don't simulate w
 
   PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
@@ -100,19 +101,12 @@ Type staRVe_model(objective_function<Type>* obj) {
   for( int i=0; i<pred_ws_dist.size(); i++ ) {
     pred_ws_dist(i) = pred_ws_dist(i)/mean_dist;
   }
+  init_rho = init_rho/mean_dist;
 
   // Initialize all the objects used. The main objects of focus are
   // nngp<Type> process which can calculate the nll component for the random effects, and
   // observations<Type> obs which can calculate the nll component for the observations
-
-  // Just need to choose a large enough initial value for rho so that the
-  // resulting correlation matrix isn't approximately diagonal, choosing
-  // rho:=100.0 works since distances are standardized
-  //
-  // Might need to put more effort into a better starting value
-  // (distance between bounding box corners? multiple of max distance?)
-  Type initRho = 100.0;
-  covariance<Type> cov(space_sd,initRho,space_nu,covar_code);
+  covariance<Type> cov(space_sd,init_rho,space_nu,covar_code);
 
   // Set up the response distribution and link function
   inv_link_function inv_link = {link_code};

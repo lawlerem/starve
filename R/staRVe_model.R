@@ -385,6 +385,26 @@ setReplaceMethod(f = "distance_units",
 #' @param x An object
 #'
 #' @export
+#' @describeIn staRVe_model Get initial range parameter
+setMethod(f = "init_range",
+          signature = "staRVe_model",
+          definition = function(x) return(init_range(settings(x)))
+)
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_model Set initial range parameter
+setReplaceMethod(f = "init_range",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  init_range(settings(x))<- value
+  return(x)
+})
+
+#' @param x An object
+#'
+#' @export
 #' @describeIn staRVe_model Get formula used for model
 setMethod(f = "formula",
           signature = "staRVe_model",
@@ -392,7 +412,7 @@ setMethod(f = "formula",
   return(formula(settings(x)))
 })
 #' @param x An object
-#' @param value A replace value
+#' @param value A replacement value
 #'
 #' @export
 #' @describeIn staRVe_model Set formula used for the model
@@ -549,12 +569,18 @@ prepare_staRVe_model<- function(formula,
   time_form<- .time_from_formula(formula,data)
   model<- new("staRVe_model")
 
+  # Set init_range to maximum distance of bounding box
+  bbox<- sf::st_as_sfc(sf::st_bbox(data))
+  init_range<- max(sf::st_distance(sf::st_cast(bbox,"POINT")))
+  init_range<- units::set_units(init_range,distance_units,mode="standard")
+
   # Set the settings in the model
   settings(model)<- new("staRVe_settings",
     formula = formula,
     n_neighbours = n_neighbours,
     p_far_neighbours = p_far_neighbours,
     distance_units = distance_units,
+    init_range = units::drop_units(init_range),
     max_distance = max_dist
   )
 
@@ -663,6 +689,8 @@ setMethod(f = "TMB_in",
     pred_w_time = numeric(0),
     pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
     pred_ws_dists = vector(mode="list",length=0),
+    # Initial value for spatial range parameter
+    init_rho = init_range(x),
     # conditional_sim only used in simulations
     conditional_sim = F
   )

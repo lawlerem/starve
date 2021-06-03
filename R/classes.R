@@ -137,6 +137,7 @@ setClass(
     p_far_neighbours = "numeric",
     distance_units = "character",
     max_distance = "numeric",
+    init_range = "numeric",
     obs_dag_method = "character",
     extras = "list"
   )
