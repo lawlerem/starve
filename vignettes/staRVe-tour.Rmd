@@ -230,18 +230,19 @@ Some of these options are stored as slots in model settings:
 - **formula**: this is the formula supplied to 'prepare_staRVe_model'
 - **n_neighbours**: the maximum number of parents that each node in the directed acyclic graph
 - **p_far_neighbours**: the percentage of parents of each node that should be randomly selected, or the percentage of parents of each node that are not nearest neighbours
-- **distance_units**: units used for distance calculations
+- **distance_units**: units used for distance calculations. All distances in the model (for example max_distance, init_range, and graph distances) have these units.
 - **max_distance**: the maximum distance that a location is allowed to be from nearest-neighbour parents
+- **init_range**: nominally the spatial range parameter of the covariance function. In practice the value is irrelevant as long as it is "large enough".
 - **obs_dag_method**: either "standard" or "inla.mesh", depending on how the directed acyclic graph was constructed
 - **extras**: extra settings that are currently only used if the obs_dag_method is "inla.mesh"
 
-For a more detailed explanation of the directed acyclic graph, see section ###.
+For a more detailed explanation of the directed acyclic graph and the spatial range parameter, see section ###.
 
 
 
 ## (Advanced)
 
-(INLA mesh, TMB object, graph details, pre-computed graphs, optimizer settings)
+(INLA mesh, TMB object, graph details, pre-computed graphs, optimizer settings, spatial range)
 
 TO BE COMPLETED
 
@@ -331,12 +332,20 @@ The fixed effects parameters will be automatically updated to reflect the new fo
 
 ```{r change-units}
 graph(bird_model)
+init_range(bird_model)
 distance_units(bird_model)<- "ft"
 graph(bird_model)
+init_range(bird_model)
 ```
 
 The distance units used in calculations can be changed to any valid distance unit provided by the 'units' package.
 Distances are standardized within the model so changing the distance units should not affect inference or predictions.
+
+```{r change-init-range}
+init_range(bird_model)
+init_range(bird_model)<- 500
+init_range(bird_model)
+```
 
 ```{r include = F}
 bird_model<- cache_model
