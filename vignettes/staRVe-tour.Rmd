@@ -161,6 +161,7 @@ The spatial parameters describe the spatial covariance function.
 The staRVe package uses a Matern covariance function with the following parameters:
 
 - **sd**: a scale parameter. Higher values correspond to spatial surfaces with larger peaks and lower valleys. Must be greater than 0.
+- **range**: a range parameter. Typically interpreted as the distance by which two locations need to be separated to be approximately uncorrelated.
 - **nu**: a smoothness parameter. Higher values correspond to smoother spatial surfaces. The smoothness parameter is only estimated when the covariance function is 'matern'. Must be greater than 0.
 
 ```{r time-parameters}
@@ -232,7 +233,6 @@ Some of these options are stored as slots in model settings:
 - **p_far_neighbours**: the percentage of parents of each node that should be randomly selected, or the percentage of parents of each node that are not nearest neighbours
 - **distance_units**: units used for distance calculations. All distances in the model (for example max_distance, init_range, and graph distances) have these units.
 - **max_distance**: the maximum distance that a location is allowed to be from nearest-neighbour parents
-- **init_range**: nominally the spatial range parameter of the covariance function. In practice the value is irrelevant as long as it is "large enough".
 - **obs_dag_method**: either "standard" or "inla.mesh", depending on how the directed acyclic graph was constructed
 - **extras**: extra settings that are currently only used if the obs_dag_method is "inla.mesh"
 
@@ -267,7 +267,8 @@ spatial_parameters(bird_model)
 time_parameters(bird_model)
 
 time_parameters(bird_model)[c("mu","ar1"),"par"]<- c(10,0.75)
-spatial_parameters(bird_model)["sd","fixed"]<- T
+spatial_parameters(bird_model)["range","par"]<- 80
+spatial_parameters(bird_model)["range","fixed"]<- T
 
 spatial_parameters(bird_model)
 time_parameters(bird_model)
@@ -331,21 +332,15 @@ Any variables used in the new formula must be present in the data held in the st
 The fixed effects parameters will be automatically updated to reflect the new formula.
 
 ```{r change-units}
+spatial_parameters(bird_model)
 graph(bird_model)
-init_range(bird_model)
 distance_units(bird_model)<- "ft"
+spatial_parameters(bird_model)
 graph(bird_model)
-init_range(bird_model)
 ```
 
 The distance units used in calculations can be changed to any valid distance unit provided by the 'units' package.
 Distances are standardized within the model so changing the distance units should not affect inference or predictions.
-
-```{r change-init-range}
-init_range(bird_model)
-init_range(bird_model)<- 500
-init_range(bird_model)
-```
 
 ```{r include = F}
 bird_model<- cache_model
@@ -503,7 +498,7 @@ The sf data.frame constructed above consists of a 4x4 grid (16 points) replicate
 
 ```{r sim-new2}
 time_parameters(sim_model)[c("mu","ar1","sd"),"par"]<- c(10,0.7,1)
-spatial_parameters(sim_model)["sd","par"]<- 2
+spatial_parameters(sim_model)[c("sd","range"),"par"]<- c(2,0.5)
 response_parameters(sim_model)["sd","par"]<- 0.5
 sim_model<- staRVe_simulate(sim_model)
 sim_model
