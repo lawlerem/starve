@@ -35,7 +35,6 @@
   p_far_neighbours = 0,
   distance_units = "km",
   max_distance = Inf,
-  init_range = 1,
   obs_dag_method = "standard",
   extras = vector(mode = "list", length = 0)
 )

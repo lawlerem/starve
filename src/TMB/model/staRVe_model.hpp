@@ -30,13 +30,13 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_STRUCT(pred_ws_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(pred_ws_dists,dag_dists); // See data_in.hpp
 
-  DATA_SCALAR(init_rho); // starting value for spatial range
   DATA_INTEGER(conditional_sim); // If true, don't simulate w
 
   PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
   PARAMETER(log_space_sd);
+  PARAMETER(log_space_rho);
   PARAMETER(log_space_nu);
   PARAMETER_VECTOR(time_effects);
   PARAMETER(time_mu);
@@ -58,11 +58,12 @@ Type staRVe_model(objective_function<Type>* obj) {
     case 4 : response_pars(0) = exp(working_response_pars(0)); break; // Gamma, sd>0
     case 5 : response_pars(0) = exp(working_response_pars(0)); break; // Log-Normal, sd>0
     case 6 : break; // Binomial, NA
-    case 7 : break; // AtLeastOneBinomai, NA
+    case 7 : break; // atLeastOneBinomial, NA
     case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson, dispersion > 0
     default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal, sd>0
   }
   Type space_sd = exp(log_space_sd); // sd>0
+  Type space_rho = exp(log_space_rho); // rho>0
   Type space_nu = exp(log_space_nu); // nu>0
 
   Type time_ar1 = 2*invlogit(logit_time_ar1)-1; // -1 < ar1 < +1
@@ -101,12 +102,12 @@ Type staRVe_model(objective_function<Type>* obj) {
   for( int i=0; i<pred_ws_dist.size(); i++ ) {
     pred_ws_dist(i) = pred_ws_dist(i)/mean_dist;
   }
-  init_rho = init_rho/mean_dist;
+  space_rho = space_rho/mean_dist;
 
   // Initialize all the objects used. The main objects of focus are
   // nngp<Type> process which can calculate the nll component for the random effects, and
   // observations<Type> obs which can calculate the nll component for the observations
-  covariance<Type> cov(space_sd,init_rho,space_nu,covar_code);
+  covariance<Type> cov(space_sd,space_rho,space_nu,covar_code);
 
   // Set up the response distribution and link function
   inv_link_function inv_link = {link_code};
@@ -331,6 +332,10 @@ Type staRVe_model(objective_function<Type>* obj) {
   Type par_space_sd = space_sd;
   REPORT(par_space_sd);
   ADREPORT(par_space_sd);
+
+  Type par_space_rho = space_rho*mean_dist;
+  REPORT(par_space_rho);
+  ADREPORT(par_space_rho);
 
   Type par_space_nu = space_nu;
   REPORT(par_space_nu);

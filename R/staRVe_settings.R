@@ -23,7 +23,6 @@ setMethod(
                         p_far_neighbours = 0,
                         distance_units = "km",
                         max_distance = Inf,
-                        init_range = 1,
                         obs_dag_method = "standard",
                         extras = vector(mode="list",length=0)) {
     formula(.Object)<- formula
@@ -31,7 +30,6 @@ setMethod(
     p_far_neighbours(.Object)<- p_far_neighbours
     .Object@distance_units<- distance_units
     max_distance(.Object)<- max_distance
-    init_range(.Object)<- init_range
     obs_dag_method(.Object)<- obs_dag_method
     extras<- extras
 
@@ -111,14 +109,10 @@ setMethod(f = "distance_units",
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
-  init_range<- units::set_units(init_range(x),distance_units(x),mode="standard")
   max_distance<- units::set_units(max_distance(x),distance_units(x),mode="standard")
   x@distance_units<- value
 
-  init_range<- units::set_units(init_range,value,mode="standard")
   max_distance<- units::set_units(max_distance,value,mode="standard")
-
-  init_range(x)<- units::drop_units(init_range)
   max_distance(x)<- units::drop_units(max_distance)
   return(x)
 })
@@ -136,22 +130,6 @@ setReplaceMethod(f = "max_distance",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
   x@max_distance<- value
-  return(x)
-})
-
-
-#' @param x An object
-#'
-#' @export
-#' @describeIn staRVe_settings Get initial range parameter
-setMethod(f = "init_range",
-          signature = "staRVe_settings",
-          definition = function(x) return(x@init_range)
-)
-setReplaceMethod(f = "init_range",
-                 signature = "staRVe_settings",
-                 definition = function(x,value) {
-  x@init_range<- value
   return(x)
 })
 

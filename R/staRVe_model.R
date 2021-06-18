@@ -376,31 +376,17 @@ setMethod(f = "distance_units",
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_model",
                  definition = function(x,value) {
+  range<- units::set_units(spatial_parameters(x)["range","par"],
+                           distance_units(x),
+                           mode="standard")
   distance_units(settings(x))<- value
   distance_units(persistent_graph(process(x)))<- value
   distance_units(transient_graph(observations(x)))<- value
+  range<- units::set_units(range,value,mode="standard")
+  spatial_parameters(x)["range","par"]<- units::drop_units(range)
   return(x)
 })
 
-#' @param x An object
-#'
-#' @export
-#' @describeIn staRVe_model Get initial range parameter
-setMethod(f = "init_range",
-          signature = "staRVe_model",
-          definition = function(x) return(init_range(settings(x)))
-)
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @export
-#' @describeIn staRVe_model Set initial range parameter
-setReplaceMethod(f = "init_range",
-                 signature = "staRVe_model",
-                 definition = function(x,value) {
-  init_range(settings(x))<- value
-  return(x)
-})
 
 #' @param x An object
 #'
@@ -569,18 +555,12 @@ prepare_staRVe_model<- function(formula,
   time_form<- .time_from_formula(formula,data)
   model<- new("staRVe_model")
 
-  # Set init_range to maximum distance of bounding box
-  bbox<- sf::st_as_sfc(sf::st_bbox(data))
-  init_range<- max(sf::st_distance(sf::st_cast(bbox,"POINT")))
-  init_range<- units::set_units(init_range,distance_units,mode="standard")
-
   # Set the settings in the model
   settings(model)<- new("staRVe_settings",
     formula = formula,
     n_neighbours = n_neighbours,
     p_far_neighbours = p_far_neighbours,
     distance_units = distance_units,
-    init_range = units::drop_units(init_range),
     max_distance = max_dist
   )
 
@@ -689,8 +669,6 @@ setMethod(f = "TMB_in",
     pred_w_time = numeric(0),
     pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
     pred_ws_dists = vector(mode="list",length=0),
-    # Initial value for spatial range parameter
-    init_rho = init_range(x),
     # conditional_sim only used in simulations
     conditional_sim = F
   )
@@ -759,6 +737,12 @@ setMethod(f = "TMB_in",
       log(spatial_parameters(parameters(process))["sd","par"]),
       log(1)
     ),
+    log_space_rho = ifelse( # rho > 0
+      spatial_parameters(parameters(process))["range","par"] > 0 ||
+      spatial_parameters(parameters(process))["range","fixed"] == T,
+      log(spatial_parameters(parameters(process))["range","par"]),
+      log(mean(do.call(c,distances(graph(x)$persistent_graph))))
+    ),
     log_space_nu = ifelse( # nu > 0
           spatial_parameters(parameters(process))["nu","par"] > 0 ||
           spatial_parameters(parameters(process))["nu","fixed"] == T,
@@ -802,6 +786,7 @@ setMethod(f = "TMB_in",
       sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
     ),
     log_space_sd = spatial_parameters(parameters(process))["sd","fixed"],
+    log_space_rho = spatial_parameters(parameters(process))["range","fixed"],
     log_space_nu = spatial_parameters(parameters(process))["nu","fixed"],
     time_mu = time_parameters(parameters(process))["mu","fixed"],
     logit_time_ar1 = time_parameters(parameters(process))["ar1","fixed"],
@@ -835,7 +820,7 @@ setMethod(f = "update_staRVe_model",
   # Spatial parameters
   spatial_parameters(x)<- within(
     spatial_parameters(x),{
-      par_names<<- c("par_space_sd","par_space_nu")
+      par_names<<- c("par_space_sd","par_space_rho","par_space_nu")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
     }

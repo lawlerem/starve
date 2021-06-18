@@ -30,8 +30,6 @@
 \alias{fixed_effects<-,staRVe_model-method}
 \alias{distance_units,staRVe_model-method}
 \alias{distance_units<-,staRVe_model-method}
-\alias{init_range,staRVe_model-method}
-\alias{init_range<-,staRVe_model-method}
 \alias{formula,staRVe_model-method}
 \alias{formula<-,staRVe_model-method}
 \alias{parameters,staRVe_model-method}
@@ -90,10 +88,6 @@
 \S4method{distance_units}{staRVe_model}(x)
 
 \S4method{distance_units}{staRVe_model}(x) <- value
-
-\S4method{init_range}{staRVe_model}(x)
-
-\S4method{init_range}{staRVe_model}(x) <- value
 
 \S4method{formula}{staRVe_model}(x)
 
@@ -185,10 +179,6 @@ get_staRVe_distributions("link") for valid covariance functions.
 \item \code{distance_units}: Get distance units used for the model
 
 \item \code{distance_units<-}: Set distance units used for the model
-
-\item \code{init_range}: Get initial range parameter
-
-\item \code{init_range<-}: Set initial range parameter
 
 \item \code{formula}: Get formula used for model
 

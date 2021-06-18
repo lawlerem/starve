@@ -174,16 +174,6 @@ setGeneric(name = "hess_time<-",
 
 # I
 
-#' @describeIn staRVe-access Get spatial range parameter
-#' @export
-setGeneric(name = "init_range",
-           def = function(x) standardGeneric("init_range")
-)
-#' @describeIn staRVe-access Set spatial range parameter
-#' @noRd
-setGeneric(name = "init_range<-",
-           def = function(x,value) standardGeneric("init_range<-")
-)
 
 
 # J

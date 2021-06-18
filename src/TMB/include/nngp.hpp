@@ -82,40 +82,24 @@ nngp<Type>::nngp(covariance<Type> cov,
   mean(mean),
   ws_graph(ws_graph),
   ws_dists(ws_dists) {
-  // Calibrate scaleTau coefficient (avg_forecast_sd/cov.get_scaleTau) so
-  // that scaleTau gives average forecast variance
+  // Fill in kriging predictors for nodes with parents
+  ws_krigs.resizeLike(ws_graph);
   avg_forecast_sd = 0.0;
   Type n = 0;
   for( int i=0; i<ws_graph.size(); i++ ) {
     if( ws_graph(i)(1).size() > 0 ) {
-      kriging<Type> krig = fieldPred(ws_graph(i),
+      ws_krigs(i) = fieldPred(ws_graph(i),
                                       ws_dists(i),
                                       false);
       for(int j=0; j<ws_graph(i)(0).size(); j++) {
-        avg_forecast_sd += sqrt(krig.cov()(j,j));
+        avg_forecast_sd += sqrt(ws_krigs(i).cov()(j,j));
         n += 1.0;
       }
     } else {}
   }
   avg_forecast_sd *= 1.0/n;
 
-  // // range held constant, marginal variance re-computed
-  this->cov.update_scaleTau(cov.get_scaleTau()/(avg_forecast_sd/cov.get_scaleTau()));
-
-  ws_krigs.resizeLike(ws_graph);
-  avg_forecast_sd = 0.0;
-  for( int i=0; i<ws_graph.size(); i++ ) {
-    if( ws_graph(i)(1).size() > 1 ) {
-      ws_krigs(i) = fieldPred(ws_graph(i),
-                              ws_dists(i),
-                              false);
-      for(int j=0; j<ws_krigs(i).cov().rows(); j++) {
-        avg_forecast_sd += sqrt(ws_krigs(i).cov()(j,j));
-      }
-    } else {}
-  }
-  avg_forecast_sd *= 1.0/n;
-
+  // Fill in joint distributions for nodes without parents
   ws_joints.resizeLike(ws_graph);
   Type old_sd = sqrt(cov(Type(0.0)));
   cov.update_marg_sd(avg_forecast_sd);

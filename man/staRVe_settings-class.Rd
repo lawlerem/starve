@@ -10,7 +10,6 @@
 \alias{distance_units,staRVe_settings-method}
 \alias{distance_units<-,staRVe_settings-method}
 \alias{max_distance,staRVe_settings-method}
-\alias{init_range,staRVe_settings-method}
 \alias{obs_dag_method,staRVe_settings-method}
 \alias{extras,staRVe_settings-method}
 \title{An S4 class to hold extra settings for a staRVe model}
@@ -26,8 +25,6 @@
 \S4method{distance_units}{staRVe_settings}(x) <- value
 
 \S4method{max_distance}{staRVe_settings}(x)
-
-\S4method{init_range}{staRVe_settings}(x)
 
 \S4method{obs_dag_method}{staRVe_settings}(x)
 
@@ -54,8 +51,6 @@ An S4 class to hold extra settings for a staRVe model
 \item \code{distance_units<-}: Set distance units
 
 \item \code{max_distance}: Get maximum distance for neighbours
-
-\item \code{init_range}: Get initial range parameter
 
 \item \code{obs_dag_method}: Get obs_dag_method
 

@@ -18,7 +18,6 @@
 \alias{formula}
 \alias{graph}
 \alias{hess_time}
-\alias{init_range}
 \alias{link_function}
 \alias{link_function<-}
 \alias{max_distance}
@@ -84,8 +83,6 @@ formula(x, ...)
 graph(x)
 
 hess_time(x)
-
-init_range(x)
 
 link_function(x)
 
@@ -194,8 +191,6 @@ Access methods for the staRVe package
 \item \code{graph}: Get graph
 
 \item \code{hess_time}: Get hessian time
-
-\item \code{init_range}: Get spatial range parameter
 
 \item \code{link_function}: Get link function
 
