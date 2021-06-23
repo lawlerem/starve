@@ -1,4 +1,0 @@
-> Change covariance_function<- to change spatial parameters as well
-> Change response_distribution<- to change response parameters as well
-> Change persistent_dag so that the first k random effects are a multivariate 
-	normal instead of conditionals; change in C++ code too.
