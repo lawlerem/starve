@@ -247,6 +247,30 @@ NULL
 
 #' @describeIn construct_dag Construct a directed acyclic graph from a single
 #'   \code{sf} object. The first element of the ordered list contains the indices
+#'   for the first k rows, where k is the n_neighbours settings. The ith element
+#'   contains the parents for the (i+k-1)th row of x. Also returns a sorted copy
+#'   of the locations x.
+#'
+#' @export
+construct_dag<- function(x,
+                          settings = new("staRVe_settings"),
+                          silent = T) {
+  dist_matrix<- as.matrix(units::set_units(sf::st_distance(x),
+                                           distance_units(settings),
+                                           mode="standard"))
+  dag<- .dist_to_dag(d=dist_matrix,n_neighbours=min(nrow(x),n_neighbours(settings)))
+  x<- x[dag$order+1,]
+  dag<- new("dag",
+            edges = dag$edge_list,
+            distances = dag$dist_list,
+            distance_units = distance_units(settings))
+  dag<- idxC_to_R(dag)
+  return(list(locations = x,
+              dag = dag))
+}
+
+#' @describeIn construct_dag Construct a directed acyclic graph from a single
+#'   \code{sf} object. The first element of the ordered list contains the indices
 #'   for the first k rows, where k is the n_neighbours setting. The ith element
 #'   contains the parents for the (i+k-1)th row of x.
 #'

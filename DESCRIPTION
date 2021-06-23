@@ -26,8 +26,9 @@ Imports:
     raster,
     Rcpp
 LinkingTo:
-    TMB,
-    Rcpp
+    Rcpp,
+    RcppEigen,
+    TMB
 RoxygenNote: 7.1.1
 Suggests:
     MASS,

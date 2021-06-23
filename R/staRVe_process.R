@@ -176,9 +176,13 @@ prepare_staRVe_process<- function(nodes,
 
   # random_effects = "sf",
   nodes<- nodes[,attr(nodes,"sf_column")] # Only need locations
-  if( obs_dag_method(settings) == "standard" ) {
-    nodes<- .order_by_location(unique(nodes)) # Lexicographic ordering S->N/W->E
-  } else {}
+  graph<- construct_dag2(unique(nodes),settings=settings,silent=T)
+  nodes<- graph$locations
+
+
+  # if( obs_dag_method(settings) == "standard" ) {
+  #   nodes<- .order_by_location(unique(nodes)) # Lexicographic ordering S->N/W->E
+  # } else {}
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
     df<- sf::st_sf(data.frame(w = 0,
                               se = NA,
@@ -189,19 +193,19 @@ prepare_staRVe_process<- function(nodes,
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")
 
-
+  persistent_graph(process)<- graph$dag
   # persistent_graph = "dag",
-  if( identical(persistent_graph,NA) || class(persistent_graph) != "dag" ) {
-    # Create persistent graph
-    persistent_graph(process)<- construct_dag(nodes,
-      settings = settings,
-      silent = T
-    )
-  } else {
-    # Use pre-supplied persistent_graph
-    distance_units(persistent_graph)<- distance_units(settings)
-    persistent_graph(process)<- persistent_graph
-  }
+  # if( identical(persistent_graph,NA) || class(persistent_graph) != "dag" ) {
+  #   # Create persistent graph
+  #   persistent_graph(process)<- construct_dag(nodes,
+  #     settings = settings,
+  #     silent = T
+  #   )
+  # } else {
+  #   # Use pre-supplied persistent_graph
+  #   distance_units(persistent_graph)<- distance_units(settings)
+  #   persistent_graph(process)<- persistent_graph
+  # }
 
   # parameters = "staRVe_process_parameters"
   parameters<- new("staRVe_process_parameters")
