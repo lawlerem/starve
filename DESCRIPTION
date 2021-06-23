@@ -23,10 +23,11 @@ Imports:
     TMB (>= 1.7.16),
     nngeo (>= 0.3.0),
     units,
-    raster
+    raster,
+    Rcpp
 LinkingTo:
     TMB,
-    RcppEigen
+    Rcpp
 RoxygenNote: 7.1.1
 Suggests:
     MASS,
@@ -38,6 +39,7 @@ Depends:
     sf,
     R (>= 2.10)
 Collate:
+    'RcppExports.R'
     'classes.R'
     'getset.R'
     'generics.R'

@@ -4,4 +4,5 @@
 #' @importFrom stats median model.frame model.matrix nlminb optimHess
 #'   qlogis rnorm terms
 #' @importFrom utils head
+#' @importFrom Rcpp sourceCpp
 NULL
