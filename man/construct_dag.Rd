@@ -55,8 +55,9 @@ A directed acyclic graph is stored as an ordered list. The ith element of the
 \itemize{
 \item \code{construct_dag}: Construct a directed acyclic graph from a single
 \code{sf} object. The first element of the ordered list contains the indices
-for the first k rows, where k is the n_neighbours setting. The ith element
-contains the parents for the (i+k-1)th row of x.
+for the first k rows, where k is the n_neighbours settings. The ith element
+contains the parents for the (i+k-1)th row of x. Also returns a sorted copy
+of the locations x.
 
 \item \code{construct_obs_dag}: Construct a directed acyclic graph from one \code{sf}
 object to another. The i'th element of the list is a vector containing

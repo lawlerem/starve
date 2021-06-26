@@ -304,16 +304,20 @@ setMethod(f = "staRVe_simulate",
   intersection_idx<- do.call(c,lapply(edges(dag),function(e) {
     return( length(e$from) )
   })) == 1
-  intersection_all_idx<- rep(intersection_idx,length(pred_times))
-  # If prediction location is same as random effect location, then prediction
-  # covariance matrix will be singular and TMB object will crash
-  distances(dag)<- lapply(distances(dag),function(x) {
-    if( identical(matrix(0),x) ) {
-      return(matrix(c(0,dist_tol,dist_tol,0),nrow = 2))
-    } else {
-      return(x)
-    }
+  # going to remove intersection locations, and adjust the remaining indices
+  # adjust[i] is the number of intersection locations appearing before or at node i
+  adjust<- numeric(nrow(locations))
+  lapply(edges(dag)[intersection_idx],function(e) {
+    idx<- seq_along(adjust) >= e$to
+    adjust[idx]<<- adjust[idx]+1
   })
+  edges(dag)[!intersection_idx]<- lapply(edges(dag)[!intersection_idx],function(e) {
+    e$to<- e$to-adjust[e$to]
+    return(e)
+  })
+
+
+  intersection_all_idx<- rep(intersection_idx,length(pred_times))
 
   # Add random effects for times not present in the original model,
   # only added to pass to TMB
@@ -323,7 +327,7 @@ setMethod(f = "staRVe_simulate",
   # except pred_w is already declared as a random effect
   TMB_input<- TMB_in(x)
   TMB_input$data$pred_w_time<- c(predictions[,time_column,drop=T]
-    - min(random_effects(process(x))[,time_column,drop=T]))[!intersection_all_idx]
+    - min(random_effects(x)[,time_column,drop=T]))[!intersection_all_idx]
   TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))[!intersection_idx]
   TMB_input$data$pred_ws_dists<- distances(dag)[!intersection_idx]
 
