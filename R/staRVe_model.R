@@ -640,8 +640,11 @@ setMethod(f = "TMB_in",
       )),
     ys_edges = edges(idxR_to_C(transient_graph(observations))),
     ys_dists = distances(transient_graph(observations)),
-    # Get time index of random effects in transient graph
+    # Get covariates and time index of random effects in transient graph
     # If length>0, need an additional random effect
+    resp_w_mean_design = matrix(0,ncol=0,
+      nrow=sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
+    ),
     resp_w_time = c(dat(observations)[
         sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1,
         time_column,
@@ -657,6 +660,9 @@ setMethod(f = "TMB_in",
         dat(observations),
         nullReturn = T
       )[,1],
+    # Get covariates for proc_w random effects
+    w_mean_design = matrix(0,ncol=0,nrow=nrow(random_effects(process))),
+    w_mean_pars_idx = numeric(0), # Dummy for now, no fixed effecs
     # Convert covariance function (char) to (int)
     covar_code = .covariance_to_code(
         covariance_function(parameters(process))
@@ -666,6 +672,7 @@ setMethod(f = "TMB_in",
     ws_edges = edges(idxR_to_C(persistent_graph(process))),
     ws_dists = distances(persistent_graph(process)),
     # Pred_* only used for predictions
+    pred_w_mean_design = matrix(0,ncol=0,nrow=0),
     pred_w_time = numeric(0),
     pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
     pred_ws_dists = vector(mode="list",length=0),

@@ -23,7 +23,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_IVECTOR(sample_size);
 
   DATA_MATRIX(w_mean_design);
-  DATA_IVECTOR(w_fixed_effects_idx); // Want to use the same fixed effects as y
+  DATA_IVECTOR(w_mean_pars_idx); // Want to use the same fixed effects as y
   DATA_INTEGER(covar_code);
   DATA_IVECTOR(w_time);
   DATA_STRUCT(ws_edges,directed_graph);
@@ -74,10 +74,10 @@ Type staRVe_model(objective_function<Type>* obj) {
   Type time_sd = exp(log_time_sd); // sd>0
 
   // Subtract off fixed effects to alleviate spatial confounding
-  vector<TYpe> w_fixed_effects = fixed_effects(w_fixed_effects_idx)
-  w -= w_mean_design*w_fixed_effects;
-  resp_w -= resp_w_mean_design*w_fixed_effects;
-  pred_w -= pred_w_mean_design*w_fixed_effects;
+  vector<Type> w_mean_pars = mean_pars(w_mean_pars_idx);
+  proc_w -= w_mean_design*w_mean_pars;
+  resp_w -= resp_w_mean_design*w_mean_pars;
+  pred_w -= pred_w_mean_design*w_mean_pars;
 
   // Get graphs
 
