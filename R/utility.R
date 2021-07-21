@@ -118,7 +118,7 @@ NULL
   small_bird<- cbind(x=rnorm(nrow(small_bird)),
                      small_bird)
   fit<- prepare_staRVe_model(
-    cnt~time(year)+mean(x),
+    cnt~x+time(year),
     small_bird,
     distribution="poisson",
     link="log",
@@ -613,33 +613,24 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @noRd
 .mean_design_from_formula<- function(x,data,return = "model.matrix") {
   data<- as.data.frame(data)
-  # Get out just the "mean" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("^mean",term.labels,value=T)
-
-  # (if the "mean" term is missing, design matrix is empty)
-  if( length(the_call) == 0 ) {
-    the_df<- matrix(0,nrow=nrow(data),ncol=0)
-    return(the_df)
-  } else {}
-
-  # Make the expression inside "mean(...)" a standalone formula, and
-  # use that formula to create the design matrix.
-  new_formula<- sub("mean\\(","~",the_call)
-  new_formula<- sub("\\)$","",new_formula)
-  new_terms<- terms(formula(new_formula))
-  attr(new_terms,"intercept")<- 0 # Intercept part of temporal random effects
+  the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
+  if( nrow(attr(the_terms,"factors")[-unlist(attr(the_terms,"specials")),,drop=F]) == 0 ) {
+    return(matrix(0,ncol=0,nrow=nrow(data)))
+  }
+  new_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
   the_df<- switch(return,
-    # model.matrix expands factors into dummy variable, and expands
-    # interactions, etc.
+    # model.matrix expands factors into dummy variables, and expands
+    # interaction terms, etc.
     model.matrix = model.matrix(new_terms,data=data),
     # model.frame returns just the covariates needed to eventually
-    # create the model.matrix (no expansion)
+    # create the model.matrix (no expansion). Does expand poly() (and other specials?)
     model.frame = model.frame(new_terms,data=data),
-    all.vars = data[,all.vars(formula(new_formula)),drop=F]
+    # Returns the subset of the original the data.frame
+    all.vars = data[,all.vars(formula(new_terms)),drop=F]
   )
   attr(the_df,"assign")<- NULL
+  attr(the_df,"contrasts")<- NULL
+  if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=F]}
   rownames(the_df)<- NULL
   return(the_df)
 }
@@ -658,19 +649,14 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @noRd
 .names_from_formula<- function(x) {
-  # Get out just the "mean" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("mean",term.labels,value=T)
-  # (if the "mean" term is missing, no covariates)
-  if( length(the_call) == 0 ) {
+  # Don't use colnames(.mean_design_from_formula(...,return="all.vars")) since
+  # I don't want to supply a data.frame
+  the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
+  if( nrow(attr(the_terms,"factors")[-unlist(attr(the_terms,"specials")),,drop=F]) == 0 ) {
     return(character(0))
-  } else {}
-  new_formula<- paste(the_call,collapse=" + ") # If someone adds more than one
-  # "mean" term then just paste them together
-  new_formula<- the_call
-  new_formula<- paste("~",new_formula)
-  var_names<- all.vars(formula(new_formula))
+  }
+  new_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
+  var_names<- all.vars(new_terms)
   return(var_names)
 }
 
