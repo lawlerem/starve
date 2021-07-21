@@ -122,8 +122,11 @@ NULL
     small_bird,
     distribution="poisson",
     link="log",
-    fit=T
+    fit=F
   )
+  spatial_parameters(fit)["range","par"]<- 80
+  spatial_parameters(fit)["range","fixed"]<- T
+  fit<- staRVe_fit(fit,silent=T)
   sim<- staRVe_simulate(fit)
   pred_locs<- do.call(rbind,lapply(2000:2010, function(t) {
     sf::st_sf(data.frame(x=rnorm(1),
