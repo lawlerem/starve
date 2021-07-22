@@ -158,6 +158,7 @@ NULL
   # Set up what the "space" term does in the formula
   space<- function(formula,covariance,nu) {
     # Find the closest match for covariance function
+    if( missing(covariance) ) {covariance<- "exponential"}
     covar<- pmatch(covariance,get_staRVe_distributions("covariance"))
     covar<- get_staRVe_distributions("covariance")[covar]
 

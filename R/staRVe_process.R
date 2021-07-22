@@ -143,7 +143,8 @@ setReplaceMethod(f = "parameters",
 
 #' Prepare the process part of a staRVe_model object.
 #'
-#' @param nodes An sf object containing the persistent node locations
+#' @param nodes An sf object containing the persistent node locations, and covariate
+#'   values if included in space(...) special of formula.
 #' @param persistent_graph An optionally supplied pre-computed persistent graph.
 #'   If a persistent_graph is not supplied, the order of the rows of nodes may change.
 #'   If a persisten_graph is supplied, the order will not change.
@@ -177,14 +178,14 @@ prepare_staRVe_process<- function(nodes,
   attr(time_effects(process),"time_column")<- attr(time_form,"name")
 
   # random_effects = "sf",
-  nodes<- unique(nodes[,attr(nodes,"sf_column")])
+  uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])
 
   if( !identical(persistent_graph,NA) ) {
     distance_units(persistent_graph)<- distance_units(settings)
     persistent_graph(process)<- persistent_graph
   } else {
-    graph<- construct_dag(unique(nodes),settings=settings,silent=T)
-    nodes<- graph$locations
+    graph<- construct_dag(uniq_nodes,settings=settings,silent=T)
+    uniq_nodes<- graph$locations
     persistent_graph(process)<- graph$dag
   }
 
@@ -192,8 +193,15 @@ prepare_staRVe_process<- function(nodes,
     df<- sf::st_sf(data.frame(w = 0,
                               se = NA,
                               time = t,
-                              nodes))
+                              uniq_nodes))
     colnames(df)[[3]]<- attr(time_form,"name")
+    # spatial join of covariates
+    covariates<- nodes[nodes[,attr(time_form,"name"),drop=T]==t,]
+    covariates<- sf::st_sf(cbind(
+      .mean_design_from_space_formula(formula(settings),covariates,"all.vars"),
+      covariates[,attr(covariates,"sf_column")]
+    ))
+    df<- st_join(df,covariates)
     return(df)
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")
