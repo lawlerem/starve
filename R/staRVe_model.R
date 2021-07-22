@@ -555,6 +555,11 @@ prepare_staRVe_model<- function(formula,
   time_form<- .time_from_formula(formula,data)
   model<- new("staRVe_model")
 
+  if( !all(colnames(.mean_design_from_space_formula(formula,nodes,"model.matrix")) %in%
+           colnames(.mean_design_from_formula(formula,data,"model.matrix"))) ) {
+    stop("Spatial covariate formula must be a subset of model covariate formula.")
+  }
+
   # Set the settings in the model
   settings(model)<- new("staRVe_settings",
     formula = formula,

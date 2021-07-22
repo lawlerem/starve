@@ -709,7 +709,7 @@ Some options to the individual terms in the above model formula can be specified
     - **independent**: Each year in the model is assumed to be independent. The 'ar1' time parameter is fixed at 0.
     - **ar1** (default): An autoregressive order 1 model is used. The 'ar1' time parameter is freely estimated.
     - **rw**: A random walk is used. The 'ar1' time parameter is fixed at 1.
-- **space(...covariance=,nu=)**: The name of the covariance function should be given. If using the 'matern' covariance function, supplying a value to the nu option fixes the smoothness parameter nu at that value. Can be omitted from the formula, in which case the default exponential covariance function will be used.
+- **space(...covariance=,nu=)**: Spatially structured covariates should be supplied in the first argument, if desired. The covariate terms supplied here need to be a subset of the terms supplied to the "covariates" part of the model formula. The name of the covariance function should be given to the covariance argument. If using the 'matern' covariance function, supplying a value to the nu option fixes the smoothness parameter nu at that value. Can be omitted from the formula, in which case the default exponential covariance function will be used.
 
 
 ## Response distribution
