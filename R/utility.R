@@ -156,7 +156,7 @@ NULL
 #' @noRd
 .covariance_from_formula<- function(x,data=data.frame(1)) {
   # Set up what the "space" term does in the formula
-  space<- function(covariance,nu) {
+  space<- function(formula,covariance,nu) {
     # Find the closest match for covariance function
     covar<- pmatch(covariance,get_staRVe_distributions("covariance"))
     covar<- get_staRVe_distributions("covariance")[covar]
@@ -173,7 +173,7 @@ NULL
   }
 
   # Get out just the "space" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^space",term.labels,value=T)
 
@@ -603,9 +603,9 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 #' Retrieve observation mean covariate data from a formula and a data.frame.
 #'
-#' @param x A formula object with terms grouped in a \code{mean(...)} function.
+#' @param x A formula object.
 #' @param data A data.frame containing the covariate data.
-#' @param return Either "model.matrix", "model.frame", "var.names"
+#' @param return Either "model.matrix", "model.frame", "all.vars"
 #'
 #' @return The design matrix for the covariates. If return is set to "model.matrix",
 #'   factors, interaction terms, etc. are expanded to their own variables.
@@ -616,7 +616,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
   if( nrow(attr(the_terms,"factors")[-unlist(attr(the_terms,"specials")),,drop=F]) == 0 ) {
     return(matrix(0,ncol=0,nrow=nrow(data)))
-  }
+  } else {}
   new_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
   the_df<- switch(return,
     # model.matrix expands factors into dummy variables, and expands
@@ -635,6 +635,39 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   return(the_df)
 }
 
+#' Retrieve spatial mean covariate data from a formula and a data.frame
+#'
+#' @param x A formula object
+#' @param data A data.frame containing the covariate data
+#' @param return Either "model.matrix", "model.frame", or "all.vars"
+#'
+#' @return The design matrix for the covariates designated inside the space(...)
+#'   special.
+#'
+#' @noRd
+.mean_design_from_space_formula<- function(x,data,return = "model.matrix") {
+  # Pick out the formula inside the space special
+  space<- function(x,covariance,nu) {
+    if( missing(x) ) {
+      return("~space()")
+    }
+    return(paste0("~",deparse(substitute(x)),"+space()"))
+  }
+
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("^space",term.labels,value=T)
+
+  # if the "space" term is missing, return 0 column matrix
+  if( length(the_call) == 0 ) {
+    return(matrix(0,ncol=0,nrow=nrow(data)))
+  } else {}
+
+  the_call<- gsub("space","~space",the_call)
+  new_terms<- terms(formula(the_call),specials="space")
+  covar_formula<- formula(eval(attr(new_terms,"variables")[[2]]))
+  return(.mean_design_from_formula(covar_formula,data,return))
+}
 
 
 
@@ -734,7 +767,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @noRd
 .response_from_formula<- function(x,data) {
   # Get out just the left-hand side of the formula
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   if( attr(the_terms,"response") == 0 ) {
     stop("Response variable must be specified.")
   } else {}
@@ -764,7 +797,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @noRd
 .sample_size_from_formula<- function(x,data,nullReturn=F) {
   # Get out just the "sample.size" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^sample.size",term.labels,value=T)
 
@@ -895,7 +928,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   }
 
   # Get out just the "time" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^time",term.labels,value=T)
 

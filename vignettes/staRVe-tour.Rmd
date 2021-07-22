@@ -321,7 +321,7 @@ Since 'dat(bird_model)' is an 'sf' object you can use spatial operations such as
 formula(bird_model)
 fixed_effects(bird_model)
 
-formula(bird_model)<- cnt~time(year)+mean(elev)
+formula(bird_model)<- cnt~elev+time(year)
 
 formula(bird_model)
 fixed_effects(bird_model)
@@ -564,19 +564,12 @@ First we add two dummy covariates 'elev' and 'temp' to our original data.
 
 ```{r covar-fit-elev}
 bird_model<- prepare_staRVe_model(
-  cnt ~ time(year) + mean(elev+temp),
+  cnt ~ elev+temp+time(year),
   bird_survey,
   distribution = "poisson",
   fit = T
 )
 ```
-
-The only change needed to include covariates is to add a 'mean(...)' term to the model formula.
-Inside of the 'mean(...)' term can be the right-hand side of any formula, with some exceptions.
-The 'offset()' term is not recognized, and the '.' shorthand for 'all variables not otherwise in the formula' is not recognized.
-In our example we include elev and temp by writing 'mean(elev+temp)'.
-A corresponding formula to 'lm' without any spatial or temporal information would be
-cnt~elev+temp'.
 
 
 ```{r}
@@ -590,7 +583,7 @@ All covariates that are named in the model formula are also present in the data 
 
 ```{r covar-fit-elev-temp}
 bird_model<- prepare_staRVe_model(
-  cnt ~ time(year) + mean(I(abs(temp))+poly(elev,2)),
+  cnt ~ I(abs(temp))+poly(elev,2) + time(year),
   bird_survey,
   distribution = "poisson",
   fit = T
@@ -609,7 +602,7 @@ dat(bird_model)
 
 ```{r pred-covar-model}
 bird_model<- prepare_staRVe_model(
-  cnt ~ time(year) + mean(elev+temp),
+  cnt ~ elev+temp + time(year),
   bird_survey,
   distribution = "poisson",
   fit = T
@@ -705,18 +698,18 @@ A model formula specifies the response variable, the covariate effects, the temp
 Put together a model formula should have this general format:
 
 ```{r eval=F}
-response ~ mean(...) + sample.size(...) + time(...) + space(...)
+response ~ covariates + sample.size(...) + time(...) + space(...)
 ```
 
 Some options to the individual terms in the above model formula can be specified, as described below.
 
-- **mean(...)**: Covariate effects can be specified as they would be in a typical call to 'lm' or 'glm'. Can be omitted from the formula if no covariates effects are desired.
+- **covariates**: Covariate effects can be specified as they would be in a typical call to 'lm' or 'glm'. Can be omitted from the formula if no covariates effects are desired.
 - **sample.size(...)**: Used only for specific response distributions, for example the binomial distribution. A single variable name should be supplied. Can be omitted from the formula, and sample sizes are assumed to be equal to 1 for all observations.
 - **time(...,type=)**: The name of the column holding the time information should be given. Valid options for the type option are:
     - **independent**: Each year in the model is assumed to be independent. The 'ar1' time parameter is fixed at 0.
     - **ar1** (default): An autoregressive order 1 model is used. The 'ar1' time parameter is freely estimated.
     - **rw**: A random walk is used. The 'ar1' time parameter is fixed at 1.
-- **space(...,nu=)**: The name of the covariance function should be given. If using the 'matern' covariance function, supplying a value to the nu option fixes the smoothness parameter nu at that value. Can be omitted from the formula, in which case the default exponential covariance function will be used.
+- **space(...covariance=,nu=)**: The name of the covariance function should be given. If using the 'matern' covariance function, supplying a value to the nu option fixes the smoothness parameter nu at that value. Can be omitted from the formula, in which case the default exponential covariance function will be used.
 
 
 ## Response distribution
