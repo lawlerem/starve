@@ -647,9 +647,11 @@ setMethod(f = "TMB_in",
     ys_dists = distances(transient_graph(observations)),
     # Get covariates and time index of random effects in transient graph
     # If length>0, need an additional random effect
-    resp_w_mean_design = matrix(0,ncol=0,
-      nrow=sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
-    ),
+    resp_w_mean_design = .mean_design_from_space_formula(
+        formula(settings(x)),
+        dat(observations)[sapply(lapply(edges(transient_graph(observations)),`[[`,2),length)>1,],
+        "model.matrix"
+      ),
     resp_w_time = c(dat(observations)[
         sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1,
         time_column,
@@ -658,7 +660,8 @@ setMethod(f = "TMB_in",
     # Get covariates, and sample.size for binomial
     mean_design = .mean_design_from_formula(
         formula(settings(x)),
-        dat(observations)
+        dat(observations),
+        "model.matrix"
       ),
     sample_size = .sample_size_from_formula(
         formula(settings(x)),
@@ -666,8 +669,23 @@ setMethod(f = "TMB_in",
         nullReturn = T
       )[,1],
     # Get covariates for proc_w random effects
-    w_mean_design = matrix(0,ncol=0,nrow=nrow(random_effects(process))),
-    w_mean_pars_idx = numeric(0), # Dummy for now, no fixed effecs
+    w_mean_design = .mean_design_from_space_formula(
+      formula(settings(x)),
+      random_effects(process),
+      "model.matrix"
+    ),
+    w_mean_pars_idx = match(
+      colnames(.mean_design_from_space_formula(
+        formula(settings(x)),
+        random_effects(process),
+        "model.matrix"
+      )),
+      colnames(.mean_design_from_formula(
+        formula(settings(x)),
+        dat(observations),
+        "model.matrix"
+      ))
+    )-1,
     # Convert covariance function (char) to (int)
     covar_code = .covariance_to_code(
         covariance_function(parameters(process))

@@ -293,6 +293,9 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   // Report back the simulated random effects and data to R
   SIMULATE{
+    proc_w += w_mean_design*w_mean_pars;
+    resp_w += resp_w_mean_design*w_mean_pars;
+
     REPORT(time_effects);
     REPORT(proc_w);
     REPORT(resp_w);
