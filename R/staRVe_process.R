@@ -201,7 +201,7 @@ prepare_staRVe_process<- function(nodes,
       .mean_design_from_space_formula(formula(settings),covariates,"all.vars"),
       covariates[,attr(covariates,"sf_column")]
     ))
-    df<- st_join(df,covariates)
+    df<- sf::st_join(df,covariates)
     return(df)
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")

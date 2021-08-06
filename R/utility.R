@@ -23,7 +23,7 @@ NULL
   # Get original random effects; only need first time for locations
   random_effects<- random_effects(x)
   nodes<- split(
-    random_effects[,attr(random_effects,"sf_column")],
+    random_effects, # Keep everything in because the values don't matter (except for time)
     random_effects[,attr(random_effects,"time_column"),drop=T]
   )[[1]]
   model_times<- unique(random_effects[,attr(random_effects,"time_column"),drop=T])
@@ -45,15 +45,11 @@ NULL
 
     # Add spatio-temporal random effects prior to the start of the original random effects
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      # Random effects for each new time, just replicating
-      # the locations from the original random effects
-      df<- sf::st_sf(data.frame(w = 0,
-                                se = NA,
-                                time = t,
-                                nodes))
-      colnames(df)[[3]]<- attr(random_effects,"time_column")
+      df<- nodes
+      df[,attr(random_effects,"time_column")]<- t
       return(df)
     }))
+    # Need to add dummy covariates to extra_effects
     random_effects(x)<- rbind(
       extra_effects,
       random_effects(x)
@@ -77,13 +73,8 @@ NULL
 
     # Add spatio-temporal random effects after the end of the original random effects
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      # Random effects for each new time, just replicating
-      # the locations from the original random effects
-      df<- sf::st_sf(data.frame(w = 0,
-                                se = NA,
-                                time = t,
-                                nodes))
-      colnames(df)[[3]]<- attr(random_effects,"time_column")
+      df<- nodes
+      df[,attr(random_effects,"time_column")]<- t
       return(df)
     }))
 
@@ -114,12 +105,23 @@ NULL
 #'
 #' @noRd
 .birdFit<- function() {
-  small_bird<- staRVe::bird_survey[staRVe::bird_survey$year %in% 1998:2000,]
+  years<- 1998:2000
+  small_bird<- staRVe::bird_survey[staRVe::bird_survey$year %in% years,]
   small_bird<- cbind(x=rnorm(nrow(small_bird)),
                      small_bird)
+  nodes<- unique(small_bird[,attr(small_bird,"sf_column")])
+  nodes<- do.call(rbind,lapply(years,function(t) {
+    df<- sf::st_sf(cbind(
+      x = rnorm(nrow(nodes)),
+      year = t,
+      nodes
+    ))
+    return(df)
+  }))
   fit<- prepare_staRVe_model(
-    cnt~x+time(year),
+    cnt~x+I(x^2)+space(x)+time(year),
     small_bird,
+    nodes,
     distribution="poisson",
     link="log",
     fit=F
@@ -133,7 +135,8 @@ NULL
                          year=t,
                          small_bird[1,"geom"]))
   }))
-  pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs,time=2000:2010)
+  pred_locs<- rbind(pred_locs,sf::st_sf(data.frame(x=rnorm(1),year=2010,small_bird[2,"geom"])))
+  pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs)
   return(list(fit=fit,sim=sim,pred=pred))
 }
 
@@ -675,9 +678,9 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 # N
 
-#' Check which covariates are used inside the "mean(...)" term of a formula
+#' Check which covariates are used in a formula
 #'
-#' @param x A formula object with terms grouped in a \code{mean(...)} function.
+#' @param x A formula object.
 #'
 #' @return A character vector giving the names of covariates used in a formula.
 #'
@@ -693,7 +696,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   var_names<- all.vars(new_terms)
   return(var_names)
 }
-
 
 
 
