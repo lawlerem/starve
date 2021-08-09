@@ -603,6 +603,28 @@ prepare_staRVe_model<- function(formula,
     link = link
   )
 
+  # Add spatial covariates to dat(model)
+  # Add spatial covariates from random_effects
+  w_covar<- sf::st_sf(cbind(
+    .mean_design_from_space_formula(formula,random_effects(model),"all.vars"),
+    random_effects(model)[,attr(time_form,"name"),drop=F]
+  ))
+  w_covar<- w_covar[w_covar[,attr(time_form,"name"),drop=T] %in% unique(dat(model)[,attr(time_form,"name"),drop=T]),]
+  dat(model)<- do.call(rbind,Map(
+    sf::st_join,
+    split(dat(model),dat(model)[,attr(time_form,"name"),drop=T]),
+    split(w_covar,w_covar[,attr(time_form,"name"),drop=T]),
+    suffix=lapply(seq_along(unique(dat(model)[,attr(time_form,"name"),drop=T])),function(t) return(c("",".w")))
+  ))
+  # For transient nodes, just use the observation covariates
+  dat(model)[,paste0(attr(time_form,"name"),".w")]<- NULL
+  rownames(dat(model))<- NULL
+  w_covar_names<- colnames(.mean_design_from_space_formula(formula,random_effects(model),"all.vars"))
+  foo<- sf::st_drop_geometry(dat(model)[,paste0(w_covar_names,".w"),drop=F])
+  foo[is.na(foo)]<- sf::st_drop_geometry(dat(model)[,w_covar_names,drop=F])[is.na(foo)]
+  dat(model)[,paste0(w_covar_names,".w")]<- foo
+  attr(dat(model),"time_column")<- attr(time_form,"name")
+
   if( fit == T ) {
     model<- staRVe_fit(model,silent = silent,...)
   } else {}

@@ -85,12 +85,22 @@ setMethod(f = "staRVe_fit",
   )
 
   # Get random effects, predictions on link scale, and predictions on response scale
-  predictions<- dat(observations(fit))
-  predictions<- .predict_linear(fit,predictions,predictions)
-  predictions<- .predict_response(fit,predictions)
+  w_covar_names<- colnames(.mean_design_from_space_formula(formula(fit),dat(fit),"all.vars"))
+  w_predictions<- sf::st_sf(cbind(
+    dat(fit)[,c("w","w_se",attr(dat(fit),"time_column")),drop=T],
+    dat(fit)[,paste0(w_covar_names,".w"),drop=F]
+  ))
+  colnames(w_predictions)<- c("w","w_se",attr(dat(fit),"time_column"),w_covar_names,attr(w_predictions,"sf_column"))
+  dat(fit)[,c("linear","linear_se")]<- .predict_linear(fit,w_predictions,dat(fit))[,c("linear","linear_se"),drop=T]
+  dat(fit)[,c("response","response_se")]<- .predict_response(fit,dat(fit))[,c("response","response_se"),drop=T]
 
-  dat(observations(fit))[,c("linear","linear_se","response","response_se")]<-
-    predictions[,c("linear","linear_se","response","response_se"),drop=T]
+
+  # predictions<- dat(observations(fit))
+  # predictions<- .predict_linear(fit,predictions,predictions)
+  # predictions<- .predict_response(fit,predictions)
+  #
+  # dat(observations(fit))[,c("linear","linear_se","response","response_se")]<-
+  #   predictions[,c("linear","linear_se","response","response_se"),drop=T]
 
   return(fit)
 })
@@ -252,7 +262,18 @@ setMethod(f = "staRVe_simulate",
   # Simulated values don't have standard errors, update linear and response predictions
   # to correspond to the simulated random effects
   dat(model)[,c("w_se","linear","linear_se","response","response_se")]<- NA
-  dat(model)[,c("linear")]<- .predict_linear(model,dat(model),dat(model),se=F)[,"linear",drop=T]
+  w_covar_names<- colnames(.mean_design_from_space_formula(formula(model),dat(model),"all.vars"))
+  w_predictions<- sf::st_sf(cbind(
+    dat(model)[,c("w","w_se",time_column),drop=T],
+    dat(model)[,paste0(w_covar_names,".w"),drop=F]
+  ))
+  colnames(w_predictions)<- c("w","w_se",time_column,w_covar_names,attr(w_predictions,"sf_column"))
+  dat(model)[,c("linear")]<- .predict_linear(
+    model,
+    w_predictions,
+    dat(model),
+    se = F
+  )[,"linear",drop=T]
   dat(model)[,c("response")]<- .predict_response(model,dat(model),se=F)[,c("response"),drop=T]
 
   # Update response observations to be the simulated value
@@ -443,17 +464,18 @@ setMethod(f = "staRVe_simulate",
       w_predictions,
       return = "all.vars"
     ))
-    space_covar<- sf::st_drop_geometry(predictions[,paste0(space_covar_names,".w"),drop=F])
-    colnames(space_covar)<- space_covar_names
-    space_design<- .mean_design_from_space_formula(formula(x),space_covar)
-    mod_design<- design
-    mod_design[,colnames(space_design)]<- design[,colnames(space_design)]-space_design[,colnames(space_design)]
+    if( length(space_covar_names) > 0 ) {
+      space_covar<- sf::st_drop_geometry(predictions[,paste0(space_covar_names,".w"),drop=F])
+      colnames(space_covar)<- space_covar_names
+      space_design<- .mean_design_from_space_formula(formula(x),space_covar)
+      design[,colnames(space_design)]<- design[,colnames(space_design)]-space_design[,colnames(space_design)]
+    } else {}
 
 
     # Create linear predictions
     beta<- fixed_effects(x)[,"par"]
     names(beta)<- rownames(fixed_effects(x))
-    linear<- mod_design %*% beta + predictions$w
+    linear<- design %*% beta + predictions$w
 
     if( se ) {
       # Create parameter covariance estimate for fixed effects
@@ -471,19 +493,23 @@ setMethod(f = "staRVe_simulate",
 
       # The commented and uncommented methods are the same
       # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
-      linear_se<- sqrt(rowSums((mod_design %*% par_cov) * mod_design) + predictions$w_se^2)
+      linear_se<- sqrt(rowSums((design %*% par_cov) * design) + predictions$w_se^2)
     } else {
       linear_se<- NA
     }
 
-    return(sf::st_sf(data.frame(predictions[,c("w","w_se"),drop=T],
-                                linear,
-                                linear_se,
-                                response = NA,
-                                response_se = NA,
-                                as.data.frame(predictions)[,time_column,drop=F],
-                                as.data.frame(predictions)[,paste0(space_covar_names,".w"),drop=F],
-                                predictions[,.names_from_formula(formula(x))])))
+    df<- data.frame(predictions[,c("w","w_se"),drop=T],
+                    linear,
+                    linear_se,
+                    response = NA,
+                    response_se = NA,
+                    as.data.frame(predictions)[,time_column,drop=F])
+    if( length(space_covar_names) > 0 ) {
+      df<- cbind(df,as.data.frame(predictions)[,paste0(space_covar_names,".w"),drop=F])
+    } else {}
+    df<- sf::st_sf(cbind(df,predictions[,.names_from_formula(formula(x))]))
+
+    return(return(df))
   }
 }
 

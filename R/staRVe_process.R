@@ -201,6 +201,10 @@ prepare_staRVe_process<- function(nodes,
       .mean_design_from_space_formula(formula(settings),covariates,"all.vars"),
       covariates[,attr(covariates,"sf_column")]
     ))
+    covariates<- unique(covariates)
+    if( anyDuplicated(covariates[,attr(covariates,"sf_column")]) ) {
+      stop("Spatial covariates must be unique.")
+    } else {}
     df<- sf::st_join(df,covariates)
     return(df)
   }))
