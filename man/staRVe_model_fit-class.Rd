@@ -13,7 +13,7 @@
 \alias{timing,staRVe_model_fit-method}
 \title{An S4 class to hold an optimized staRVe model, extends the staRVe_model class}
 \usage{
-\S4method{staRVe_predict}{staRVe_model_fit,sf}(x, locations, covariates)
+\S4method{staRVe_predict}{staRVe_model_fit,sf}(x, locations, covariates = locations)
 
 \S4method{staRVe_predict}{staRVe_model_fit,RasterLayer}(x, locations, covariates, time = "model")
 

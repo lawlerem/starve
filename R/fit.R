@@ -86,21 +86,18 @@ setMethod(f = "staRVe_fit",
 
   # Get random effects, predictions on link scale, and predictions on response scale
   w_covar_names<- colnames(.mean_design_from_space_formula(formula(fit),dat(fit),"all.vars"))
-  w_predictions<- sf::st_sf(cbind(
-    dat(fit)[,c("w","w_se",attr(dat(fit),"time_column")),drop=T],
-    dat(fit)[,paste0(w_covar_names,".w"),drop=F]
-  ))
-  colnames(w_predictions)<- c("w","w_se",attr(dat(fit),"time_column"),w_covar_names,attr(w_predictions,"sf_column"))
-  dat(fit)[,c("linear","linear_se")]<- .predict_linear(fit,w_predictions,dat(fit))[,c("linear","linear_se"),drop=T]
+  w_predictions<- dat(fit)[,c("w","w_se",attr(dat(fit),"time_column")),drop=F]
+  if( length(w_covar_names) > 0 ) {
+    w_covar<- sf::st_drop_geometry(dat(fit)[,paste0(w_covar_names,".w")])
+    colnames(w_covar)<- w_covar_names
+    w_predictions<- sf::st_sf(cbind(
+      w_predictions,
+      w_covar
+    ))
+    attr(w_predictions,"time_column")<- attr(dat(fit),"time_column")
+  } else {}
+  dat(fit)[,c("linear","linear_se")]<- .predict_linear(fit,unique(w_predictions),dat(fit))[,c("linear","linear_se"),drop=T]
   dat(fit)[,c("response","response_se")]<- .predict_response(fit,dat(fit))[,c("response","response_se"),drop=T]
-
-
-  # predictions<- dat(observations(fit))
-  # predictions<- .predict_linear(fit,predictions,predictions)
-  # predictions<- .predict_response(fit,predictions)
-  #
-  # dat(observations(fit))[,c("linear","linear_se","response","response_se")]<-
-  #   predictions[,c("linear","linear_se","response","response_se"),drop=T]
 
   return(fit)
 })
@@ -115,7 +112,7 @@ setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","sf"),
           definition = function(x,
                                 locations,
-                                covariates) {
+                                covariates = locations) {
   ### Check that we have all covariates, if there are covariates in the model
   covar_names<- .names_from_formula(formula(settings(x)))
   # if( missing(covariates) && (length(covar_names) == 0) ) {
@@ -128,7 +125,10 @@ setMethod(f = "staRVe_predict",
 
   if( !all(covar_names %in% colnames(locations)) ) {
     stop("Missing covariates, please add them to the prediction locations.")
-  }
+  } else {}
+  if( missing(covariates) ) {
+    covariates<- locations
+  } else {}
 
   # Need a good way to do this check
   # if( !missing(covariates) & (anyRow(locations) !%in% rows(covariates)) ) {
@@ -164,23 +164,48 @@ setMethod(f = "staRVe_predict",
 setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","RasterLayer"),
           definition = function(x,locations,covariates,time="model") {
+  time_column<- attr(dat(x),"time_column")
   # Convert raster to sf
   prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
   prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
+  if( time == "model" ) {
+    time<- seq(min(dat(x)[,time_column,drop=T]),max(dat(x)[,time_column,drop=T]))
+  } else {
+    time<- seq(min(time),max(time))
+  }
+  prediction_points<- do.call(rbind,lapply(time,function(t) {
+    df<- sf::st_sf(cbind(
+      t = t,
+      prediction_points
+    ))
+    colnames(df)[[1]]<- time_column
+    attr(df,"time_column")<- time_column
+    return(df)
+  }))
 
   # Dispatch predictions based on if covariates are in the model and
   # if they are supplied
   covar_names<- .names_from_formula(formula(settings(x)))
   if( missing(covariates) && (length(covar_names) == 0) ) {
-    pred<- staRVe_predict(x,prediction_points,time=time)
+    pred<- staRVe_predict(x,prediction_points)
   } else if( missing(covariates) && (length(covar_names) != 0) ) {
     stop("Missing covariates, please supply them.")
   } else if( !all(covar_names %in% names(covariates)) ) {
     stop("Missing some covariates. Check the names of your raster covariates.")
   } else {
-    covar_points<- .sf_from_raster_list(covariates,
-      time_name=attr(random_effects(x),"time_column"))
-    pred<- staRVe_predict(x,prediction_points,covar_points,time=time)
+    covar_points<- .sf_from_raster_list(covariates,time_name=time_column)
+    p1<- prediction_points
+    prediction_points<- do.call(rbind,lapply(time,function(t) {
+      df<- sf::st_join(
+        prediction_points[prediction_points[,time_column,drop=T] == t,],
+        covar_points[covar_points[,time_column,drop=T] == t,],
+        suffix = c("",".c")
+      )
+      df[,paste0(time_column,".c")]<- NULL
+      attr(df,"time_column")<- time_column
+      return(df)
+    }))
+    pred<- staRVe_predict(x,prediction_points,prediction_points)
   }
 
   # Convert sf predictions to raster list
@@ -263,17 +288,17 @@ setMethod(f = "staRVe_simulate",
   # to correspond to the simulated random effects
   dat(model)[,c("w_se","linear","linear_se","response","response_se")]<- NA
   w_covar_names<- colnames(.mean_design_from_space_formula(formula(model),dat(model),"all.vars"))
-  w_predictions<- sf::st_sf(cbind(
-    dat(model)[,c("w","w_se",time_column),drop=T],
-    dat(model)[,paste0(w_covar_names,".w"),drop=F]
-  ))
-  colnames(w_predictions)<- c("w","w_se",time_column,w_covar_names,attr(w_predictions,"sf_column"))
-  dat(model)[,c("linear")]<- .predict_linear(
-    model,
-    w_predictions,
-    dat(model),
-    se = F
-  )[,"linear",drop=T]
+  w_predictions<- dat(model)[,c("w","w_se",attr(dat(model),"time_column")),drop=F]
+  if( length(w_covar_names) > 0 ) {
+    w_covar<- sf::st_drop_geometry(dat(model)[,paste0(w_covar_names,".w")])
+    colnames(w_covar)<- w_covar_names
+    w_predictions<- sf::st_sf(cbind(
+      w_predictions,
+      w_covar
+    ))
+    attr(w_predictions,"time_column")<- attr(dat(model),"time_column")
+  } else {}
+  dat(model)[,c("linear")]<- .predict_linear(model,unique(w_predictions),dat(model),se = F)[,"linear",drop=T]
   dat(model)[,c("response")]<- .predict_response(model,dat(model),se=F)[,c("response"),drop=T]
 
   # Update response observations to be the simulated value
@@ -451,7 +476,7 @@ setMethod(f = "staRVe_simulate",
       linear_se,
       response = NA,
       response_se = NA,
-      predictions[,time_column],
+      predictions[,time_column]
     )))
   } else {
     # Create design matrix from covariates
