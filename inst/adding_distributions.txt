@@ -1,7 +1,7 @@
-1.) Add to family.hpp
+1.) Add to family.hpp (response_density and simulate)
 2.) Add to utility.R -> get_staRVe_distributions
-3.) Add number of response pars to staRVe_observations.R -> prepare_staRVe_observations
+3.) Add to staRVe_observation_parameters.R -> response_distribution<- (w/ default link function)
 4.) Add parameters to staRVe_model.R -> TMB_in
 5.) Make sure par_($PARAMETER_NAME) is in staRVe_model.R -> update_staRVe_model
-5.) Put in parameter transformations at beginning of staRVe.cpp
-6.) Add distribution parameters to ADREPORT at end of staRVe.cpp
+5.) Put in parameter transformations at beginning of staRVe_model.cpp
+6.) Add distribution parameters to ADREPORT at end of staRVe_model.cpp

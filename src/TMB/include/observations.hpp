@@ -14,7 +14,7 @@ class observations {
     vector<matrix<Type> > ys_dists; // Distances for transient graph
     vector<Type> resp_w; // Extra random effects needed for transient graph
     matrix<Type> mean_design; // Covariate observations
-    vector<int> sample_size; // Sample size for binomial observations
+    vector<Type> sample_size; // Sample size for binomial observations
     glm<Type> family; // link function and response distribution
 
     vector<Type> response; // Response mean computed from process and covariates
@@ -27,7 +27,7 @@ class observations {
                  vector<matrix<Type> > ys_dists,
                  vector<Type> resp_w,
                  matrix<Type> mean_design,
-                 vector<int> sample_size,
+                 vector<Type> sample_size,
                  glm<Type> family);
     observations() = default;
 
@@ -38,7 +38,7 @@ class observations {
                vector<matrix<Type> > new_dists,
                vector<Type> new_resp_w,
                matrix<Type> new_mean_design,
-               vector<int> new_sample_size);
+               vector<Type> new_sample_size);
 
     // Compute response mean conditional on random effects and covaraites
     vector<Type> find_response();
@@ -62,7 +62,7 @@ observations<Type>::observations(nngp<Type> &process,
                                  vector<matrix<Type> > ys_dists,
                                  vector<Type> resp_w,
                                  matrix<Type> mean_design,
-                                 vector<int> sample_size,
+                                 vector<Type> sample_size,
                                  glm<Type> family) :
   process(process),
   y(y),
@@ -83,7 +83,7 @@ void observations<Type>::update_y(vector<Type> new_y,
                                   vector<matrix<Type> > new_dists,
                                   vector<Type> new_resp_w,
                                   matrix<Type> new_mean_design,
-                                  vector<int> new_sample_size) {
+                                  vector<Type> new_sample_size) {
   keep = new_keep;
   ys_graph = new_graph; // don't need to resizeLike(new_graph)
   y = new_y;

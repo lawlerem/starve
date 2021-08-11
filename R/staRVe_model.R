@@ -774,12 +774,28 @@ setMethod(f = "TMB_in",
         ), # Log-normal; std. dev.
       binomial = numeric(0), # Binomial; NA
       atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
-      compois = ifelse ( # Conway-Maxwell-Poisson; dispersion > 0
+      compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
             response_parameters(parameters(observations))["dispersion","par"] > 0 ||
             response_parameters(parameters(observations))["dispersion","fixed"] == T,
           -log(response_parameters(parameters(observations))["dispersion","par"]),
+          # negative sign since we want >0 to be over-dispersion
           -log(1)
+        ),
+      tweedie = c( # tweedie
+        ifelse( # scale>0
+          response_parameters(parameters(observations))["scale","par"] > 0 ||
+          response_parameters(parameters(observations))["scale","fixed"] == T,
+          log(response_parameters(parameters(observations))["scale","par"]),
+          log(1)
+        ),
+        ifelse( # 1<power<2
+          (0 < response_parameters(parameters(observations))["power","par"] &&
+           response_parameters(parameters(observations))["power","par"] < 1) ||
+          response_parameters(parameters(observations))["power","par"] == T,
+          qlogis(response_parameters(parameters(observations))["power","par"]-1),
+          qlogis(1.5-1)
         )
+      )
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],
     resp_w = numeric(
@@ -919,7 +935,7 @@ setMethod(f = "update_staRVe_model",
   # Response distribution parameters; need to be careful if no parameters
   response_parameters(x)<- within(
     response_parameters(x),{
-      par_names<<- c("par_sd","par_overdispersion","par_dispersion")
+      par_names<<- c("par_sd","par_overdispersion","par_dispersion","par_scale","par_power")
       par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }

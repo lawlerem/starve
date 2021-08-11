@@ -21,9 +21,9 @@ class glm {
                   Type random_predictor);
     // Evaluate the density for an observation x with conditional mean x
     // sample_size is the sample size related to a single binomial observation
-    Type log_density(Type x, Type mean, int sample_size);
+    Type log_density(Type x, Type mean, Type sample_size);
     // Simulated a single draw from the response distribution
-    Type simulate(Type mean, int sample_size);
+    Type simulate(Type mean, Type sample_size);
 };
 
 
@@ -48,11 +48,11 @@ Type glm<Type>::inv_link(vector<Type> fixed_predictors,
 }
 
 template<class Type>
-Type glm<Type>::log_density(Type x, Type mean, int sample_size) {
+Type glm<Type>::log_density(Type x, Type mean, Type sample_size) {
   return distribution(x,mean,sample_size,distribution_pars);
 }
 
 template<class Type>
-Type glm<Type>::simulate(Type mean, int sample_size) {
+Type glm<Type>::simulate(Type mean, Type sample_size) {
   return distribution.simulate(mean,sample_size,distribution_pars);
 }

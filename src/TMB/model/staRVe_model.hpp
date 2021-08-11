@@ -20,7 +20,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_IVECTOR(resp_w_time);
 
   DATA_MATRIX(mean_design);
-  DATA_IVECTOR(sample_size);
+  DATA_VECTOR(sample_size);
 
   DATA_MATRIX(w_mean_design);
   DATA_IVECTOR(w_mean_pars_idx); // Want to use the same fixed effects as y
@@ -64,6 +64,9 @@ Type staRVe_model(objective_function<Type>* obj) {
     case 6 : break; // Binomial, NA
     case 7 : break; // atLeastOneBinomial, NA
     case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson, dispersion > 0
+    case 9 : response_pars(0) = exp(working_response_pars(0)); // Tweedie, scale > 0
+             // response_pars(1) = plogis(working_response_pars(0))+1; break;// 1 < power < 2
+             response_pars(1) = 1.0/(1.0+exp(-working_response_pars(1)))+1.0; break;
     default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal, sd>0
   }
   Type space_sd = exp(log_space_sd); // sd>0
@@ -339,6 +342,13 @@ Type staRVe_model(objective_function<Type>* obj) {
     Type par_dispersion = response_pars(0);
     REPORT(par_dispersion);
     ADREPORT(par_dispersion);
+  } else if ( distribution_code == 9 ) { // Tweedie
+    Type par_scale = response_pars(0);
+    REPORT(par_scale);
+    ADREPORT(par_scale);
+    Type par_power = response_pars(1);
+    REPORT(par_power);
+    ADREPORT(par_power);
   } else {}
 
   Type par_space_sd = space_sd;
