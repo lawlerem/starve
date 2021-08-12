@@ -9,6 +9,7 @@ Eigen::VectorXi to_list(Rcpp::List edge_list) {
   return Rcpp::as<Eigen::VectorXi>(edge_list["to"]);
 }
 
+
 Eigen::VectorXi order_d_matrix(Eigen::MatrixXd &d) {
   Eigen::VectorXi order=Eigen::VectorXi::LinSpaced(d.rows(),0,d.rows()-1);
   int minParent, minChild;
@@ -24,11 +25,30 @@ Eigen::VectorXi order_d_matrix(Eigen::MatrixXd &d) {
   return order;
 }
 
+
+
+// struct refSorter {
+//     bool operator (const Foo& lhs, const Foo& rhs) const {
+//         return lhs.ham_index < rhs.ham_index;
+//     }
+// };
+
+struct refSorter {
+  refSorter(const Eigen::VectorXd &d) : d_(d) {}
+  bool operator () (const int a, const int b) {
+    return d_(a) < d_(b);
+  }
+
+  const Eigen::VectorXd d_;
+};
+
+
 Eigen::VectorXi lowest_k(const Eigen::VectorXd &d, const int k) {
   Eigen::VectorXi ind=Eigen::VectorXi::LinSpaced(d.size(),0,d.size()-1);
-  std::partial_sort(ind.data(),ind.data()+k,ind.data()+ind.size(),[&d](int a, int b) {
-    return d(a) < d(b);
-  });
+  // std::partial_sort(ind.data(),ind.data()+k,ind.data()+ind.size(),[&d](int a, int b) {
+  //   return d(a) < d(b);
+  // });
+  std::partial_sort(ind.data(),ind.data()+k,ind.data()+ind.size(),refSorter(d));
   return ind.segment(0,k);
 }
 
