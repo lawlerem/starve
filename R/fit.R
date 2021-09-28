@@ -152,7 +152,6 @@ setMethod(f = "staRVe_predict",
                                 locations)
   predictions<- .predict_response(x,
                                   predictions)
-
   attr(predictions,"time_column")<- attr(random_effects(process(x)),"time_column")
 
   return(predictions)
@@ -451,8 +450,16 @@ setMethod(f = "staRVe_simulate",
                            w_predictions,
                            locations,
                            se = T) {
-  # 1.) Pick out the w predictions for each location
   time_column<- attr(random_effects(x),"time_column")
+  locations<- sf::st_sf(cbind(.mean_design_from_formula(
+      formula(x),
+      locations,
+      return = "all.vars"
+    ),
+    locations[,time_column]
+  ))
+  attr(locations,"time_column")<- time_column
+  # 1.) Pick out the w predictions for each location
   locations<- locations[order(locations[,time_column,drop=T]),]
   w_predictions<- w_predictions[
     w_predictions[,time_column,drop=T] %in% unique(locations[,time_column,drop=T]),

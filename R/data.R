@@ -1,6 +1,6 @@
-#' House finch counts from the Breeding Bird Survey
+#' Carolina wren counts from the Breeding Bird Survey
 #'
-#' A spatio-temporal dataset containing yearly counts of the house finch from
+#' A spatio-temporal dataset containing yearly counts of the Carolina wren from
 #'   the North American Breeding Bird Survey, between the years 1967 and 2014.
 #'
 #' We obtained the data the "Spatio-Temporal Statistics with R" book by C. K.
@@ -14,3 +14,9 @@
 #' }
 #' @source \url{ftp://ftpext.usgs.gov/pub/er/md/laurel/BBS/Archivefiles/Version2016v0/}
 "bird_survey"
+
+#' Haddock survey data from the Scotian shelf
+#'
+#' 
+#'
+"haddock_survey"
