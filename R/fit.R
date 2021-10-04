@@ -167,7 +167,7 @@ setMethod(f = "staRVe_predict",
   # Convert raster to sf
   prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
   prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
-  if( time == "model" ) {
+  if( identical(time,"model") ) {
     time<- seq(min(dat(x)[,time_column,drop=T]),max(dat(x)[,time_column,drop=T]))
   } else {
     time<- seq(min(time),max(time))

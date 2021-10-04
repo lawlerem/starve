@@ -89,7 +89,7 @@ setReplaceMethod(f = "response_distribution",
     tweedie = data.frame(par = numeric(2),
                          se = numeric(2),
                          fixed = c(F,F),
-                         row.names = c("scale","power"))
+                         row.names = c("dispersion","power"))
   )
   link_function(x)<- switch(value,
     gaussian = "identity",

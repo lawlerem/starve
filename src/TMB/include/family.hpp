@@ -37,8 +37,10 @@ struct response_density {
                         log(1 - pow(1-mean,size)) ); // AtLeastOneBinomial
       case 8 : return dcompois2(data,mean,pars(0),true); // Conway-Maxwell-Poisson
       case 9 : return dtweedie(data,
-        size*pars(0)*mean, // E[y]
-        exp(log(mean)-log(2-pars(1)))*pow(size*pars(0)*mean,1-pars(1)), // dispersion
+        // size*pars(0)*mean, // E[y]
+        size*mean, // E[y]
+        // exp(log(mean)-log(2-pars(1)))*pow(size*pars(0)*mean,1-pars(1)), // dispersion
+        pars(0), // dispersion
         pars(1), // power
         true
       ); // Tweedie
@@ -60,7 +62,8 @@ struct response_density {
       case 6 : return rbinom(T(size),mean); // Binomial
       case 7 : return (rbinom(T(size),mean) == 0 ? 0 : 1); // AtLeastOneBinomial
       case 8 : return rcompois2(mean,pars(0)); // Conway-Maxwell-Poisson
-      case 9 : return rtweedie(size*pars(0)*mean,exp(log(mean)-log(2-pars(1)))*pow(size*pars(0)*mean,1-pars(1)),pars(1)); // Tweedie
+      // case 9 : return rtweedie(size*pars(0)*mean,exp(log(mean)-log(2-pars(1)))*pow(size*pars(0)*mean,1-pars(1)),pars(1)); // Tweedie
+      case 9 : return rtweedie(size*mean,pars(0),pars(1)); // Tweedie
       default : return rnorm(mean,pars(0)); // Normal
     }
   }

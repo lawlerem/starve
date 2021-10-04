@@ -782,10 +782,10 @@ setMethod(f = "TMB_in",
           -log(1)
         ),
       tweedie = c( # tweedie
-        ifelse( # scale>0
-          response_parameters(parameters(observations))["scale","par"] > 0 ||
-          response_parameters(parameters(observations))["scale","fixed"] == T,
-          log(response_parameters(parameters(observations))["scale","par"]),
+        ifelse( # dispersion>0
+          response_parameters(parameters(observations))["dispersion","par"] > 0 ||
+          response_parameters(parameters(observations))["dispersion","fixed"] == T,
+          log(response_parameters(parameters(observations))["dispersion","par"]),
           log(1)
         ),
         ifelse( # 1<power<2

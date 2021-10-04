@@ -3,7 +3,7 @@
 \docType{data}
 \name{bird_survey}
 \alias{bird_survey}
-\title{House finch counts from the Breeding Bird Survey}
+\title{Carolina wren counts from the Breeding Bird Survey}
 \format{
 An sf object of point geometries containing 1,575 rows and 2 fields:
 \describe{
@@ -18,7 +18,7 @@ An sf object of point geometries containing 1,575 rows and 2 fields:
 bird_survey
 }
 \description{
-A spatio-temporal dataset containing yearly counts of the house finch from
+A spatio-temporal dataset containing yearly counts of the Carolina wren from
   the North American Breeding Bird Survey, between the years 1967 and 2014.
 }
 \details{
