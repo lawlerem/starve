@@ -18,7 +18,7 @@ setMethod(f = "staRVe_fit",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe",
+    DLL = "staRVe_model",
     silent = silent,
     ...
   )
@@ -85,18 +85,25 @@ setMethod(f = "staRVe_fit",
   )
 
   # Get random effects, predictions on link scale, and predictions on response scale
-  predictions<- dat(observations(fit))
-  predictions<- .predict_linear(fit,predictions,predictions)
-  predictions<- .predict_response(fit,predictions)
-
-  dat(observations(fit))[,c("linear","linear_se","response","response_se")]<-
-    predictions[,c("linear","linear_se","response","response_se"),drop=T]
+  w_covar_names<- colnames(.mean_design_from_space_formula(formula(fit),dat(fit),"all.vars"))
+  w_predictions<- dat(fit)[,c("w","w_se",attr(dat(fit),"time_column")),drop=F]
+  if( length(w_covar_names) > 0 ) {
+    w_covar<- sf::st_drop_geometry(dat(fit)[,paste0(w_covar_names,".w")])
+    colnames(w_covar)<- w_covar_names
+    w_predictions<- sf::st_sf(cbind(
+      w_predictions,
+      w_covar
+    ))
+    attr(w_predictions,"time_column")<- attr(dat(fit),"time_column")
+  } else {}
+  dat(fit)[,c("linear","linear_se")]<- .predict_linear(fit,unique(w_predictions),dat(fit))[,c("linear","linear_se"),drop=T]
+  dat(fit)[,c("response","response_se")]<- .predict_response(fit,dat(fit))[,c("response","response_se"),drop=T]
 
   return(fit)
 })
 
-#' @param locations An sf object
-#' @param covariates An sf object with covariates
+#' @param locations An sf object for prediction locations and times, with covariates
+#' @param covariates An sf object with spatial covariates
 #' @param time Which times to predict at?
 #'
 #' @export
@@ -105,37 +112,46 @@ setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","sf"),
           definition = function(x,
                                 locations,
-                                covariates,
-                                time = "model") {
+                                covariates = locations) {
   ### Check that we have all covariates, if there are covariates in the model
   covar_names<- .names_from_formula(formula(settings(x)))
-  if( missing(covariates) && (length(covar_names) == 0) ) {
-    covariates<- "missing"
-  } else if( missing(covariates) && (length(covar_names) != 0) ) {
-    stop("Missing covariates, please supply them.")
-  } else if( !all(covar_names %in% names(covariates)) ) {
-    stop("Missing some covariates. Please check covariate names.")
-  } else {  }
+  # if( missing(covariates) && (length(covar_names) == 0) ) {
+  #   covariates<- "missing"
+  # } else if( missing(covariates) && (length(covar_names) != 0) ) {
+  #   stop("Missing covariates, please supply them.")
+  # } else if( !all(covar_names %in% names(covariates)) ) {
+  #   stop("Missing some covariates. Please check covariate names.")
+  # } else {  }
+
+  if( !all(covar_names %in% colnames(locations)) ) {
+    stop("Missing covariates, please add them to the prediction locations.")
+  } else {}
+  if( missing(covariates) ) {
+    covariates<- locations
+  } else {}
+
+  # Need a good way to do this check
+  # if( !missing(covariates) & (anyRow(locations) !%in% rows(covariates)) ) {
+  #   stop("Need to supply spatial covariates for all prediction locations/times.")
+  # }
 
   ### If time = "model", use timespan of original dataset
-  model_times<- unique(random_effects(process(x))[,attr(random_effects(process(x)),"time_column"),drop=T])
-  if( identical(time,"model") ) {
-    time<- model_times
-  } else {}
+  # model_times<- unique(random_effects(process(x))[,attr(random_effects(process(x)),"time_column"),drop=T])
+  # if( identical(time,"model") ) {
+  #   time<- model_times
+  # } else {}
 
   # Get predictions and standard errors
   predictions<- .predict_w(x,
                            locations = locations,
-                           pred_times = time)
+                           covariates = covariates)
+  # .predict_w gives all locations every year, .predict_linear needs to
+  #   pick out only the ones you want
   predictions<- .predict_linear(x,
                                 predictions,
-                                covariates)
+                                locations)
   predictions<- .predict_response(x,
                                   predictions)
-
-  # Re-order to w, w_se, linear, linear_se, response, response_se
-  predictions[,1:6]<- predictions[,c(5,6,3,4,1,2),drop=T]
-  colnames(predictions)[1:6]<- colnames(predictions)[c(5,6,3,4,1,2)]
   attr(predictions,"time_column")<- attr(random_effects(process(x)),"time_column")
 
   return(predictions)
@@ -146,32 +162,57 @@ setMethod(f = "staRVe_predict",
 #' @describeIn staRVe_model_fit Predict/forecast over an entire raster
 setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","RasterLayer"),
-          definition = function(x,locations,covariates,...) {
+          definition = function(x,locations,covariates,time="model") {
+  time_column<- attr(dat(x),"time_column")
   # Convert raster to sf
   prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
   prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
+  if( identical(time,"model") ) {
+    time<- seq(min(dat(x)[,time_column,drop=T]),max(dat(x)[,time_column,drop=T]))
+  } else {
+    time<- seq(min(time),max(time))
+  }
+  prediction_points<- do.call(rbind,lapply(time,function(t) {
+    df<- sf::st_sf(cbind(
+      t = t,
+      prediction_points
+    ))
+    colnames(df)[[1]]<- time_column
+    attr(df,"time_column")<- time_column
+    return(df)
+  }))
 
   # Dispatch predictions based on if covariates are in the model and
   # if they are supplied
   covar_names<- .names_from_formula(formula(settings(x)))
   if( missing(covariates) && (length(covar_names) == 0) ) {
-    pred<- staRVe_predict(x,prediction_points,...)
+    pred<- staRVe_predict(x,prediction_points)
   } else if( missing(covariates) && (length(covar_names) != 0) ) {
     stop("Missing covariates, please supply them.")
   } else if( !all(covar_names %in% names(covariates)) ) {
     stop("Missing some covariates. Check the names of your raster covariates.")
   } else {
-    covar_points<- .sf_from_raster_list(covariates,
-      time_name=attr(random_effects(x),"time_column"))
-    pred<- staRVe_predict(x,prediction_points,covar_points,...)
+    covar_points<- .sf_from_raster_list(covariates,time_name=time_column)
+    p1<- prediction_points
+    prediction_points<- do.call(rbind,lapply(time,function(t) {
+      df<- sf::st_join(
+        prediction_points[prediction_points[,time_column,drop=T] == t,],
+        covar_points[covar_points[,time_column,drop=T] == t,],
+        suffix = c("",".c")
+      )
+      df[,paste0(time_column,".c")]<- NULL
+      attr(df,"time_column")<- time_column
+      return(df)
+    }))
+    pred<- staRVe_predict(x,prediction_points,prediction_points)
   }
 
   # Convert sf predictions to raster list
-  pred_by_time<- split(pred,pred[,attr(random_effects(process(x)),"time_column"),drop=T])
+  pred_by_time<- split(pred,pred[,attr(random_effects(x),"time_column"),drop=T])
   pred_raster_by_time<- lapply(pred_by_time,raster::rasterize,locations)
   pred_raster_by_time<- lapply(pred_raster_by_time,function(raster_time) {
     ID_layer<- 1
-    time_layer<- raster::nlayers(raster_time)
+    time_layer<- which(names(pred_raster_by_time[[1]]) == attr(random_effects(x),"time_column"))
     return(raster_time[[-c(ID_layer,time_layer)]])
   }) # Remove ID and time layer
 
@@ -206,7 +247,7 @@ setMethod(f = "staRVe_simulate",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe",
+    DLL = "staRVe_model",
     silent = T,
     ...
   )
@@ -245,7 +286,18 @@ setMethod(f = "staRVe_simulate",
   # Simulated values don't have standard errors, update linear and response predictions
   # to correspond to the simulated random effects
   dat(model)[,c("w_se","linear","linear_se","response","response_se")]<- NA
-  dat(model)[,c("linear")]<- .predict_linear(model,dat(model),dat(model),se=F)[,"linear",drop=T]
+  w_covar_names<- colnames(.mean_design_from_space_formula(formula(model),dat(model),"all.vars"))
+  w_predictions<- dat(model)[,c("w","w_se",attr(dat(model),"time_column")),drop=F]
+  if( length(w_covar_names) > 0 ) {
+    w_covar<- sf::st_drop_geometry(dat(model)[,paste0(w_covar_names,".w")])
+    colnames(w_covar)<- w_covar_names
+    w_predictions<- sf::st_sf(cbind(
+      w_predictions,
+      w_covar
+    ))
+    attr(w_predictions,"time_column")<- attr(dat(model),"time_column")
+  } else {}
+  dat(model)[,c("linear")]<- .predict_linear(model,unique(w_predictions),dat(model),se = F)[,"linear",drop=T]
   dat(model)[,c("response")]<- .predict_response(model,dat(model),se=F)[,c("response"),drop=T]
 
   # Update response observations to be the simulated value
@@ -259,7 +311,7 @@ setMethod(f = "staRVe_simulate",
 #'
 #' @param x A starve_model_fit object
 #' @param locations An sf object containing the prediction locations
-#' @param pred_times Which times should predictions be made for?
+#' @param covariates An sf object holding spatial covariates
 #' @param dist_tol A small number so that prediction variances are not
 #'   computationally singular
 #'
@@ -269,7 +321,7 @@ setMethod(f = "staRVe_simulate",
 #' @noRd
 .predict_w<- function(x,
                       locations,
-                      pred_times,
+                      covariates,
                       dist_tol = 0.00001,
                       ...) {
   # Get random effects, needed to compute prediction dag,
@@ -278,21 +330,30 @@ setMethod(f = "staRVe_simulate",
 
   # Set up prediction data.frame
   # Each location is used each prediction time
-  locations<- unique(locations[,attr(locations,"sf_column")])
-  pred_times<- unique(pred_times)
+  locs<- unique(locations[,attr(locations,"sf_column")])
+  pred_times<- unique(locations[,time_column,drop=T])
   predictions<- do.call(rbind,lapply(pred_times,function(t) {
     df<- sf::st_sf(data.frame(w = 0,
                               w_se = NA,
                               time = t,
-                              locations))
+                              locs))
     colnames(df)[[3]]<- time_column
+    covariates<- covariates[covariates[,time_column,drop=T]==t,]
+    covariates<- sf::st_sf(cbind(
+      .mean_design_from_space_formula(formula(x),covariates,"all.vars"),
+      covariates[,attr(covariates,"sf_column")]
+    ))
+    df<- sf::st_join(df,covariates)
+    df<- as.data.frame(df)
+    df[is.na(df)]<- 0 # Won't be using these so covariate value doesn't matter
+    df<- sf::st_sf(df)
     return(df)
   }))
   attr(predictions,"time_column")<- time_column
 
   # Compute dag used for predictions
   dag<- construct_obs_dag(
-    x = locations,
+    x = locs,
     y = split( # Random effect locations are duplicated, only want one representative
       random_effects,
       random_effects[,time_column,drop=T]
@@ -304,16 +365,20 @@ setMethod(f = "staRVe_simulate",
   intersection_idx<- do.call(c,lapply(edges(dag),function(e) {
     return( length(e$from) )
   })) == 1
-  intersection_all_idx<- rep(intersection_idx,length(pred_times))
-  # If prediction location is same as random effect location, then prediction
-  # covariance matrix will be singular and TMB object will crash
-  distances(dag)<- lapply(distances(dag),function(x) {
-    if( identical(matrix(0),x) ) {
-      return(matrix(c(0,dist_tol,dist_tol,0),nrow = 2))
-    } else {
-      return(x)
-    }
+  # going to remove intersection locations, and adjust the remaining indices
+  # adjust[i] is the number of intersection locations appearing before or at node i
+  adjust<- numeric(nrow(locs))
+  lapply(edges(dag)[intersection_idx],function(e) {
+    idx<- seq_along(adjust) >= e$to
+    adjust[idx]<<- adjust[idx]+1
   })
+  edges(dag)[!intersection_idx]<- lapply(edges(dag)[!intersection_idx],function(e) {
+    e$to<- e$to-adjust[e$to]
+    return(e)
+  })
+
+
+  intersection_all_idx<- rep(intersection_idx,length(pred_times))
 
   # Add random effects for times not present in the original model,
   # only added to pass to TMB
@@ -322,8 +387,13 @@ setMethod(f = "staRVe_simulate",
   # Prepare input for TMB, TMB_in(x) doesn't take care of pred_* things
   # except pred_w is already declared as a random effect
   TMB_input<- TMB_in(x)
+  TMB_input$data$pred_w_mean_design<- .mean_design_from_space_formula(
+    formula(x),
+    predictions,
+    "model.matrix"
+  )
   TMB_input$data$pred_w_time<- c(predictions[,time_column,drop=T]
-    - min(random_effects(process(x))[,time_column,drop=T]))[!intersection_all_idx]
+    - min(random_effects(x)[,time_column,drop=T]))[!intersection_all_idx]
   TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))[!intersection_idx]
   TMB_input$data$pred_ws_dists<- distances(dag)[!intersection_idx]
 
@@ -336,7 +406,7 @@ setMethod(f = "staRVe_simulate",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe",
+    DLL = "staRVe_model",
     silent = TRUE,
     ...
   )
@@ -368,9 +438,8 @@ setMethod(f = "staRVe_simulate",
 #'
 #' @param x A staRVe_model object. If se = T, should be a staRVe_model_fit object.
 #' @param w_predictions An sf object, typically the output of .predict_w. Must
-#'   contain at least the columns w and w_se, and a time column if covariates are used.
-#' @param covariates An sf object containing covariate information. Must have the same
-#'   locations/times as w_predictions.
+#'   contain columns for w, w_se, time, and any spatial covariates.
+#' @param locations An sf object containing prediction locations and covariate information.
 #' @param se Should standard errors be calculated?
 #'
 #' @return A data.frame including the supplied w_predictions and the predictions
@@ -379,47 +448,66 @@ setMethod(f = "staRVe_simulate",
 #' @noRd
 .predict_linear<- function(x,
                            w_predictions,
-                           covariates,
+                           locations,
                            se = T) {
+  time_column<- attr(random_effects(x),"time_column")
+  locations<- sf::st_sf(cbind(.mean_design_from_formula(
+      formula(x),
+      locations,
+      return = "all.vars"
+    ),
+    locations[,time_column]
+  ))
+  attr(locations,"time_column")<- time_column
+  # 1.) Pick out the w predictions for each location
+  locations<- locations[order(locations[,time_column,drop=T]),]
+  w_predictions<- w_predictions[
+    w_predictions[,time_column,drop=T] %in% unique(locations[,time_column,drop=T]),
+  ]
+  predictions<- do.call(rbind,Map(
+    sf::st_join,
+    split(locations,locations[,time_column,drop=T]),
+    split(w_predictions,w_predictions[,time_column,drop=T]),
+    suffix=lapply(seq_along(unique(locations[,time_column,drop=T])),function(t) return(c("",".w")))
+  ))
+  predictions[,paste0(time_column,".w")]<- NULL
+
   ### No intercept since it's already taken care of in predict_w
-  if( identical(covariates,"missing") ) {
+  if( length(.names_from_formula(formula(x))) == 0 ) {
     # If there are no covariates, there's nothing to do
-    linear<- w_predictions$w
-    if( se ) { linear_se<- w_predictions$w_se } else { linear_se<- NA }
-    return(sf::st_sf(data.frame(linear,
-                                linear_se,
-                                w_predictions)))
+    linear<- predictions$w
+    if( se ) { linear_se<- predictions$w_se } else { linear_se<- NA }
+    return(sf::st_sf(data.frame(
+      predictions[,c("w","w_se"),drop=T],
+      linear,
+      linear_se,
+      response = NA,
+      response_se = NA,
+      predictions[,time_column]
+    )))
   } else {
-    time_column<- attr(random_effects(x),"time_column")
-    covar_names<- .names_from_formula(formula(settings(x)))
-
-    # Split random effects by time so we can do a spatial join each year
-    w_predictions<- w_predictions[,!(names(w_predictions) %in% covar_names)]
-    w_predictions<- split(w_predictions,
-                          w_predictions[,time_column,drop=T])
-
-    # Split covariates by time, and take only the ones we need
-    covariates<- covariates[,c(covar_names,time_column)]
-    covariates<- split(covariates,covariates[,time_column,drop=T])
-    covariates<- covariates[names(covariates) %in% names(w_predictions)]
-    # names(covariates) and names(w_predictions) give the time
-
-    # Do a spatial join of the predicted random effects and covariates,
-    # and then stack them by time in an sf data.frame
-    w_predictions<- do.call(rbind,lapply(names(w_predictions), function(t) {
-      this_w<- w_predictions[[t]]
-      this_covar<- covariates[[t]][,covar_names]
-      suppressMessages(return(sf::st_join(this_w,this_covar,left=T)))
-    }))
-
     # Create design matrix from covariates
-    design<- .mean_design_from_formula(formula(settings(x)),
-                                       w_predictions)
+    design<- .mean_design_from_formula(formula(x),
+                                       predictions)
+
+    # Pick out the spatial covariates and subtract from non-spatial
+    space_covar_names<- colnames(.mean_design_from_space_formula(
+      formula(x),
+      w_predictions,
+      return = "all.vars"
+    ))
+    if( length(space_covar_names) > 0 ) {
+      space_covar<- sf::st_drop_geometry(predictions[,paste0(space_covar_names,".w"),drop=F])
+      colnames(space_covar)<- space_covar_names
+      space_design<- .mean_design_from_space_formula(formula(x),space_covar)
+      design[,colnames(space_design)]<- design[,colnames(space_design)]-space_design[,colnames(space_design)]
+    } else {}
+
 
     # Create linear predictions
     beta<- fixed_effects(x)[,"par"]
     names(beta)<- rownames(fixed_effects(x))
-    linear<- design %*% beta + w_predictions$w
+    linear<- design %*% beta + predictions$w
 
     if( se ) {
       # Create parameter covariance estimate for fixed effects
@@ -437,14 +525,23 @@ setMethod(f = "staRVe_simulate",
 
       # The commented and uncommented methods are the same
       # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
-      linear_se<- sqrt(rowSums((design %*% par_cov) * design) + w_predictions$w_se^2)
+      linear_se<- sqrt(rowSums((design %*% par_cov) * design) + predictions$w_se^2)
     } else {
       linear_se<- NA
     }
 
-    return(sf::st_sf(data.frame(linear,
-                                linear_se,
-                                w_predictions)))
+    df<- data.frame(predictions[,c("w","w_se"),drop=T],
+                    linear,
+                    linear_se,
+                    response = NA,
+                    response_se = NA,
+                    as.data.frame(predictions)[,time_column,drop=F])
+    if( length(space_covar_names) > 0 ) {
+      df<- cbind(df,as.data.frame(predictions)[,paste0(space_covar_names,".w"),drop=F])
+    } else {}
+    df<- sf::st_sf(cbind(df,predictions[,.names_from_formula(formula(x))]))
+
+    return(return(df))
   }
 }
 
@@ -453,7 +550,7 @@ setMethod(f = "staRVe_simulate",
 #' A second-order Taylor approximation (delta method) is used
 #'
 #' @param x A staRVe_model object. If se = T, should be a staRVe_model_fit object.
-#' @param linear_predictions A data.frame, typically the output of .predict_linear.
+#' @param predictions A data.frame, typically the output of .predict_linear.
 #'   Must contain at least the columns linear and linear_se.
 #' @param se Should standard errors be calculated?
 #'
@@ -462,7 +559,7 @@ setMethod(f = "staRVe_simulate",
 #'
 #' @noRd
 .predict_response<- function(x,
-                             linear_predictions,
+                             predictions,
                              se = T) {
   # Just need to specify which link function is used
   # Will get the function and gradient from TMB, evaluated at
@@ -475,7 +572,7 @@ setMethod(f = "staRVe_simulate",
   link_function<- TMB::MakeADFun(
     data = data,
     para = para,
-    DLL = "staRVe",
+    DLL = "staRVe_model",
     silent = T
   )
 
@@ -485,9 +582,9 @@ setMethod(f = "staRVe_simulate",
       mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
       return(as.numeric(mean))
     }
-    response<- sapply(seq(nrow(linear_predictions)),function(i) {
-      return(second_order_mean(linear_predictions[i,"linear",drop=T],
-                               linear_predictions[i,"linear_se",drop=T]))
+    response<- sapply(seq(nrow(predictions)),function(i) {
+      return(second_order_mean(predictions[i,"linear",drop=T],
+                               predictions[i,"linear_se",drop=T]))
     })
 
     # Standard error =  f'(linear)^2*linear_se^2 + 0.5 * f''(linear)^2*linear_se^4
@@ -496,17 +593,16 @@ setMethod(f = "staRVe_simulate",
         + 0.5*link_function$he(linear)^2*linear_se^4)
       return(as.numeric(se))
     }
-    response_se<- sapply(seq(nrow(linear_predictions)),function(i) {
-      return(second_order_se(linear_predictions[i,"linear",drop=T],
-                             linear_predictions[i,"linear_se",drop=T]))
+    response_se<- sapply(seq(nrow(predictions)),function(i) {
+      return(second_order_se(predictions[i,"linear",drop=T],
+                             predictions[i,"linear_se",drop=T]))
     })
   } else {
     # No standard error for second order delta method, just apply link function
-    response<- sapply(linear_predictions$linear,link_function$fn)
+    response<- sapply(predictions$linear,link_function$fn)
     response_se<- NA
   }
-  predictions<- sf::st_sf(data.frame(response,
-                                     response_se,
-                                     linear_predictions))
+  predictions$response<- response
+  predictions$response_se<- response_se
   return(predictions)
 }

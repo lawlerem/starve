@@ -30,6 +30,8 @@
 \alias{fixed_effects<-,staRVe_model-method}
 \alias{distance_units,staRVe_model-method}
 \alias{distance_units<-,staRVe_model-method}
+\alias{formula,staRVe_model-method}
+\alias{formula<-,staRVe_model-method}
 \alias{parameters,staRVe_model-method}
 \alias{parameters<-,staRVe_model,staRVe_parameters-method}
 \alias{graph,staRVe_model-method}
@@ -86,6 +88,10 @@
 \S4method{distance_units}{staRVe_model}(x)
 
 \S4method{distance_units}{staRVe_model}(x) <- value
+
+\S4method{formula}{staRVe_model}(x)
+
+\S4method{formula}{staRVe_model}(x) <- value
 
 \S4method{parameters}{staRVe_model}(x)
 
@@ -173,6 +179,10 @@ get_staRVe_distributions("link") for valid covariance functions.
 \item \code{distance_units}: Get distance units used for the model
 
 \item \code{distance_units<-}: Set distance units used for the model
+
+\item \code{formula}: Get formula used for model
+
+\item \code{formula<-}: Set formula used for the model
 
 \item \code{parameters}: Get parameters
 

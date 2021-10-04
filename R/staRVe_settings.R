@@ -28,7 +28,7 @@ setMethod(
     formula(.Object)<- formula
     n_neighbours(.Object)<- n_neighbours
     p_far_neighbours(.Object)<- p_far_neighbours
-    distance_units(.Object)<- distance_units
+    .Object@distance_units<- distance_units
     max_distance(.Object)<- max_distance
     obs_dag_method(.Object)<- obs_dag_method
     extras<- extras
@@ -109,7 +109,11 @@ setMethod(f = "distance_units",
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
+  max_distance<- units::set_units(max_distance(x),distance_units(x),mode="standard")
   x@distance_units<- value
+
+  max_distance<- units::set_units(max_distance,value,mode="standard")
+  max_distance(x)<- units::drop_units(max_distance)
   return(x)
 })
 

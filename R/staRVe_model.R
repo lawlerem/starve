@@ -376,9 +376,48 @@ setMethod(f = "distance_units",
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_model",
                  definition = function(x,value) {
+  range<- units::set_units(spatial_parameters(x)["range","par"],
+                           distance_units(x),
+                           mode="standard")
   distance_units(settings(x))<- value
   distance_units(persistent_graph(process(x)))<- value
   distance_units(transient_graph(observations(x)))<- value
+  range<- units::set_units(range,value,mode="standard")
+  spatial_parameters(x)["range","par"]<- units::drop_units(range)
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_model Get formula used for model
+setMethod(f = "formula",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(formula(settings(x)))
+})
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_model Set formula used for the model
+setReplaceMethod(f = "formula",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  if( !all(all.vars(value) %in% colnames(dat(x))) ) {
+    stop("Not changing formula. Some variables present in new formula which are not available in dat(x)")
+  } else {}
+  formula(settings(x))<- value
+
+  design<- .mean_design_from_formula(value,dat(x))
+  fixed_effects(x)<- data.frame(
+    par = numeric(ncol(design)),
+    se = rep(NA,ncol(design)),
+    fixed = rep(F,ncol(design)),
+    row.names = colnames(design)
+  )
+
   return(x)
 })
 
@@ -516,6 +555,11 @@ prepare_staRVe_model<- function(formula,
   time_form<- .time_from_formula(formula,data)
   model<- new("staRVe_model")
 
+  if( !all(colnames(.mean_design_from_space_formula(formula,nodes,"model.matrix")) %in%
+           colnames(.mean_design_from_formula(formula,data,"model.matrix"))) ) {
+    stop("Spatial covariate formula must be a subset of model covariate formula.")
+  }
+
   # Set the settings in the model
   settings(model)<- new("staRVe_settings",
     formula = formula,
@@ -559,6 +603,30 @@ prepare_staRVe_model<- function(formula,
     link = link
   )
 
+  # Add spatial covariates to dat(model)
+  # Add spatial covariates from random_effects
+  w_covar_names<- colnames(.mean_design_from_space_formula(formula,random_effects(model),"all.vars"))
+  if( length(w_covar_names) > 0 ) {
+    w_covar<- sf::st_sf(cbind(
+      .mean_design_from_space_formula(formula,random_effects(model),"all.vars"),
+      random_effects(model)[,attr(time_form,"name"),drop=F]
+    ))
+    w_covar<- w_covar[w_covar[,attr(time_form,"name"),drop=T] %in% unique(dat(model)[,attr(time_form,"name"),drop=T]),]
+    dat(model)<- do.call(rbind,Map(
+      sf::st_join,
+      split(dat(model),dat(model)[,attr(time_form,"name"),drop=T]),
+      split(w_covar,w_covar[,attr(time_form,"name"),drop=T]),
+      suffix=lapply(seq_along(unique(dat(model)[,attr(time_form,"name"),drop=T])),function(t) return(c("",".w")))
+    ))
+    # For transient nodes, just use the observation covariates
+    dat(model)[,paste0(attr(time_form,"name"),".w")]<- NULL
+    rownames(dat(model))<- NULL
+    foo<- sf::st_drop_geometry(dat(model)[,paste0(w_covar_names,".w"),drop=F])
+    foo[is.na(foo)]<- sf::st_drop_geometry(dat(model)[,w_covar_names,drop=F])[is.na(foo)]
+    dat(model)[,paste0(w_covar_names,".w")]<- foo
+    attr(dat(model),"time_column")<- attr(time_form,"name")
+  } else {}
+
   if( fit == T ) {
     model<- staRVe_fit(model,silent = silent,...)
   } else {}
@@ -601,8 +669,13 @@ setMethod(f = "TMB_in",
       )),
     ys_edges = edges(idxR_to_C(transient_graph(observations))),
     ys_dists = distances(transient_graph(observations)),
-    # Get time index of random effects in transient graph
+    # Get covariates and time index of random effects in transient graph
     # If length>0, need an additional random effect
+    resp_w_mean_design = .mean_design_from_space_formula(
+        formula(settings(x)),
+        dat(observations)[sapply(lapply(edges(transient_graph(observations)),`[[`,2),length)>1,],
+        "model.matrix"
+      ),
     resp_w_time = c(dat(observations)[
         sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1,
         time_column,
@@ -611,13 +684,32 @@ setMethod(f = "TMB_in",
     # Get covariates, and sample.size for binomial
     mean_design = .mean_design_from_formula(
         formula(settings(x)),
-        dat(observations)
+        dat(observations),
+        "model.matrix"
       ),
     sample_size = .sample_size_from_formula(
         formula(settings(x)),
         dat(observations),
         nullReturn = T
       )[,1],
+    # Get covariates for proc_w random effects
+    w_mean_design = .mean_design_from_space_formula(
+      formula(settings(x)),
+      random_effects(process),
+      "model.matrix"
+    ),
+    w_mean_pars_idx = match(
+      colnames(.mean_design_from_space_formula(
+        formula(settings(x)),
+        random_effects(process),
+        "model.matrix"
+      )),
+      colnames(.mean_design_from_formula(
+        formula(settings(x)),
+        dat(observations),
+        "model.matrix"
+      ))
+    )-1,
     # Convert covariance function (char) to (int)
     covar_code = .covariance_to_code(
         covariance_function(parameters(process))
@@ -627,6 +719,7 @@ setMethod(f = "TMB_in",
     ws_edges = edges(idxR_to_C(persistent_graph(process))),
     ws_dists = distances(persistent_graph(process)),
     # Pred_* only used for predictions
+    pred_w_mean_design = matrix(0,ncol=0,nrow=0),
     pred_w_time = numeric(0),
     pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
     pred_ws_dists = vector(mode="list",length=0),
@@ -681,12 +774,28 @@ setMethod(f = "TMB_in",
         ), # Log-normal; std. dev.
       binomial = numeric(0), # Binomial; NA
       atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
-      compois = ifelse ( # Conway-Maxwell-Poisson; dispersion > 0
+      compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
             response_parameters(parameters(observations))["dispersion","par"] > 0 ||
             response_parameters(parameters(observations))["dispersion","fixed"] == T,
           -log(response_parameters(parameters(observations))["dispersion","par"]),
+          # negative sign since we want >0 to be over-dispersion
           -log(1)
+        ),
+      tweedie = c( # tweedie
+        ifelse( # dispersion>0
+          response_parameters(parameters(observations))["dispersion","par"] > 0 ||
+          response_parameters(parameters(observations))["dispersion","fixed"] == T,
+          log(response_parameters(parameters(observations))["dispersion","par"]),
+          log(1)
+        ),
+        ifelse( # 1<power<2
+          (0 < response_parameters(parameters(observations))["power","par"] &&
+           response_parameters(parameters(observations))["power","par"] < 1) ||
+          response_parameters(parameters(observations))["power","par"] == T,
+          qlogis(response_parameters(parameters(observations))["power","par"]-1),
+          qlogis(1.5-1)
         )
+      )
     ),
     mean_pars = fixed_effects(parameters(observations))[colnames(data$mean_design),"par"],
     resp_w = numeric(
@@ -697,6 +806,12 @@ setMethod(f = "TMB_in",
         spatial_parameters(parameters(process))["sd","fixed"] == T,
       log(spatial_parameters(parameters(process))["sd","par"]),
       log(1)
+    ),
+    log_space_rho = ifelse( # rho > 0
+      spatial_parameters(parameters(process))["range","par"] > 0 ||
+      spatial_parameters(parameters(process))["range","fixed"] == T,
+      log(spatial_parameters(parameters(process))["range","par"]),
+      log(mean(do.call(c,distances(graph(x)$persistent_graph))))
     ),
     log_space_nu = ifelse( # nu > 0
           spatial_parameters(parameters(process))["nu","par"] > 0 ||
@@ -741,6 +856,7 @@ setMethod(f = "TMB_in",
       sum(sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1)
     ),
     log_space_sd = spatial_parameters(parameters(process))["sd","fixed"],
+    log_space_rho = spatial_parameters(parameters(process))["range","fixed"],
     log_space_nu = spatial_parameters(parameters(process))["nu","fixed"],
     time_mu = time_parameters(parameters(process))["mu","fixed"],
     logit_time_ar1 = time_parameters(parameters(process))["ar1","fixed"],
@@ -774,7 +890,7 @@ setMethod(f = "update_staRVe_model",
   # Spatial parameters
   spatial_parameters(x)<- within(
     spatial_parameters(x),{
-      par_names<<- c("par_space_sd","par_space_nu")
+      par_names<<- c("par_space_sd","par_space_rho","par_space_nu")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
     }
@@ -819,7 +935,7 @@ setMethod(f = "update_staRVe_model",
   # Response distribution parameters; need to be careful if no parameters
   response_parameters(x)<- within(
     response_parameters(x),{
-      par_names<<- c("par_sd","par_overdispersion","par_dispersion")
+      par_names<<- c("par_sd","par_overdispersion","par_dispersion","par_scale","par_power")
       par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
     }

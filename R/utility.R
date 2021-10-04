@@ -23,7 +23,7 @@ NULL
   # Get original random effects; only need first time for locations
   random_effects<- random_effects(x)
   nodes<- split(
-    random_effects[,attr(random_effects,"sf_column")],
+    random_effects, # Keep everything in because the values don't matter (except for time)
     random_effects[,attr(random_effects,"time_column"),drop=T]
   )[[1]]
   model_times<- unique(random_effects[,attr(random_effects,"time_column"),drop=T])
@@ -45,15 +45,11 @@ NULL
 
     # Add spatio-temporal random effects prior to the start of the original random effects
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      # Random effects for each new time, just replicating
-      # the locations from the original random effects
-      df<- sf::st_sf(data.frame(w = 0,
-                                se = NA,
-                                time = t,
-                                nodes))
-      colnames(df)[[3]]<- attr(random_effects,"time_column")
+      df<- nodes
+      df[,attr(random_effects,"time_column")]<- t
       return(df)
     }))
+    # Need to add dummy covariates to extra_effects
     random_effects(x)<- rbind(
       extra_effects,
       random_effects(x)
@@ -77,13 +73,8 @@ NULL
 
     # Add spatio-temporal random effects after the end of the original random effects
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      # Random effects for each new time, just replicating
-      # the locations from the original random effects
-      df<- sf::st_sf(data.frame(w = 0,
-                                se = NA,
-                                time = t,
-                                nodes))
-      colnames(df)[[3]]<- attr(random_effects,"time_column")
+      df<- nodes
+      df[,attr(random_effects,"time_column")]<- t
       return(df)
     }))
 
@@ -114,23 +105,38 @@ NULL
 #'
 #' @noRd
 .birdFit<- function() {
-  small_bird<- staRVe::bird_survey[staRVe::bird_survey$year %in% 1998:2000,]
+  years<- 1998:2000
+  small_bird<- staRVe::bird_survey[staRVe::bird_survey$year %in% years,]
   small_bird<- cbind(x=rnorm(nrow(small_bird)),
                      small_bird)
+  nodes<- unique(small_bird[,attr(small_bird,"sf_column")])
+  nodes<- do.call(rbind,lapply(years,function(t) {
+    df<- sf::st_sf(cbind(
+      x = rnorm(nrow(nodes)),
+      year = t,
+      nodes
+    ))
+    return(df)
+  }))
   fit<- prepare_staRVe_model(
-    cnt~time(year)+mean(x),
+    cnt~x+I(x^2)+space(x)+time(year),
     small_bird,
+    nodes,
     distribution="poisson",
     link="log",
-    fit=T
+    fit=F
   )
+  spatial_parameters(fit)["range","par"]<- 80
+  spatial_parameters(fit)["range","fixed"]<- T
+  fit<- staRVe_fit(fit,silent=T)
   sim<- staRVe_simulate(fit)
   pred_locs<- do.call(rbind,lapply(2000:2010, function(t) {
     sf::st_sf(data.frame(x=rnorm(1),
                          year=t,
                          small_bird[1,"geom"]))
   }))
-  pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs,time=2000:2010)
+  pred_locs<- rbind(pred_locs,sf::st_sf(data.frame(x=rnorm(1),year=2010,small_bird[2,"geom"])))
+  pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs)
   return(list(fit=fit,sim=sim,pred=pred))
 }
 
@@ -153,8 +159,9 @@ NULL
 #' @noRd
 .covariance_from_formula<- function(x,data=data.frame(1)) {
   # Set up what the "space" term does in the formula
-  space<- function(covariance,nu) {
+  space<- function(formula,covariance,nu) {
     # Find the closest match for covariance function
+    if( missing(covariance) ) {covariance<- "exponential"}
     covar<- pmatch(covariance,get_staRVe_distributions("covariance"))
     covar<- get_staRVe_distributions("covariance")[covar]
 
@@ -170,7 +177,7 @@ NULL
   }
 
   # Get out just the "space" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^space",term.labels,value=T)
 
@@ -334,7 +341,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
                       "lognormal", # 5
                       "binomial", # 6
                       "atLeastOneBinomial", # 7
-                      "compois") # 8
+                      "compois", # 8
+                      "tweedie") # 9
     names(distributions)<- rep("distribution",length(distributions))
   } else { distributions<- character(0) }
 
@@ -600,75 +608,95 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 #' Retrieve observation mean covariate data from a formula and a data.frame.
 #'
-#' @param x A formula object with terms grouped in a \code{mean(...)} function.
+#' @param x A formula object.
 #' @param data A data.frame containing the covariate data.
-#' @param return Either "model.matrix"  or "model.frame"
+#' @param return Either "model.matrix", "model.frame", "all.vars"
 #'
 #' @return The design matrix for the covariates. If return is set to "model.matrix",
 #'   factors, interaction terms, etc. are expanded to their own variables.
 #'
 #' @noRd
 .mean_design_from_formula<- function(x,data,return = "model.matrix") {
-  # Get out just the "mean" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("^mean",term.labels,value=T)
-
-  # (if the "mean" term is missing, design matrix is empty)
-  if( length(the_call) == 0 ) {
-    the_df<- matrix(0,nrow=nrow(data),ncol=0)
-    return(the_df)
+  data<- as.data.frame(data)
+  the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
+  if( nrow(attr(the_terms,"factors")[-unlist(attr(the_terms,"specials")),,drop=F]) == 0 ) {
+    return(matrix(0,ncol=0,nrow=nrow(data)))
   } else {}
-
-  # Make the expression inside "mean(...)" a standalone formula, and
-  # use that formula to create the design matrix.
-  new_formula<- sub("mean\\(","~",the_call)
-  new_formula<- sub("\\)$","",new_formula)
-  new_terms<- terms(formula(new_formula))
-  attr(new_terms,"intercept")<- 0 # Intercept part of temporal random effects
+  new_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
   the_df<- switch(return,
-    # model.matrix expands factors into dummy variable, and expands
-    # interactions, etc.
+    # model.matrix expands factors into dummy variables, and expands
+    # interaction terms, etc.
     model.matrix = model.matrix(new_terms,data=data),
     # model.frame returns just the covariates needed to eventually
-    # create the model.matrix (no expansion)
-    model.frame = model.frame(new_terms,data=data)
+    # create the model.matrix (no expansion). Does expand poly() (and other specials?)
+    model.frame = model.frame(new_terms,data=data),
+    # Returns the subset of the original the data.frame
+    all.vars = data[,all.vars(formula(new_terms)),drop=F]
   )
   attr(the_df,"assign")<- NULL
+  attr(the_df,"contrasts")<- NULL
+  if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=F]}
   rownames(the_df)<- NULL
   return(the_df)
 }
 
+#' Retrieve spatial mean covariate data from a formula and a data.frame
+#'
+#' @param x A formula object
+#' @param data A data.frame containing the covariate data
+#' @param return Either "model.matrix", "model.frame", or "all.vars"
+#'
+#' @return The design matrix for the covariates designated inside the space(...)
+#'   special.
+#'
+#' @noRd
+.mean_design_from_space_formula<- function(x,data,return = "model.matrix") {
+  # Pick out the formula inside the space special
+  space<- function(x,covariance,nu) {
+    if( missing(x) ) {
+      return("~space()")
+    }
+    return(paste0("~",deparse(substitute(x)),"+space()"))
+  }
+
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("^space",term.labels,value=T)
+
+  # if the "space" term is missing, return 0 column matrix
+  if( length(the_call) == 0 ) {
+    return(matrix(0,ncol=0,nrow=nrow(data)))
+  } else {}
+
+  the_call<- gsub("space","~space",the_call)
+  new_terms<- terms(formula(the_call),specials="space")
+  covar_formula<- formula(eval(attr(new_terms,"variables")[[2]]))
+  return(.mean_design_from_formula(covar_formula,data,return))
+}
 
 
 
 
 # N
 
-#' Check which covariates are used inside the "mean(...)" term of a formula
+#' Check which covariates are used in a formula
 #'
-#' @param x A formula object with terms grouped in a \code{mean(...)} function.
+#' @param x A formula object.
 #'
 #' @return A character vector giving the names of covariates used in a formula.
 #'
 #' @noRd
 .names_from_formula<- function(x) {
-  # Get out just the "mean" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("mean",term.labels,value=T)
-  # (if the "mean" term is missing, no covariates)
-  if( length(the_call) == 0 ) {
+  # Don't use colnames(.mean_design_from_formula(...,return="all.vars")) since
+  # I don't want to supply a data.frame
+  the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
+  if( nrow(attr(the_terms,"factors")[-unlist(attr(the_terms,"specials")),,drop=F]) == 0 ) {
     return(character(0))
-  } else {}
-  new_formula<- paste(the_call,collapse=" + ") # If someone adds more than one
-  # "mean" term then just paste them together
-  new_formula<- the_call
-  new_formula<- paste("~",new_formula)
-  var_names<- all.vars(formula(new_formula))
+  }
+  new_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
+  var_names<- all.vars(new_terms)
   return(var_names)
 }
-
 
 
 
@@ -743,7 +771,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @noRd
 .response_from_formula<- function(x,data) {
   # Get out just the left-hand side of the formula
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   if( attr(the_terms,"response") == 0 ) {
     stop("Response variable must be specified.")
   } else {}
@@ -773,7 +801,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @noRd
 .sample_size_from_formula<- function(x,data,nullReturn=F) {
   # Get out just the "sample.size" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^sample.size",term.labels,value=T)
 
@@ -904,7 +932,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   }
 
   # Get out just the "time" term from the formula (as a character string)
-  the_terms<- terms(x,specials=c("mean","time","space","sample.size"))
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^time",term.labels,value=T)
 

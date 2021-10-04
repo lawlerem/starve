@@ -16,16 +16,20 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_STRUCT(ys_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(ys_dists,dag_dists); // See data_in.hpp
 
+  DATA_MATRIX(resp_w_mean_design);
   DATA_IVECTOR(resp_w_time);
 
   DATA_MATRIX(mean_design);
-  DATA_IVECTOR(sample_size);
+  DATA_VECTOR(sample_size);
 
+  DATA_MATRIX(w_mean_design);
+  DATA_IVECTOR(w_mean_pars_idx); // Want to use the same fixed effects as y
   DATA_INTEGER(covar_code);
   DATA_IVECTOR(w_time);
   DATA_STRUCT(ws_edges,directed_graph);
   DATA_STRUCT(ws_dists,dag_dists);
 
+  DATA_MATRIX(pred_w_mean_design);
   DATA_IVECTOR(pred_w_time);
   DATA_STRUCT(pred_ws_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(pred_ws_dists,dag_dists); // See data_in.hpp
@@ -36,6 +40,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
   PARAMETER(log_space_sd);
+  PARAMETER(log_space_rho);
   PARAMETER(log_space_nu);
   PARAMETER_VECTOR(time_effects);
   PARAMETER(time_mu);
@@ -57,16 +62,25 @@ Type staRVe_model(objective_function<Type>* obj) {
     case 4 : response_pars(0) = exp(working_response_pars(0)); break; // Gamma, sd>0
     case 5 : response_pars(0) = exp(working_response_pars(0)); break; // Log-Normal, sd>0
     case 6 : break; // Binomial, NA
-    case 7 : break; // AtLeastOneBinomai, NA
+    case 7 : break; // atLeastOneBinomial, NA
     case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson, dispersion > 0
+    case 9 : response_pars(0) = exp(working_response_pars(0)); // Tweedie, scale > 0
+             // response_pars(1) = plogis(working_response_pars(0))+1; break;// 1 < power < 2
+             response_pars(1) = 1.0/(1.0+exp(-working_response_pars(1)))+1.0; break;
     default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal, sd>0
   }
   Type space_sd = exp(log_space_sd); // sd>0
+  Type space_rho = exp(log_space_rho); // rho>0
   Type space_nu = exp(log_space_nu); // nu>0
 
   Type time_ar1 = 2*invlogit(logit_time_ar1)-1; // -1 < ar1 < +1
   Type time_sd = exp(log_time_sd); // sd>0
 
+  // Subtract off fixed effects to alleviate spatial confounding
+  vector<Type> w_mean_pars = mean_pars(w_mean_pars_idx);
+  proc_w -= w_mean_design*w_mean_pars;
+  resp_w -= resp_w_mean_design*w_mean_pars;
+  pred_w -= pred_w_mean_design*w_mean_pars;
 
   // Get graphs
 
@@ -100,19 +114,12 @@ Type staRVe_model(objective_function<Type>* obj) {
   for( int i=0; i<pred_ws_dist.size(); i++ ) {
     pred_ws_dist(i) = pred_ws_dist(i)/mean_dist;
   }
+  space_rho = space_rho/mean_dist;
 
   // Initialize all the objects used. The main objects of focus are
   // nngp<Type> process which can calculate the nll component for the random effects, and
   // observations<Type> obs which can calculate the nll component for the observations
-
-  // Just need to choose a large enough initial value for rho so that the
-  // resulting correlation matrix isn't approximately diagonal, choosing
-  // rho:=100.0 works since distances are standardized
-  //
-  // Might need to put more effort into a better starting value
-  // (distance between bounding box corners? multiple of max distance?)
-  Type initRho = 100.0;
-  covariance<Type> cov(space_sd,initRho,space_nu,covar_code);
+  covariance<Type> cov(space_sd,space_rho,space_nu,covar_code);
 
   // Set up the response distribution and link function
   inv_link_function inv_link = {link_code};
@@ -289,6 +296,9 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   // Report back the simulated random effects and data to R
   SIMULATE{
+    proc_w += w_mean_design*w_mean_pars;
+    resp_w += resp_w_mean_design*w_mean_pars;
+
     REPORT(time_effects);
     REPORT(proc_w);
     REPORT(resp_w);
@@ -332,11 +342,22 @@ Type staRVe_model(objective_function<Type>* obj) {
     Type par_dispersion = response_pars(0);
     REPORT(par_dispersion);
     ADREPORT(par_dispersion);
+  } else if ( distribution_code == 9 ) { // Tweedie
+    Type par_scale = response_pars(0);
+    REPORT(par_scale);
+    ADREPORT(par_scale);
+    Type par_power = response_pars(1);
+    REPORT(par_power);
+    ADREPORT(par_power);
   } else {}
 
   Type par_space_sd = space_sd;
   REPORT(par_space_sd);
   ADREPORT(par_space_sd);
+
+  Type par_space_rho = space_rho*mean_dist;
+  REPORT(par_space_rho);
+  ADREPORT(par_space_rho);
 
   Type par_space_nu = space_nu;
   REPORT(par_space_nu);

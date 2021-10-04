@@ -22,7 +22,7 @@ struct response_density {
   int distribution_code;
 
   template<class T>
-  T operator() (T data,T mean,int size,vector<T> pars) {
+  T operator() (T data,T mean,T size,vector<T> pars) {
     switch(distribution_code) {
       case 0 : return dnorm(data,mean,pars(0),true); // Normal
       case 1 : return dpois(data,mean,true); // Poisson
@@ -36,13 +36,21 @@ struct response_density {
                         size*log(1-mean) :
                         log(1 - pow(1-mean,size)) ); // AtLeastOneBinomial
       case 8 : return dcompois2(data,mean,pars(0),true); // Conway-Maxwell-Poisson
+      case 9 : return dtweedie(data,
+        // size*pars(0)*mean, // E[y]
+        size*mean, // E[y]
+        // exp(log(mean)-log(2-pars(1)))*pow(size*pars(0)*mean,1-pars(1)), // dispersion
+        pars(0), // dispersion
+        pars(1), // power
+        true
+      ); // Tweedie
       default : return dnorm(data,mean,pars(0),true); // Normal
     }
   }
 
   // Simulate a single draw from the distribution
   template<class T>
-  T simulate(T mean,int size,vector<T> pars) {
+  T simulate(T mean,T size,vector<T> pars) {
     switch(distribution_code) {
       case 0 : return rnorm(mean,pars(0)); // Normal
       case 1 : return rpois(mean); // Poisson
@@ -53,7 +61,9 @@ struct response_density {
       case 5 : return exp(rnorm(mean,pars(0))); // Log-normal
       case 6 : return rbinom(T(size),mean); // Binomial
       case 7 : return (rbinom(T(size),mean) == 0 ? 0 : 1); // AtLeastOneBinomial
-      case 8 : return rcompois2(mean,pars(0));
+      case 8 : return rcompois2(mean,pars(0)); // Conway-Maxwell-Poisson
+      // case 9 : return rtweedie(size*pars(0)*mean,exp(log(mean)-log(2-pars(1)))*pow(size*pars(0)*mean,1-pars(1)),pars(1)); // Tweedie
+      case 9 : return rtweedie(size*mean,pars(0),pars(1)); // Tweedie
       default : return rnorm(mean,pars(0)); // Normal
     }
   }

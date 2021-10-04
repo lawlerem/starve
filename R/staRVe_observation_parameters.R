@@ -86,6 +86,10 @@ setReplaceMethod(f = "response_distribution",
                          se = 0,
                          fixed = F,
                          row.names = "dispersion"),
+    tweedie = data.frame(par = numeric(2),
+                         se = numeric(2),
+                         fixed = c(F,F),
+                         row.names = c("dispersion","power"))
   )
   link_function(x)<- switch(value,
     gaussian = "identity",
@@ -96,7 +100,8 @@ setReplaceMethod(f = "response_distribution",
     lognormal = "log",
     binomial = "logit",
     atLeastOneBinomial = "logit",
-    compois = "log"
+    compois = "log",
+    tweedie = "log"
   )
   return(x)
 })

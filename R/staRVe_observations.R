@@ -150,7 +150,8 @@ prepare_staRVe_observations<- function(data,
   names(response)<- c(attr(y,"name"),attr(time_form,"name"))
 
   # Get covariates, and sample size information if using a binomial response
-  design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
+  design<- .mean_design_from_formula(formula(settings),data,return = "all.vars")
+  # design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
   sample_size<- .sample_size_from_formula(formula(settings),data)
 
   dat(observations)<- sf::st_sf(data.frame(

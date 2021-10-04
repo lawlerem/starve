@@ -143,8 +143,11 @@ setReplaceMethod(f = "parameters",
 
 #' Prepare the process part of a staRVe_model object.
 #'
-#' @param nodes An sf object containing the persistent node locations
-#' @param persistent_graph An optionally supplied pre-computed persistent graph
+#' @param nodes An sf object containing the persistent node locations, and covariate
+#'   values if included in space(...) special of formula.
+#' @param persistent_graph An optionally supplied pre-computed persistent graph.
+#'   If a persistent_graph is not supplied, the order of the rows of nodes may change.
+#'   If a persisten_graph is supplied, the order will not change.
 #' @param time A data.frame containing at least one column, which contains the
 #'   time index
 #' @param settings A staRVe_settings object
@@ -175,33 +178,38 @@ prepare_staRVe_process<- function(nodes,
   attr(time_effects(process),"time_column")<- attr(time_form,"name")
 
   # random_effects = "sf",
-  nodes<- nodes[,attr(nodes,"sf_column")] # Only need locations
-  if( obs_dag_method(settings) == "standard" ) {
-    nodes<- .order_by_location(unique(nodes)) # Lexicographic ordering S->N/W->E
-  } else {}
+  uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])
+
+  if( !identical(persistent_graph,NA) ) {
+    distance_units(persistent_graph)<- distance_units(settings)
+    persistent_graph(process)<- persistent_graph
+  } else {
+    graph<- construct_dag(uniq_nodes,settings=settings,silent=T)
+    uniq_nodes<- graph$locations
+    persistent_graph(process)<- graph$dag
+  }
+
   random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
     df<- sf::st_sf(data.frame(w = 0,
                               se = NA,
                               time = t,
-                              nodes))
+                              uniq_nodes))
     colnames(df)[[3]]<- attr(time_form,"name")
+    # spatial join of covariates
+    covariates<- nodes[nodes[,attr(time_form,"name"),drop=T]==t,]
+    covariates<- sf::st_sf(cbind(
+      .mean_design_from_space_formula(formula(settings),covariates,"all.vars"),
+      covariates[,attr(covariates,"sf_column")]
+    ))
+    covariates<- unique(covariates)
+    if( anyDuplicated(covariates[,attr(covariates,"sf_column")]) ) {
+      stop("Spatial covariates must be unique.")
+    } else {}
+    df<- sf::st_join(df,covariates)
     return(df)
   }))
   attr(random_effects(process),"time_column")<- attr(time_form,"name")
 
-
-  # persistent_graph = "dag",
-  if( identical(persistent_graph,NA) || class(persistent_graph) != "dag" ) {
-    # Create persistent graph
-    persistent_graph(process)<- construct_dag(nodes,
-      settings = settings,
-      silent = T
-    )
-  } else {
-    # Use pre-supplied persistent_graph
-    distance_units(persistent_graph)<- distance_units(settings)
-    persistent_graph(process)<- persistent_graph
-  }
 
   # parameters = "staRVe_process_parameters"
   parameters<- new("staRVe_process_parameters")
