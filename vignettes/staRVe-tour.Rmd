@@ -361,16 +361,14 @@ Predictions can be made as individual locations or as a raster.
 ```{r predict-points}
 pred_points<- st_sample(
   st_as_sfc(st_bbox(bird_survey)),
-  size = 5
+  size = 25
 )
-pred_points<- st_sf(geom = pred_points)
+pred_points<- st_sf(geom = pred_points,year=rep(2012:2016,each=5))
 pred_points
 ```
 
-We first randomly sample a small number of points for predictions, and store those points as an sf data.frame.
-The only part of the prediction locations used are the locations themselves; a year column is unnecessary.
-The unique locations provided will predicted at for each year desired.
-By default predictions will be made for every year spanned by the dataset, from the earliest year to the latest.
+We first randomly sample a small number of points for predictions each year, and store those points as an sf data.frame.
+The prediction locations can be the same every year or they can be different, and the years of the predictions can be different from those in the original data.
 
 ```{r predict-sf}
 staRVe_predict(
@@ -385,15 +383,6 @@ The output is a sf data.frame containing predictions for
 - The response mean before applying the link function **linear**, and their standard errors **linear_se**
 - the response mean after applying the link function **response**, and their standard errors **response_se**
 
-```{r forecast-sf}
-staRVe_predict(
-  bird_model,
-  pred_points,
-  time = 2015:2019
-)
-```
-
-To predict outside of the timespan of the original data, or to predict at specific years only you can supply specific years to the 'time' option.
 
 ## Raster predictions
 
@@ -443,7 +432,7 @@ staRVe_predict(
 ) |> head()
 ```
 
-Predictions outside the timespan of the original data or at specific years only use the same 'time' option as the point predictions.
+For raster predictions an additional 'time' option is available to specify which years to make predictions for, with the default behaviour being to predict every year between the earliest and latest year in the original dataset.
 
 
 
@@ -610,12 +599,9 @@ bird_model<- prepare_staRVe_model(
 ```
 
 ```{r covar-points}
-pred_covar<- do.call(rbind,lapply(min(bird_survey$year):2019,function(year) {
-  return(st_sf(data.frame(year=year,pred_points)))
-}))
-pred_covar$elev<- rnorm(nrow(pred_covar))
-pred_covar$temp<- rnorm(nrow(pred_covar))
-pred_covar
+pred_points$elev<- rnorm(nrow(pred_points))
+pred_points$temp<- rnorm(nrow(pred_points))
+pred_points
 ```
 
 The code above creates an sf data.frame with covariate values at all prediction locations, in every year for which we want predictions.
@@ -624,9 +610,7 @@ More locations or years can be supplied, only the locations/years that are neede
 ```{r pred-covar-sf}
 staRVe_predict(
   bird_model,
-  pred_points,
-  pred_covar,
-  time = min(bird_survey$year):2019
+  pred_points
 )
 ```
 
