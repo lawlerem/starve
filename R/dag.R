@@ -120,6 +120,8 @@ setReplaceMethod(f = "distance_units",
 #' @param settings An object of class \code{staRVe_settings}
 #' @param check_intersection Logical. If true, duplicated locations will be checked
 #' @param silent Should intermediate calculations be shown?
+#' @param time The time index for each location in x
+
 #'
 #' @return An object of class \code{dag}
 #'
@@ -153,20 +155,6 @@ construct_dag<- function(x,
 #' @describeIn construct_dag Construct a directed acyclic graph from one \code{sf}
 #'   object to another. The i'th element of the list is a vector containing
 #'   indices j such that there is a directed edge from node j (in y) to node i (in x).
-#'
-#' @param method What method should be used to construct the graph? If "standard",
-#'   the parents are taken to be the nearest neighbours according to geographic
-#'   distance.
-#'
-#'   If "mesh", additional \code{adjacency_matrix} and \code{distance_matrix}
-#'   arguments need to be supplied.
-#'   The 3 nearest neighbours according to geographic distance are taken to be
-#'   the initial parents, then additional parents are added by traversing the edges
-#'   of the supplied graph. The distance between a location and its parents is the
-#'   sum of the path lengths along the graph from the location to that parent.
-#' @param adjacency_matrix An adjacency matrix for the locations y.
-#' @param distance_matrix A distance matrix giving the length of the shortest
-#'   paths to/from each node in y, following the edges given by adjacency_matrix
 #'
 #' @export
 construct_obs_dag<- function(x,

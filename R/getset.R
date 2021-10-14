@@ -139,7 +139,8 @@ setGeneric(name = "fixed_effects<-",
 setGeneric(name = "formula",
            def = function(x) standardGeneric("formula")
 )
-#' @noRd
+#' @describeIn staRVe-access Set formula
+#' @export
 setGeneric(name = "formula<-",
            def = function(x,value) standardGeneric("formula<-")
 )
@@ -247,8 +248,6 @@ setGeneric(name = "obj<-",
 setGeneric(name = "obs_dag_method",
            def = function(x) standardGeneric("obs_dag_method")
 )
-#' @describeIn staRVe-access Set obs_dag_method
-#' @export
 setGeneric(name = "obs_dag_method<-",
            def = function(x,value) standardGeneric("obs_dag_method<-")
 )

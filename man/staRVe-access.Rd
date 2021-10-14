@@ -16,6 +16,7 @@
 \alias{fixed_effects}
 \alias{fixed_effects<-}
 \alias{formula}
+\alias{formula<-}
 \alias{graph}
 \alias{hess_time}
 \alias{link_function}
@@ -24,7 +25,6 @@
 \alias{n_neighbours}
 \alias{obj}
 \alias{obs_dag_method}
-\alias{obs_dag_method<-}
 \alias{opt}
 \alias{opt_time}
 \alias{p_far_neighbours}
@@ -80,6 +80,8 @@ fixed_effects(x) <- value
 
 formula(x, ...)
 
+formula(x) <- value
+
 graph(x)
 
 hess_time(x)
@@ -95,8 +97,6 @@ n_neighbours(x)
 obj(x)
 
 obs_dag_method(x)
-
-obs_dag_method(x) <- value
 
 opt(x)
 
@@ -188,6 +188,8 @@ Access methods for the staRVe package
 
 \item \code{formula}: Get formula
 
+\item \code{formula<-}: Set formula
+
 \item \code{graph}: Get graph
 
 \item \code{hess_time}: Get hessian time
@@ -203,8 +205,6 @@ Access methods for the staRVe package
 \item \code{obj}: Get obj
 
 \item \code{obs_dag_method}: Get obs_dag_method
-
-\item \code{obs_dag_method<-}: Set obs_dag_method
 
 \item \code{opt}: Get opt
 

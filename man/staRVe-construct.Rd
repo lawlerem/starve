@@ -121,6 +121,10 @@
 
 \item{max_distance}{A positive number}
 
+\item{obs_dag_method}{The method used to create the transient graph}
+
+\item{extras}{A list of extra settings}
+
 \item{response_distribution}{Which response distribution to use}
 
 \item{fixed_effects}{A data.frame}

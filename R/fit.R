@@ -103,43 +103,20 @@ setMethod(f = "staRVe_fit",
 })
 
 #' @param locations An sf object for prediction locations and times, with covariates
-#' @param covariates An sf object with spatial covariates
-#' @param time Which times to predict at?
 #'
 #' @export
 #' @describeIn staRVe_model_fit Predict/forecast at specific locations
 setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","sf"),
           definition = function(x,
-                                locations,
-                                covariates = locations) {
+                                locations) {
   ### Check that we have all covariates, if there are covariates in the model
   covar_names<- .names_from_formula(formula(settings(x)))
-  # if( missing(covariates) && (length(covar_names) == 0) ) {
-  #   covariates<- "missing"
-  # } else if( missing(covariates) && (length(covar_names) != 0) ) {
-  #   stop("Missing covariates, please supply them.")
-  # } else if( !all(covar_names %in% names(covariates)) ) {
-  #   stop("Missing some covariates. Please check covariate names.")
-  # } else {  }
 
   if( !all(covar_names %in% colnames(locations)) ) {
     stop("Missing covariates, please add them to the prediction locations.")
   } else {}
-  if( missing(covariates) ) {
-    covariates<- locations
-  } else {}
-
-  # Need a good way to do this check
-  # if( !missing(covariates) & (anyRow(locations) !%in% rows(covariates)) ) {
-  #   stop("Need to supply spatial covariates for all prediction locations/times.")
-  # }
-
-  ### If time = "model", use timespan of original dataset
-  # model_times<- unique(random_effects(process(x))[,attr(random_effects(process(x)),"time_column"),drop=T])
-  # if( identical(time,"model") ) {
-  #   time<- model_times
-  # } else {}
+  covariates<- locations
 
   # Get predictions and standard errors
   predictions<- .predict_w(x,
@@ -156,7 +133,21 @@ setMethod(f = "staRVe_predict",
 
   return(predictions)
 })
-#' @param ... Extra options
+#' @param covariates A list of \code{Raster*} objects for raster predictions.
+#'  If the model has no covariates, then nothing needs to be supplied.
+#'
+#'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
+#'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
+#'  contain data for one covariate, should have one layer for each time unit,
+#'  and should have the same raster geometry as the \code{locations} object. The
+#'  layer names of each raster layer should be of the form \code{T####}, where
+#'  \code{####} gives the specific time index. The geometry of all the
+#'  \code{Raster*} objects should be identical.
+#'
+#'  #'  If \code{locations} is of class \code{sf} with point geometries, then
+#'  covariate values should be included in that \code{sf} object.
+#' @param time What time indices should predictions be made for raster prediction?
+#'  If set to "model", predictions are made for every time present in the model.
 #'
 #' @export
 #' @describeIn staRVe_model_fit Predict/forecast over an entire raster
