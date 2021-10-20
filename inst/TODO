@@ -1,0 +1,51 @@
+--- Prerequisites ---
+** R side **
+1.) Convert random effects to stars
+2.) Move observation random effects to be hidden
+  a.) no spatial/year info held in random effects
+  b.) each row lines up with the row in the shown data
+  c.) columns: w, w_se, linear, linear_se, response, response_se
+  d.) depth gives variable
+  e.) still include response and response_se in shown data (rename to pred_cnt and se_cnt)
+
+
+--- Multiple Independent Variables ---
+
+** R side **
+1.) Multiple response variables in data input and TMB_in
+  a.) cbind(x,y) is LHS of formula
+2.) Data and random effect management
+  a1.) 3d array? Locations, times, and covariates should all be the same; or,
+  a2.) Multiple columns? Lots of w, w_se, linear, linear_se, etc. floating around...
+  a3.) 2d array holding response variables, covariates, time, location, and 3d array holding random effects (with time and location)
+3.) Parameter management
+  a.) Can use 3d array for spatial, temporal, and covariate parameters since # parameters are equal
+  b.) How to store response parameters since # of parameters can be unequal? Just a list?
+
+** C++ side **
+1.) Multivariate random effects
+  a.) Pass in matrix of random effects instead of vector
+  b.) nngp object
+    -- w and mean add columns for each variable
+    -- share ws_graph and ws_dists between variables
+    -- ws_joints and ws_krigs are vector<vector<MVNORM_t<Type> > > instead of vector<MVNORM_t<Type> >, outermost vector indexes variable
+
+2.) Multivariate observations
+  a1.) Pass in data as long format -- one vector for response values, one vector for variable index; or,
+  a2.) pass in data in wide format, one observation object for each variable, store all in a vector <---
+  b.) Pass in missing values as NA, just skip over them in likelihood evaluation (integrate them out?)
+
+
+
+--- Independent --> Dependent Variables ---
+
+** R side **
+1.) Add quantiles to random effects
+2.) Add copula families to get_staRVe_distributions
+  a.) Check for only two response for bivariate families
+3.) Add copula parameters to staRVe_process_parameters
+
+** C++ side **
+1.) Compute quantiles for random effects & report them
+2.) Add copula header file (similar to family.hpp)
+3.) Add likelihood contribution for copula for each row of random effects

@@ -904,6 +904,37 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 
 
+#' Convert an sf data.frame to a stars object
+#'
+#' Takes the sf geometry and the time column as the dimensions for a stars object
+#'   with the remaining columns taken as attributes. If any location / time combination
+#'   is not present in x, then the corresponding entry of the stars object will be NA.
+#'
+#' @param x An sf object
+#' @param time_column The name of the column in x giving the time index
+.sf_to_stars<- function(x,time_column) {
+  # Get stars dimensions object
+  dim_list<- list(
+    loc = sf::st_as_sfc(unique(sf::st_geometry(x))),
+    time = unique(x[,time_column,drop=TRUE])
+  )
+  names(dim_list)<- c(attr(x,"sf_column"),time_column)
+  dims<- do.call(stars::st_dimensions,dim_list)
+
+  # Reshape x into 3d array
+  a<- array(NA,dim(dims),dimnames=dim_list)
+  var_cols<- setdiff(colnames(x),names(dims))
+  x_stars<- stars::st_as_stars(lapply(var_cols,function(name) {
+    a[apply(as.matrix(x[names(dims)]),2,as.character)]<- x[,name,drop=T]
+    return(a)
+  }),dimensions=dims)
+  names(x_stars)<- var_cols
+
+  return(x_stars)
+}
+
+
+
 
 
 

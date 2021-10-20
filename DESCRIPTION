@@ -24,7 +24,8 @@ Imports:
     nngeo (>= 0.3.0),
     units,
     raster,
-    Rcpp
+    Rcpp,
+    stars
 LinkingTo:
     Rcpp,
     RcppEigen,
