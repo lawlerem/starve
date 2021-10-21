@@ -172,10 +172,7 @@ prepare_staRVe_observations<- function(data,
 
   # transient_graph = "dag"
   # Random effect locations are the same each year, so only need first year
-  random_effects<- split(
-    random_effects(process),
-    random_effects(process)[,attr(random_effects(process),"time_column"),drop=T]
-  )[[1]]
+  random_effects<- sf::st_sf(sf::st_geometry(sf::st_as_sf(random_effects(process))))
   if( identical(transient_graph,NA) || class(transient_graph) != "dag" ) {
     # Construct transient graph if not supplied
     transient_graph(observations)<- construct_obs_dag(

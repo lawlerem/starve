@@ -34,6 +34,7 @@ NULL
 setOldClass("proc_time")
 setOldClass("sdreport")
 setOldClass("sf")
+setOldClass("stars")
 
 #' An S4 class to hold a directed acyclic graph with distances.
 #'
@@ -75,7 +76,7 @@ setClass(
   Class = "staRVe_process",
   slots = c(
     time_effects = "data.frame",
-    random_effects = "sf",
+    random_effects = "stars",
     persistent_graph = "dag",
     parameters = "staRVe_process_parameters"
   ),

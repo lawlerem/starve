@@ -918,6 +918,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     loc = sf::st_as_sfc(unique(sf::st_geometry(x))),
     time = unique(x[,time_column,drop=TRUE])
   )
+  sf::st_crs(dim_list$loc)<- sf::st_crs(x)
   names(dim_list)<- c(attr(x,"sf_column"),time_column)
   dims<- do.call(stars::st_dimensions,dim_list)
 
@@ -925,7 +926,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   a<- array(NA,dim(dims),dimnames=dim_list)
   var_cols<- setdiff(colnames(x),names(dims))
   x_stars<- stars::st_as_stars(lapply(var_cols,function(name) {
-    a[apply(as.matrix(x[names(dims)]),2,as.character)]<- x[,name,drop=T]
+    a[rbind(apply(as.matrix(x[names(dims)]),2,as.character))]<- x[,name,drop=T]
     return(a)
   }),dimensions=dims)
   names(x_stars)<- var_cols
@@ -997,6 +998,30 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   attr(x,"name")<- the_name # Store the name of the time variable
 
   return(x)
+}
+
+.time_name_from_formula<- function(x) {
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("^time",term.labels,value=T)
+
+  # If the "time" term is missing, create a dummy Time variable where all
+  # observations happen at the same time. Type = independent because there
+  # is only one time
+  if( length(the_call) == 0 ) {
+    return("Time")
+  } else {}
+
+  new_formula<- sub("time","~",the_call)
+  new_formula<- sub(",.*","",new_formula)
+  new_formula<- sub("\\(","",new_formula)
+  new_formula<- sub("\\)$","",new_formula)
+  new_terms<- terms(formula(new_formula))
+  if( length(attr(new_terms,"term.labels")) > 1 ) {
+    stop("Only one variable is allowed for time.")
+  } else {}
+
+  return(attr(new_terms,"term.labels")[[1]])
 }
 
 

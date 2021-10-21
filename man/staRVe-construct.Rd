@@ -61,8 +61,9 @@
 \S4method{initialize}{staRVe_process}(
   .Object,
   time_effects = data.frame(w = numeric(1), se = numeric(1), time = numeric(1)),
-  random_effects = sf::st_sf(data.frame(w = numeric(1), se = numeric(1), time =
-    numeric(1)), geometry = sf::st_sfc(sf::st_point())),
+  random_effects = .sf_to_stars(sf::st_sf(data.frame(w = numeric(1), se = numeric(1),
+    time = numeric(1)), geometry = sf::st_sfc(sf::st_point(c(0, 0)))), time_column =
+    "time"),
   persistent_graph = new("dag"),
   parameters = new("staRVe_process_parameters")
 )
@@ -139,7 +140,7 @@
 
 \item{time_effects}{A data.frame}
 
-\item{random_effects}{An sf object}
+\item{random_effects}{A stars object}
 
 \item{persistent_graph}{A dag object}
 

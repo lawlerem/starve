@@ -176,3 +176,11 @@ setReplaceMethod(f = "extras",
   x@extras<- value
   return(x)
 })
+
+
+
+setMethod(f = ".time_name",
+          signature = "staRVe_settings",
+          definition = function(x) {
+  return(.time_name_from_formula(formula(x)))
+})

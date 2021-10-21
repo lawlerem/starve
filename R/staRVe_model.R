@@ -422,6 +422,13 @@ setReplaceMethod(f = "formula",
 })
 
 
+setMethod(f = ".time_name",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(.time_name(settings(x)))
+})
+
+
 ### Extras
 
 #' @param x An object

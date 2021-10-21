@@ -201,6 +201,10 @@ setGeneric(name = "staRVe_simulate",
 
 # T
 
+setGeneric(name = ".time_name",
+           def = function(x) standardGeneric(".time_name")
+)
+
 #' Convert a staRVe_model object to a form suitable for TMB input.
 #'
 #' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
