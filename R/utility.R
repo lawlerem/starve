@@ -580,6 +580,14 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   return(link_code)
 }
 
+.locations_from_stars<- function(x) {
+  sf_obj<- sf::st_as_sf(stars::st_dimensions(x)[[.which_sfc(x)]][["values"]])
+  colnames(sf_obj)<- .which_sfc(x)
+  st_geometry(sf_obj)<- .which_sfc(x)
+
+  return(sf_obj)
+}
+
 #' Convert a "map" list to use in TMB::MakeADFun
 #'
 #' Parameters that should be fixed have a value of TRUE, which is converted
@@ -1043,7 +1051,20 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 # W
 
-
+# Copied from the stars source code
+.which_sfc<- function(x) {
+  if( inherits(x,"stars") ) {
+    x<- stars::st_dimensions(x)
+    idx<- which(sapply(x, function(i) inherits(i$values, "sfc")))
+    if( length(idx) < 1 ) {
+      stop("No sf column present.")
+    } else if( length(idx) > 1 ) {
+      idx<- idx[[1]]
+      warning("Using only first sf column.")
+    }
+    return(names(x)[[idx]])
+  } else {}
+}
 
 
 

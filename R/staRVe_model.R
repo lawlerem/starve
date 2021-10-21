@@ -596,7 +596,7 @@ prepare_staRVe_model<- function(formula,
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
     persistent_graph = persistent_graph,
-    time = as.data.frame(data)[,attr(time_form,"name"),drop=F],
+    time = as.data.frame(data)[,.time_name(model),drop=F],
     settings = settings(model)
   )
 
@@ -616,22 +616,22 @@ prepare_staRVe_model<- function(formula,
   if( length(w_covar_names) > 0 ) {
     w_covar<- sf::st_sf(cbind(
       .mean_design_from_space_formula(formula,random_effects(model),"all.vars"),
-      random_effects(model)[,attr(time_form,"name"),drop=F]
+      random_effects(model)[,.time_name(model),drop=F]
     ))
-    w_covar<- w_covar[w_covar[,attr(time_form,"name"),drop=T] %in% unique(dat(model)[,attr(time_form,"name"),drop=T]),]
+    w_covar<- w_covar[w_covar[,.time_name(model),drop=T] %in% unique(dat(model)[,.time_name(model),drop=T]),]
     dat(model)<- do.call(rbind,Map(
       sf::st_join,
-      split(dat(model),dat(model)[,attr(time_form,"name"),drop=T]),
-      split(w_covar,w_covar[,attr(time_form,"name"),drop=T]),
-      suffix=lapply(seq_along(unique(dat(model)[,attr(time_form,"name"),drop=T])),function(t) return(c("",".w")))
+      split(dat(model),dat(model)[,.time_name(model),drop=T]),
+      split(w_covar,w_covar[,.time_name(model),drop=T]),
+      suffix=lapply(seq_along(unique(dat(model)[,.time_name(model),drop=T])),function(t) return(c("",".w")))
     ))
     # For transient nodes, just use the observation covariates
-    dat(model)[,paste0(attr(time_form,"name"),".w")]<- NULL
+    dat(model)[,paste0(.time_name(model),".w")]<- NULL
     rownames(dat(model))<- NULL
     foo<- sf::st_drop_geometry(dat(model)[,paste0(w_covar_names,".w"),drop=F])
     foo[is.na(foo)]<- sf::st_drop_geometry(dat(model)[,w_covar_names,drop=F])[is.na(foo)]
     dat(model)[,paste0(w_covar_names,".w")]<- foo
-    attr(dat(model),"time_column")<- attr(time_form,"name")
+    attr(dat(model),"time_column")<- .time_name(model)
   } else {}
 
   if( fit == T ) {
