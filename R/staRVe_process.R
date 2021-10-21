@@ -168,7 +168,6 @@ prepare_staRVe_process<- function(nodes,
     time = time_seq
   )
   colnames(time_effects(process))[[3]]<- .time_name(settings)
-  attr(time_effects(process),"time_column")<- .time_name(settings)
 
   # random_effects = "sf",
   uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])

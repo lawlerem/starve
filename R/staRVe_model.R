@@ -631,7 +631,6 @@ prepare_staRVe_model<- function(formula,
     foo<- sf::st_drop_geometry(dat(model)[,paste0(w_covar_names,".w"),drop=F])
     foo[is.na(foo)]<- sf::st_drop_geometry(dat(model)[,w_covar_names,drop=F])[is.na(foo)]
     dat(model)[,paste0(w_covar_names,".w")]<- foo
-    attr(dat(model),"time_column")<- .time_name(model)
   } else {}
 
   if( fit == T ) {
@@ -653,14 +652,13 @@ setMethod(f = "TMB_in",
           definition = function(x) {
   process<- process(x)
   observations<- observations(x)
-  time_column<- attr(random_effects(process),"time_column")
 
   ###
   ### Things input as data
   ###
   data<- list(
     model = "staRVe_model",
-    n_time = length(unique(random_effects(process)[,time_column,drop=T])),
+    n_time = length(unique(random_effects(process)[,.time_name(x),drop=T])),
     # Convert distribution and link (char) to (int)
     distribution_code = .distribution_to_code(
         response_distribution(parameters(observations))
@@ -669,7 +667,7 @@ setMethod(f = "TMB_in",
         link_function(parameters(observations))
       ),
     # Get time index, observations, and graph for observations
-    y_time = c(dat(observations)[,time_column,drop=T]),
+    y_time = c(dat(observations)[,.time_name(x),drop=T]),
     obs_y = c(.response_from_formula(
         formula(settings(x)),
         dat(observations)
@@ -685,7 +683,7 @@ setMethod(f = "TMB_in",
       ),
     resp_w_time = c(dat(observations)[
         sapply(lapply(edges(transient_graph(observations)),`[[`,2),length) > 1,
-        time_column,
+        .time_name(x),
         drop=T
       ]),
     # Get covariates, and sample.size for binomial
@@ -722,7 +720,7 @@ setMethod(f = "TMB_in",
         covariance_function(parameters(process))
       ),
     # Get time index and graph for spatio-temporal random effects
-    w_time = c(random_effects(process)[,time_column,drop=T]),
+    w_time = c(random_effects(process)[,.time_name(x),drop=T]),
     ws_edges = edges(idxR_to_C(persistent_graph(process))),
     ws_dists = distances(persistent_graph(process)),
     # Pred_* only used for predictions
@@ -953,7 +951,6 @@ setMethod(f = "update_staRVe_model",
   re<- random_effects(x)
   obs_dag<- transient_graph(x)
   random_effects<- random_effects(x)
-  time_column<- attr(data,"time_column")
 
   resp_w_idx<- 1
   resp_w<- sdr_mat[rownames(sdr_mat) == "resp_w",]
@@ -961,7 +958,7 @@ setMethod(f = "update_staRVe_model",
   for( i in seq(nrow(data)) ) {
     if( length(edges(obs_dag)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effect from persistent graph
-      this_year<- re[,time_column,drop=T] == data[i,time_column,drop=T]
+      this_year<- re[,.time_name(x),drop=T] == data[i,.time_name(x),drop=T]
       w<- re[,c("w","se"),drop=T][this_year,] # Putting this_year in first `[`
       # makes it really slow because sf checks spatial bounds
       data[i,c("w","w_se")]<- w[edges(obs_dag)[[i]][["from"]],c("w","se")]

@@ -24,9 +24,9 @@ NULL
   random_effects<- random_effects(x)
   nodes<- split(
     random_effects, # Keep everything in because the values don't matter (except for time)
-    random_effects[,attr(random_effects,"time_column"),drop=T]
+    random_effects[,.time_name(x),drop=T]
   )[[1]]
-  model_times<- unique(random_effects[,attr(random_effects,"time_column"),drop=T])
+  model_times<- unique(random_effects[,.time_name(x),drop=T])
 
   if( min(times) < min(model_times) ) {
     extra_times<- seq(min(times),min(model_times)-1)
@@ -37,7 +37,7 @@ NULL
       se = NA,
       time = extra_times
     )
-    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
+    colnames(extra_time_effects)[[3]]<- .time_name(x)
     time_effects(x)<- rbind(
       extra_time_effects,
       time_effects(x)
@@ -46,7 +46,7 @@ NULL
     # Add spatio-temporal random effects prior to the start of the original random effects
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       df<- nodes
-      df[,attr(random_effects,"time_column")]<- t
+      df[,.time_name(x)]<- t
       return(df)
     }))
     # Need to add dummy covariates to extra_effects
@@ -65,7 +65,7 @@ NULL
       se = NA,
       time = extra_times
     )
-    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
+    colnames(extra_time_effects)[[3]]<- .time_name(x)
     time_effects(x)<- rbind(
       time_effects(x),
       extra_time_effects
@@ -74,7 +74,7 @@ NULL
     # Add spatio-temporal random effects after the end of the original random effects
     extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
       df<- nodes
-      df[,attr(random_effects,"time_column")]<- t
+      df[,.time_name(x)]<- t
       return(df)
     }))
 
@@ -84,8 +84,6 @@ NULL
     )
   } else {}
 
-  attr(random_effects(x),"time_column")<- attr(random_effects,"time_column")
-  attr(time_effects(x),"time_column")<- attr(random_effects,"time_column")
   return(x)
 }
 
@@ -917,6 +915,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' Takes the sf geometry and the time column as the dimensions for a stars object
 #'   with the remaining columns taken as attributes. If any location / time combination
 #'   is not present in x, then the corresponding entry of the stars object will be NA.
+#' Inverse operation of st_as_sf(x,long=T)
 #'
 #' @param x An sf object
 #' @param time_column The name of the column in x giving the time index
