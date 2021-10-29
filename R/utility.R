@@ -20,14 +20,39 @@ NULL
 #'
 #' @noRd
 .add_random_effects_by_time<- function(x,times) {
-  # Get original random effects; only need first time for locations
-  random_effects<- random_effects(x)
-  nodes<- split(
-    random_effects, # Keep everything in because the values don't matter (except for time)
-    random_effects[,.time_name(x),drop=T]
-  )[[1]]
-  model_times<- unique(random_effects[,.time_name(x),drop=T])
+  model_times<- stars::st_get_dimension_values(random_effects(x),.time_name(x))
 
+  ### Add extra spatio-temporal random effects
+  new_dims<- stars::st_dimensions(random_effects(x))
+  relist<- lapply(random_effects(x),function(var_array) return(var_array))
+  if( min(times) < min(model_times) ) {
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(array(0,dim = c(nrow(var_array),min(model_times)-min(times))),
+                          var_array,
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = F
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
+    new_dims[[.time_name(x)]]$offset<- min(times)
+  } else {}
+  if( max(times) > max(model_times) ) {
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(var_array,
+                          array(0,dim = c(nrow(var_array),max(times)-max(model_times))),
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = T
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
+  } else {}
+  relist<- lapply(relist,function(var_array) {
+    dimnames(var_array)[[2]]<- stars::st_get_dimension_values(new_dims,.time_name(x))
+    return(var_array)
+  })
+  random_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
+
+  ### Add extra time effects
   if( min(times) < min(model_times) ) {
     extra_times<- seq(min(times),min(model_times)-1)
 
@@ -42,20 +67,7 @@ NULL
       extra_time_effects,
       time_effects(x)
     )
-
-    # Add spatio-temporal random effects prior to the start of the original random effects
-    extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      df<- nodes
-      df[,.time_name(x)]<- t
-      return(df)
-    }))
-    # Need to add dummy covariates to extra_effects
-    random_effects(x)<- rbind(
-      extra_effects,
-      random_effects(x)
-    )
   } else {}
-
   if( max(times) > max(model_times) ) {
     extra_times<- seq(max(model_times)+1,max(times))
 
@@ -69,18 +81,6 @@ NULL
     time_effects(x)<- rbind(
       time_effects(x),
       extra_time_effects
-    )
-
-    # Add spatio-temporal random effects after the end of the original random effects
-    extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      df<- nodes
-      df[,.time_name(x)]<- t
-      return(df)
-    }))
-
-    random_effects(x)<- rbind(
-      random_effects(x),
-      extra_effects
     )
   } else {}
 
@@ -107,34 +107,22 @@ NULL
   small_bird<- staRVe::bird_survey[staRVe::bird_survey$year %in% years,]
   small_bird<- cbind(x=rnorm(nrow(small_bird)),
                      small_bird)
-  nodes<- unique(small_bird[,attr(small_bird,"sf_column")])
-  nodes<- do.call(rbind,lapply(years,function(t) {
-    df<- sf::st_sf(cbind(
-      x = rnorm(nrow(nodes)),
-      year = t,
-      nodes
-    ))
-    return(df)
-  }))
   fit<- prepare_staRVe_model(
-    cnt~x+I(x^2)+space(x)+time(year),
+    cnt~x+I(x^2)+time(year),
     small_bird,
-    nodes,
     distribution="poisson",
-    link="log",
-    fit=F
+    fit=T
   )
-  spatial_parameters(fit)["range","par"]<- 80
-  spatial_parameters(fit)["range","fixed"]<- T
-  fit<- staRVe_fit(fit,silent=T)
   sim<- staRVe_simulate(fit)
-  pred_locs<- do.call(rbind,lapply(2000:2010, function(t) {
-    sf::st_sf(data.frame(x=rnorm(1),
-                         year=t,
-                         small_bird[1,"geom"]))
-  }))
-  pred_locs<- rbind(pred_locs,sf::st_sf(data.frame(x=rnorm(1),year=2010,small_bird[2,"geom"])))
-  pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs)
+  pred_years<- 2000:2010
+  pred_locs<- small_bird[1,"geom"]
+  pred_locs<- sf::st_sf(data.frame(x = rnorm(length(pred_years)*nrow(pred_locs)),
+                                   year = rep(pred_years,each=nrow(pred_locs)),
+                                   geom = rep(sf::st_geometry(pred_locs),length(pred_years))))
+  colnames(pred_locs)[[3]]<- "geom"
+  sf::st_geometry(pred_locs)<- "geom"
+  pred_locs<- rbind(pred_locs,sf::st_sf(data.frame(x=rnorm(1),year=2010,geometry=small_bird[2,"geom"])))
+  pred<- staRVe_predict(fit,pred_locs)
   return(list(fit=fit,sim=sim,pred=pred))
 }
 
@@ -274,6 +262,10 @@ NULL
 #'     linear predictor determines the mean, has a variance parameter.}
 #'   \item{lognormal - }{Used for modelling strictly positive continuous data such
 #'     as biomass, linear predictor determines the mean, has a variance parameter.}
+#'   \item{tweedie - }{Used to model non-negative continuous data with point mass at 0,
+#'     linear predictor determines the response mean before applying the offset.
+#'     The offset term is a multiplier to the response mean and can be supplied
+#'     in the model formula through the sample.size(...) term.}
 #'   \item{poisson - }{Typically used for count data, linear
 #'     predictor determines the intensity parameter.}
 #'   \item{negative binomial - }{Typically used for over-dispersed count data,
@@ -646,39 +638,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   return(the_df)
 }
 
-#' Retrieve spatial mean covariate data from a formula and a data.frame
-#'
-#' @param x A formula object
-#' @param data A data.frame containing the covariate data
-#' @param return Either "model.matrix", "model.frame", or "all.vars"
-#'
-#' @return The design matrix for the covariates designated inside the space(...)
-#'   special.
-#'
-#' @noRd
-.mean_design_from_space_formula<- function(x,data,return = "model.matrix") {
-  # Pick out the formula inside the space special
-  space<- function(x,covariance,nu) {
-    if( missing(x) ) {
-      return("~space()")
-    }
-    return(paste0("~",deparse(substitute(x)),"+space()"))
-  }
-
-  the_terms<- terms(x,specials=c("time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("^space",term.labels,value=T)
-
-  # if the "space" term is missing, return 0 column matrix
-  if( length(the_call) == 0 ) {
-    return(matrix(0,ncol=0,nrow=nrow(data)))
-  } else {}
-
-  the_call<- gsub("space","~space",the_call)
-  new_terms<- terms(formula(the_call),specials="space")
-  covar_formula<- formula(eval(attr(new_terms,"variables")[[2]]))
-  return(.mean_design_from_formula(covar_formula,data,return))
-}
 
 
 

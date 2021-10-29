@@ -13,7 +13,7 @@ NULL
 
 
 ###
-### Collection of all generics defined in this package
+### Collection of all get/set generics defined in this package
 ### Should be in alphabetical order
 ###
 

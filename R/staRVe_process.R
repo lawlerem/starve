@@ -159,7 +159,7 @@ prepare_staRVe_process<- function(nodes,
 
   # Return a time column with name and type (ar1/rw/etc) attributes
   time_form<- .time_from_formula(formula(settings),time)
-  time_seq<- seq(min(time),max(time))
+  time_seq<- seq(min(time_form),max(time_form))
 
   # time_effects = "data.frame"
   time_effects(process)<- data.frame(
@@ -181,25 +181,14 @@ prepare_staRVe_process<- function(nodes,
     persistent_graph(process)<- graph$dag
   }
 
-  random_effects(process)<- .sf_to_stars(do.call(rbind,lapply(time_seq,function(t) {
-    df<- sf::st_sf(data.frame(w = 0,
-                              se = NA,
-                              time = t,
-                              uniq_nodes))
-    colnames(df)[[3]]<- .time_name(settings)
-    # spatial join of covariates
-    covariates<- nodes[nodes[,.time_name(settings),drop=T]==t,]
-    covariates<- sf::st_sf(cbind(
-      .mean_design_from_space_formula(formula(settings),covariates,"all.vars"),
-      covariates[,attr(covariates,"sf_column")]
-    ))
-    covariates<- unique(covariates)
-    if( anyDuplicated(covariates[,attr(covariates,"sf_column")]) ) {
-      stop("Spatial covariates must be unique.")
-    } else {}
-    df<- sf::st_join(df,covariates)
-    return(df)
-  })),time_column=.time_name(settings))
+  df<- sf::st_sf(data.frame(w = 0,
+                            se = NA,
+                            time = rep(time_seq,each=nrow(uniq_nodes)),
+                            geom = rep(sf::st_geometry(uniq_nodes),length(time_seq))
+  ))
+  colnames(df)[[3]]<- .time_name(settings)
+  random_effects(process)<- .sf_to_stars(df,time_column=.time_name(settings))
+
 
   # parameters = "staRVe_process_parameters"
   parameters<- new("staRVe_process_parameters")

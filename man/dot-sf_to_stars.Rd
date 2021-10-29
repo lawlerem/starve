@@ -15,4 +15,5 @@
 Takes the sf geometry and the time column as the dimensions for a stars object
   with the remaining columns taken as attributes. If any location / time combination
   is not present in x, then the corresponding entry of the stars object will be NA.
+Inverse operation of st_as_sf(x,long=T)
 }

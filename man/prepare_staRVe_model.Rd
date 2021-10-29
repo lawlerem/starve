@@ -80,7 +80,9 @@ The formula object should always be of the form
 
 The variable y should be replaced with the desired response variable.
 
-The sample.size(...) term is only used if the response distribution is \code{binomial} or \code{atLeastOneBinomial}. If it is missing the sample sizes are assumed to all be 1.
+The sample.size(...) term is only used if the response distribution is
+\code{binomial}, \code{atLeastOneBinomial}, or \code{tweedie}.
+If it is missing the sample sizes are assumed to all be 1.
 
 The variables in the \code{mean(...)} term are linear predictors for the mean
 of the response variable. Any formula valid for the \code{lm} command can be used

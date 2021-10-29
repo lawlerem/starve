@@ -6,7 +6,6 @@
 template<class Type>
 Type staRVe_model(objective_function<Type>* obj) {
   // Read in data / parameters / random effects from R
-  DATA_INTEGER(n_time);
   DATA_INTEGER(distribution_code);
   DATA_INTEGER(link_code);
 
@@ -16,20 +15,15 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_STRUCT(ys_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(ys_dists,dag_dists); // See data_in.hpp
 
-  DATA_MATRIX(resp_w_mean_design);
   DATA_IVECTOR(resp_w_time);
 
   DATA_MATRIX(mean_design);
   DATA_VECTOR(sample_size);
 
-  DATA_MATRIX(w_mean_design);
-  DATA_IVECTOR(w_mean_pars_idx); // Want to use the same fixed effects as y
   DATA_INTEGER(covar_code);
-  DATA_IVECTOR(w_time);
   DATA_STRUCT(ws_edges,directed_graph);
   DATA_STRUCT(ws_dists,dag_dists);
 
-  DATA_MATRIX(pred_w_mean_design);
   DATA_IVECTOR(pred_w_time);
   DATA_STRUCT(pred_ws_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(pred_ws_dists,dag_dists); // See data_in.hpp
@@ -46,7 +40,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER(time_mu);
   PARAMETER(logit_time_ar1);
   PARAMETER(log_time_sd);
-  PARAMETER_VECTOR(proc_w);
+  PARAMETER_ARRAY(proc_w);
   PARAMETER_VECTOR(pred_w);
 
 
@@ -75,12 +69,6 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   Type time_ar1 = 2*invlogit(logit_time_ar1)-1; // -1 < ar1 < +1
   Type time_sd = exp(log_time_sd); // sd>0
-
-  // Subtract off fixed effects to alleviate spatial confounding
-  vector<Type> w_mean_pars = mean_pars(w_mean_pars_idx);
-  proc_w -= w_mean_design*w_mean_pars;
-  resp_w -= resp_w_mean_design*w_mean_pars;
-  pred_w -= pred_w_mean_design*w_mean_pars;
 
   // Get graphs
 
@@ -133,7 +121,6 @@ Type staRVe_model(objective_function<Type>* obj) {
   // random effect / data streams. First element will give the index for the
   // first random effect for each time, second element will give the number of
   // random effects to take out.
-  vector<int> w_segment(2);
   vector<int> y_segment(2);
   vector<int> resp_w_segment(2);
   vector<int> pred_w_segment(2);
@@ -179,7 +166,6 @@ Type staRVe_model(objective_function<Type>* obj) {
   // Likelihood contributions for spatio-temporal random effects and observations
 
   // Initial time segments
-  w_segment = get_time_segment(w_time,0);
   y_segment = get_time_segment(y_time,0);
   resp_w_segment = get_time_segment(resp_w_time,0);
   pred_w_segment = get_time_segment(pred_w_time,0);
@@ -190,8 +176,8 @@ Type staRVe_model(objective_function<Type>* obj) {
   // ws_dag = edge list for persistent graph
   // ws_dist = distances for persistent graph
   nngp<Type> process(cov,
-                     proc_w.segment(w_segment(0),w_segment(1)),
-                     time_effects(0)+0*proc_w.segment(w_segment(0),w_segment(1)),
+                     proc_w.col(0),
+                     time_effects(0)+0*proc_w.col(0),
                      // ^ gives constant mean
                      ws_dag,
                      ws_dist);
@@ -238,7 +224,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   SIMULATE{
     if( !conditional_sim ) {
       // Simulate new random effects, if desired
-      proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+      proc_w.col(0) = process.simulate();
       resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
     } else {}
     // Simulate new response data
@@ -248,16 +234,15 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   // Update process and observations for each time step,
   // add their likelihood contributions
-  for(int time=1; time<n_time; time++) {
+  for(int time=1; time<proc_w.cols(); time++) {
     // Get indices for this time
-    w_segment = get_time_segment(w_time,time);
     y_segment = get_time_segment(y_time,time);
     resp_w_segment = get_time_segment(resp_w_time,time);
     pred_w_segment = get_time_segment(pred_w_time,time);
 
     // Update the random effects and the mean function
     // the mean function here ensures a marginal AR(1) process at each location
-    process.update_w(proc_w.segment(w_segment(0),w_segment(1)),
+    process.update_w(proc_w.col(time),
                      time_effects(time) + time_ar1*(process.get_w()-time_effects(time-1)));
     // Update the data, covariates, transient graph, and extra random effects
     obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
@@ -286,7 +271,7 @@ Type staRVe_model(objective_function<Type>* obj) {
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effecst
-        proc_w.segment(w_segment(0),w_segment(1)) = process.simulate();
+        proc_w.col(time) = process.simulate();
         resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
@@ -296,9 +281,6 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   // Report back the simulated random effects and data to R
   SIMULATE{
-    proc_w += w_mean_design*w_mean_pars;
-    resp_w += resp_w_mean_design*w_mean_pars;
-
     REPORT(time_effects);
     REPORT(proc_w);
     REPORT(resp_w);

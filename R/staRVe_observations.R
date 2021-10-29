@@ -143,7 +143,7 @@ prepare_staRVe_observations<- function(data,
   # Return a time column with name and type (ar1/rw/etc) attributes
   time_form<- .time_from_formula(formula(settings),data) #in order
   response<- data.frame(y = c(y),t = c(time_form)) # c() removes attributes
-  names(response)<- c(attr(y,"name"),.time_name(settings))
+  colnames(response)<- c(attr(y,"name"),.time_name(settings))
 
   # Get covariates, and sample size information if using a binomial response
   design<- .mean_design_from_formula(formula(settings),data,return = "all.vars")
@@ -166,12 +166,11 @@ prepare_staRVe_observations<- function(data,
 
   # transient_graph = "dag"
   # Random effect locations are the same each year, so only need first year
-  random_effects<- .locations_from_stars(random_effects(process))
   if( identical(transient_graph,NA) || class(transient_graph) != "dag" ) {
     # Construct transient graph if not supplied
     transient_graph(observations)<- construct_obs_dag(
       x = data,
-      y = random_effects,
+      y = .locations_from_stars(random_effects(process)),
       time = c(time_form),
       settings = settings,
     )
