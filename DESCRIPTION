@@ -25,7 +25,8 @@ Imports:
     units,
     raster,
     Rcpp,
-    stars
+    stars,
+    abind
 LinkingTo:
     Rcpp,
     RcppEigen,

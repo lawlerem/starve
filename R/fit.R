@@ -140,7 +140,7 @@ setMethod(f = "staRVe_predict",
           definition = function(x,locations,covariates,time="model") {
   # Convert raster to sf
   uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
-  uniq_prediction_points<- prediction_points[,attr(prediction_points,"sf_column")]
+  uniq_prediction_points<- uniq_prediction_points[,attr(uniq_prediction_points,"sf_column")]
   if( identical(time,"model") ) {
     time<- seq(min(dat(x)[,.time_name(x),drop=T]),max(dat(x)[,.time_name(x),drop=T]))
   } else {
@@ -161,12 +161,15 @@ setMethod(f = "staRVe_predict",
     stop("Missing some covariates. Check the names of your raster covariates.")
   } else {
     covar_points<- .sf_from_raster_list(covariates,time_name=.time_name(x))
+    colnames(prediction_points)[[2]]<- attr(covar_points,"sf_column")
+    sf::st_geometry(prediction_points)<- attr(covar_points,"sf_column")
     prediction_points<- do.call(rbind,Map(
       sf::st_join,
-      split(prediction_points,predictions_points[,.time_name(x),drop=T]),
+      split(prediction_points,prediction_points[,.time_name(x),drop=T]),
       split(covar_points,covar_points[,.time_name(x),drop=T]),
-      suffix = c("",".c")
+      suffix = lapply(unique(covar_points[,.time_name(x),drop=T]),function(t) return(c("",".a")))
     ))
+
     prediction_points[,paste0(.time_name(x),".c")]<- NULL
     pred<- staRVe_predict(x,prediction_points,prediction_points)
   }
@@ -349,17 +352,19 @@ setMethod(f = "staRVe_simulate",
     return(e$from)
   }))
 
-  intersection_w<- as.list(sdr,"Estimate")$proc_w
-  intersection_w<- apply(intersection_w,MARGIN=2,`[`,intersection_w_idx) # MARGIN=2 is time
-  intersection_w<- intersection_w[,stars::st_get_dimension_values(random_effects(x),.time_name(x)) %in% pred_times]
-  intersection_w<- c(intersection_w)
+  if( any(intersection_idx) ) {
+    intersection_w<- as.list(sdr,"Estimate")$proc_w
+    intersection_w<- apply(intersection_w,MARGIN=2,`[`,intersection_w_idx) # MARGIN=2 is time
+    intersection_w<- intersection_w[,stars::st_get_dimension_values(random_effects(x),.time_name(x)) %in% pred_times]
+    intersection_w<- c(intersection_w)
 
-  intersection_se<- as.list(sdr,"Std. Error")$proc_w
-  intersection_se<- apply(intersection_se,MARGIN=2,`[`,intersection_w_idx) # MARGIN=2 is time
-  intersection_se<- intersection_se[,stars::st_get_dimension_values(random_effects(x),.time_name(x)) %in% pred_times]
-  intersection_se<- c(intersection_se)
+    intersection_se<- as.list(sdr,"Std. Error")$proc_w
+    intersection_se<- apply(intersection_se,MARGIN=2,`[`,intersection_w_idx) # MARGIN=2 is time
+    intersection_se<- intersection_se[,stars::st_get_dimension_values(random_effects(x),.time_name(x)) %in% pred_times]
+    intersection_se<- c(intersection_se)
 
-  predictions[intersection_all_idx,c("w","w_se")]<- cbind(intersection_w,intersection_se)
+    predictions[intersection_all_idx,c("w","w_se")]<- cbind(intersection_w,intersection_se)
+  } else {}
   predictions[!intersection_idx,c("w","w_se")] <- summary(sdr)[rownames(summary(sdr)) == "pred_w",]
 
   return(predictions)
