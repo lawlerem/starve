@@ -749,7 +749,7 @@ setMethod(f = "TMB_in",
         log(spatial_parameters(x)["nu","par"]),
         log(0.5)
       ),
-    time_effects = c(time_effects(x)[,"w",drop=T]),
+    time_effects = time_effects(x)[["w"]],
     time_mu = time_parameters(x)["mu","par"],
     logit_time_ar1 = ifelse( # -1 <= ar1 <= +1
           (time_parameters(x)["ar1","par"] >= -1
@@ -831,13 +831,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Temporal random effects
-  time_effects(x)<- within(
-    time_effects(x),{
-      par_names<<- c("time_effects")
-      w<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
-    }
-  )
+  time_effects(x)$w<- as.list(sdr(y),"Estimate")$time_effects
+  time_effects(x)$se<- as.list(sdr(y),"Std. Error")$time_effects
 
   # Spatio-temporal random effects
   random_effects(x)$w<- as.list(sdr(y),"Estimate")$proc_w

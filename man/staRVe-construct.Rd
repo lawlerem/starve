@@ -60,7 +60,8 @@
 
 \S4method{initialize}{staRVe_process}(
   .Object,
-  time_effects = data.frame(w = numeric(1), se = numeric(1), time = numeric(1)),
+  time_effects = stars::st_as_stars(list(w = array(0, dim = c(1)), se = array(NA, dim =
+    c(1))), dimensions = stars::st_dimensions(time = 0)),
   random_effects = .sf_to_stars(sf::st_sf(data.frame(w = numeric(1), se = numeric(1),
     time = numeric(1)), geometry = sf::st_sfc(sf::st_point(c(0, 0)))), time_column =
     "time"),
@@ -138,7 +139,7 @@
 
 \item{observation_parameters}{A staRVe_observation_parameters object}
 
-\item{time_effects}{A data.frame}
+\item{time_effects}{A stars object}
 
 \item{random_effects}{A stars object}
 

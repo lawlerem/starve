@@ -87,6 +87,11 @@ The new staRVe_model object is shown below.
 bird_model
 ```
 
+```{r}
+spatial_parameters(bird_model)["range","par"]<- 80
+spatial_parameters(bird_model)["range","fixed"]<- TRUE
+```
+
 The individual components of a 'staRVe_model" object are explained in the following sections.
 For now, note the columns labelled 'par' in the 'time_parameters', 'spatial_parameters', 'response_parameters', and 'fixed_effects' slots (the latter two of which have 0 rows in this particular model).
 These are the parameter values for the model.

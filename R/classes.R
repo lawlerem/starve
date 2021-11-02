@@ -69,13 +69,14 @@ setClass(
 
 #' An S4 class to hold the process information for a staRVe model.
 #'
-#' @slot random_effects An sf object containing random effects.
-#' @slot persistent graph A dag object describing the dependence graph of the process.
+#' @slot time_effects A stars object containing temporal random effects
+#' @slot random_effects A stars object containing spatio-temporal random effects.
+#' @slot persistent_graph A dag object describing the dependence graph of the process.
 #' @slot parameters An object of class staRVe_process_parameters.
 setClass(
   Class = "staRVe_process",
   slots = c(
-    time_effects = "data.frame",
+    time_effects = "stars",
     random_effects = "stars",
     persistent_graph = "dag",
     parameters = "staRVe_process_parameters"

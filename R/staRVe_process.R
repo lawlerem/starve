@@ -7,7 +7,7 @@ NULL
 ###           ###
 #################
 
-#' @param time_effects A data.frame
+#' @param time_effects A stars object
 #' @param random_effects A stars object
 #' @param persistent_graph A dag object
 #' @param parameters A staRVe_process_parameters object
@@ -17,10 +17,10 @@ setMethod(
   f = "initialize",
   signature = "staRVe_process",
   definition = function(.Object,
-                        time_effects = data.frame(
-                          w = numeric(1),
-                          se = numeric(1),
-                          time = numeric(1)
+                        time_effects = stars::st_as_stars(
+                          list(w = array(0,dim=c(1)),
+                               se = array(NA,dim=c(1))),
+                          dimensions = stars::st_dimensions(time=0)
                         ),
                         random_effects = .sf_to_stars(sf::st_sf(
                           data.frame(
@@ -162,12 +162,12 @@ prepare_staRVe_process<- function(nodes,
   time_seq<- seq(min(time_form),max(time_form))
 
   # time_effects = "data.frame"
-  time_effects(process)<- data.frame(
-    w = 0,
-    se = NA,
-    time = time_seq
+  time_effects(process)<- stars::st_as_stars(
+    list(w = array(0,dim=c(length(time_seq))),
+         se = array(NA,dim=c(length(time_seq)))),
+    dimensions = stars::st_dimensions(time = time_seq)
   )
-  colnames(time_effects(process))[[3]]<- .time_name(settings)
+  names(stars::st_dimensions(time_effects(process)))<- .time_name(settings)
 
   # random_effects = "sf",
   uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])

@@ -53,36 +53,30 @@ NULL
   random_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
 
   ### Add extra time effects
+  new_dims<- stars::st_dimensions(time_effects(x))
+  relist<- lapply(time_effects(x),function(var_array) return(var_array))
   if( min(times) < min(model_times) ) {
-    extra_times<- seq(min(times),min(model_times)-1)
-
-    # Add temporal random effects prior to the start of the original random effects
-    extra_time_effects<- data.frame(
-      w = 0,
-      se = NA,
-      time = extra_times
-    )
-    colnames(extra_time_effects)[[3]]<- .time_name(x)
-    time_effects(x)<- rbind(
-      extra_time_effects,
-      time_effects(x)
-    )
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(array(0,dim = c(min(model_times)-min(times))),
+                          var_array,
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = F
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
+    new_dims[[.time_name(x)]]$offset<- min(times)
   } else {}
   if( max(times) > max(model_times) ) {
-    extra_times<- seq(max(model_times)+1,max(times))
-
-    # Add temporal random effects after the end of the original random effects
-    extra_time_effects<- data.frame(
-      w = 0,
-      se = NA,
-      time = extra_times
-    )
-    colnames(extra_time_effects)[[3]]<- .time_name(x)
-    time_effects(x)<- rbind(
-      time_effects(x),
-      extra_time_effects
-    )
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(var_array,
+                          array(0,dim = c(max(times)-max(model_times))),
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = T
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
   } else {}
+  time_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
 
   return(x)
 }
