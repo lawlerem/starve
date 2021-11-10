@@ -20,6 +20,8 @@
 \alias{time_parameters<-,staRVe_model-method}
 \alias{dat,staRVe_model-method}
 \alias{dat<-,staRVe_model-method}
+\alias{data_predictions,staRVe_model-method}
+\alias{data_predictions<-,staRVe_model-method}
 \alias{response_distribution,staRVe_model-method}
 \alias{response_distribution<-,staRVe_model-method}
 \alias{response_parameters,staRVe_model-method}
@@ -68,6 +70,10 @@
 \S4method{dat}{staRVe_model}(x)
 
 \S4method{dat}{staRVe_model}(x) <- value
+
+\S4method{data_predictions}{staRVe_model}(x)
+
+\S4method{data_predictions}{staRVe_model}(x) <- value
 
 \S4method{response_distribution}{staRVe_model}(x)
 
@@ -155,6 +161,10 @@ Setting the covariance function also overwrites the spatial parameters.
 \item \code{dat}: Get data
 
 \item \code{dat<-}: Set data
+
+\item \code{data_predictions}: Get data predictions
+
+\item \code{data_predictions<-}: Set data predictions
 
 \item \code{response_distribution}: Get the response distribution.
 

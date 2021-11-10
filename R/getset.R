@@ -66,6 +66,17 @@ setGeneric(name = "dat<-",
            def = function(x,value) standardGeneric("dat<-")
 )
 
+#' @describeIn staRVe-access Get data predictions
+#' @export
+setGeneric(name = "data_predictions",
+           def = function(x,...) standardGeneric("data_predictions")
+)
+#' @describeIn staRVe-access Set data
+#' @export
+setGeneric(name = "data_predictions<-",
+           def = function(x,value) standardGeneric("data_predictions<-")
+)
+
 #' @describeIn staRVe-access Get distance units
 #' @export
 setGeneric(name = "distance_units",
@@ -196,6 +207,15 @@ setGeneric(name = "link_function",
 #' @export
 setGeneric(name = "link_function<-",
            def = function(x,value) standardGeneric("link_function<-")
+)
+
+#' @noRd
+setGeneric(name = "locations",
+           def = function(x) standardGeneric("locations")
+)
+#' @noRd
+setGeneric(name = "locations<-",
+           def = function(x,value) standardGeneric("locations<-")
 )
 
 
@@ -335,6 +355,15 @@ setGeneric(name = "persistent_graph",
 #' @noRd
 setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
+)
+
+#' @noRd
+setGeneric(name = "predictions",
+           def = function(x) standardGeneric("predictions")
+)
+#' @noRd
+setGeneric(name = "predictions<-",
+           def = function(x,value) standardGeneric("predictions<-")
 )
 
 #' @noRd

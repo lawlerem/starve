@@ -7,6 +7,8 @@
 \alias{covariance_function<-}
 \alias{dat}
 \alias{dat<-}
+\alias{data_predictions}
+\alias{data_predictions<-}
 \alias{distance_units}
 \alias{distance_units<-}
 \alias{distances}
@@ -61,6 +63,10 @@ covariance_function(x) <- value
 dat(x)
 
 dat(x) <- value
+
+data_predictions(x, ...)
+
+data_predictions(x) <- value
 
 distance_units(x)
 
@@ -169,6 +175,10 @@ Access methods for the staRVe package
 \item \code{dat}: Get data
 
 \item \code{dat<-}: Set data
+
+\item \code{data_predictions}: Get data predictions
+
+\item \code{data_predictions<-}: Set data
 
 \item \code{distance_units}: Get distance units
 

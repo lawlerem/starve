@@ -377,17 +377,27 @@ We first randomly sample a small number of points for predictions each year, and
 The prediction locations can be the same every year or they can be different, and the years of the predictions can be different from those in the original data.
 
 ```{r predict-sf}
-staRVe_predict(
+sf_pred<- staRVe_predict(
   bird_model,
   pred_points
 )
+sf_pred
 ```
 
-The output is a sf data.frame containing predictions for
+The output is a staRVe_predictions object with two slots, a 'locations' slot containing an sf data.frame with any covariates used, the year, and the geometry, and a 'predictions' slot containing a stars object with attributes for:
 
 - The spatio-temporal random effects **w**, and their standard errors **w_se**
 - The response mean before applying the link function **linear**, and their standard errors **linear_se**
 - the response mean after applying the link function **response**, and their standard errors **response_se**
+
+These predictions can be converted to a single sf data.frame fairly easily.
+
+```{r}
+cbind(
+  do.call(cbind,predictions(sf_pred)),
+  locations(sf_pred)
+)
+```
 
 
 ## Raster predictions
@@ -409,11 +419,10 @@ The 'staRVe_predict' function handles rasters by extracting the centroid of each
 staRVe_predict(
   bird_model,
   pred_raster
-) |> head()
+)
 ```
 
-The output is a list of rasters with one list element / raster for each year of predictions.
-Each of those rasters has a layer for the same predictions as that point predictions give.
+The output is a stars object with predictions at each raster location and every year.
 
 ```{r predict_mask_raster}
 pred_raster[]<- 0
@@ -424,7 +433,7 @@ pred_out<- staRVe_predict(
   bird_model,
   pred_raster
 )
-as.matrix(pred_out[[1]][["response"]])
+pred_out$response[,,1]
 ```
 
 If the supplied raster has values, then predictions will only be made at cells that are not `r NA`.
@@ -435,7 +444,7 @@ staRVe_predict(
   bird_model,
   pred_raster,
   time = 2015:2019
-) |> head()
+)
 ```
 
 For raster predictions an additional 'time' option is available to specify which years to make predictions for, with the default behaviour being to predict every year between the earliest and latest year in the original dataset.
@@ -505,14 +514,14 @@ Once a staRVe model is created from the template data, the parameter values and 
 ## Simulating random effects and observations
 
 ```{r simulate-all}
-head(time_effects(sim_model)$w)
-head(random_effects(sim_model)$w)
+time_effects(sim_model)
+random_effects(sim_model)
 head(dat(sim_model)$y)
 sim_model<- staRVe_simulate(
   sim_model
 )
-head(time_effects(sim_model)$w)
-head(random_effects(sim_model)$w)
+time_effects(sim_model)
+random_effects(sim_model)
 head(dat(sim_model)$y)
 ```
 
@@ -522,15 +531,15 @@ We show only the first few of each to show their difference before and after sim
 ## Simulating only observations
 
 ```{r simulate-obs}
-head(time_effects(sim_model)$w)
-head(random_effects(sim_model)$w)
+time_effects(sim_model)
+random_effects(sim_model)
 head(dat(sim_model)$y)
 sim_model<- staRVe_simulate(
   sim_model,
   conditional=T
 )
-head(time_effects(sim_model)$w)
-head(random_effects(sim_model)$w)
+time_effects(sim_model)
+random_effects(sim_model)
 head(dat(sim_model)$y)
 ```
 
@@ -667,7 +676,7 @@ staRVe_predict(
   pred_raster,
   pred_covar,
   time = min(bird_survey$year):2019
-) |> head()
+)
 ```
 
 Covariates are supplied to 'staRVe_predict' the same way as they were for point predictions.
@@ -720,6 +729,12 @@ get_staRVe_distributions("distribution")
 - **lognormal**: Models strictly positive continuous data. Random effects and covariates determine the mean.
     - Parameters
         - **sd**: standard deviation of the log of response variable.
+    - Default link: log
+
+- **tweedie**: Models non-negative continuous data with a point mass at zero. Random effects and covariates determine the mean. The relationship between the mean and variance is given by $Var(Y) = \sigma^{2}\mu^{p}$.
+    - Parameters
+        - **dispersion**: The parameter $\sigma^{2}$ above.
+        - **power**: The parameter $p$ above.
     - Default link: log
 
 - **poisson**: Models non-negative integer data. Random effects and covariates determine the intensity/mean.

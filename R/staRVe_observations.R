@@ -1,4 +1,4 @@
-#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R
+#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R staRVe_predictions.R
 NULL
 
 #################
@@ -22,16 +22,11 @@ setMethod(
                           ),
                           geometry = sf::st_sfc(sf::st_point())
                         ),
+                        data_predictions = new("staRVe_predictions"),
                         transient_graph = new("dag"),
                         parameters = new("staRVe_observation_parameters")) {
     dat(.Object)<- data
-    if( is.null(attr(dat(.Object),"active_time")) &&
-        "time" %in% colnames(dat(.Object)) ) {
-      # If active_time attribute doesn't exist but "time" is a column
-      # make the active_time attribute to be "time"
-      attr(dat(.Object),"active_time")<- "time"
-    } else {}
-
+    data_predictions(.Object)<- data_predictions
     transient_graph(.Object)<- transient_graph
     parameters(.Object)<- parameters
 
@@ -65,6 +60,27 @@ setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
   x@data<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_observations Get data predictions
+setMethod(f = "data_predictions",
+          signature = "staRVe_observations",
+          definition = function(x) return(x@data_predictions)
+)
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_observations Set data predictions
+setReplaceMethod(f = "data_predictions",
+                 signature = "staRVe_observations",
+                 definition = function(x,value) {
+  x@data_predictions<- value
   return(x)
 })
 
@@ -150,18 +166,12 @@ prepare_staRVe_observations<- function(data,
   sample_size<- .sample_size_from_formula(formula(settings),data)
 
   dat(observations)<- sf::st_sf(data.frame(
-    w = 0,
-    w_se = NA,
-    linear = NA,
-    linear_se = NA,
-    response = NA,
-    response_se = NA,
     design,
     sample_size,
     response,
     data[,attr(data,"sf_column")]
   ))
-
+  data_predictions(observations)<- new("staRVe_predictions",dat(observations)[,c(colnames(design),.time_name(settings)),drop=F])
 
 
   # transient_graph = "dag"

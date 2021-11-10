@@ -22,6 +22,7 @@ To see documentation for a particular class, load the package and run e.g.
   \item TMB_out
   \item staRVe_model_fit
   \item staRVe_parameters
+  \item staRVe_predictions
 }
 }
 

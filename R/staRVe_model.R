@@ -248,6 +248,29 @@ setReplaceMethod(f = "dat",
   return(x)
 })
 
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_model Get data predictions
+setMethod(f = "data_predictions",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(data_predictions(observations(x)))
+})
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_model Set data predictions
+setReplaceMethod(f = "data_predictions",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  data_predictions(observations(x))<- value
+  return(x)
+})
+
+
 #' Get/set transient graph
 #'
 #' @param x An object
@@ -857,27 +880,28 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Update the random effects corresponding to the observations
-  data<- dat(x)
-
   resp_w_idx<- 1
   resp_w<- sdr_mat[rownames(sdr_mat) == "resp_w",]
 
-  for( i in seq(nrow(data)) ) {
+  for( i in seq(nrow(dat(x))) ) {
     if( length(edges(graph(x)$transient_graph)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effect from persistent graph
-      this_year<- data[i,.time_name(x),drop=T]
+      this_year<- dat(x)[i,.time_name(x),drop=T]
       # makes it really slow because sf checks spatial bounds
-      data[i,c("w","w_se")]<- as.numeric(random_effects(x)[c("w","se"),
-                                edges(graph(x)$transient_graph)[[i]][["from"]],
-                                which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
-                                drop=T])
+      w_se<- as.numeric(random_effects(x)[c("w","se"),
+                        edges(graph(x)$transient_graph)[[i]][["from"]],
+                        which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
+                        drop=T])
+      predictions(data_predictions(x))[["w"]][[i]]<- w_se[[1]]
+      predictions(data_predictions(x))[["w_se"]][[i]]<- w_se[[2]]
     } else {
       # if length > 1, take random effect from resp_w
-      data[i,c("w","w_se")]<- resp_w[resp_w_idx,]
+      w_se<- resp_w[resp_w_idx,]
+      predictions(data_predictions(x))[["w"]][[i]]<- w_se[[1]]
+      predictions(data_predictions(x))[["w_se"]][[i]]<- w_se[[2]]
       resp_w_idx<- resp_w_idx+1
     }
   }
-  dat(x)<- data
 
   return(x)
 })
