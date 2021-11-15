@@ -1,21 +1,3 @@
---- Prerequisites ---
-** R side **
-1.) Convert random effects to stars --- DONE ---
-  a.) first dimension (row) should be location, second dimension (column) should be year
-  b.) How do space(...) covariates work here? Change .space_mean_design_from_formula
-2.) Convert time effects to stars
-3.) Move observation random effects to be hidden; convert to stars (only dimension is variable)
-  a.) no spatial/year info held in random effects
-  b.) each row lines up with the row in the shown data
-  c.) columns: w, w_se, linear, linear_se, response, response_se
-  d.) depth gives variable
-  e.) still include response and response_se in shown data (rename to pred_cnt and se_cnt)
-
-** C++ side ** --- DONE ---
-1.) Turn process random effects into an array
-  a.) x[i][j]: j (column) gives year and i (row) gives location. Update with just x.col(j)
-
-
 --- Multiple Independent Variables ---
 
 ** R side **
