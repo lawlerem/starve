@@ -10,6 +10,7 @@
 #'   \item dag
 #'   \item staRVe_process_parameters
 #'   \item staRVe_process
+#'   \item staRVe_predictions
 #'   \item staRVe_observation_parameters
 #'   \item staRVe_observations
 #'   \item staRVe_settings
@@ -18,7 +19,6 @@
 #'   \item TMB_out
 #'   \item staRVe_model_fit
 #'   \item staRVe_parameters
-#'   \item staRVe_predictions
 #' }
 #'
 #' @name staRVe_classes
@@ -117,16 +117,13 @@ setClass(
 
 #' An S4 class to hold the observation information for a staRVe model.
 #'
-#' @slot data An sf object containing the data for the model.
-#' @slot data_predictions A stars object containing the random effect, linear,
-#'   and response predictions for the data locations and times.
+#' @slot data_predictions A staRVe_predictions object for the data.
 #' @slot transient_graph A dag object describing the dependence of the data on
 #'   the process.
 #' @slot parameters An object of class staRVe_observation_parameters.
 setClass(
   Class = "staRVe_observations",
   slots = c(
-    data = "sf",
     data_predictions = "staRVe_predictions",
     transient_graph = "dag",
     parameters = "staRVe_observation_parameters"

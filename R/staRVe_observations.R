@@ -7,7 +7,7 @@ NULL
 ###           ###
 #################
 
-#' @param data An sf object
+#' @param data_predictions A staRVe_predictions object
 #' @param transient_graph A dag object
 #' @param parameters A staRVe_observation_parameters object
 #'
@@ -16,16 +16,9 @@ setMethod(
   f = "initialize",
   signature = "staRVe_observations",
   definition = function(.Object,
-                        data = sf::st_sf(data.frame(
-                            y = numeric(1),
-                            time = numeric(1)
-                          ),
-                          geometry = sf::st_sfc(sf::st_point())
-                        ),
                         data_predictions = new("staRVe_predictions"),
                         transient_graph = new("dag"),
                         parameters = new("staRVe_observation_parameters")) {
-    dat(.Object)<- data
     data_predictions(.Object)<- data_predictions
     transient_graph(.Object)<- transient_graph
     parameters(.Object)<- parameters
@@ -49,7 +42,7 @@ setMethod(
 #' @describeIn staRVe_observations Get data
 setMethod(f = "dat",
           signature = "staRVe_observations",
-          definition = function(x) return(x@data)
+          definition = function(x) return(locations(x@data_predictions))
 )
 #' @param x An object
 #' @param value A replacement value
@@ -59,7 +52,7 @@ setMethod(f = "dat",
 setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
-  x@data<- value
+  locations(x@data_predictions)<- value
   return(x)
 })
 
@@ -165,14 +158,12 @@ prepare_staRVe_observations<- function(data,
   design<- .mean_design_from_formula(formula(settings),data,return = "all.vars")
   sample_size<- .sample_size_from_formula(formula(settings),data)
 
-  dat(observations)<- sf::st_sf(data.frame(
+  data_predictions(observations)<- new("staRVe_predictions",sf::st_sf(data.frame(
     design,
     sample_size,
     response,
     data[,attr(data,"sf_column")]
-  ))
-  data_predictions(observations)<- new("staRVe_predictions",dat(observations)[,c(colnames(design),.time_name(settings)),drop=F])
-
+  )))
 
   # transient_graph = "dag"
   # Random effect locations are the same each year, so only need first year

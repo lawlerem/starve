@@ -49,10 +49,7 @@ An S4 class to hold the observation information for a staRVe model.
 \section{Slots}{
 
 \describe{
-\item{\code{data}}{An sf object containing the data for the model.}
-
-\item{\code{data_predictions}}{A stars object containing the random effect, linear,
-and response predictions for the data locations and times.}
+\item{\code{data_predictions}}{A staRVe_predictions object for the data.}
 
 \item{\code{transient_graph}}{A dag object describing the dependence of the data on
 the process.}

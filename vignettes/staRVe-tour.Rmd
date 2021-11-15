@@ -218,12 +218,29 @@ Since the same random effect locations are repeated at every time point they for
 ## Data
 
 ```{r dat}
+data_predictions(bird_model)
+```
+
+The data used in the model holds the data supplied to 'prepare_staRVe_model', and is held in a 'staRVe_predictions' object.
+The 'predictions' slot contains a stars object for the random effect predictions (w), the response mean before applying the link function (linear), and the response mean after applying the link function (response).
+Standard errors are also given for these predictions.
+The 'locations' slot contains an sf object with columns for the response variable, any covariates, and the year column.
+
+```{r}
 dat(bird_model)
 ```
 
-The data used in the model holds the data supplied to 'prepare_staRVe_model'.
-It also include predictions for the random effects (w), the response mean before applying the link function (linear), and the response mean after applying the link function (response).
-Standard errors are also given for these predictions.
+The 'locations' slot can be easily accessed through the 'dat' function.
+
+```{r}
+cbind(
+  do.call(cbind,predictions(data_predictions(bird_model))),
+  dat(bird_model)
+)
+```
+
+The rows of 'predictions' are in the same order as the rows of 'locations'.
+
 
 ## Settings
 

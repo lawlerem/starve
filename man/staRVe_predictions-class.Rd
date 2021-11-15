@@ -4,15 +4,23 @@
 \name{staRVe_predictions-class}
 \alias{staRVe_predictions-class}
 \alias{predictions,staRVe_predictions-method}
+\alias{predictions<-,staRVe_predictions-method}
 \alias{locations,staRVe_predictions-method}
+\alias{locations<-,staRVe_predictions-method}
 \title{An S4 class to hold predictions from a staRVe model.}
 \usage{
 \S4method{predictions}{staRVe_predictions}(x)
 
+\S4method{predictions}{staRVe_predictions}(x) <- value
+
 \S4method{locations}{staRVe_predictions}(x)
+
+\S4method{locations}{staRVe_predictions}(x) <- value
 }
 \arguments{
 \item{x}{An object}
+
+\item{value}{A replacement value}
 }
 \description{
 An S4 class to hold predictions from a staRVe model.
@@ -21,7 +29,11 @@ An S4 class to hold predictions from a staRVe model.
 \itemize{
 \item \code{predictions}: Get predictions
 
+\item \code{predictions<-}: Set predictions
+
 \item \code{locations}: Get locations
+
+\item \code{locations<-}: Set locations
 }}
 
 \section{Slots}{

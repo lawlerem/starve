@@ -209,11 +209,13 @@ setGeneric(name = "link_function<-",
            def = function(x,value) standardGeneric("link_function<-")
 )
 
-#' @noRd
+#' @describeIn staRVe-access Get locations
+#' @export
 setGeneric(name = "locations",
            def = function(x) standardGeneric("locations")
 )
-#' @noRd
+#' @describeIn staRVe-access Get locations
+#' @export
 setGeneric(name = "locations<-",
            def = function(x,value) standardGeneric("locations<-")
 )
@@ -357,11 +359,13 @@ setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
 )
 
-#' @noRd
+#' @describeIn staRVe-access Get predictions
+#' @export
 setGeneric(name = "predictions",
            def = function(x) standardGeneric("predictions")
 )
-#' @noRd
+#' @describeIn staRVe-access Set predictions
+#' @export
 setGeneric(name = "predictions<-",
            def = function(x,value) standardGeneric("predictions<-")
 )

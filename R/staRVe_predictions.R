@@ -50,6 +50,11 @@ setMethod(f = "predictions",
           signature = "staRVe_predictions",
           definition = function(x) return(x@predictions)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_predictions Set predictions
 setReplaceMethod(f = "predictions",
                  signature = "staRVe_predictions",
                  definition = function(x,value) {
@@ -65,6 +70,11 @@ setMethod(f = "locations",
           signature = "staRVe_predictions",
           definition = function(x) return(x@locations)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_predictions Set locations
 setReplaceMethod(f = "locations",
                  signature = "staRVe_predictions",
                  definition = function(x,value) {

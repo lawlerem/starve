@@ -78,8 +78,6 @@
 
 \S4method{initialize}{staRVe_observations}(
   .Object,
-  data = sf::st_sf(data.frame(y = numeric(1), time = numeric(1)), geometry =
-    sf::st_sfc(sf::st_point())),
   data_predictions = new("staRVe_predictions"),
   transient_graph = new("dag"),
   parameters = new("staRVe_observation_parameters")
@@ -157,7 +155,7 @@
 
 \item{parameters}{A staRVe_observation_parameters object}
 
-\item{data}{An sf object}
+\item{data_predictions}{A staRVe_predictions object}
 
 \item{transient_graph}{A dag object}
 

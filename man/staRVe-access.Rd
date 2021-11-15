@@ -23,6 +23,8 @@
 \alias{hess_time}
 \alias{link_function}
 \alias{link_function<-}
+\alias{locations}
+\alias{locations<-}
 \alias{max_distance}
 \alias{n_neighbours}
 \alias{obj}
@@ -34,6 +36,8 @@
 \alias{parameter_hessian}
 \alias{parameters}
 \alias{parameters<-}
+\alias{predictions}
+\alias{predictions<-}
 \alias{random_effects}
 \alias{random_effects<-}
 \alias{response_distribution}
@@ -96,6 +100,10 @@ link_function(x)
 
 link_function(x) <- value
 
+locations(x)
+
+locations(x) <- value
+
 max_distance(x)
 
 n_neighbours(x)
@@ -117,6 +125,10 @@ parameter_hessian(x)
 parameters(x)
 
 parameters(x) <- value
+
+predictions(x)
+
+predictions(x) <- value
 
 random_effects(x)
 
@@ -208,6 +220,10 @@ Access methods for the staRVe package
 
 \item \code{link_function<-}: Set link function
 
+\item \code{locations}: Get locations
+
+\item \code{locations<-}: Get locations
+
 \item \code{max_distance}: Get max distance
 
 \item \code{n_neighbours}: Get n neighbours
@@ -229,6 +245,10 @@ Access methods for the staRVe package
 \item \code{parameters}: Get parameters
 
 \item \code{parameters<-}: Set parameters
+
+\item \code{predictions}: Get predictions
+
+\item \code{predictions<-}: Set predictions
 
 \item \code{random_effects}: Get random effects
 
