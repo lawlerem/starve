@@ -13,7 +13,7 @@
 \alias{timing,staRVe_model_fit-method}
 \title{An S4 class to hold an optimized staRVe model, extends the staRVe_model class}
 \usage{
-\S4method{staRVe_predict}{staRVe_model_fit,sf}(x, locations, covariates = locations)
+\S4method{staRVe_predict}{staRVe_model_fit,sf}(x, locations)
 
 \S4method{staRVe_predict}{staRVe_model_fit,RasterLayer}(x, locations, covariates, time = "model")
 
@@ -32,9 +32,22 @@
 
 \item{locations}{An sf object for prediction locations and times, with covariates}
 
-\item{covariates}{An sf object with spatial covariates}
+\item{covariates}{A list of \code{Raster*} objects for raster predictions.
+ If the model has no covariates, then nothing needs to be supplied.
 
-\item{time}{Which times to predict at?}
+ If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
+ should be a list of \code{Raster*} objects. Each \code{Raster*} object should
+ contain data for one covariate, should have one layer for each time unit,
+ and should have the same raster geometry as the \code{locations} object. The
+ layer names of each raster layer should be of the form \code{T####}, where
+ \code{####} gives the specific time index. The geometry of all the
+ \code{Raster*} objects should be identical.
+
+ #'  If \code{locations} is of class \code{sf} with point geometries, then
+ covariate values should be included in that \code{sf} object.}
+
+\item{time}{What time indices should predictions be made for raster prediction?
+If set to "model", predictions are made for every time present in the model.}
 
 \item{object}{An object}
 
@@ -67,4 +80,3 @@ An S4 class to hold an optimized staRVe model, extends the staRVe_model class
 
 \item{\code{TMB_out}}{A TMB_out object.}
 }}
-

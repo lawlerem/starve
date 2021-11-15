@@ -5,6 +5,8 @@
 \alias{staRVe_observations-class}
 \alias{dat,staRVe_observations-method}
 \alias{dat<-,staRVe_observations-method}
+\alias{data_predictions,staRVe_observations-method}
+\alias{data_predictions<-,staRVe_observations-method}
 \alias{parameters,staRVe_observations-method}
 \alias{parameters<-,staRVe_observations,ANY-method}
 \title{An S4 class to hold the observation information for a staRVe model.}
@@ -12,6 +14,10 @@
 \S4method{dat}{staRVe_observations}(x)
 
 \S4method{dat}{staRVe_observations}(x) <- value
+
+\S4method{data_predictions}{staRVe_observations}(x)
+
+\S4method{data_predictions}{staRVe_observations}(x) <- value
 
 \S4method{parameters}{staRVe_observations}(x)
 
@@ -31,6 +37,10 @@ An S4 class to hold the observation information for a staRVe model.
 
 \item \code{dat<-}: Set data
 
+\item \code{data_predictions}: Get data predictions
+
+\item \code{data_predictions<-}: Set data predictions
+
 \item \code{parameters}: Get parameters
 
 \item \code{parameters<-}: Set parameters
@@ -39,7 +49,7 @@ An S4 class to hold the observation information for a staRVe model.
 \section{Slots}{
 
 \describe{
-\item{\code{data}}{An sf object containing the data for the model.}
+\item{\code{data_predictions}}{A staRVe_predictions object for the data.}
 
 \item{\code{transient_graph}}{A dag object describing the dependence of the data on
 the process.}

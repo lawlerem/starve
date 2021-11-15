@@ -20,72 +20,64 @@ NULL
 #'
 #' @noRd
 .add_random_effects_by_time<- function(x,times) {
-  # Get original random effects; only need first time for locations
-  random_effects<- random_effects(x)
-  nodes<- split(
-    random_effects, # Keep everything in because the values don't matter (except for time)
-    random_effects[,attr(random_effects,"time_column"),drop=T]
-  )[[1]]
-  model_times<- unique(random_effects[,attr(random_effects,"time_column"),drop=T])
+  model_times<- stars::st_get_dimension_values(random_effects(x),.time_name(x))
 
+  ### Add extra spatio-temporal random effects
+  new_dims<- stars::st_dimensions(random_effects(x))
+  relist<- lapply(random_effects(x),function(var_array) return(var_array))
   if( min(times) < min(model_times) ) {
-    extra_times<- seq(min(times),min(model_times)-1)
-
-    # Add temporal random effects prior to the start of the original random effects
-    extra_time_effects<- data.frame(
-      w = 0,
-      se = NA,
-      time = extra_times
-    )
-    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
-    time_effects(x)<- rbind(
-      extra_time_effects,
-      time_effects(x)
-    )
-
-    # Add spatio-temporal random effects prior to the start of the original random effects
-    extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      df<- nodes
-      df[,attr(random_effects,"time_column")]<- t
-      return(df)
-    }))
-    # Need to add dummy covariates to extra_effects
-    random_effects(x)<- rbind(
-      extra_effects,
-      random_effects(x)
-    )
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(array(0,dim = c(nrow(var_array),min(model_times)-min(times))),
+                          var_array,
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = F
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
+    new_dims[[.time_name(x)]]$offset<- min(times)
   } else {}
-
   if( max(times) > max(model_times) ) {
-    extra_times<- seq(max(model_times)+1,max(times))
-
-    # Add temporal random effects after the end of the original random effects
-    extra_time_effects<- data.frame(
-      w = 0,
-      se = NA,
-      time = extra_times
-    )
-    colnames(extra_time_effects)[[3]]<- attr(random_effects,"time_column")
-    time_effects(x)<- rbind(
-      time_effects(x),
-      extra_time_effects
-    )
-
-    # Add spatio-temporal random effects after the end of the original random effects
-    extra_effects<- do.call(rbind,lapply(extra_times,function(t) {
-      df<- nodes
-      df[,attr(random_effects,"time_column")]<- t
-      return(df)
-    }))
-
-    random_effects(x)<- rbind(
-      random_effects(x),
-      extra_effects
-    )
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(var_array,
+                          array(0,dim = c(nrow(var_array),max(times)-max(model_times))),
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = T
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
   } else {}
+  relist<- lapply(relist,function(var_array) {
+    dimnames(var_array)[[2]]<- stars::st_get_dimension_values(new_dims,.time_name(x))
+    return(var_array)
+  })
+  random_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
 
-  attr(random_effects(x),"time_column")<- attr(random_effects,"time_column")
-  attr(time_effects(x),"time_column")<- attr(random_effects,"time_column")
+  ### Add extra time effects
+  new_dims<- stars::st_dimensions(time_effects(x))
+  relist<- lapply(time_effects(x),function(var_array) return(var_array))
+  if( min(times) < min(model_times) ) {
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(array(0,dim = c(min(model_times)-min(times))),
+                          var_array,
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = F
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
+    new_dims[[.time_name(x)]]$offset<- min(times)
+  } else {}
+  if( max(times) > max(model_times) ) {
+    relist<- lapply(relist,function(var_array) {
+      return(abind::abind(var_array,
+                          array(0,dim = c(max(times)-max(model_times))),
+                          along = which(names(new_dims) == .time_name(x)),
+                          use.first.dimnames = T
+                        ))
+    })
+    new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
+  } else {}
+  time_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
+
   return(x)
 }
 
@@ -119,24 +111,25 @@ NULL
     return(df)
   }))
   fit<- prepare_staRVe_model(
-    cnt~x+I(x^2)+space(x)+time(year),
+    cnt~x+I(x^2)+time(year),
     small_bird,
     nodes,
     distribution="poisson",
-    link="log",
-    fit=F
+    fit=T
   )
   spatial_parameters(fit)["range","par"]<- 80
   spatial_parameters(fit)["range","fixed"]<- T
   fit<- staRVe_fit(fit,silent=T)
   sim<- staRVe_simulate(fit)
-  pred_locs<- do.call(rbind,lapply(2000:2010, function(t) {
-    sf::st_sf(data.frame(x=rnorm(1),
-                         year=t,
-                         small_bird[1,"geom"]))
-  }))
-  pred_locs<- rbind(pred_locs,sf::st_sf(data.frame(x=rnorm(1),year=2010,small_bird[2,"geom"])))
-  pred<- staRVe_predict(fit,pred_locs,covariates=pred_locs)
+  pred_years<- 2000:2010
+  pred_locs<- small_bird[1,"geom"]
+  pred_locs<- sf::st_sf(data.frame(x = rnorm(length(pred_years)*nrow(pred_locs)),
+                                   year = rep(pred_years,each=nrow(pred_locs)),
+                                   geom = rep(sf::st_geometry(pred_locs),length(pred_years))))
+  colnames(pred_locs)[[3]]<- "geom"
+  sf::st_geometry(pred_locs)<- "geom"
+  pred_locs<- rbind(pred_locs,sf::st_sf(data.frame(x=rnorm(1),year=2010,geometry=small_bird[2,"geom"])))
+  pred<- staRVe_predict(fit,pred_locs)
   return(list(fit=fit,sim=sim,pred=pred))
 }
 
@@ -276,6 +269,10 @@ NULL
 #'     linear predictor determines the mean, has a variance parameter.}
 #'   \item{lognormal - }{Used for modelling strictly positive continuous data such
 #'     as biomass, linear predictor determines the mean, has a variance parameter.}
+#'   \item{tweedie - }{Used to model non-negative continuous data with point mass at 0,
+#'     linear predictor determines the response mean before applying the offset.
+#'     The offset term is a multiplier to the response mean and can be supplied
+#'     in the model formula through the sample.size(...) term.}
 #'   \item{poisson - }{Typically used for count data, linear
 #'     predictor determines the intensity parameter.}
 #'   \item{negative binomial - }{Typically used for over-dispersed count data,
@@ -578,6 +575,14 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   }
 
   return(link_code)
+}
+
+.locations_from_stars<- function(x) {
+  sf_obj<- sf::st_as_sf(stars::st_dimensions(x)[[.which_sfc(x)]][["values"]])
+  colnames(sf_obj)<- .which_sfc(x)
+  st_geometry(sf_obj)<- .which_sfc(x)
+
+  return(sf_obj)
 }
 
 #' Convert a "map" list to use in TMB::MakeADFun
@@ -904,6 +909,39 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 
 
+#' Convert an sf data.frame to a stars object
+#'
+#' Takes the sf geometry and the time column as the dimensions for a stars object
+#'   with the remaining columns taken as attributes. If any location / time combination
+#'   is not present in x, then the corresponding entry of the stars object will be NA.
+#' Inverse operation of st_as_sf(x,long=T)
+#'
+#' @param x An sf object
+#' @param time_column The name of the column in x giving the time index
+.sf_to_stars<- function(x,time_column) {
+  # Get stars dimensions object
+  dim_list<- list(
+    loc = sf::st_as_sfc(unique(sf::st_geometry(x))),
+    time = unique(x[,time_column,drop=TRUE])
+  )
+  sf::st_crs(dim_list$loc)<- sf::st_crs(x)
+  names(dim_list)<- c(attr(x,"sf_column"),time_column)
+  dims<- do.call(stars::st_dimensions,dim_list)
+
+  # Reshape x into 3d array
+  a<- array(NA,dim(dims),dimnames=dim_list)
+  var_cols<- setdiff(colnames(x),names(dims))
+  x_stars<- stars::st_as_stars(lapply(var_cols,function(name) {
+    a[rbind(apply(as.matrix(x[names(dims)]),2,as.character))]<- x[,name,drop=T]
+    return(a)
+  }),dimensions=dims)
+  names(x_stars)<- var_cols
+
+  return(x_stars)
+}
+
+
+
 
 
 
@@ -968,6 +1006,30 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   return(x)
 }
 
+.time_name_from_formula<- function(x) {
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
+  term.labels<- attr(the_terms,"term.labels")
+  the_call<- grep("^time",term.labels,value=T)
+
+  # If the "time" term is missing, create a dummy Time variable where all
+  # observations happen at the same time. Type = independent because there
+  # is only one time
+  if( length(the_call) == 0 ) {
+    return("Time")
+  } else {}
+
+  new_formula<- sub("time","~",the_call)
+  new_formula<- sub(",.*","",new_formula)
+  new_formula<- sub("\\(","",new_formula)
+  new_formula<- sub("\\)$","",new_formula)
+  new_terms<- terms(formula(new_formula))
+  if( length(attr(new_terms,"term.labels")) > 1 ) {
+    stop("Only one variable is allowed for time.")
+  } else {}
+
+  return(attr(new_terms,"term.labels")[[1]])
+}
+
 
 
 
@@ -987,7 +1049,20 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 # W
 
-
+# Copied from the stars source code
+.which_sfc<- function(x) {
+  if( inherits(x,"stars") ) {
+    x<- stars::st_dimensions(x)
+    idx<- which(sapply(x, function(i) inherits(i$values, "sfc")))
+    if( length(idx) < 1 ) {
+      stop("No sf column present.")
+    } else if( length(idx) > 1 ) {
+      idx<- idx[[1]]
+      warning("Using only first sf column.")
+    }
+    return(names(x)[[idx]])
+  } else {}
+}
 
 
 

@@ -24,7 +24,9 @@ Imports:
     nngeo (>= 0.3.0),
     units,
     raster,
-    Rcpp
+    Rcpp,
+    stars,
+    abind
 LinkingTo:
     Rcpp,
     RcppEigen,
@@ -56,6 +58,7 @@ Collate:
     'staRVe_observation_parameters.R'
     'staRVe_process_parameters.R'
     'staRVe_parameters.R'
+    'staRVe_predictions.R'
     'staRVe_process.R'
     'staRVe_observations.R'
     'staRVe_model.R'

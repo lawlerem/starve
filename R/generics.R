@@ -146,21 +146,13 @@ setGeneric(name = "staRVe_fit",
 #'
 #' @param x An object of class \code{staRVe_fit}.
 #' @param locations Either an object of class \code{sf} containing point geometries,
-#'  or an object of class \code{RasterLayer}. This object should not have any
-#'  time information, as predictions will be made at each location at every time.
+#'  or an object of class \code{RasterLayer}. If an \code{sf} object, covariate
+#'  values and a time index should be included as part of the object.
 #'  If a \code{RasterLayer} object, predictions will be made for all raster cells
 #'  whose value are not NA. If the raster has no values, then predictions will
 #'  be made at every cell. Raster predictions are made at the midpoint of each cell.
-#' @param covariates Either a data.frame of class \code{sf} or a list of \code{Raster*}
-#'  objects, depending on the input type of \code{locations}. If the model has
-#'  no covariates, then nothing needs to be supplied.
-#'
-#'  If \code{locations} is of class \code{sf} with point geometries, then
-#'  \code{covariates} should also be of class \code{sf}. The data.frame should contain
-#'  columns for each of the covariates, a column for the time index, and a column
-#'  of point geometries. For each time unit and prediction point, there should
-#'  be a row in the \code{covariates} data.frame, but the rows do not need to be
-#'  in the same order as \code{locations}.
+#' @param covariates A list of \code{Raster*} objects for raster predictions.
+#'  If the model has no covariates, then nothing needs to be supplied.
 #'
 #'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
 #'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
@@ -169,8 +161,11 @@ setGeneric(name = "staRVe_fit",
 #'  layer names of each raster layer should be of the form \code{T####}, where
 #'  \code{####} gives the specific time index. The geometry of all the
 #'  \code{Raster*} objects should be identical.
-#' @param time What time indices should predictions be made for? If set to "model",
-#'  predictions are made for every time present in the model.
+#'
+#'  #'  If \code{locations} is of class \code{sf} with point geometries, then
+#'  covariate values should be included in that \code{sf} object.
+#' @param time What time indices should predictions be made for raster prediction?
+#'  If set to "model", predictions are made for every time present in the model.
 #' @param ... Extra options
 #'
 #' @return Either a \code{sf} object or a list of \code{Raster*} objects,
@@ -205,6 +200,10 @@ setGeneric(name = "staRVe_simulate",
 
 
 # T
+
+setGeneric(name = ".time_name",
+           def = function(x) standardGeneric(".time_name")
+)
 
 #' Convert a staRVe_model object to a form suitable for TMB input.
 #'

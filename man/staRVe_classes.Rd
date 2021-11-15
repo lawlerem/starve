@@ -14,6 +14,7 @@ To see documentation for a particular class, load the package and run e.g.
   \item dag
   \item staRVe_process_parameters
   \item staRVe_process
+  \item staRVe_predictions
   \item staRVe_observation_parameters
   \item staRVe_observations
   \item staRVe_settings

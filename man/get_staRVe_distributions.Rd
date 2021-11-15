@@ -28,6 +28,10 @@ Print a list of implemented response distributions, link functions, and
     linear predictor determines the mean, has a variance parameter.}
   \item{lognormal - }{Used for modelling strictly positive continuous data such
     as biomass, linear predictor determines the mean, has a variance parameter.}
+  \item{tweedie - }{Used to model non-negative continuous data with point mass at 0,
+    linear predictor determines the response mean before applying the offset.
+    The offset term is a multiplier to the response mean and can be supplied
+    in the model formula through the sample.size(...) term.}
   \item{poisson - }{Typically used for count data, linear
     predictor determines the intensity parameter.}
   \item{negative binomial - }{Typically used for over-dispersed count data,

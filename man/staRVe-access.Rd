@@ -7,6 +7,8 @@
 \alias{covariance_function<-}
 \alias{dat}
 \alias{dat<-}
+\alias{data_predictions}
+\alias{data_predictions<-}
 \alias{distance_units}
 \alias{distance_units<-}
 \alias{distances}
@@ -16,15 +18,17 @@
 \alias{fixed_effects}
 \alias{fixed_effects<-}
 \alias{formula}
+\alias{formula<-}
 \alias{graph}
 \alias{hess_time}
 \alias{link_function}
 \alias{link_function<-}
+\alias{locations}
+\alias{locations<-}
 \alias{max_distance}
 \alias{n_neighbours}
 \alias{obj}
 \alias{obs_dag_method}
-\alias{obs_dag_method<-}
 \alias{opt}
 \alias{opt_time}
 \alias{p_far_neighbours}
@@ -32,6 +36,8 @@
 \alias{parameter_hessian}
 \alias{parameters}
 \alias{parameters<-}
+\alias{predictions}
+\alias{predictions<-}
 \alias{random_effects}
 \alias{random_effects<-}
 \alias{response_distribution}
@@ -62,6 +68,10 @@ dat(x)
 
 dat(x) <- value
 
+data_predictions(x, ...)
+
+data_predictions(x) <- value
+
 distance_units(x)
 
 distance_units(x) <- value
@@ -80,6 +90,8 @@ fixed_effects(x) <- value
 
 formula(x, ...)
 
+formula(x) <- value
+
 graph(x)
 
 hess_time(x)
@@ -88,6 +100,10 @@ link_function(x)
 
 link_function(x) <- value
 
+locations(x)
+
+locations(x) <- value
+
 max_distance(x)
 
 n_neighbours(x)
@@ -95,8 +111,6 @@ n_neighbours(x)
 obj(x)
 
 obs_dag_method(x)
-
-obs_dag_method(x) <- value
 
 opt(x)
 
@@ -111,6 +125,10 @@ parameter_hessian(x)
 parameters(x)
 
 parameters(x) <- value
+
+predictions(x)
+
+predictions(x) <- value
 
 random_effects(x)
 
@@ -170,6 +188,10 @@ Access methods for the staRVe package
 
 \item \code{dat<-}: Set data
 
+\item \code{data_predictions}: Get data predictions
+
+\item \code{data_predictions<-}: Set data
+
 \item \code{distance_units}: Get distance units
 
 \item \code{distance_units<-}: Set distance units
@@ -188,6 +210,8 @@ Access methods for the staRVe package
 
 \item \code{formula}: Get formula
 
+\item \code{formula<-}: Set formula
+
 \item \code{graph}: Get graph
 
 \item \code{hess_time}: Get hessian time
@@ -196,6 +220,10 @@ Access methods for the staRVe package
 
 \item \code{link_function<-}: Set link function
 
+\item \code{locations}: Get locations
+
+\item \code{locations<-}: Get locations
+
 \item \code{max_distance}: Get max distance
 
 \item \code{n_neighbours}: Get n neighbours
@@ -203,8 +231,6 @@ Access methods for the staRVe package
 \item \code{obj}: Get obj
 
 \item \code{obs_dag_method}: Get obs_dag_method
-
-\item \code{obs_dag_method<-}: Set obs_dag_method
 
 \item \code{opt}: Get opt
 
@@ -219,6 +245,10 @@ Access methods for the staRVe package
 \item \code{parameters}: Get parameters
 
 \item \code{parameters<-}: Set parameters
+
+\item \code{predictions}: Get predictions
+
+\item \code{predictions<-}: Set predictions
 
 \item \code{random_effects}: Get random effects
 

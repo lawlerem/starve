@@ -1,4 +1,4 @@
-#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R
+#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R staRVe_predictions.R
 NULL
 
 #################
@@ -7,7 +7,7 @@ NULL
 ###           ###
 #################
 
-#' @param data An sf object
+#' @param data_predictions A staRVe_predictions object
 #' @param transient_graph A dag object
 #' @param parameters A staRVe_observation_parameters object
 #'
@@ -16,22 +16,10 @@ setMethod(
   f = "initialize",
   signature = "staRVe_observations",
   definition = function(.Object,
-                        data = sf::st_sf(data.frame(
-                            y = numeric(1),
-                            time = numeric(1)
-                          ),
-                          geometry = sf::st_sfc(sf::st_point())
-                        ),
+                        data_predictions = new("staRVe_predictions"),
                         transient_graph = new("dag"),
                         parameters = new("staRVe_observation_parameters")) {
-    dat(.Object)<- data
-    if( is.null(attr(dat(.Object),"active_time")) &&
-        "time" %in% colnames(dat(.Object)) ) {
-      # If active_time attribute doesn't exist but "time" is a column
-      # make the active_time attribute to be "time"
-      attr(dat(.Object),"active_time")<- "time"
-    } else {}
-
+    data_predictions(.Object)<- data_predictions
     transient_graph(.Object)<- transient_graph
     parameters(.Object)<- parameters
 
@@ -54,7 +42,7 @@ setMethod(
 #' @describeIn staRVe_observations Get data
 setMethod(f = "dat",
           signature = "staRVe_observations",
-          definition = function(x) return(x@data)
+          definition = function(x) return(locations(x@data_predictions))
 )
 #' @param x An object
 #' @param value A replacement value
@@ -64,7 +52,28 @@ setMethod(f = "dat",
 setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
-  x@data<- value
+  locations(x@data_predictions)<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_observations Get data predictions
+setMethod(f = "data_predictions",
+          signature = "staRVe_observations",
+          definition = function(x) return(x@data_predictions)
+)
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_observations Set data predictions
+setReplaceMethod(f = "data_predictions",
+                 signature = "staRVe_observations",
+                 definition = function(x,value) {
+  x@data_predictions<- value
   return(x)
 })
 
@@ -135,52 +144,34 @@ prepare_staRVe_observations<- function(data,
                                        link = "default") {
   observations<- new("staRVe_observations")
 
-  # Return a time column with name and type (ar1/rw/etc) attributes
-  # Need it here for the name attribute
-  time_form<- .time_from_formula(formula(settings),data)
-
   # data = "sf"
   # Put in lexicographic ordering by time, then S->N / W->E
-  data<- .order_by_location(data,time = data[[attr(time_form,"name")]])
+  data<- .order_by_location(data,time = data[[.time_name(settings)]])
   # Returns response variable with a "name" attribute
   y<- .response_from_formula(formula(settings),data)
   # Return a time column with name and type (ar1/rw/etc) attributes
   time_form<- .time_from_formula(formula(settings),data) #in order
   response<- data.frame(y = c(y),t = c(time_form)) # c() removes attributes
-  names(response)<- c(attr(y,"name"),attr(time_form,"name"))
+  colnames(response)<- c(attr(y,"name"),.time_name(settings))
 
   # Get covariates, and sample size information if using a binomial response
   design<- .mean_design_from_formula(formula(settings),data,return = "all.vars")
-  # design<- .mean_design_from_formula(formula(settings),data,return = "model.frame")
   sample_size<- .sample_size_from_formula(formula(settings),data)
 
-  dat(observations)<- sf::st_sf(data.frame(
-    w = 0,
-    w_se = NA,
-    linear = NA,
-    linear_se = NA,
-    response = NA,
-    response_se = NA,
+  data_predictions(observations)<- new("staRVe_predictions",sf::st_sf(data.frame(
     design,
     sample_size,
     response,
     data[,attr(data,"sf_column")]
-  ))
-  attr(dat(observations),"time_column")<- attr(time_form,"name")
-
-
+  )))
 
   # transient_graph = "dag"
   # Random effect locations are the same each year, so only need first year
-  random_effects<- split(
-    random_effects(process),
-    random_effects(process)[,attr(random_effects(process),"time_column"),drop=T]
-  )[[1]]
   if( identical(transient_graph,NA) || class(transient_graph) != "dag" ) {
     # Construct transient graph if not supplied
     transient_graph(observations)<- construct_obs_dag(
       x = data,
-      y = random_effects,
+      y = .locations_from_stars(random_effects(process)),
       time = c(time_form),
       settings = settings,
     )

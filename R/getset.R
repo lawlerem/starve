@@ -13,7 +13,7 @@ NULL
 
 
 ###
-### Collection of all generics defined in this package
+### Collection of all get/set generics defined in this package
 ### Should be in alphabetical order
 ###
 
@@ -64,6 +64,17 @@ setGeneric(name = "dat",
 #' @export
 setGeneric(name = "dat<-",
            def = function(x,value) standardGeneric("dat<-")
+)
+
+#' @describeIn staRVe-access Get data predictions
+#' @export
+setGeneric(name = "data_predictions",
+           def = function(x,...) standardGeneric("data_predictions")
+)
+#' @describeIn staRVe-access Set data
+#' @export
+setGeneric(name = "data_predictions<-",
+           def = function(x,value) standardGeneric("data_predictions<-")
 )
 
 #' @describeIn staRVe-access Get distance units
@@ -139,7 +150,8 @@ setGeneric(name = "fixed_effects<-",
 setGeneric(name = "formula",
            def = function(x) standardGeneric("formula")
 )
-#' @noRd
+#' @describeIn staRVe-access Set formula
+#' @export
 setGeneric(name = "formula<-",
            def = function(x,value) standardGeneric("formula<-")
 )
@@ -197,6 +209,17 @@ setGeneric(name = "link_function<-",
            def = function(x,value) standardGeneric("link_function<-")
 )
 
+#' @describeIn staRVe-access Get locations
+#' @export
+setGeneric(name = "locations",
+           def = function(x) standardGeneric("locations")
+)
+#' @describeIn staRVe-access Get locations
+#' @export
+setGeneric(name = "locations<-",
+           def = function(x,value) standardGeneric("locations<-")
+)
+
 
 
 
@@ -247,8 +270,6 @@ setGeneric(name = "obj<-",
 setGeneric(name = "obs_dag_method",
            def = function(x) standardGeneric("obs_dag_method")
 )
-#' @describeIn staRVe-access Set obs_dag_method
-#' @export
 setGeneric(name = "obs_dag_method<-",
            def = function(x,value) standardGeneric("obs_dag_method<-")
 )
@@ -336,6 +357,17 @@ setGeneric(name = "persistent_graph",
 #' @noRd
 setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
+)
+
+#' @describeIn staRVe-access Get predictions
+#' @export
+setGeneric(name = "predictions",
+           def = function(x) standardGeneric("predictions")
+)
+#' @describeIn staRVe-access Set predictions
+#' @export
+setGeneric(name = "predictions<-",
+           def = function(x,value) standardGeneric("predictions<-")
 )
 
 #' @noRd

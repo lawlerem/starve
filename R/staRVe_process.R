@@ -7,8 +7,8 @@ NULL
 ###           ###
 #################
 
-#' @param time_effects A data.frame
-#' @param random_effects An sf object
+#' @param time_effects A stars object
+#' @param random_effects A stars object
 #' @param persistent_graph A dag object
 #' @param parameters A staRVe_process_parameters object
 #'
@@ -17,30 +17,23 @@ setMethod(
   f = "initialize",
   signature = "staRVe_process",
   definition = function(.Object,
-                        time_effects = data.frame(
-                          w = numeric(1),
-                          se = numeric(1),
-                          time = numeric(1)
+                        time_effects = stars::st_as_stars(
+                          list(w = array(0,dim=c(1)),
+                               se = array(NA,dim=c(1))),
+                          dimensions = stars::st_dimensions(time=0)
                         ),
-                        random_effects = sf::st_sf(
+                        random_effects = .sf_to_stars(sf::st_sf(
                           data.frame(
                             w = numeric(1),
                             se = numeric(1),
                             time = numeric(1)
                           ),
-                          geometry = sf::st_sfc(sf::st_point())
-                        ),
+                          geometry = sf::st_sfc(sf::st_point(c(0,0)))
+                        ),time_column="time"),
                         persistent_graph = new("dag"),
                         parameters = new("staRVe_process_parameters")) {
     time_effects(.Object)<- time_effects
     random_effects(.Object)<- random_effects
-    if( is.null(attr(random_effects(.Object),"active_time")) &&
-        "time" %in% colnames(random_effects(.Object)) ) {
-      # If active_time attribute doesn't exist but "time" is a column
-      # make the active_time attribute to be "time"
-      attr(random_effects(.Object),"active_time")<- "time"
-    } else {}
-
     persistent_graph(.Object)<- persistent_graph
     parameters(.Object)<- parameters
 
@@ -166,16 +159,15 @@ prepare_staRVe_process<- function(nodes,
 
   # Return a time column with name and type (ar1/rw/etc) attributes
   time_form<- .time_from_formula(formula(settings),time)
-  time_seq<- seq(min(time),max(time))
+  time_seq<- seq(min(time_form),max(time_form))
 
   # time_effects = "data.frame"
-  time_effects(process)<- data.frame(
-    w = 0,
-    se = NA,
-    time = time_seq
+  time_effects(process)<- stars::st_as_stars(
+    list(w = array(0,dim=c(length(time_seq))),
+         se = array(NA,dim=c(length(time_seq)))),
+    dimensions = stars::st_dimensions(time = time_seq)
   )
-  colnames(time_effects(process))[[3]]<- attr(time_form,"name")
-  attr(time_effects(process),"time_column")<- attr(time_form,"name")
+  names(stars::st_dimensions(time_effects(process)))<- .time_name(settings)
 
   # random_effects = "sf",
   uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])
@@ -189,26 +181,13 @@ prepare_staRVe_process<- function(nodes,
     persistent_graph(process)<- graph$dag
   }
 
-  random_effects(process)<- do.call(rbind,lapply(time_seq,function(t) {
-    df<- sf::st_sf(data.frame(w = 0,
-                              se = NA,
-                              time = t,
-                              uniq_nodes))
-    colnames(df)[[3]]<- attr(time_form,"name")
-    # spatial join of covariates
-    covariates<- nodes[nodes[,attr(time_form,"name"),drop=T]==t,]
-    covariates<- sf::st_sf(cbind(
-      .mean_design_from_space_formula(formula(settings),covariates,"all.vars"),
-      covariates[,attr(covariates,"sf_column")]
-    ))
-    covariates<- unique(covariates)
-    if( anyDuplicated(covariates[,attr(covariates,"sf_column")]) ) {
-      stop("Spatial covariates must be unique.")
-    } else {}
-    df<- sf::st_join(df,covariates)
-    return(df)
-  }))
-  attr(random_effects(process),"time_column")<- attr(time_form,"name")
+  df<- sf::st_sf(data.frame(w = 0,
+                            se = NA,
+                            time = rep(time_seq,each=nrow(uniq_nodes)),
+                            geom = rep(sf::st_geometry(uniq_nodes),length(time_seq))
+  ))
+  colnames(df)[[3]]<- .time_name(settings)
+  random_effects(process)<- .sf_to_stars(df,time_column=.time_name(settings))
 
 
   # parameters = "staRVe_process_parameters"

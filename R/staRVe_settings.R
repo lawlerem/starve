@@ -12,6 +12,8 @@ NULL
 #' @param p_far_neighbours A number between 0 and 1
 #' @param distance_units Which distance units to use
 #' @param max_distance A positive number
+#' @param obs_dag_method The method used to create the transient graph
+#' @param extras A list of extra settings
 #'
 #' @rdname staRVe-construct
 setMethod(
@@ -53,6 +55,11 @@ setMethod(f = "formula",
           signature = "staRVe_settings",
           definition = function(x) return(x@formula)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_settings Set formula
 setReplaceMethod(f = "formula",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -158,9 +165,22 @@ setMethod(f = "extras",
           signature = "staRVe_settings",
           definition = function(x) return(x@extras)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_settings Set miscellaneous settings
 setReplaceMethod(f = "extras",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
   x@extras<- value
   return(x)
+})
+
+
+
+setMethod(f = ".time_name",
+          signature = "staRVe_settings",
+          definition = function(x) {
+  return(.time_name_from_formula(formula(x)))
 })

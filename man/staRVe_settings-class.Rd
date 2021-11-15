@@ -5,6 +5,7 @@
 \alias{staRVe_settings-class}
 \alias{staRVe_settings}
 \alias{formula,staRVe_settings-method}
+\alias{formula<-,staRVe_settings-method}
 \alias{n_neighbours,staRVe_settings-method}
 \alias{p_far_neighbours,staRVe_settings-method}
 \alias{distance_units,staRVe_settings-method}
@@ -12,9 +13,12 @@
 \alias{max_distance,staRVe_settings-method}
 \alias{obs_dag_method,staRVe_settings-method}
 \alias{extras,staRVe_settings-method}
+\alias{extras<-,staRVe_settings-method}
 \title{An S4 class to hold extra settings for a staRVe model}
 \usage{
 \S4method{formula}{staRVe_settings}(x)
+
+\S4method{formula}{staRVe_settings}(x) <- value
 
 \S4method{n_neighbours}{staRVe_settings}(x)
 
@@ -29,6 +33,8 @@
 \S4method{obs_dag_method}{staRVe_settings}(x)
 
 \S4method{extras}{staRVe_settings}(x)
+
+\S4method{extras}{staRVe_settings}(x) <- value
 }
 \arguments{
 \item{x}{An object}
@@ -41,6 +47,8 @@ An S4 class to hold extra settings for a staRVe model
 \section{Methods (by generic)}{
 \itemize{
 \item \code{formula}: Get model formula
+
+\item \code{formula<-}: Set formula
 
 \item \code{n_neighbours}: Get maximum number of neighbours
 
@@ -55,6 +63,8 @@ An S4 class to hold extra settings for a staRVe model
 \item \code{obs_dag_method}: Get obs_dag_method
 
 \item \code{extras}: Get extra settings
+
+\item \code{extras<-}: Set miscellaneous settings
 }}
 
 \section{Slots}{
