@@ -139,7 +139,7 @@ NULL
 #' @noRd
 .covariance_from_formula<- function(x,data=data.frame(1)) {
   # Set up what the "space" term does in the formula
-  space<- function(formula,covariance,nu) {
+  space<- function(covariance,nu) {
     # Find the closest match for covariance function
     if( missing(covariance) ) {covariance<- "exponential"}
     covar<- pmatch(covariance,get_staRVe_distributions("covariance"))
@@ -611,23 +611,35 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 .mean_design_from_formula<- function(x,data,return = "model.matrix") {
   data<- as.data.frame(data)
   the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
-  if( nrow(attr(the_terms,"factors")[-unlist(attr(the_terms,"specials")),,drop=F]) == 0 ) {
-    return(matrix(0,ncol=0,nrow=nrow(data)))
+  if( length(attr(the_terms,"term.labels")) == 0 ) {
+    # formula RHS: ~1
+    return(as.data.frame(matrix(0,ncol=0,nrow=nrow(data))))
+  } else if( length(attr(the_terms,"term.labels")) == length(unlist(attr(the_terms,"specials"))) ) {
+    # all formula terms are specials
+    return(as.data.frame(matrix(0,ncol=0,nrow=nrow(data))))
   } else {}
-  new_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
-  the_df<- switch(return,
+
+  if( length(unlist(attr(the_terms,"specials"))) > 0 ) {
+    the_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
+  } else {}
+
+  the_df<- as.data.frame(switch(return,
     # model.matrix expands factors into dummy variables, and expands
     # interaction terms, etc.
-    model.matrix = model.matrix(new_terms,data=data),
+    model.matrix = model.matrix(the_terms,data=data),
     # model.frame returns just the covariates needed to eventually
     # create the model.matrix (no expansion). Does expand poly() (and other specials?)
-    model.frame = model.frame(new_terms,data=data),
+    model.frame = model.frame(the_terms,data=data),
     # Returns the subset of the original the data.frame
-    all.vars = data[,all.vars(formula(new_terms)),drop=F]
-  )
+    all.vars = data[,all.vars(formula(the_terms)),drop=F]
+  ))
+  attr(the_df,"terms")<- NULL
   attr(the_df,"assign")<- NULL
-  attr(the_df,"contrasts")<- NULL
+  attr(the_df,"constrasts")<- NULL
   if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=F]}
+
+
+
   rownames(the_df)<- NULL
   return(the_df)
 }
@@ -649,12 +661,17 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   # Don't use colnames(.mean_design_from_formula(...,return="all.vars")) since
   # I don't want to supply a data.frame
   the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
-  if( nrow(attr(the_terms,"factors")[-unlist(attr(the_terms,"specials")),,drop=F]) == 0 ) {
+  if( length(attr(the_terms,"term.labels")) == 0 ) {
     return(character(0))
+  } else if( length(attr(the_terms,"term.labels")) == length(unlist(attr(the_terms,"specials"))) ) {
+    return(character(0))
+  } else {
+    if( length(unlist(attr(the_terms,"specials"))) > 0 ) {
+      the_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
+    } else {}
+    var_names<- all.vars(the_terms)
+    return(var_names)
   }
-  new_terms<- drop.terms(the_terms,unlist(attr(the_terms,"specials")))
-  var_names<- all.vars(new_terms)
-  return(var_names)
 }
 
 
@@ -739,7 +756,14 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   var_call<- attr(the_terms,"variables")[[idx+1]] # +1 because [[1]] is just `list`,
   # then the terms are in order starting at 2
   response<- with(data,eval(var_call)) # Get response variable data
+  if( !is.numeric(response) ) {
+    stop("Response variable must be numeric")
+  } else {}
   attr(response,"name")<- deparse(var_call) # Get response variable name
+  if( is.matrix(response) && dim(response)[[2]] > 1 ) {
+    attr(response,"name")<- colnames(response)[[1]]
+    warning(paste("Only univariate analyses supported, will use response variable",colnames(response)[[1]]))
+  } else {}
   return(response)
 }
 
@@ -768,22 +792,39 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   # or a matrix with a column of ones
   if( length(the_call) == 0 ) {
     if( nullReturn == F ) {
-      the_df<- matrix(0,nrow=nrow(data),ncol=0)
-    } else if( nullReturn == T ) {
-      the_df<- matrix(1,nrow=nrow(data),ncol=1)
+      the_df<- as.data.frame(matrix(0,nrow=nrow(data),ncol=0))
+    } else {
+      the_df<- as.data.frame(matrix(1,nrow=nrow(data),ncol=1))
     }
     return(the_df)
-  } else {}
+  } else if( length(the_call) > 1 ) {
+    warning(paste("Multiple sample.size variables given, using only the first:",the_call[[1]]))
+    the_call<- the_call[[1]]
+  }
 
   # Make the expression inside "sample.size" a standalone formula, and
   # use that formula to get the sample.size data
   new_formula<- sub("sample.size\\(","~",the_call)
   new_formula<- sub("\\)$","",new_formula)
   new_terms<- terms(formula(new_formula))
-  the_df<- model.frame(new_terms,data=data)
+  attr(new_terms,"intercept")<- 0
+
+  if( length(attr(new_terms,"term.labels")) == 0 ) {
+    # Happens if intercept is the only term
+    the_df<- as.data.frame(matrix(1,nrow=nrow(data),ncol=1))
+  } else if( length(attr(new_terms,"term.labels")) > 1 ) {
+    stop("Only one variable is allowed for sample.size.")
+  } else if( !identical(attr(new_terms,"term.labels"),all.vars(new_terms)) ) {
+    stop("Sample.size entry must be a single column name.")
+  } else {
+    the_df<- data.frame(model.frame(new_terms,data=data))
+  }
 
   attr(the_df,"assign")<- NULL
+  attr(the_df,"contrasts")<- NULL
+  if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=F]}
   rownames(the_df)<- NULL
+
   return(the_df)
 }
 
@@ -936,7 +977,10 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     attr(x,"name")<- "Time"
     attr(x,"type")<- "independent"
     return(x)
-  } else {}
+  } else if( length(the_call) > 1 ) {
+    warning(paste("Multiple time columns given, using only the first:",the_call[[1]]))
+    the_call<- the_call[[1]]
+  }
 
   # Make the "time(...)" term a formula object. The way we defined the "time"
   # special above, x gives a matrix with 1 column containing the times that
@@ -970,7 +1014,10 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   # is only one time
   if( length(the_call) == 0 ) {
     return("Time")
-  } else {}
+  } else if( length(the_call) > 1 ) {
+    warning(paste("Multiple time columns given, using only the first:",the_call[[1]]))
+    the_call<- the_call[[1]]
+  }
 
   new_formula<- sub("time","~",the_call)
   new_formula<- sub(",.*","",new_formula)

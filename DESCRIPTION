@@ -36,7 +36,8 @@ Suggests:
     MASS,
     knitr,
     rmarkdown,
-    igraph
+    igraph,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Depends:
     sf,
@@ -64,3 +65,4 @@ Collate:
     'staRVe_model.R'
     'staRVe_tracing.R'
     'staRVe_fit.R'
+Config/testthat/edition: 3
