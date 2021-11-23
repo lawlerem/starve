@@ -657,7 +657,7 @@ setMethod(f = "TMB_in",
     link_code = .link_to_code(link_function(x)),
     # Get time index, observations, and graph for observations
     y_time = c(dat(x)[,.time_name(x),drop=T]),
-    obs_y = c(.response_from_formula(formula(x),dat(x))),
+    obs_y = c(.response_from_formula(formula(x),dat(x)))[[1]],
     ys_edges = edges(idxR_to_C(graph(x)$transient_graph)),
     ys_dists = distances(graph(x)$transient_graph),
     # Get time index of random effects in transient graph
@@ -666,7 +666,7 @@ setMethod(f = "TMB_in",
         sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1, # Which edges have more than 1 in-node?
         .time_name(x),drop=T]),
     # Get covariates, and sample.size for binomial
-    mean_design = .mean_design_from_formula(formula(x),dat(x),"model.matrix"),
+    mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
     sample_size = .sample_size_from_formula(formula(x),dat(x),nullReturn = T)[,1],
     # Convert covariance function (char) to (int)
     covar_code = .covariance_to_code(covariance_function(x)),

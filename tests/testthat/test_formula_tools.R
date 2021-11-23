@@ -245,23 +245,21 @@ test_that("Response variable from formula",{
   eval(bquote(expect_error(.response_from_formula(ff[[1]],test_data),"Response variable")))
 
   f<- ff[[2]]
-  expect_val_equal(f,test_data$y)
+  expect_val_equal(f,data.frame(y=test_data$y))
   expect_name_equal(f,"y")
 
   f<- ff[[3]]
-  expect_val_equal(f,test_data$response)
+  expect_val_equal(f,data.frame(response=test_data$response))
   expect_name_equal(f,"response")
 
-  eval(bquote(expect_error(.response_from_formula(ff[[4]],test_data))))
+  f<- ff[[4]]
+  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Response variable")))
 
   f<- ff[[5]]
-  suppressWarnings(expect_val_equal(f,as.matrix(test_data[,c("y","response"),drop=T])))
-  suppressWarnings(expect_name_equal(f,"y"))
-  eval(bquote(expect_warning(.response_from_formula(f,test_data),"Only univariate")))
+  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Multivariate response")))
 
   f<- ff[[6]]
-  expect_val_equal(f,test_data$y+test_data$response)
-  expect_name_equal(f,"y + response")
+  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Multivariate response")))
 })
 
 # .sample_size_from_formula

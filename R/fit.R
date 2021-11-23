@@ -411,8 +411,8 @@ setMethod(f = "staRVe_simulate",
       else { predictions(predictions)$linear_se<- NA }
   } else {
     # Create design matrix from covariates
-    design<- .mean_design_from_formula(formula(x),
-                                       locations(predictions))
+    design<- as.matrix(.mean_design_from_formula(formula(x),
+                                                 locations(predictions)))
 
     # Create linear predictions
     beta<- fixed_effects(x)[,"par"]

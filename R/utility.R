@@ -746,6 +746,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @noRd
 .response_from_formula<- function(x,data) {
+  data<- data.frame(data)
   # Get out just the left-hand side of the formula
   the_terms<- terms(x,specials=c("time","space","sample.size"))
   if( attr(the_terms,"response") == 0 ) {
@@ -755,15 +756,22 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   idx<- attr(the_terms,"response")
   var_call<- attr(the_terms,"variables")[[idx+1]] # +1 because [[1]] is just `list`,
   # then the terms are in order starting at 2
-  response<- with(data,eval(var_call)) # Get response variable data
-  if( !is.numeric(response) ) {
+
+  if( length(var_call) == 1 ) {
+    # Univariate
+    if( !(paste(var_call) %in% colnames(data)) ) {
+      stop(paste("Response variable",var_call,"not present in data."))
+    } else {}
+    response<- data[,paste(var_call),drop=F]
+  } else {
+    # Multivariate
+    stop("Multivariate response not yet supported.")
+  }
+
+  if( !all(apply(response,2,is.numeric)) ) {
     stop("Response variable must be numeric")
   } else {}
-  attr(response,"name")<- deparse(var_call) # Get response variable name
-  if( is.matrix(response) && dim(response)[[2]] > 1 ) {
-    attr(response,"name")<- colnames(response)[[1]]
-    warning(paste("Only univariate analyses supported, will use response variable",colnames(response)[[1]]))
-  } else {}
+
   return(response)
 }
 
