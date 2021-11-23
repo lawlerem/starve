@@ -223,7 +223,7 @@ test_that("Response variable from formula",{
   }
   expect_name_equal<- function(formula,expected) {
     eval(bquote(
-      expect_match(attributes(.response_from_formula(.(formula),test_data))$name,expected,fixed=T)
+      expect_equal(attributes(.response_from_formula(.(formula),test_data))$name,expected)
     ))
   }
 
@@ -239,7 +239,9 @@ test_that("Response variable from formula",{
     response ~ 1, # 3
     geom ~ 1, # 4
     cbind(y,response) ~ 1, # 5
-    y+response ~ 1 # 6
+    c(y,response) ~ 1, # 6
+    y+response ~ 1, # 7
+    cbind(y,q) ~ 1 # 8
   )
 
   eval(bquote(expect_error(.response_from_formula(ff[[1]],test_data),"Response variable")))
@@ -256,10 +258,17 @@ test_that("Response variable from formula",{
   eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Response variable")))
 
   f<- ff[[5]]
-  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Multivariate response")))
+  expect_val_equal(f,data.frame(y=test_data$y,response=test_data$response))
+  expect_name_equal(f,c("y","response"))
 
   f<- ff[[6]]
-  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Multivariate response")))
+  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"In LHS of formula")))
+
+  f<- ff[[7]]
+  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"In LHS of formula")))
+
+  f<- ff[[8]]
+  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Response variable")))
 })
 
 # .sample_size_from_formula

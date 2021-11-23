@@ -765,7 +765,15 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     response<- data[,paste(var_call),drop=F]
   } else {
     # Multivariate
-    stop("Multivariate response not yet supported.")
+    if( !(paste(var_call[[1]]) == "cbind") ) {
+      stop(paste0("In LHS of formula function `",var_call[[1]],"` not valid. ",
+                  "Use `cbind(",paste(var_call[-1],collapse=", "),")` for multivariate response."))
+    } else {}
+    missing_vars<- paste(var_call[-1])[!(paste(var_call[-1]) %in% colnames(data))]
+    if( length(missing_vars) > 0 ) {
+      stop(paste("Response variable(s)",paste(missing_vars,collapse=", "),"not present in data."))
+    } else {}
+    response<- data[,paste(var_call[-1])]
   }
 
   if( !all(apply(response,2,is.numeric)) ) {
