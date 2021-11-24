@@ -18,18 +18,19 @@ setMethod(
   signature = "staRVe_process",
   definition = function(.Object,
                         time_effects = stars::st_as_stars(
-                          list(w = array(0,dim=c(1)),
-                               se = array(NA,dim=c(1))),
-                          dimensions = stars::st_dimensions(time=0)
+                          list(w = array(0,dim=c(1,1)),
+                               se = array(NA,dim=c(1,1))),
+                          dimensions = stars::st_dimensions(time=0,variable="y")
                         ),
-                        random_effects = .sf_to_stars(sf::st_sf(
-                          data.frame(
-                            w = numeric(1),
-                            se = numeric(1),
-                            time = numeric(1)
-                          ),
-                          geometry = sf::st_sfc(sf::st_point(c(0,0)))
-                        ),time_column="time"),
+                        random_effects = stars::st_as_stars(
+                          list(w = array(0,dim=c(1,1,1)),
+                               se = array(NA,dim=c(1,1,1))),
+                          dimensions = stars::st_dimensions(
+                            geom = sf::st_sfc(sf::st_point(c(0,0))),
+                            time = 0,
+                            variable = "y"
+                          )
+                        ),
                         persistent_graph = new("dag"),
                         parameters = new("staRVe_process_parameters")) {
     time_effects(.Object)<- time_effects
@@ -161,10 +162,12 @@ prepare_staRVe_process<- function(nodes,
   # time_effects = "data.frame"
   time_effects(process)<- stars::st_as_stars(
     list(w = array(0,dim=c(length(time_seq),.n_response(formula(settings)))),
-         se = array(NA,dim=c(length(time_seq),.n_response(formula(settings))))),
-       )
+         se = array(NA,dim=c(length(time_seq),.n_response(formula(settings))))
+    ),
     dimensions = stars::st_dimensions(time = time_seq,variable = .response_names(formula(settings)))
+  )
   names(stars::st_dimensions(time_effects(process)))[[1]]<- .time_name(settings)
+
 
   # random_effects = "sf",
   uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])
@@ -178,13 +181,15 @@ prepare_staRVe_process<- function(nodes,
     persistent_graph(process)<- graph$dag
   }
 
-  df<- sf::st_sf(data.frame(w = 0,
-                            se = NA,
-                            time = rep(time_seq,each=nrow(uniq_nodes)),
-                            geom = rep(sf::st_geometry(uniq_nodes),length(time_seq))
-  ))
-  colnames(df)[[3]]<- .time_name(settings)
-  random_effects(process)<- .sf_to_stars(df,time_column=.time_name(settings))
+  random_effects(process)<- stars::st_as_stars(
+    list(w = array(0,dim=c(nrow(uniq_nodes),length(time_seq),.n_response(formula(settings)))),
+         se = array(0,dim=c(nrow(uniq_nodes),length(time_seq),.n_response(formula(settings))))
+    ),
+    dimensions = stars::st_dimensions(geom = sf::st_geometry(uniq_nodes),
+                                      time = time_seq,
+                                      variable = .response_names(formula(settings)))
+  )
+  names(stars::st_dimensions(random_effects(process)))[[2]]<- .time_name(settings)
 
 
   # parameters = "staRVe_process_parameters"
@@ -230,6 +235,5 @@ prepare_staRVe_process<- function(nodes,
 
   parameters(process)<- parameters
 
-  browser()
   return(process)
 }
