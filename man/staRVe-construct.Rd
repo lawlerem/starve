@@ -49,8 +49,8 @@
 \S4method{initialize}{staRVe_process_parameters}(
   .Object,
   covariance_function = "exponential",
-  time_parameters = data.frame(par = c(0, 0, 0), se = c(0, 0, 0), fixed = c(F, F, F),
-    row.names = c("mu", "ar1", "sd"))
+  time_parameters = list(data.frame(par = c(0, 0, 0), se = c(0, 0, 0), fixed = c(F, F,
+    F), row.names = c("mu", "ar1", "sd")))
 )
 
 \S4method{initialize}{staRVe_parameters}(

@@ -154,20 +154,17 @@ prepare_staRVe_process<- function(nodes,
                                   settings = new("staRVe_settings") ) {
   process<- new("staRVe_process")
 
-  # Returns name of covariance function and value of nu
-  covariance<- .covariance_from_formula(formula(settings))
-
   # Return a time column with name and type (ar1/rw/etc) attributes
-  time_form<- .time_from_formula(formula(settings),time)
-  time_seq<- seq(min(time_form),max(time_form))
+  time_col<- .time_from_formula(formula(settings),time)
+  time_seq<- seq(min(time_col[,1]),max(time_col[,1]))
 
   # time_effects = "data.frame"
   time_effects(process)<- stars::st_as_stars(
-    list(w = array(0,dim=c(length(time_seq))),
-         se = array(NA,dim=c(length(time_seq)))),
-    dimensions = stars::st_dimensions(time = time_seq)
-  )
-  names(stars::st_dimensions(time_effects(process)))<- .time_name(settings)
+    list(w = array(0,dim=c(length(time_seq),.n_response(formula(settings)))),
+         se = array(NA,dim=c(length(time_seq),.n_response(formula(settings))))),
+       )
+    dimensions = stars::st_dimensions(time = time_seq,variable = .response_names(formula(settings)))
+  names(stars::st_dimensions(time_effects(process)))[[1]]<- .time_name(settings)
 
   # random_effects = "sf",
   uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])
@@ -192,36 +189,47 @@ prepare_staRVe_process<- function(nodes,
 
   # parameters = "staRVe_process_parameters"
   parameters<- new("staRVe_process_parameters")
+  # Returns name of covariance function and value of nu
+  covariance<- .covariance_from_formula(formula(settings))
+
   covariance_function(parameters)<- covariance$covariance
   # covariance_function<- takes care of settings spatial parameters,
   # but if nu is supplied for matern need to set nu
-  if( covariance$covariance == "matern" & !is.na(covariance$nu) ) {
-    spatial_parameters(parameters)["nu","par"]<- covariance$nu
-    spatial_parameters(parameters)["nu","fixed"]<- T
-  } else {}
+  for( i in seq_along(covariance$nu) ) {
+    if( covariance$covariance[[i]] == "matern" & !is.na(covariance$nu[[i]]) ) {
+      spatial_parameters(parameters)[[i]]["nu","par"]<- covariance$nu
+      spatial_parameters(parameters)[[i]]["nu","fixed"]<- T
+    } else {}
+  }
+  names(spatial_parameters(parameters))<- .response_names(formula(settings))
 
-  time_parameters(parameters)<- data.frame(
-    par = c(0,
-            switch(attr(time_form,"type"),
-                   ar1 = 0,
-                   independent = 0,
-                   rw = 1),
-            0),
-    se = NA,
-    fixed = c(F,
-              switch(attr(time_form,"type"),
-                     ar1 = F,
-                     independent = T,
-                     rw = T),
-              F),
-    row.names = c("mu","ar1","sd")
-  )
-  if( length(unique(time_seq)) == 1 ) {
-    # If purely spatial data, we don't need time parameters
-    time_parameters(parameters)[c("ar1","sd"),"fixed"]<- c(T,T)
-  } else {}
+  time_parameters(parameters)<- lapply(attr(time_col,"type"),function(tt) {
+    df<- data.frame(
+      par = c(0,
+              switch(tt,
+                     ar1 = 0,
+                     independent = 0,
+                     rw = 1),
+              0),
+      se = NA,
+      fixed = c(F,
+                switch(tt,
+                       ar1 = F,
+                       independent = T,
+                       rw = T),
+                F),
+      row.names = c("mu","ar1","sd")
+    )
+    if( length(unique(time_seq)) == 1 ) {
+      # If purely spatial data, we don't need time parameters
+      df[c("ar1","sd"),"fixed"]<- c(T,T)
+    } else {}
+    return(df)
+  })
+  names(time_parameters(parameters))<- .response_names(formula(settings))
 
   parameters(process)<- parameters
 
+  browser()
   return(process)
 }

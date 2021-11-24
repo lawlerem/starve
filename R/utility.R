@@ -137,48 +137,40 @@ NULL
 #' @return A list containing the name of the covariance function and the value of nu.
 #'
 #' @noRd
-.covariance_from_formula<- function(x,data=data.frame(1)) {
+.covariance_from_formula<- function(x) {
   # Set up what the "space" term does in the formula
   space<- function(covariance,nu) {
     # Find the closest match for covariance function
     if( missing(covariance) ) {covariance<- "exponential"}
-    covar<- pmatch(covariance,get_staRVe_distributions("covariance"))
-    covar<- get_staRVe_distributions("covariance")[covar]
+
+    covar<- pmatch(covariance,get_staRVe_distributions("covariance"),duplicates.ok = TRUE)
+    covar<- unname(get_staRVe_distributions("covariance")[covar])
 
     # Grab value for nu, only used for "matern"
     # If nu is supplied (for matern) it's going to be held constant
     if( missing(nu) ) {
       nu<- NaN
     }
-    covariance<- cbind(covar,nu)
-    colnames(covariance)<- c("covariance","nu")
 
-    return(covariance)
+    return(list(
+      covariance = rep(covar,length.out=.n_response(x)),
+      nu = rep(as.numeric(nu),length.out=.n_response(x))
+    ))
   }
 
   # Get out just the "space" term from the formula (as a character string)
   the_terms<- terms(x,specials=c("time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("^space",term.labels,value=T)
-
-  # (if the "space" term is missing, default to exponential)
-  if( length(the_call) == 0 ) {
-    return(list(covariance = "exponential",
-                nu = 0.5))
+  the_idx<- attr(the_terms,"specials")$space
+  if( length(the_idx) == 0 ) {
+    return(list(covariance = rep("exponential",.n_response(x)),
+                nu = rep(0.5,.n_response(x))))
+  } else if( length(the_idx) > 1 ) {
+    stop("Multiple `space` terms found in formula. Only one is allowed")
   } else {}
 
-  # Make the "space(...)" term a formula object. The way we defined the
-  # "space" special above, x gives a matrix with 1 row with a column
-  # each for the covariance function (character) and nu. Then we convert x
-  # to a list for convenience
-  the_call<- gsub("space","~space",the_call)
-  new_terms<- terms(formula(the_call),specials="space")
-  x<- model.frame(new_terms,data=data)[[1]]
-  x<- as.list(x)
-  names(x)<- c("covariance","nu")
-  x$nu<- as.numeric(x$nu)
+  the_call<- attr(the_terms,"variables")[[the_idx+1]]
 
-  return(x)
+  return(eval(the_call))
 }
 
 #' Convert covariance function (character) to (int)
@@ -676,6 +668,10 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 
 
+.n_response<- function(x) return(length(.response_names(x)))
+
+
+
 
 
 # O
@@ -781,6 +777,32 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   } else {}
 
   return(response)
+}
+
+.response_names<- function(x) {
+  # Get out just the left-hand side of the formula
+  the_terms<- terms(x,specials=c("time","space","sample.size"))
+  if( attr(the_terms,"response") == 0 ) {
+    stop("Response variable must be specified.")
+  } else {}
+  # Get out
+  idx<- attr(the_terms,"response")
+  var_call<- attr(the_terms,"variables")[[idx+1]] # +1 because [[1]] is just `list`,
+  # then the terms are in order starting at 2
+
+  if( length(var_call) == 1 ) {
+    # Univariate
+    response_names<- var_call
+  } else {
+    # Multivariate
+    if( !(paste(var_call[[1]]) == "cbind") ) {
+      stop(paste0("In LHS of formula function `",var_call[[1]],"` not valid. ",
+                  "Use `cbind(",paste(var_call[-1],collapse=", "),")` for multivariate response."))
+    } else {}
+    response_names<- paste(var_call[-1])
+  }
+
+  return(response_names)
 }
 
 
@@ -971,53 +993,45 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @noRd
 .time_from_formula<- function(x,data) {
   # Set up what the "time" term does in the formula
-  time<- function(x,type="ar1") {
+  time<- function(time_var,type="ar1") {
+    if( length(time_var) != 1 ) {
+      stop("Must supply exactly one variable to time(...) term in formula.")
+    } else {}
+    if( !(time_var %in% colnames(data)) ) {
+      stop(paste("Time variable",time_var,"not present in data."))
+    } else {}
+    if( !is.numeric(data[,time_var,drop=T]) ) {
+      stop(paste("Time variable must be numeric. Supplied variable",time_var,"is",class(time_var)))
+    } else {}
+    if( !isTRUE(all.equal(floor(data[,time_var,drop=T]),data[,time_var,drop=T])) ) {
+      warning(paste("Time variable",time_var,"will be rounded down to integer values."))
+      data[,time_var]<- floor(data[,time_var,drop=T])
+    } else {}
     # Find the closest match for type of temporal structure
     # Why is this not in get_staRVe_distributions? They're not really different structures?
-    type<- pmatch(type[[1]],c("ar1","rw","independent"))
+    time_col<- as.data.frame(data)[,time_var,drop=F]
+    type<- pmatch(type,c("ar1","rw","independent"),duplicates.ok=TRUE)
     type<- c("ar1","rw","independent")[type]
-    attr(x,"type")<- type
-    return(x)
+    attr(time_col,"type")<- rep(type,length.out=.n_response(x))
+    return(time_col)
   }
 
   # Get out just the "time" term from the formula (as a character string)
   the_terms<- terms(x,specials=c("time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("^time",term.labels,value=T)
+  the_idx<- attr(the_terms,"specials")$time
+  if( length(the_idx) == 0 ) {
+    time_col<- data.frame(rep(0,nrow(data)))
+    colnames(time_col)<- "Time"
+    attr(time_col,"type")<- rep("independent",.n_response(x))
+    return(time_col)
+  } else if( length(the_idx) > 1 ) {
+    stop("Multiple `time` terms found in formula. Only one is allowed.")
+  } else {}
 
-  # If the "time" term is missing, create a dummy Time variable where all
-  # observations happen at the same time. Type = independent because there
-  # is only one time
-  if( length(the_call) == 0 ) {
-    x<- rep(0,nrow(data))
-    attr(x,"name")<- "Time"
-    attr(x,"type")<- "independent"
-    return(x)
-  } else if( length(the_call) > 1 ) {
-    warning(paste("Multiple time columns given, using only the first:",the_call[[1]]))
-    the_call<- the_call[[1]]
-  }
+  the_call<- attr(the_terms,"variables")[[the_idx+1]]
+  the_call[[2]]<- as.character(the_call[[2]]) # puts variable name in quotes
 
-  # Make the "time(...)" term a formula object. The way we defined the "time"
-  # special above, x gives a matrix with 1 column containing the times that
-  # each row in data was observed. The matrix as a "type" attribute giving
-  # the name of the temporal structure.
-  new_formula<- sub("time","~",the_call)
-  new_formula<- sub(",.*","",new_formula)
-  new_formula<- sub("\\(","",new_formula)
-  new_formula<- sub("\\)$","",new_formula)
-  new_terms<- terms(formula(new_formula))
-  if( length(attr(new_terms,"term.labels")) > 1 ) {
-    stop("Only one variable is allowed for time.")
-  } else {
-    the_name<- attr(new_terms,"term.labels")[[1]]
-  }
-  new_formula<- sub("time","~time",the_call)
-  new_terms<- terms(formula(new_formula),specials="time")
-  x<- model.frame(new_terms,data=data)[[1]]
-  attr(x,"name")<- the_name # Store the name of the time variable
-
-  return(x)
+  return(eval(the_call))
 }
 
 .time_name_from_formula<- function(x) {

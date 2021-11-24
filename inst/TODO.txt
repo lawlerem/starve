@@ -3,6 +3,11 @@
 ** R side **
 1.) Multiple response variables in data input and TMB_in
   a.) cbind(x,y) is LHS of formula
+  b.) Model options for multiple response
+    -- space(...)
+    -- sample.size(...)
+    -- distribution =
+    -- link =
 2.) Data and random effect management
   a1.) 3d array? Locations, times, and covariates should all be the same; or,
   a2.) Multiple columns? Lots of w, w_se, linear, linear_se, etc. floating around...

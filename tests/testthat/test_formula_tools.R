@@ -6,7 +6,7 @@ npert<- 5
 test_that("Covariance function from formula",{
   expect_covariance_function_equal<- function(formula,expected) {
     eval(bquote(
-      expect_match(.covariance_from_formula(formula)$covariance,expected)
+      expect_equal(.covariance_from_formula(formula)$covariance,expected)
     ))
   }
   expect_nu_equal<- function(formula,expected) {
@@ -22,7 +22,11 @@ test_that("Covariance function from formula",{
     y ~ space("gaussian"), # 4
     y ~ space("matern"), # 5
     y ~ space("matern",nu = 1), # 6
-    y ~ space("nothere") # 7
+    y ~ space("exponential")+space("matern32"), # 7
+    cbind(y,response) ~ 1, # 8
+    cbind(y,response) ~ space("exponential"), # 9
+    cbind(y,response) ~ space(c("exponential","matern32")), # 10
+    cbind(y,response) ~ space(c("matern","matern"),c(0.5,NaN)) # 11
   )
 
   expect_covariance_function_equal(ff[[1]],"exponential")
@@ -32,8 +36,13 @@ test_that("Covariance function from formula",{
   expect_covariance_function_equal(ff[[5]],"matern")
   expect_nu_equal(ff[[5]],NaN)
   expect_covariance_function_equal(ff[[6]],"matern")
+  eval(bquote(expect_error(.covariance_from_formula(ff[[7]]),"Multiple")))
   expect_nu_equal(ff[[6]],1)
-  eval(bquote(expect_error(.covariance_from_formula(.(ff[[7]])))))
+  expect_covariance_function_equal(ff[[8]],c("exponential","exponential"))
+  expect_covariance_function_equal(ff[[9]],c("exponential","exponential"))
+  expect_covariance_function_equal(ff[[10]],c("exponential","matern32"))
+  expect_covariance_function_equal(ff[[11]],c("matern","matern"))
+  expect_nu_equal(ff[[11]],c(0.5,NaN))
 })
 
 # .mean_design_from_formula
@@ -322,13 +331,13 @@ test_that("Time information from formula",{
   }
   expect_time_name_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(attributes(.time_from_formula(.(formula),test_data))$name,.(expected))
+      expect_equal(colnames(.time_from_formula(.(formula),test_data)),.(expected))
     ))
   }
 
   test_data<- sf::st_sf(
     t = rep(seq(nt),each=npert),
-    year = rep(seq(nt)+0.5,each=npert),
+    year = rep(-seq(nt),each=npert),
     geom = sf::st_sample(bbox,nt*npert)
   )
   ff<- c(
@@ -341,11 +350,13 @@ test_that("Time information from formula",{
     y ~ time(month), # 7
     y ~ time(t) + time(year), # 8
     y ~ time(t+year), # 9
-    y ~ 1 # 10
+    y ~ 1, # 10
+    cbind(y1,y2) ~ time(t), # 11
+    cbind(y1,y2) ~ time(t,c("ar1","rw")) # 12
   )
 
   f<- ff[[1]]
-  expect_time_val_equal(f,test_data$t)
+  expect_time_val_equal(f,data.frame(t=test_data$t))
   expect_time_type_equal(f,"ar1")
   expect_time_name_equal(f,"t")
   eval(bquote(
@@ -353,7 +364,7 @@ test_that("Time information from formula",{
   ))
 
   f<- ff[[2]]
-  expect_time_val_equal(f,test_data$t)
+  expect_time_val_equal(f,data.frame(t=test_data$t))
   expect_time_type_equal(f,"ar1")
   expect_time_name_equal(f,"t")
   eval(bquote(
@@ -361,7 +372,7 @@ test_that("Time information from formula",{
   ))
 
   f<- ff[[3]]
-  expect_time_val_equal(f,test_data$t)
+  expect_time_val_equal(f,data.frame(t=test_data$t))
   expect_time_type_equal(f,"rw")
   expect_time_name_equal(f,"t")
   eval(bquote(
@@ -369,7 +380,7 @@ test_that("Time information from formula",{
   ))
 
   f<- ff[[4]]
-  expect_time_val_equal(f,test_data$t)
+  expect_time_val_equal(f,data.frame(t=test_data$t))
   expect_time_type_equal(f,"independent")
   expect_time_name_equal(f,"t")
   eval(bquote(
@@ -377,7 +388,7 @@ test_that("Time information from formula",{
   ))
 
   f<- ff[[5]]
-  expect_time_val_equal(f,test_data$year)
+  expect_time_val_equal(f,data.frame(year=test_data$year))
   expect_time_type_equal(f,"ar1")
   expect_time_name_equal(f,"year")
   eval(bquote(
@@ -386,33 +397,46 @@ test_that("Time information from formula",{
 
   f<- ff[[6]]
   eval(bquote(
-    expect_error(staRVe:::.time_from_formula(.(f),test_data))
+    expect_error(staRVe:::.time_from_formula(.(f),test_data),
+                 "Time variable must be numeric.")
   ))
 
   f<- ff[[7]]
   eval(bquote(
-    expect_error(staRVe:::.time_from_formula(.(f),test_data))
+    expect_error(staRVe:::.time_from_formula(.(f),test_data),"Time variable month")
   ))
 
   f<- ff[[8]]
-  suppressWarnings(expect_time_val_equal(f,test_data$t))
-  suppressWarnings(expect_time_type_equal(f,"ar1"))
-  suppressWarnings(expect_time_name_equal(f,"t"))
-  suppressWarnings(eval(bquote(expect_match(.time_name_from_formula(.(f)),"t"))))
   eval(bquote(
-    expect_warning(staRVe:::.time_from_formula(.(f),test_data),"Multiple time")
+    expect_error(staRVe:::.time_from_formula(.(f),test_data),"Multiple `time` terms")
   ))
 
   f<- ff[[9]]
   eval(bquote(
-    expect_error(staRVe:::.time_from_formula(.(f),test_data),"Only one")
+    expect_error(staRVe:::.time_from_formula(.(f),test_data),"Must supply exactly one")
   ))
 
   f<- ff[[10]]
-  expect_time_val_equal(f,numeric(nrow(test_data)))
+  expect_time_val_equal(f,data.frame(Time=numeric(nrow(test_data))))
   expect_time_type_equal(f,"independent")
   expect_time_name_equal(f,"Time")
   eval(bquote(
     expect_match(.time_name_from_formula(.(f)),"Time")
+  ))
+
+  f<- ff[[11]]
+  expect_time_val_equal(f,data.frame(t=test_data$t))
+  expect_time_type_equal(f,c("ar1","ar1"))
+  expect_time_name_equal(f,"t")
+  eval(bquote(
+    expect_equal(.time_name_from_formula(.(f)),"t")
+  ))
+
+  f<- ff[[12]]
+  expect_time_val_equal(f,data.frame(t=test_data$t))
+  expect_time_type_equal(f,c("ar1","rw"))
+  expect_time_name_equal(f,"t")
+  eval(bquote(
+    expect_equal(.time_name_from_formula(.(f)),"t")
   ))
 })

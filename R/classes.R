@@ -57,14 +57,14 @@ setClass(
 #'
 #' @slot covariance_function The covariance function, must be one given by
 #'   get_staRVe_distributions("covariance").
-#' @slot spatial_parameters A data.frame containing spatial parameters.
-#' @slot time_parameters A data.frame containing time parameters.
+#' @slot spatial_parameters A list containing spatial parameters for each variable.
+#' @slot time_parameters A list containing time parameters for each variable.
 setClass(
   Class = "staRVe_process_parameters",
   slots = c(
     covariance_function = "character",
-    spatial_parameters = "data.frame",
-    time_parameters = "data.frame"
+    spatial_parameters = "list",
+    time_parameters = "list"
   )
 )
 

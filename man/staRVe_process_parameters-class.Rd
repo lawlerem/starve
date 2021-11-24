@@ -54,8 +54,8 @@ Setting the covariance function also overwrites the spatial parameters.
 \item{\code{covariance_function}}{The covariance function, must be one given by
 get_staRVe_distributions("covariance").}
 
-\item{\code{spatial_parameters}}{A data.frame containing spatial parameters.}
+\item{\code{spatial_parameters}}{A list containing spatial parameters for each variable.}
 
-\item{\code{time_parameters}}{A data.frame containing time parameters.}
+\item{\code{time_parameters}}{A list containing time parameters for each variable.}
 }}
 
