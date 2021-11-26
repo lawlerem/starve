@@ -667,7 +667,7 @@ setMethod(f = "TMB_in",
         .time_name(x),drop=T]),
     # Get covariates, and sample.size for binomial
     mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
-    sample_size = .sample_size_from_formula(formula(x),dat(x),nullReturn = T)[,1],
+    sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE))[,1],
     # Convert covariance function (char) to (int)
     covar_code = .covariance_to_code(covariance_function(x)),
     # Get time index and graph for spatio-temporal random effects

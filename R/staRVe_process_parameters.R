@@ -53,6 +53,7 @@ setMethod(f = "covariance_function",
 setReplaceMethod(f = "covariance_function",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {
+  value<- unname(get_staRVe_distributions("covariance")[pmatch(value,get_staRVe_distributions("covariance"),duplicates.ok=TRUE)])
   x@covariance_function<- value
   spatial_pars<- lapply(value,function(cf) {
     switch(cf,

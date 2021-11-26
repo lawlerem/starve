@@ -282,39 +282,96 @@ test_that("Response variable from formula",{
 
 # .sample_size_from_formula
 test_that("Sample size variable from formula",{
-  expect_val_equal<- function(formula,expected,nullReturn=F) {
+  expect_val_equal<- function(formula,unique_vars,expected) {
     eval(bquote(
-      expect_equal(.sample_size_from_formula(.(formula),test_data,nullReturn),expected)
+      expect_equal(.sample_size_from_formula(.(formula),test_data,unique_vars),expected)
     ))
   }
   test_data<- sf::st_sf(
-    x = rnorm(nt*npert),
-    y = rnorm(nt*npert),
+    y1 = rnorm(nt*npert),
+    y2 = rnorm(nt*npert),
+    x1 = rnorm(nt*npert),
+    x2 = rnorm(nt*npert),
     geom = sf::st_sample(bbox,nt*npert)
   )
   ff<- c(
-    ~ 1, # 1
-    ~ sample.size(1), # 2
-    ~ sample.size(x), # 3
-    ~ sample.size(x+y), # 4
-    ~ sample.size(x) + sample.size(y), # 5
-    ~ sample.size(I(x+y)), # 6
-    ~ sample.size(nothere) # 7
+    y1 ~ 1, # 1
+    y1 ~ sample.size(NA), # 2
+    y1 ~ sample.size(1), # 3
+    y1 ~ sample.size(2), # 4
+    y1 ~ sample.size(x1), # 5
+    y1 ~ sample.size(x1+x2), # 6
+    y1 ~ sample.size(x1) + sample.size(x2), # 7
+    y1 ~ sample.size(nothere), # 8
+    cbind(y1,y2) ~ sample.size(1), # 9
+    cbind(y1,y2) ~ sample.size(x1), # 10
+    cbind(y1,y2) ~ sample.size(cbind(NA,1)), # 11
+    cbind(y1,y2) ~ sample.size(cbind(NA,x1)), # 12
+    cbind(y1,y2) ~ sample.size(cbind(2,x1)), # 13
+    cbind(y1,y2) ~ sample.size(cbind(x1,x1)), # 14
+    cbind(y1,y2) ~ sample.size(cbind(x1,x2)), # 15
+    cbind(y1,y2) ~ sample.size(cbind(x1,nothere)) # 16
   )
 
-  expect_val_equal(ff[[1]],nullReturn=F,expected=as.data.frame(matrix(1,nrow=nrow(test_data),ncol=0)))
-  expect_val_equal(ff[[1]],nullReturn=T,expected=as.data.frame(matrix(1,nrow=nrow(test_data),ncol=1)))
+  f<- ff[[1]]
+  expect_val_equal(f,TRUE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=0)))
+  expect_val_equal(f,FALSE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=1)))
 
-  expect_val_equal(ff[[2]],as.data.frame(matrix(1,nrow=nrow(test_data),ncol=1)))
-  expect_val_equal(ff[[3]],as.data.frame(test_data)[,"x",drop=F])
+  f<- ff[[2]]
+  expect_val_equal(f,TRUE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=0)))
+  expect_val_equal(f,FALSE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=1)))
 
-  eval(bquote(expect_error(.sample_size_from_formula(.(ff[[4]]),test_data),"Only one")))
+  f<- ff[[3]]
+  expect_val_equal(f,TRUE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=0)))
+  expect_val_equal(f,FALSE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=1)))
 
-  suppressWarnings(expect_val_equal(ff[[5]],as.data.frame(test_data)[,"x",drop=F]))
-  eval(bquote(expect_warning(.sample_size_from_formula(.(ff[[5]]),test_data))))
+  f<- ff[[4]]
+  expect_val_equal(f,TRUE,as.data.frame(matrix(2,nrow=nrow(test_data),ncol=0)))
+  expect_val_equal(f,FALSE,as.data.frame(matrix(2,nrow=nrow(test_data),ncol=1)))
 
-  eval(bquote(expect_error(.sample_size_from_formula(.(ff[[6]]),test_data),"Sample.size entry")))
-  eval(bquote(expect_error(.sample_size_from_formula(.(ff[[7]]),test_data))))
+  f<- ff[[5]]
+  expect_val_equal(f,TRUE,data.frame(x1=test_data$x1))
+  expect_val_equal(f,FALSE,data.frame(x1=test_data$x1))
+
+  f<- ff[[6]]
+  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"In sample.size term")))
+
+  f<- ff[[7]]
+  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"Multiple `sample.size`")))
+
+  f<- ff[[8]]
+  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"Sample.size variable")))
+
+  f<- ff[[9]]
+  expect_val_equal(f,TRUE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=0)))
+  expect_val_equal(f,FALSE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=2)))
+
+  f<- ff[[10]]
+  expect_val_equal(f,TRUE,data.frame(x1=test_data$x1))
+  expect_val_equal(f,FALSE,data.frame(x1=test_data$x1,x1=test_data$x1,check.names=FALSE))
+
+  f<- ff[[11]]
+  expect_val_equal(f,TRUE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=0)))
+  expect_val_equal(f,FALSE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=2)))
+
+  f<- ff[[12]]
+  expect_val_equal(f,TRUE,data.frame(x1=test_data$x1))
+  expect_val_equal(f,FALSE,data.frame(V1=1,x1=test_data$x1))
+
+  f<- ff[[13]]
+  expect_val_equal(f,TRUE,data.frame(x1=test_data$x1))
+  expect_val_equal(f,FALSE,data.frame(V1=2,x1=test_data$x1))
+
+  f<- ff[[14]]
+  expect_val_equal(f,TRUE,data.frame(x1=test_data$x1))
+  expect_val_equal(f,FALSE,data.frame(x1=test_data$x1,x1=test_data$x1,check.names=FALSE))
+
+  f<- ff[[15]]
+  expect_val_equal(f,TRUE,data.frame(x1=test_data$x1,x2=test_data$x2))
+  expect_val_equal(f,FALSE,data.frame(x1=test_data$x1,x2=test_data$x2))
+
+  f<- ff[[16]]
+  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"Sample.size variable")))
 })
 
 # .time_from_formula & .time_name_from_formula

@@ -792,7 +792,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
   if( length(var_call) == 1 ) {
     # Univariate
-    response_names<- var_call
+    response_names<- paste(var_call)
   } else {
     # Multivariate
     if( !(paste(var_call[[1]]) == "cbind") ) {
@@ -815,55 +815,68 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @param x A formula object with a sample.size(...) function containing one entry.
 #' @param data A data.frame containing the sample size information.
-#' @param nullReturn If there is no sample.size(...) function, should a vector of ones be returned?
+#' @param unique_vars Either TRUE for a data.frame with unique variables, or FALSE
+#'   for a data.frame with a column for each response variable
 #'
 #' @return A data.frame with a single column for the sample size.
 #'
 #' @noRd
-.sample_size_from_formula<- function(x,data,nullReturn=F) {
+.sample_size_from_formula<- function(x,data,unique_vars=FALSE) {
+  data<- data.frame(data)
   # Get out just the "sample.size" term from the formula (as a character string)
   the_terms<- terms(x,specials=c("time","space","sample.size"))
-  term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("^sample.size",term.labels,value=T)
-
-  # (if the "sample.size" term is missing, either return an empty matrix of
-  # or a matrix with a column of ones
-  if( length(the_call) == 0 ) {
-    if( nullReturn == F ) {
-      the_df<- as.data.frame(matrix(0,nrow=nrow(data),ncol=0))
+  the_idx<- attr(the_terms,"specials")$sample.size
+  if( length(the_idx) == 0 ) {
+    if( unique_vars ) {
+      sample.size<- as.data.frame(matrix(1,nrow=nrow(data),ncol=0))
     } else {
-      the_df<- as.data.frame(matrix(1,nrow=nrow(data),ncol=1))
+      sample.size<- as.data.frame(matrix(1,nrow=nrow(data),ncol=1))
     }
-    return(the_df)
-  } else if( length(the_call) > 1 ) {
-    warning(paste("Multiple sample.size variables given, using only the first:",the_call[[1]]))
-    the_call<- the_call[[1]]
-  }
+    return(sample.size)
+  } else if( length(the_idx) > 1 ) {
+    stop("Multiple `sample.size` terms found in formula. Only one is allowed.")
+  } else {}
 
-  # Make the expression inside "sample.size" a standalone formula, and
-  # use that formula to get the sample.size data
-  new_formula<- sub("sample.size\\(","~",the_call)
-  new_formula<- sub("\\)$","",new_formula)
-  new_terms<- terms(formula(new_formula))
-  attr(new_terms,"intercept")<- 0
 
-  if( length(attr(new_terms,"term.labels")) == 0 ) {
-    # Happens if intercept is the only term
-    the_df<- as.data.frame(matrix(1,nrow=nrow(data),ncol=1))
-  } else if( length(attr(new_terms,"term.labels")) > 1 ) {
-    stop("Only one variable is allowed for sample.size.")
-  } else if( !identical(attr(new_terms,"term.labels"),all.vars(new_terms)) ) {
-    stop("Sample.size entry must be a single column name.")
+  var_call<- as.list(attr(the_terms,"variables")[[the_idx+1]][[2]]) # [[2]] gets rid of sample.size()
+  # if( length(var_call) == 1 && is.symbol(var_call[[1]]) ) {var_call<- as.character(var_call)}
+
+  if( length(var_call) > 1 ) {
+    if( !identical(paste(var_call[[1]]),"cbind") ) {
+      stop(paste0("In sample.size term of formula function `",var_call[[1]],"` not valid. ",
+                  "Use `cbind(",paste(var_call[-1],collapse=", "),")` for multiple sample.size variables."))
+    } else {}
+      var_call<- var_call[-1]
+  } else {}
+  var_call<- rep(var_call,length.out=.n_response(x))
+
+  char_vars<- unique(paste(var_call[sapply(var_call,is.symbol) | sapply(var_call,is.character)]))
+  missing_vars<- char_vars[!(char_vars %in% colnames(data))]
+  if( length(missing_vars) > 0 ) {
+    stop(paste("Sample.size variable(s)",paste(missing_vars,collapse=", "),"not present in data."))
+  } else {}
+
+  if( unique_vars ) {
+    if( length(char_vars) == 0 ) {
+      sample.size<- as.data.frame(matrix(1,nrow=nrow(data),ncol=0))
+    } else {
+      sample.size<- data[,char_vars,drop=F]
+    }
   } else {
-    the_df<- data.frame(model.frame(new_terms,data=data))
+    sample.size<-  as.data.frame(matrix(1,nrow=nrow(data),ncol=.n_response(x)))
+    for( i in seq_along(var_call) ) {
+      if( identical(NA,var_call[[i]]) ) {
+        sample.size[,i]<- as.data.frame(matrix(1,nrow=nrow(data),ncol=1))
+      } else if( is.numeric(var_call[[i]]) ) {
+        sample.size[,i]<- as.data.frame(matrix(var_call[[i]],nrow=nrow(data),ncol=1))
+      } else {
+        sample.size[,i]<- data[,paste(var_call[[i]]),drop=F]
+        colnames(sample.size)[[i]]<- paste(var_call[[i]])
+      }
+    }
   }
 
-  attr(the_df,"assign")<- NULL
-  attr(the_df,"contrasts")<- NULL
-  if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=F]}
-  rownames(the_df)<- NULL
-
-  return(the_df)
+  return(sample.size)
 }
 
 #' Reform a list of \code{Raster*} objects to an \code{sf} data.frame.

@@ -18,15 +18,16 @@ setMethod(
                             time = numeric(1)
                           ),
                           geometry = sf::st_sfc(sf::st_point())
-                        )) {
+                        ),
+                        var_names = "y") {
     predictions(.Object)<- stars::st_as_stars(
-      list(w = array(0,dim=c(nrow(locations))),
-           w_se = array(NA,dim=c(nrow(locations))),
-           linear = array(0,dim=c(nrow(locations))),
-           linear_se = array(NA,dim=c(nrow(locations))),
-           response = array(0,dim=c(nrow(locations))),
-           response_se = array(NA,dim=c(nrow(locations)))),
-      dimensions = stars::st_dimensions(i=seq(nrow(locations)))
+      list(w = array(0,dim=c(nrow(locations),length(var_names))),
+           w_se = array(NA,dim=c(nrow(locations),length(var_names))),
+           linear = array(0,dim=c(nrow(locations),length(var_names))),
+           linear_se = array(NA,dim=c(nrow(locations),length(var_names))),
+           response = array(0,dim=c(nrow(locations),length(var_names))),
+           response_se = array(NA,dim=c(nrow(locations),length(var_names)))),
+      dimensions = stars::st_dimensions(i=seq(nrow(locations)),variable=var_names)
     )
     locations(.Object)<- locations
 

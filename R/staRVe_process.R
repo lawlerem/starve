@@ -202,7 +202,7 @@ prepare_staRVe_process<- function(nodes,
   # but if nu is supplied for matern need to set nu
   for( i in seq_along(covariance$nu) ) {
     if( covariance$covariance[[i]] == "matern" & !is.na(covariance$nu[[i]]) ) {
-      spatial_parameters(parameters)[[i]]["nu","par"]<- covariance$nu
+      spatial_parameters(parameters)[[i]]["nu","par"]<- covariance$nu[[i]]
       spatial_parameters(parameters)[[i]]["nu","fixed"]<- T
     } else {}
   }

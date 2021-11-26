@@ -43,7 +43,7 @@
 \S4method{initialize}{staRVe_observation_parameters}(
   .Object,
   response_distribution = "gaussian",
-  fixed_effects = data.frame(par = numeric(0), fixed = numeric(0))
+  fixed_effects = list(data.frame(par = numeric(0), fixed = numeric(0)))
 )
 
 \S4method{initialize}{staRVe_process_parameters}(
@@ -62,7 +62,8 @@
 \S4method{initialize}{staRVe_predictions}(
   .Object,
   locations = sf::st_sf(data.frame(time = numeric(1)), geometry =
-    sf::st_sfc(sf::st_point()))
+    sf::st_sfc(sf::st_point())),
+  var_names = "y"
 )
 
 \S4method{initialize}{staRVe_process}(

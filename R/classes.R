@@ -109,9 +109,9 @@ setClass(
   Class = "staRVe_observation_parameters",
   slots = c(
     response_distribution = "character",
-    response_parameters = "data.frame",
+    response_parameters = "list",
     link_function = "character",
-    fixed_effects = "data.frame"
+    fixed_effects = "list"
   )
 )
 

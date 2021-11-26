@@ -147,23 +147,18 @@ prepare_staRVe_observations<- function(data,
   # data = "sf"
   # Put in lexicographic ordering by time, then S->N / W->E
   data<- .order_by_location(data,time = data[[.time_name(settings)]])
-  # Returns response variable with a "name" attribute
-  y<- .response_from_formula(formula(settings),data)
-  # Return a time column with name and type (ar1/rw/etc) attributes
-  time_form<- .time_from_formula(formula(settings),data) #in order
-  response<- data.frame(y = c(y),t = c(time_form)) # c() removes attributes
-  colnames(response)<- c(attr(y,"name"),.time_name(settings))
 
-  # Get covariates, and sample size information if using a binomial response
-  design<- .mean_design_from_formula(formula(settings),data,return = "all.vars")
-  sample_size<- .sample_size_from_formula(formula(settings),data)
+  # Return a time column with name and type (ar1/rw/etc) attributes
+  time_column<- .time_from_formula(formula(settings),data) #in order
 
   data_predictions(observations)<- new("staRVe_predictions",sf::st_sf(data.frame(
-    design,
-    sample_size,
-    response,
+    .mean_design_from_formula(formula(settings),data,return = "all.vars"),
+    .sample_size_from_formula(formula(settings),data,unique_vars = TRUE),
+    .response_from_formula(formula(settings),data),
+    time_column,
     data[,attr(data,"sf_column")]
-  )))
+  )),
+  var_names = .response_names(formula(settings)))
 
   # transient_graph = "dag"
   # Random effect locations are the same each year, so only need first year
@@ -172,7 +167,7 @@ prepare_staRVe_observations<- function(data,
     transient_graph(observations)<- construct_obs_dag(
       x = data,
       y = .locations_from_stars(random_effects(process)),
-      time = c(time_form),
+      time = c(dat(observations)[,.time_name(settings),drop=T]),
       settings = settings,
     )
   } else {
@@ -188,29 +183,25 @@ prepare_staRVe_observations<- function(data,
   # Match supplied response distribution to valid options
   # response_distribution<- also takes care of response parameters
   # and link function
-  response_distribution(parameters)<- unname(
-    get_staRVe_distributions("distribution")[
-      charmatch(distribution,get_staRVe_distributions("distribution"))
-    ]
-  )
+  response_distribution(parameters)<- rep(distribution,length.out=.n_response(formula(settings)))
+  names(response_parameters(parameters))<- .response_names(formula(settings))
 
   # Match supplied link function with valid options
   if( !identical(link,"default") ) {
-    link_function(parameters)<- unname(
-      get_staRVe_distributions("link")[
-        charmatch(link,get_staRVe_distributions("link"))
-      ]
-    )
+    link_function(parameters)<- rep(link,length.out=.n_response(formula(settings)))
   } else {}
 
   # Set up fixed effects according to covariates formula
-  design<- .mean_design_from_formula(formula(settings),data)
-  fixed_effects(parameters)<- data.frame(
-    par = numeric(ncol(design)),
-    se = rep(NA,ncol(design)),
-    fixed = rep(F,ncol(design)),
-    row.names = colnames(design)
-  )
+  nff<- colnames(.mean_design_from_formula(formula(settings),data))
+  fixed_effects(parameters)<- lapply(.response_names(formula(settings)),function(rr) {
+    return(data.frame(
+      par = numeric(length(nff)),
+      se = rep(NA,length(nff)),
+      fixed = rep(F,length(nff)),
+      row.names = nff
+    ))
+  })
+  names(fixed_effects(parameters))<- .response_names(formula(settings))
   parameters(observations)<- parameters
 
   return(observations)

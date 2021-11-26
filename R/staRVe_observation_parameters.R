@@ -16,8 +16,8 @@ setMethod(
   signature = "staRVe_observation_parameters",
   definition = function(.Object,
                         response_distribution = "gaussian",
-                        fixed_effects = data.frame(par = numeric(0),
-                                                   fixed = numeric(0))) {
+                        fixed_effects = list(data.frame(par = numeric(0),
+                                                        fixed = numeric(0)))) {
     response_distribution(.Object)<- response_distribution
     # response distribution takes care of response parameters and link function
     fixed_effects(.Object)<- fixed_effects
@@ -52,57 +52,67 @@ setMethod(f = "response_distribution",
 setReplaceMethod(f = "response_distribution",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
+  value<- unname(get_staRVe_distributions("distribution")[pmatch(value,get_staRVe_distributions("distribution"),duplicates.ok=TRUE)])
   x@response_distribution<- value
-  response_parameters(x)<- switch(value,
-    gaussian = data.frame(par = 0,
-                          se = 0,
-                          fixed = F,
-                          row.names = "sd"),
-    poisson = data.frame(par = numeric(0),
-                         se = numeric(0),
-                         fixed = logical(0)),
-    `negative binomial` = data.frame(par = 0,
-                                     se = 0,
-                                     fixed = F,
-                                     row.names = "overdispersion"),
-    bernoulli = data.frame(par = numeric(0),
+
+  response_pars<- lapply(value,function(rd) {
+    switch(rd,
+      gaussian = data.frame(par = 0,
+                            se = 0,
+                            fixed = F,
+                            row.names = "sd"),
+      poisson = data.frame(par = numeric(0),
                            se = numeric(0),
                            fixed = logical(0)),
-    gamma = data.frame(par = 0,
-                       se = 0,
-                       fixed = F,
-                       row.names = "sd"),
-    lognormal = data.frame(par = 0,
-                           se = 0,
-                           fixed = F,
-                           row.names = "sd"),
-    binomial = data.frame(par = numeric(0),
-                          se = numeric(0),
-                          fixed = logical(0)),
-    atLeastOneBinomial = data.frame(par = numeric(0),
-                                    se = numeric(0),
-                                    fixed = logical(0)),
-    compois = data.frame(par = 0,
+      `negative binomial` = data.frame(par = 0,
+                                       se = 0,
+                                       fixed = F,
+                                       row.names = "overdispersion"),
+      bernoulli = data.frame(par = numeric(0),
+                             se = numeric(0),
+                             fixed = logical(0)),
+      gamma = data.frame(par = 0,
                          se = 0,
                          fixed = F,
-                         row.names = "dispersion"),
-    tweedie = data.frame(par = numeric(2),
-                         se = numeric(2),
-                         fixed = c(F,F),
-                         row.names = c("dispersion","power"))
-  )
-  link_function(x)<- switch(value,
-    gaussian = "identity",
-    poisson = "log",
-    `negative binomial` = "log",
-    bernoulli = "logit",
-    gamma = "log",
-    lognormal = "log",
-    binomial = "logit",
-    atLeastOneBinomial = "logit",
-    compois = "log",
-    tweedie = "log"
-  )
+                         row.names = "sd"),
+      lognormal = data.frame(par = 0,
+                             se = 0,
+                             fixed = F,
+                             row.names = "sd"),
+      binomial = data.frame(par = numeric(0),
+                            se = numeric(0),
+                            fixed = logical(0)),
+      atLeastOneBinomial = data.frame(par = numeric(0),
+                                      se = numeric(0),
+                                      fixed = logical(0)),
+      compois = data.frame(par = 0,
+                           se = 0,
+                           fixed = F,
+                           row.names = "dispersion"),
+      tweedie = data.frame(par = numeric(2),
+                           se = numeric(2),
+                           fixed = c(F,F),
+                           row.names = c("dispersion","power"))
+    )
+  })
+  try(names(response_pars)<- names(response_parameters(x)))
+  response_parameters(x)<- response_pars
+
+  link_function(x)<- do.call(c,lapply(value,function(rd) {
+    switch(rd,
+      gaussian = "identity",
+      poisson = "log",
+      `negative binomial` = "log",
+      bernoulli = "logit",
+      gamma = "log",
+      lognormal = "log",
+      binomial = "logit",
+      atLeastOneBinomial = "logit",
+      compois = "log",
+      tweedie = "log"
+    )
+  }))
+
   return(x)
 })
 
@@ -147,7 +157,11 @@ setMethod(f = "link_function",
 setReplaceMethod(f = "link_function",
                  signature = "staRVe_observation_parameters",
                  definition = function(x,value) {
-  x@link_function<- value
+  x@link_function<- unname(
+    get_staRVe_distributions("link")[
+      pmatch(value,get_staRVe_distributions("link"),duplicates.ok=T)
+    ]
+  )
   return(x)
 })
 
