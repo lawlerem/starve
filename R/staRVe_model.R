@@ -434,12 +434,16 @@ setReplaceMethod(f = "formula",
   formula(settings(x))<- value
 
   design<- .mean_design_from_formula(value,dat(x))
-  fixed_effects(x)<- data.frame(
-    par = numeric(ncol(design)),
-    se = rep(NA,ncol(design)),
-    fixed = rep(F,ncol(design)),
-    row.names = colnames(design)
-  )
+  fe<- lapply(fixed_effects(x),function(v) {
+    data.frame(
+      par = numeric(ncol(design)),
+      se = rep(NA,ncol(design)),
+      fixed = rep(F,ncol(design)),
+      row.names = colnames(design)
+    )
+  })
+  try(names(fe)<- names(fixed_effects(x)))
+  fixed_effects(x)<- fe
 
   return(x)
 })

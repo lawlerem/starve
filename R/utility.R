@@ -24,11 +24,11 @@ NULL
 
   ### Add extra spatio-temporal random effects
   new_dims<- stars::st_dimensions(random_effects(x))
-  relist<- lapply(random_effects(x),function(var_array) return(var_array))
+  relist<- lapply(random_effects(x),function(va) return(va))
   if( min(times) < min(model_times) ) {
-    relist<- lapply(relist,function(var_array) {
-      return(abind::abind(array(0,dim = c(nrow(var_array),min(model_times)-min(times))),
-                          var_array,
+    relist<- lapply(relist,function(va) {
+      return(abind::abind(array(0,dim = c(dim(va)[[1]],min(model_times)-min(times),dim(va)[[3]])),
+                          va,
                           along = which(names(new_dims) == .time_name(x)),
                           use.first.dimnames = F
                         ))
@@ -37,28 +37,28 @@ NULL
     new_dims[[.time_name(x)]]$offset<- min(times)
   } else {}
   if( max(times) > max(model_times) ) {
-    relist<- lapply(relist,function(var_array) {
-      return(abind::abind(var_array,
-                          array(0,dim = c(nrow(var_array),max(times)-max(model_times))),
+    relist<- lapply(relist,function(va) {
+      return(abind::abind(va,
+                          array(0,dim = c(dim(va)[[1]],max(times)-max(model_times),dim(va)[[3]])),
                           along = which(names(new_dims) == .time_name(x)),
                           use.first.dimnames = T
                         ))
     })
     new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
   } else {}
-  relist<- lapply(relist,function(var_array) {
-    dimnames(var_array)[[2]]<- stars::st_get_dimension_values(new_dims,.time_name(x))
-    return(var_array)
+  relist<- lapply(relist,function(va) {
+    dimnames(va)[[2]]<- stars::st_get_dimension_values(new_dims,.time_name(x))
+    return(va)
   })
   random_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
 
   ### Add extra time effects
   new_dims<- stars::st_dimensions(time_effects(x))
-  relist<- lapply(time_effects(x),function(var_array) return(var_array))
+  relist<- lapply(time_effects(x),function(va) return(va))
   if( min(times) < min(model_times) ) {
-    relist<- lapply(relist,function(var_array) {
-      return(abind::abind(array(0,dim = c(min(model_times)-min(times))),
-                          var_array,
+    relist<- lapply(relist,function(va) {
+      return(abind::abind(array(0,dim = c(min(model_times)-min(times),dim(va)[[2]])),
+                          va,
                           along = which(names(new_dims) == .time_name(x)),
                           use.first.dimnames = F
                         ))
@@ -67,9 +67,9 @@ NULL
     new_dims[[.time_name(x)]]$offset<- min(times)
   } else {}
   if( max(times) > max(model_times) ) {
-    relist<- lapply(relist,function(var_array) {
-      return(abind::abind(var_array,
-                          array(0,dim = c(max(times)-max(model_times))),
+    relist<- lapply(relist,function(va) {
+      return(abind::abind(va,
+                          array(0,dim = c(max(times)-max(model_times),dim(va)[[2]])),
                           along = which(names(new_dims) == .time_name(x)),
                           use.first.dimnames = T
                         ))
@@ -182,7 +182,7 @@ NULL
 #'
 #' @noRd
 .covariance_to_code<- function(covariance) {
-  covar_code<- charmatch(covariance,get_staRVe_distributions("covariance"))
+  covar_code<- pmatch(covariance,get_staRVe_distributions("covariance"),duplicates.ok=TRUE)
   if( is.na(covar_code) || covar_code == 0 ) {
     stop("Supplied covariance function is not implemented, or matches multiple covariance functions.")
   } else {
@@ -206,7 +206,7 @@ NULL
 #'
 #' @noRd
 .distribution_to_code<- function(distribution) {
-  distribution_code<- charmatch(distribution,get_staRVe_distributions("distribution"))
+  distribution_code<- pmatch(distribution,get_staRVe_distributions("distribution"),duplicates.ok=TRUE)
   if( is.na(distribution_code) || distribution_code == 0  ) {
     stop("Supplied distribution is not implemented, or matches multiple distributions.")
   } else {
@@ -546,7 +546,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @noRd
 .link_to_code<- function(link) {
-  link_code<- charmatch(link,get_staRVe_distributions("link"))
+  link_code<- pmatch(link,get_staRVe_distributions("link"),duplicates.ok=TRUE)
   if( is.na(link_code) || link_code == 0 ) {
     stop("Supplied link function is not implemented, or matches multiple link functions.")
   } else {
@@ -630,8 +630,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   attr(the_df,"constrasts")<- NULL
   if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=F]}
 
-
-
   rownames(the_df)<- NULL
   return(the_df)
 }
@@ -642,7 +640,9 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 # N
 
-#' Check which covariates are used in a formula
+#' Check which covariates are used in a formula.
+#'
+#' Does not include response name, time variable, etc. Only include mean design covariates.
 #'
 #' @param x A formula object.
 #'
@@ -665,8 +665,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     return(var_names)
   }
 }
-
-
 
 .n_response<- function(x) return(length(.response_names(x)))
 
