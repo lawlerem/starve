@@ -1,21 +1,5 @@
 --- Multiple Independent Variables ---
 
-** R side **
-1.) Multiple response variables in data input and TMB_in
-  a.) cbind(x,y) is LHS of formula
-  b.) Model options for multiple response
-    -- space(...)
-    -- sample.size(...)
-    -- distribution =
-    -- link =
-2.) Data and random effect management
-  a1.) 3d array? Locations, times, and covariates should all be the same; or,
-  a2.) Multiple columns? Lots of w, w_se, linear, linear_se, etc. floating around...
-  a3.) 2d array holding response variables, covariates, time, location, and 3d array holding random effects (with time and location)
-3.) Parameter management
-  a.) Can use 3d array for spatial, temporal, and covariate parameters since # parameters are equal
-  b.) How to store response parameters since # of parameters can be unequal? Just a list?
-
 ** C++ side **
 1.) Multivariate random effects
   a.) Pass in array of random effects instead of vector

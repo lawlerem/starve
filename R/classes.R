@@ -24,6 +24,8 @@
 #' @name staRVe_classes
 NULL
 
+# All stars slots should have dimensions in order: space, time, variable
+
 #' Constructors for the staRVe package
 #'
 #' @param .Object The object to create
