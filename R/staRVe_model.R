@@ -399,14 +399,18 @@ setMethod(f = "distance_units",
 setReplaceMethod(f = "distance_units",
                  signature = "staRVe_model",
                  definition = function(x,value) {
-  range<- units::set_units(spatial_parameters(x)["range","par"],
-                           distance_units(x),
-                           mode="standard")
+  ranges<- lapply(spatial_parameters(x),function(sp) {
+    units::set_units(sp["range","par"],
+                     distance_units(x),
+                     mode="standard")
+  })
   distance_units(settings(x))<- value
   distance_units(persistent_graph(process(x)))<- value
   distance_units(transient_graph(observations(x)))<- value
-  range<- units::set_units(range,value,mode="standard")
-  spatial_parameters(x)["range","par"]<- units::drop_units(range)
+  ranges<- units::set_units(ranges,value,mode="standard")
+  for( i in seq_along(ranges) ) {
+    spatial_parameters(x)[[i]]["range","par"]<- units::drop_units(ranges[[i]])
+  }
   return(x)
 })
 
@@ -661,7 +665,7 @@ setMethod(f = "TMB_in",
     link_code = .link_to_code(link_function(x)),
     # Get time index, observations, and graph for observations
     y_time = c(dat(x)[,.time_name(x),drop=T]),
-    obs_y = c(.response_from_formula(formula(x),dat(x)))[[1]],
+    obs_y = .response_from_formula(formula(x),dat(x))[[1]], # ONLY FIRST VARIABLE
     ys_edges = edges(idxR_to_C(graph(x)$transient_graph)),
     ys_dists = distances(graph(x)$transient_graph),
     # Get time index of random effects in transient graph
@@ -671,9 +675,9 @@ setMethod(f = "TMB_in",
         .time_name(x),drop=T]),
     # Get covariates, and sample.size for binomial
     mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
-    sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE))[,1],
+    sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE))[,1], # ONLY FIRST VARIABLE
     # Convert covariance function (char) to (int)
-    covar_code = .covariance_to_code(covariance_function(x)),
+    covar_code = .covariance_to_code(covariance_function(x))[[1]], # ONLY FIRST VARIABLE
     # Get time index and graph for spatio-temporal random effects
     ws_edges = edges(idxR_to_C(graph(x)$persistent_graph)),
     ws_dists = distances(graph(x)$persistent_graph),
@@ -702,96 +706,96 @@ setMethod(f = "TMB_in",
   ### but if they're fixed leave them as is.
   ### Need to convert the natural scale parameters to working scale as well
   para<- list(
-    working_response_pars = switch(response_distribution(x),
+    working_response_pars = switch(response_distribution(x)[[1]], # ONLY FIRST VARIABLE
       gaussian = ifelse( # Normal; std. dev. > 0
-            response_parameters(x)["sd","par"] > 0 ||
-            response_parameters(x)["sd","fixed"] == T,
-          log(response_parameters(x)["sd","par"]),
+            response_parameters(x)[[1]]["sd","par"] > 0 ||
+            response_parameters(x)[[1]]["sd","fixed"] == T,
+          log(response_parameters(x)[[1]]["sd","par"]),
           log(1)
         ),
       poisson = numeric(0), # Poisson; NA
       `negative binomial` = ifelse( # Neg. Binom.; overdispersion >= 1
-            response_parameters(x)["overdispersion","par"] >= 1 ||
-            response_parameters(x)["overdispersion","fixed"] == T,
-          log(response_parameters(x)["overdispersion","par"]-1),
+            response_parameters(x)[[1]]["overdispersion","par"] >= 1 ||
+            response_parameters(x)[[1]]["overdispersion","fixed"] == T,
+          log(response_parameters(x)[[1]]["overdispersion","par"]-1),
           log(1)
         ),
       bernoulli = numeric(0), # Bernoulli; NA
       gamma = ifelse( # Gamma; std. dev. > 0
-            response_parameters(x)["sd","par"] > 0 ||
-            response_parameters(x)["sd","fixed"] == T,
-          log(response_parameters(x)["sd","par"]),
+            response_parameters(x)[[1]]["sd","par"] > 0 ||
+            response_parameters(x)[[1]]["sd","fixed"] == T,
+          log(response_parameters(x)[[1]]["sd","par"]),
           log(1)
         ), # Gamma; std. dev.
       lognormal = ifelse( # Log-Normal; std. dev. > 0
-            response_parameters(x)["sd","par"] > 0 ||
-            response_parameters(x)["sd","fixed"] == T,
-          log(response_parameters(x)["sd","par"]),
+            response_parameters(x)[[1]]["sd","par"] > 0 ||
+            response_parameters(x)[[1]]["sd","fixed"] == T,
+          log(response_parameters(x)[[1]]["sd","par"]),
           log(1)
         ), # Log-normal; std. dev.
       binomial = numeric(0), # Binomial; NA
       atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
       compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
-            response_parameters(x)["dispersion","par"] > 0 ||
-            response_parameters(x)["dispersion","fixed"] == T,
-          -log(response_parameters(x)["dispersion","par"]),
+            response_parameters(x)[[1]]["dispersion","par"] > 0 ||
+            response_parameters(x)[[1]]["dispersion","fixed"] == T,
+          -log(response_parameters(x)[[1]]["dispersion","par"]),
           # negative sign since we want >0 to be over-dispersion
           -log(1)
         ),
       tweedie = c( # tweedie
         ifelse( # dispersion>0
-          response_parameters(x)["dispersion","par"] > 0 ||
-          response_parameters(x)["dispersion","fixed"] == T,
-          log(response_parameters(x)["dispersion","par"]),
+          response_parameters(x)[[1]]["dispersion","par"] > 0 ||
+          response_parameters(x)[[1]]["dispersion","fixed"] == T,
+          log(response_parameters(x)[[1]]["dispersion","par"]),
           log(1)
         ),
         ifelse( # 1<power<2
-          (0 < response_parameters(x)["power","par"] &&
-           response_parameters(x)["power","par"] < 1) ||
-          response_parameters(x)["power","par"] == T,
-          qlogis(response_parameters(x)["power","par"]-1),
+          (0 < response_parameters(x)[[1]]["power","par"] &&
+           response_parameters(x)[[1]]["power","par"] < 1) ||
+          response_parameters(x)[[1]]["power","par"] == T,
+          qlogis(response_parameters(x)[[1]]["power","par"]-1),
           qlogis(1.5-1)
         )
       )
     ),
-    mean_pars = fixed_effects(x)[colnames(data$mean_design),"par"],
+    mean_pars = fixed_effects(x)[[1]][colnames(data$mean_design),"par"],
     resp_w = numeric(
         sum(sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1) # How many extra random effects?
       ),
     log_space_sd = ifelse( # std. dev. > 0
-        spatial_parameters(x)["sd","par"] > 0 ||
-        spatial_parameters(x)["sd","fixed"] == T,
-      log(spatial_parameters(x)["sd","par"]),
+        spatial_parameters(x)[[1]]["sd","par"] > 0 ||
+        spatial_parameters(x)[[1]]["sd","fixed"] == T,
+      log(spatial_parameters(x)[[1]]["sd","par"]),
       log(1)
     ),
     log_space_rho = ifelse( # rho > 0
-      spatial_parameters(x)["range","par"] > 0 ||
-      spatial_parameters(x)["range","fixed"] == T,
-      log(spatial_parameters(x)["range","par"]),
+      spatial_parameters(x)[[1]]["range","par"] > 0 ||
+      spatial_parameters(x)[[1]]["range","fixed"] == T,
+      log(spatial_parameters(x)[[1]]["range","par"]),
       log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
     ),
     log_space_nu = ifelse( # nu > 0
-          spatial_parameters(x)["nu","par"] > 0 ||
-          spatial_parameters(x)["nu","fixed"] == T,
-        log(spatial_parameters(x)["nu","par"]),
+          spatial_parameters(x)[[1]]["nu","par"] > 0 ||
+          spatial_parameters(x)[[1]]["nu","fixed"] == T,
+        log(spatial_parameters(x)[[1]]["nu","par"]),
         log(0.5)
       ),
-    time_effects = time_effects(x)[["w"]],
-    time_mu = time_parameters(x)["mu","par"],
+    time_effects = time_effects(x)[["w"]][,1],
+    time_mu = time_parameters(x)[[1]]["mu","par"],
     logit_time_ar1 = ifelse( # -1 <= ar1 <= +1
-          (time_parameters(x)["ar1","par"] >= -1
-            && time_parameters(x)["ar1","par"] <= 1) ||
-          time_parameters(x)["ar1","fixed"] == T,
-        qlogis(0.5*(1+time_parameters(x)["ar1","par"])),
+          (time_parameters(x)[[1]]["ar1","par"] >= -1
+            && time_parameters(x)[[1]]["ar1","par"] <= 1) ||
+          time_parameters(x)[[1]]["ar1","fixed"] == T,
+        qlogis(0.5*(1+time_parameters(x)[[1]]["ar1","par"])),
         qlogis(0.5*(1+0))
       ),
     log_time_sd = ifelse( # sd > 0
-          time_parameters(x)["sd","par"] > 0 ||
-          time_parameters(x)["sd","fixed"] == T,
-        log(time_parameters(x)["sd","par"]),
+          time_parameters(x)[[1]]["sd","par"] > 0 ||
+          time_parameters(x)[[1]]["sd","fixed"] == T,
+        log(time_parameters(x)[[1]]["sd","par"]),
         log(1)
       ),
-    proc_w = random_effects(x)[["w"]],
+    proc_w = random_effects(x)[["w"]][,,1],
     pred_w = numeric(0)
   )
 
@@ -806,15 +810,15 @@ setMethod(f = "TMB_in",
   map<- list(
     working_response_pars = switch((length(para$working_response_pars) > 0)+1,
       logical(0),
-      response_parameters(x)[,"fixed"]
+      response_parameters(x)[[1]][,"fixed"]
     ),
-    mean_pars = fixed_effects(x)[colnames(data$mean_design),"fixed"],
-    log_space_sd = spatial_parameters(x)["sd","fixed"],
-    log_space_rho = spatial_parameters(x)["range","fixed"],
-    log_space_nu = spatial_parameters(x)["nu","fixed"],
-    time_mu = time_parameters(x)["mu","fixed"],
-    logit_time_ar1 = time_parameters(x)["ar1","fixed"],
-    log_time_sd = time_parameters(x)["sd","fixed"]
+    mean_pars = fixed_effects(x)[[1]][colnames(data$mean_design),"fixed"],
+    log_space_sd = spatial_parameters(x)[[1]]["sd","fixed"],
+    log_space_rho = spatial_parameters(x)[[1]]["range","fixed"],
+    log_space_nu = spatial_parameters(x)[[1]]["nu","fixed"],
+    time_mu = time_parameters(x)[[1]]["mu","fixed"],
+    logit_time_ar1 = time_parameters(x)[[1]]["ar1","fixed"],
+    log_time_sd = time_parameters(x)[[1]]["sd","fixed"]
   )
   map<- lapply(map,.logical_to_map)
 
@@ -840,8 +844,8 @@ setMethod(f = "update_staRVe_model",
   par_names<- character(0)
 
   # Spatial parameters
-  spatial_parameters(x)<- within(
-    spatial_parameters(x),{
+  spatial_parameters(x)[[1]]<- within(
+    spatial_parameters(x)[[1]],{
       par_names<<- c("par_space_sd","par_space_rho","par_space_nu")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
@@ -849,8 +853,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Time parameters
-  time_parameters(x)<- within(
-    time_parameters(x),{
+  time_parameters(x)[[1]]<- within(
+    time_parameters(x)[[1]],{
       par_names<<- c("par_time_mu","par_time_ar1","par_time_sd")
       par<- sdr_mat[par_names,1]
       se<- sdr_mat[par_names,2]
@@ -858,16 +862,16 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Temporal random effects
-  time_effects(x)$w<- as.list(sdr(y),"Estimate")$time_effects
-  time_effects(x)$se<- as.list(sdr(y),"Std. Error")$time_effects
+  time_effects(x)$w[,1]<- as.list(sdr(y),"Estimate")$time_effects
+  time_effects(x)$se[,1]<- as.list(sdr(y),"Std. Error")$time_effects
 
   # Spatio-temporal random effects
-  random_effects(x)$w<- as.list(sdr(y),"Estimate")$proc_w
-  random_effects(x)$se<- as.list(sdr(y),"Std. Error")$proc_w
+  random_effects(x)$w[,,1]<- as.list(sdr(y),"Estimate")$proc_w
+  random_effects(x)$se[,,1]<- as.list(sdr(y),"Std. Error")$proc_w
 
   # Fixed effects; need to be careful if no covariates
-  fixed_effects(x)<- within(
-    fixed_effects(x),{
+  fixed_effects(x)[[1]]<- within(
+    fixed_effects(x)[[1]],{
       par_names<<- c("par_mean_pars")
       par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<-  sdr_mat[rownames(sdr_mat) %in% par_names,2]
@@ -875,8 +879,8 @@ setMethod(f = "update_staRVe_model",
   )
 
   # Response distribution parameters; need to be careful if no parameters
-  response_parameters(x)<- within(
-    response_parameters(x),{
+  response_parameters(x)[[1]]<- within(
+    response_parameters(x)[[1]],{
       par_names<<- c("par_sd","par_overdispersion","par_dispersion","par_scale","par_power")
       par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
       se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
@@ -893,16 +897,17 @@ setMethod(f = "update_staRVe_model",
       this_year<- dat(x)[i,.time_name(x),drop=T]
       # makes it really slow because sf checks spatial bounds
       w_se<- as.numeric(random_effects(x)[c("w","se"),
-                        edges(graph(x)$transient_graph)[[i]][["from"]],
-                        which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
-                        drop=T])
-      predictions(data_predictions(x))[["w"]][[i]]<- w_se[[1]]
-      predictions(data_predictions(x))[["w_se"]][[i]]<- w_se[[2]]
+                                          edges(graph(x)$transient_graph)[[i]][["from"]],
+                                          which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
+                                          1, # ONLY FIRST VARIABLE
+                                          drop=T])
+      predictions(data_predictions(x))[["w"]][i,1]<- w_se[[1]]
+      predictions(data_predictions(x))[["w_se"]][i,1]<- w_se[[2]]
     } else {
       # if length > 1, take random effect from resp_w
       w_se<- resp_w[resp_w_idx,]
-      predictions(data_predictions(x))[["w"]][[i]]<- w_se[[1]]
-      predictions(data_predictions(x))[["w_se"]][[i]]<- w_se[[2]]
+      predictions(data_predictions(x))[["w"]][i,1]<- w_se[[1]]
+      predictions(data_predictions(x))[["w_se"]][i,1]<- w_se[[2]]
       resp_w_idx<- resp_w_idx+1
     }
   }
