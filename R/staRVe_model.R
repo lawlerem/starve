@@ -407,7 +407,7 @@ setReplaceMethod(f = "distance_units",
   distance_units(settings(x))<- value
   distance_units(persistent_graph(process(x)))<- value
   distance_units(transient_graph(observations(x)))<- value
-  ranges<- units::set_units(ranges,value,mode="standard")
+  ranges<- lapply(ranges,units::set_units,value,mode="standard")
   for( i in seq_along(ranges) ) {
     spatial_parameters(x)[[i]]["range","par"]<- units::drop_units(ranges[[i]])
   }

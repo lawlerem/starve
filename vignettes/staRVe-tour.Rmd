@@ -88,8 +88,8 @@ bird_model
 ```
 
 ```{r}
-spatial_parameters(bird_model)["range","par"]<- 80
-spatial_parameters(bird_model)["range","fixed"]<- TRUE
+spatial_parameters(bird_model)$cnt["range","par"]<- 80
+spatial_parameters(bird_model)$cnt["range","fixed"]<- TRUE
 ```
 
 The individual components of a 'staRVe_model" object are explained in the following sections.
@@ -162,7 +162,7 @@ covariance_function(bird_model)
 spatial_parameters(bird_model)
 ```
 
-The spatial parameters describe the spatial covariance function.
+The spatial parameters describe the spatial covariance function for each response variable.
 The staRVe package uses a Matern covariance function with the following parameters:
 
 - **sd**: a scale parameter. Higher values correspond to spatial surfaces with larger peaks and lower valleys. Must be greater than 0.
@@ -234,7 +234,7 @@ The 'locations' slot can be easily accessed through the 'dat' function.
 
 ```{r}
 cbind(
-  do.call(cbind,predictions(data_predictions(bird_model))),
+  do.call(cbind,predictions(data_predictions(bird_model))[,,1]),
   dat(bird_model)
 )
 ```
@@ -289,9 +289,9 @@ Changing the covariance function also resets the spatial parameters, and updates
 spatial_parameters(bird_model)
 time_parameters(bird_model)
 
-time_parameters(bird_model)[c("mu","ar1"),"par"]<- c(10,0.75)
-spatial_parameters(bird_model)["range","par"]<- 80
-spatial_parameters(bird_model)["range","fixed"]<- T
+time_parameters(bird_model)$cnt[c("mu","ar1"),"par"]<- c(10,0.75)
+spatial_parameters(bird_model)$cnt["range","par"]<- 80
+spatial_parameters(bird_model)$cnt["range","fixed"]<- T
 
 spatial_parameters(bird_model)
 time_parameters(bird_model)
@@ -350,7 +350,7 @@ formula(bird_model)
 fixed_effects(bird_model)
 ```
 
-The model formula for including covariates such as the newly created 'elev' variable will be explained in section ###.
+The model formula for including covariates such as the newly created 'elev' variable will be explained later.
 Any variables used in the new formula must be present in the data held in the staRVe_model object, so add them before changing the formula.
 The fixed effects parameters will be automatically updated to reflect the new formula.
 
@@ -411,7 +411,7 @@ These predictions can be converted to a single sf data.frame fairly easily.
 
 ```{r}
 cbind(
-  do.call(cbind,predictions(sf_pred)),
+  do.call(cbind,predictions(sf_pred)[,,1]),
   locations(sf_pred)
 )
 ```
@@ -450,7 +450,7 @@ pred_out<- staRVe_predict(
   bird_model,
   pred_raster
 )
-pred_out$response[,,1]
+pred_out$response[,,1,1]
 ```
 
 If the supplied raster has values, then predictions will only be made at cells that are not `r NA`.
@@ -518,9 +518,9 @@ The values in the response variable column are irrelevant however the covariate 
 The sf data.frame constructed above consists of a 4x4 grid (16 points) replicated over 5 years.
 
 ```{r sim-new2}
-time_parameters(sim_model)[c("mu","ar1","sd"),"par"]<- c(10,0.7,1)
-spatial_parameters(sim_model)[c("sd","range"),"par"]<- c(2,0.5)
-response_parameters(sim_model)["sd","par"]<- 0.5
+time_parameters(sim_model)$y[c("mu","ar1","sd"),"par"]<- c(10,0.7,1)
+spatial_parameters(sim_model)$y[c("sd","range"),"par"]<- c(2,0.5)
+response_parameters(sim_model)$y["sd","par"]<- 0.5
 sim_model<- staRVe_simulate(sim_model)
 sim_model
 ```
@@ -821,8 +821,8 @@ get_staRVe_distributions("covariance")
 ```{r fixed-parameters}
 parameters(bird_model)
 
-time_parameters(bird_model)["ar1","par"]<- 0
-time_parameters(bird_model)["ar1","fixed"]<- T
+time_parameters(bird_model)$cnt["ar1","par"]<- 0
+time_parameters(bird_model)$cnt["ar1","fixed"]<- T
 bird_model<- staRVe_fit(bird_model,silent=T)
 
 parameters(bird_model)
