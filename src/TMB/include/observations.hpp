@@ -8,7 +8,6 @@ class observations {
     nngp<Type> &process; // Pass by reference so that outside updates to process
     // automatically update here as well
     vector<Type> y; // Response data
-    data_indicator<vector<Type>,Type> keep; // Used for TMB residuals
     vector<vector<vector<int> > > ys_graph; // Edge list for transient graph
     // The "to" list should have length 1
     vector<matrix<Type> > ys_dists; // Distances for transient graph
@@ -22,7 +21,6 @@ class observations {
     // Constructor
     observations(nngp<Type> &process,
                  vector<Type> y,
-                 data_indicator<vector<Type>,Type> keep,
                  vector<vector<vector<int> > > ys_graph,
                  vector<matrix<Type> > ys_dists,
                  vector<Type> resp_w,
@@ -33,7 +31,6 @@ class observations {
 
     // Overwrite to get new observations, graph, covariates, etc.
     void update_y(vector<Type> new_y,
-               data_indicator<vector<Type>,Type> new_keep,
                vector<vector<vector<int> > > new_graph,
                vector<matrix<Type> > new_dists,
                vector<Type> new_resp_w,
@@ -57,7 +54,6 @@ class observations {
 template<class Type>
 observations<Type>::observations(nngp<Type> &process,
                                  vector<Type> y,
-                                 data_indicator<vector<Type>,Type> keep,
                                  vector<vector<vector<int> > > ys_graph,
                                  vector<matrix<Type> > ys_dists,
                                  vector<Type> resp_w,
@@ -66,7 +62,6 @@ observations<Type>::observations(nngp<Type> &process,
                                  glm<Type> family) :
   process(process),
   y(y),
-  keep(keep),
   ys_graph(ys_graph),
   ys_dists(ys_dists),
   resp_w(resp_w),
@@ -78,13 +73,11 @@ observations<Type>::observations(nngp<Type> &process,
 
 template<class Type>
 void observations<Type>::update_y(vector<Type> new_y,
-                                  data_indicator<vector<Type>,Type> new_keep,
                                   vector<vector<vector<int> > > new_graph,
                                   vector<matrix<Type> > new_dists,
                                   vector<Type> new_resp_w,
                                   matrix<Type> new_mean_design,
                                   vector<Type> new_sample_size) {
-  keep = new_keep;
   ys_graph = new_graph; // don't need to resizeLike(new_graph)
   y = new_y;
   ys_dists = new_dists;
@@ -183,7 +176,7 @@ Type observations<Type>::y_loglikelihood() {
   response = find_response(); // Make sure the response means are up-to-date
   for(int i=0; i<ys_graph.size(); i++) {
     idx = ys_graph(i)(0)(0);
-    ans += keep(idx)*family.log_density(Type(y(idx)), response(idx), sample_size(idx));
+    ans += family.log_density(Type(y(idx)), response(idx), sample_size(idx));
   }
   return ans;
 }

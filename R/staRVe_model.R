@@ -762,39 +762,45 @@ setMethod(f = "TMB_in",
     resp_w = numeric(
         sum(sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1) # How many extra random effects?
       ),
-    log_space_sd = ifelse( # std. dev. > 0
-        spatial_parameters(x)[[1]]["sd","par"] > 0 ||
-        spatial_parameters(x)[[1]]["sd","fixed"] == T,
-      log(spatial_parameters(x)[[1]]["sd","par"]),
-      log(1)
+    working_space_pars = switch(covariance_function(x)[[1]],
+      c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
+        ifelse( # std. dev. > 0
+            spatial_parameters(x)[[1]]["sd","par"] > 0 ||
+            spatial_parameters(x)[[1]]["sd","fixed"] == T,
+          log(spatial_parameters(x)[[1]]["sd","par"]),
+          log(1)
+        ),
+        ifelse( # rho > 0
+          spatial_parameters(x)[[1]]["range","par"] > 0 ||
+          spatial_parameters(x)[[1]]["range","fixed"] == T,
+          log(spatial_parameters(x)[[1]]["range","par"]),
+          log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
+        ),
+        ifelse( # nu > 0
+            spatial_parameters(x)[[1]]["nu","par"] > 0 ||
+            spatial_parameters(x)[[1]]["nu","fixed"] == T,
+          log(spatial_parameters(x)[[1]]["nu","par"]),
+          log(0.5)
+        )
+      )
     ),
-    log_space_rho = ifelse( # rho > 0
-      spatial_parameters(x)[[1]]["range","par"] > 0 ||
-      spatial_parameters(x)[[1]]["range","fixed"] == T,
-      log(spatial_parameters(x)[[1]]["range","par"]),
-      log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
-    ),
-    log_space_nu = ifelse( # nu > 0
-          spatial_parameters(x)[[1]]["nu","par"] > 0 ||
-          spatial_parameters(x)[[1]]["nu","fixed"] == T,
-        log(spatial_parameters(x)[[1]]["nu","par"]),
-        log(0.5)
-      ),
     time_effects = time_effects(x)[["w"]][,1],
-    time_mu = time_parameters(x)[[1]]["mu","par"],
-    logit_time_ar1 = ifelse( # -1 <= ar1 <= +1
+    working_time_pars = c(
+      time_parameters(x)[[1]]["mu","par"],
+      ifelse( # -1 <= ar1 <= +1
           (time_parameters(x)[[1]]["ar1","par"] >= -1
             && time_parameters(x)[[1]]["ar1","par"] <= 1) ||
           time_parameters(x)[[1]]["ar1","fixed"] == T,
         qlogis(0.5*(1+time_parameters(x)[[1]]["ar1","par"])),
         qlogis(0.5*(1+0))
       ),
-    log_time_sd = ifelse( # sd > 0
+      ifelse( # sd > 0
           time_parameters(x)[[1]]["sd","par"] > 0 ||
           time_parameters(x)[[1]]["sd","fixed"] == T,
         log(time_parameters(x)[[1]]["sd","par"]),
         log(1)
-      ),
+      )
+    ),
     proc_w = random_effects(x)[["w"]][,,1],
     pred_w = numeric(0)
   )
@@ -813,12 +819,8 @@ setMethod(f = "TMB_in",
       response_parameters(x)[[1]][,"fixed"]
     ),
     mean_pars = fixed_effects(x)[[1]][colnames(data$mean_design),"fixed"],
-    log_space_sd = spatial_parameters(x)[[1]]["sd","fixed"],
-    log_space_rho = spatial_parameters(x)[[1]]["range","fixed"],
-    log_space_nu = spatial_parameters(x)[[1]]["nu","fixed"],
-    time_mu = time_parameters(x)[[1]]["mu","fixed"],
-    logit_time_ar1 = time_parameters(x)[[1]]["ar1","fixed"],
-    log_time_sd = time_parameters(x)[[1]]["sd","fixed"]
+    working_space_pars = spatial_parameters(x)[[1]][,"fixed"],
+    working_time_pars = time_parameters(x)[[1]][,"fixed"]
   )
   map<- lapply(map,.logical_to_map)
 
@@ -840,56 +842,41 @@ setMethod(f = "update_staRVe_model",
           signature = c(x = "staRVe_model",
                         y = "TMB_out"),
           definition = function(x,y) {
-  sdr_mat<- summary(sdr(y))
+  sdr_est<- c(as.list(sdr(y),"Estimate",report=TRUE),
+              as.list(sdr(y),"Estimate",report=FALSE))
+  sdr_se<- c(as.list(sdr(y),"Std. Error",report=TRUE),
+             as.list(sdr(y),"Std. Error",report=FALSE))
   par_names<- character(0)
 
   # Spatial parameters
-  spatial_parameters(x)[[1]]<- within(
-    spatial_parameters(x)[[1]],{
-      par_names<<- c("par_space_sd","par_space_rho","par_space_nu")
-      par<- sdr_mat[par_names,1]
-      se<- sdr_mat[par_names,2]
-    }
-  )
+  spatial_parameters(x)[[1]]$par<- sdr_est$space_pars
+  spatial_parameters(x)[[1]]$se<- sdr_se$space_pars
 
   # Time parameters
-  time_parameters(x)[[1]]<- within(
-    time_parameters(x)[[1]],{
-      par_names<<- c("par_time_mu","par_time_ar1","par_time_sd")
-      par<- sdr_mat[par_names,1]
-      se<- sdr_mat[par_names,2]
-    }
-  )
+  time_parameters(x)[[1]]$par<- sdr_est$time_pars
+  time_parameters(x)[[1]]$se<- sdr_se$time_pars
 
   # Temporal random effects
-  time_effects(x)$w[,1]<- as.list(sdr(y),"Estimate")$time_effects
-  time_effects(x)$se[,1]<- as.list(sdr(y),"Std. Error")$time_effects
+  time_effects(x)$w[,1]<- sdr_est$time_effects
+  time_effects(x)$se[,1]<- sdr_se$time_effects
 
   # Spatio-temporal random effects
-  random_effects(x)$w[,,1]<- as.list(sdr(y),"Estimate")$proc_w
-  random_effects(x)$se[,,1]<- as.list(sdr(y),"Std. Error")$proc_w
+  random_effects(x)$w[,,1]<- sdr_est$proc_w
+  random_effects(x)$se[,,1]<- sdr_se$proc_w
 
-  # Fixed effects; need to be careful if no covariates
-  fixed_effects(x)[[1]]<- within(
-    fixed_effects(x)[[1]],{
-      par_names<<- c("par_mean_pars")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<-  sdr_mat[rownames(sdr_mat) %in% par_names,2]
-    }
-  )
+  # Fixed effects
+  fixed_effects(x)[[1]]$par<- sdr_est$mean_pars
+  fixed_effects(x)[[1]]$se<- sdr_se$mean_pars
 
-  # Response distribution parameters; need to be careful if no parameters
-  response_parameters(x)[[1]]<- within(
-    response_parameters(x)[[1]],{
-      par_names<<- c("par_sd","par_overdispersion","par_dispersion","par_scale","par_power")
-      par<- sdr_mat[rownames(sdr_mat) %in% par_names,1]
-      se<- sdr_mat[rownames(sdr_mat) %in% par_names,2]
-    }
-  )
+
+  # Response distribution parameters
+  response_parameters(x)[[1]]$par<- sdr_est$response_pars
+  response_parameters(x)[[1]]$se<- sdr_se$response_pars
 
   # Update the random effects corresponding to the observations
   resp_w_idx<- 1
-  resp_w<- sdr_mat[rownames(sdr_mat) == "resp_w",]
+  resp_w<- do.call(cbind,c(sdr_est["resp_w"],sdr_se["resp_w"]))
+  # sdr_mat[rownames(sdr_mat) == "resp_w",]
 
   for( i in seq(nrow(dat(x))) ) {
     if( length(edges(graph(x)$transient_graph)[[i]][["from"]]) == 1 ) {

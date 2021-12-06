@@ -11,7 +11,6 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   DATA_IVECTOR(y_time);
   DATA_VECTOR(obs_y);
-  DATA_VECTOR_INDICATOR(keep,obs_y); // Sets up TMB residuals if you want them
   DATA_STRUCT(ys_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(ys_dists,dag_dists); // See data_in.hpp
 
@@ -33,13 +32,9 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
-  PARAMETER(log_space_sd);
-  PARAMETER(log_space_rho);
-  PARAMETER(log_space_nu);
+  PARAMETER_VECTOR(working_space_pars);
   PARAMETER_VECTOR(time_effects);
-  PARAMETER(time_mu);
-  PARAMETER(logit_time_ar1);
-  PARAMETER(log_time_sd);
+  PARAMETER_VECTOR(working_time_pars);
   PARAMETER_ARRAY(proc_w);
   PARAMETER_VECTOR(pred_w);
 
@@ -63,12 +58,14 @@ Type staRVe_model(objective_function<Type>* obj) {
              response_pars(1) = 1.0/(1.0+exp(-working_response_pars(1)))+1.0; break;
     default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal, sd>0
   }
-  Type space_sd = exp(log_space_sd); // sd>0
-  Type space_rho = exp(log_space_rho); // rho>0
-  Type space_nu = exp(log_space_nu); // nu>0
-
-  Type time_ar1 = 2*invlogit(logit_time_ar1)-1; // -1 < ar1 < +1
-  Type time_sd = exp(log_time_sd); // sd>0
+  vector<Type> space_pars = working_space_pars;
+  switch(covar_code) {
+    default : space_pars = exp(working_space_pars); break; // Matern-types
+  }
+  vector<Type> time_pars = working_time_pars;
+  time_pars(0) = working_time_pars(0); // mu
+  time_pars(1) = 2*invlogit(working_time_pars(1))-1; // -1 < ar1 < +1
+  time_pars(2) = exp(working_time_pars(2)); // sd>0
 
   // Get graphs
 
@@ -84,38 +81,10 @@ Type staRVe_model(objective_function<Type>* obj) {
   vector<vector<vector<int> > > pred_ws_dag = pred_ws_edges.dag;
   vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
 
-  // Standardize distances (based on persistent graph) so rho doesn't scale with distance
-  // i.e. distance units don't matter
-  Type mean_dist = 0.0;
-  Type n = 0.0;
-  for( int i=0; i<ws_dist.size(); i++ ) {
-    mean_dist += ws_dist(i).sum();
-    n += ws_dist(i).size();
-  }
-  mean_dist *= 1/n;
-  for( int i=0; i<ys_dist.size(); i++ ) {
-    ys_dist(i) = ys_dist(i)/mean_dist;
-  }
-  for( int i=0; i<ws_dist.size(); i++ ) {
-    ws_dist(i) = ws_dist(i)/mean_dist;
-  }
-  for( int i=0; i<pred_ws_dist.size(); i++ ) {
-    pred_ws_dist(i) = pred_ws_dist(i)/mean_dist;
-  }
-  space_rho = space_rho/mean_dist;
 
   // Initialize all the objects used. The main objects of focus are
   // nngp<Type> process which can calculate the nll component for the random effects, and
   // observations<Type> obs which can calculate the nll component for the observations
-  covariance<Type> cov(space_sd,space_rho,space_nu,covar_code);
-
-  // Set up the response distribution and link function
-  inv_link_function inv_link = {link_code};
-  response_density y_density = {distribution_code};
-  glm<Type> family(inv_link,
-                   y_density,
-                   mean_pars,
-                   response_pars);
 
   // Initialize vectors used to slice out individual times for each of the
   // random effect / data streams. First element will give the index for the
@@ -135,10 +104,10 @@ Type staRVe_model(objective_function<Type>* obj) {
     // to mu
     Type smallNumber = pow(10,-5);
 
-    nll -= dnorm(time_effects(0),time_mu,smallNumber,true);
+    nll -= dnorm(time_effects(0),time_pars(0),smallNumber,true);
     SIMULATE{
       if( !conditional_sim ) {
-        time_effects(0) = time_mu;
+        time_effects(0) = time_pars(0);
       } else {}
     }
   } else {
@@ -146,19 +115,19 @@ Type staRVe_model(objective_function<Type>* obj) {
     matrix<Type> time_cov(time_effects.size(),time_effects.size());
     for(int i=0; i<time_cov.rows(); i++) {
       for(int j=0; j<time_cov.cols(); j++) {
-        time_cov(i,j) = pow(time_ar1,abs(i-j));
+        time_cov(i,j) = pow(time_pars(1),abs(i-j));
       }
     }
-    time_cov *= pow(time_sd,2);
+    time_cov *= pow(time_pars(2),2);
     // time_cov *= pow(time_sd,2)/(1-pow(time_ar1,2)); // time_sd gives sd of
     // innovations, this coefficient is the marginal variance
     MVNORM_t<Type> time_dist(time_cov);
 
-    nll += time_dist(time_effects-time_mu);
+    nll += time_dist(time_effects-time_pars(0));
     SIMULATE{
       if( !conditional_sim ) {
         time_dist.simulate(time_effects);
-        time_effects = time_effects+time_mu;
+        time_effects = time_effects+time_pars(0);
       } else {}
     }
   }
@@ -170,12 +139,11 @@ Type staRVe_model(objective_function<Type>* obj) {
   resp_w_segment = get_time_segment(resp_w_time,0);
   pred_w_segment = get_time_segment(pred_w_time,0);
 
-
   // cov = covariance function
   // proc_w = spatio-temporal random effects for this time
   // ws_dag = edge list for persistent graph
   // ws_dist = distances for persistent graph
-  nngp<Type> process(cov,
+  nngp<Type> process(covariance<Type>(space_pars(0),space_pars(1),space_pars(2),covar_code),
                      proc_w.col(0),
                      time_effects(0)+0*proc_w.col(0),
                      // ^ gives constant mean
@@ -184,22 +152,21 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   // process = spatio-temporal random effects, and related utilities
   // obs_y = response data
-  // keep = used for TMB residuals if wanted
   // ys_dag = edge list for transient graph
   // ys_dist = distances for transient graph
   // resp_w = additional spatio-temporal random effects needed for transient graph
   // mean_design = covariate data
   // sample.size = sample size info for binomial distribution
   // family = response distribution and link function
+  // Set up the response distribution and link function
   observations<Type> obs(process,
                          obs_y.segment(y_segment(0),y_segment(1)),
-                         keep.segment(y_segment(0),y_segment(1)),
                          ys_dag.segment(y_segment(0),y_segment(1)),
                          ys_dist.segment(y_segment(0),y_segment(1)),
                          resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                          matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
                          sample_size.segment(y_segment(0),y_segment(1)),
-                         family);
+                         glm<Type>({link_code},{distribution_code},mean_pars,response_pars));
 
   // pred_ws_dag = edge list for predictions
   // pred_ws_dist = distances for predictions
@@ -243,10 +210,9 @@ Type staRVe_model(objective_function<Type>* obj) {
     // Update the random effects and the mean function
     // the mean function here ensures a marginal AR(1) process at each location
     process.update_w(proc_w.col(time),
-                     time_effects(time) + time_ar1*(process.get_w()-time_effects(time-1)));
+                     time_effects(time) + time_pars(1)*(process.get_w()-time_effects(time-1)));
     // Update the data, covariates, transient graph, and extra random effects
     obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
-                 keep.segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
                  ys_dist.segment(y_segment(0),y_segment(1)),
                  resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
@@ -287,75 +253,14 @@ Type staRVe_model(objective_function<Type>* obj) {
     REPORT(obs_y);
   }
 
+  REPORT(response_pars);
+  ADREPORT(response_pars);
 
-  // Rename parameters so they're easily found on the R side
-  // ADREPORT lets you get standard errors
-  vector<Type> par_mean_pars = mean_pars;
-  REPORT(par_mean_pars);
-  ADREPORT(par_mean_pars);
+  REPORT(space_pars);
+  ADREPORT(space_pars);
 
-  // Cross-check distribution_code order with family.hpp
-  // switch statement doesn't work with REPORT and ADREPORT
-  if( distribution_code == 0 ) { // Normal
-    Type par_sd = response_pars(0);
-    REPORT(par_sd);
-    ADREPORT(par_sd);
-  } else if( distribution_code == 1 ) { // Poisson
-    // no extra pars
-  } else if( distribution_code == 2 ) { // Neg. Binomial
-    Type par_overdispersion = response_pars(0);
-    REPORT(par_overdispersion);
-    ADREPORT(par_overdispersion);
-  } else if( distribution_code == 3 ) { // Bernoulli
-    // no extra pars
-  } else if( distribution_code == 4 ) { // Gamma
-    Type par_sd = response_pars(0);
-    REPORT(par_sd);
-    ADREPORT(par_sd);
-  } else if( distribution_code == 5 ) { // lognormal
-    Type par_sd = response_pars(0);
-    REPORT(par_sd);
-    ADREPORT(par_sd);
-  } else if( distribution_code == 6 ) { // Binomial
-    // no extra pars
-  } else if( distribution_code == 7 ) { // AtLeastOneBinomial
-      // no extra pars
-  } else if ( distribution_code == 8 ) { // Conway-Maxwell-Poisson
-    Type par_dispersion = response_pars(0);
-    REPORT(par_dispersion);
-    ADREPORT(par_dispersion);
-  } else if ( distribution_code == 9 ) { // Tweedie
-    Type par_scale = response_pars(0);
-    REPORT(par_scale);
-    ADREPORT(par_scale);
-    Type par_power = response_pars(1);
-    REPORT(par_power);
-    ADREPORT(par_power);
-  } else {}
-
-  Type par_space_sd = space_sd;
-  REPORT(par_space_sd);
-  ADREPORT(par_space_sd);
-
-  Type par_space_rho = space_rho*mean_dist;
-  REPORT(par_space_rho);
-  ADREPORT(par_space_rho);
-
-  Type par_space_nu = space_nu;
-  REPORT(par_space_nu);
-  ADREPORT(par_space_nu);
-
-  Type par_time_mu = time_mu;
-  REPORT(par_time_mu);
-  ADREPORT(par_time_mu);
-
-  Type par_time_ar1 = time_ar1;
-  REPORT(par_time_ar1);
-  ADREPORT(par_time_ar1);
-
-  Type par_time_sd = time_sd;
-  REPORT(par_time_sd);
-  ADREPORT(par_time_sd);
+  REPORT(time_pars);
+  ADREPORT(time_pars);
 
   return(nll+pred_nll);
 }
