@@ -17,7 +17,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_IVECTOR(resp_w_time);
 
   DATA_MATRIX(mean_design);
-  DATA_VECTOR(sample_size);
+  DATA_MATRIX(sample_size); // [idx,var]
 
   DATA_INTEGER(covar_code);
   DATA_STRUCT(ws_edges,directed_graph);
@@ -168,7 +168,7 @@ Type staRVe_model(objective_function<Type>* obj) {
                          ys_dist.segment(y_segment(0),y_segment(1)),
                          resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                          matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-                         sample_size.segment(y_segment(0),y_segment(1)),
+                         sample_size.col(0).segment(y_segment(0),y_segment(1)),
                          glm<Type>({link_code(0)},
                                    {distribution_code(0)},
                                    mean_pars,
@@ -224,7 +224,7 @@ Type staRVe_model(objective_function<Type>* obj) {
                  ys_dist.segment(y_segment(0),y_segment(1)),
                  resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                  matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-                 sample_size.segment(y_segment(0),y_segment(1)));
+                 sample_size.col(0).segment(y_segment(0),y_segment(1)));
 
     // Likelihood component for predictions
     if( pred_w_segment(1) > 0 ) {
