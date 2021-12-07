@@ -141,16 +141,20 @@ setMethod(f = "staRVe_simulate",
     if( length(edges(graph(model)$transient_graph)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effects from persistent graph
       this_year<- dat(model)[i,.time_name(model),drop=T]
-      predictions(data_predictions(model))$w[i,1]<- as.numeric(
-        random_effects(model)["w",
-                              edges(graph(model)$transient_graph)[[i]][["from"]],
-                              which(stars::st_get_dimension_values(random_effects(model),.time_name(model))==this_year),
-                              1,
-                              drop=T]
-      )
+      for( v in seq(.n_response(formula(model))) ) {
+        predictions(data_predictions(model))$w[i,v]<- as.numeric(
+          random_effects(model)["w",
+                                edges(graph(model)$transient_graph)[[i]][["from"]],
+                                which(stars::st_get_dimension_values(random_effects(model),.time_name(model))==this_year),
+                                v,
+                                drop=T]
+        )
+      }
     } else {
       # If length > 1, use random effects from resp_w
-      predictions(data_predictions(model))$w[i,1]<- sims$resp_w[resp_w_idx]
+      for( v in seq(.n_response(formula(model))) ) {
+        predictions(data_predictions(model))$w[i,v]<- sims$resp_w[resp_w_idx,v]
+      }
       resp_w_idx<- resp_w_idx+1
     }
   }

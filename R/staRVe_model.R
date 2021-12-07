@@ -767,9 +767,10 @@ setMethod(f = "TMB_in",
         fixed_effects(x)[[v]][colnames(data$mean_design),"par"]
       })
     ),
-    resp_w = numeric(
-        sum(sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1) # How many extra random effects?
-      ),
+    resp_w = matrix(0,
+      nrow = sum(sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1), # How many extra random effects?
+      ncol = .n_response(formula(x))
+    ),
     working_space_pars = do.call(.cbind_no_recycle,
       lapply(seq(.n_response(formula(x))),function(v) {
         switch(covariance_function(x)[[v]],
@@ -911,26 +912,25 @@ setMethod(f = "update_staRVe_model",
 
   # Update the random effects corresponding to the observations
   resp_w_idx<- 1
-  resp_w<- do.call(cbind,c(sdr_est["resp_w"],sdr_se["resp_w"]))
-  # sdr_mat[rownames(sdr_mat) == "resp_w",]
-
   for( i in seq(nrow(dat(x))) ) {
     if( length(edges(graph(x)$transient_graph)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effect from persistent graph
       this_year<- dat(x)[i,.time_name(x),drop=T]
-      # makes it really slow because sf checks spatial bounds
-      w_se<- as.numeric(random_effects(x)[c("w","se"),
-                                          edges(graph(x)$transient_graph)[[i]][["from"]],
-                                          which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
-                                          1, # ONLY FIRST VARIABLE
-                                          drop=T])
-      predictions(data_predictions(x))[["w"]][i,1]<- w_se[[1]]
-      predictions(data_predictions(x))[["w_se"]][i,1]<- w_se[[2]]
+      for( v in seq(.n_response(formula(x))) ) {
+        w_se<- as.numeric(random_effects(x)[c("w","se"),
+                                            edges(graph(x)$transient_graph)[[i]][["from"]],
+                                            which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
+                                            v,
+                                            drop=T])
+        predictions(data_predictions(x))[["w"]][i,v]<- w_se[[v]]
+        predictions(data_predictions(x))[["w_se"]][i,v]<- w_se[[v]]
+      }
     } else {
       # if length > 1, take random effect from resp_w
-      w_se<- resp_w[resp_w_idx,]
-      predictions(data_predictions(x))[["w"]][i,1]<- w_se[[1]]
-      predictions(data_predictions(x))[["w_se"]][i,1]<- w_se[[2]]
+      for( v in seq(.n_response(formula(x))) ) {
+        predictions(data_predictions(x))[["w"]][i,v]<- sdr_est$resp_w[resp_w_idx,v]
+        predictions(data_predictions(x))[["w_se"]][i,v]<- sdr_se$resp_w[resp_w_idx,v]
+      }
       resp_w_idx<- resp_w_idx+1
     }
   }

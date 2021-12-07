@@ -32,7 +32,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_MATRIX(working_response_pars); // Response distribution parameters [par,var]
   // Columns may have trailing NAs if distribution haven't different # of parameters
   PARAMETER_MATRIX(mean_pars); // Fixed effects B*X [covariate,var]
-  PARAMETER_VECTOR(resp_w);
+  PARAMETER_MATRIX(resp_w); // [idx,var]
   PARAMETER_MATRIX(working_space_pars); // [par,var]
   PARAMETER_VECTOR(time_effects);
   PARAMETER_VECTOR(working_time_pars);
@@ -169,7 +169,7 @@ Type staRVe_model(objective_function<Type>* obj) {
                            obs_y.col(v).segment(y_segment(0),y_segment(1)),
                            ys_dag.segment(y_segment(0),y_segment(1)),
                            ys_dist.segment(y_segment(0),y_segment(1)),
-                           resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+                           resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)),
                            matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
                            sample_size.col(v).segment(y_segment(0),y_segment(1)),
                            glm<Type>({link_code(v)},
@@ -195,14 +195,14 @@ Type staRVe_model(objective_function<Type>* obj) {
     } else {}
 
     // Add likelihood components to joint likelihood
-    nll -= (v==0 ? 1 : 0)*(process.loglikelihood()
-              + obs.resp_w_loglikelihood())
+    nll -= (v==0 ? Type(1.0) : Type(0.0))*process.loglikelihood()
+              + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effects, if desired
         proc_w.col(0) = process.simulate();
-        resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+        resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
       obs_y.col(v).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
@@ -225,7 +225,7 @@ Type staRVe_model(objective_function<Type>* obj) {
       obs.update_y(obs_y.col(v).segment(y_segment(0),y_segment(1)),
                    ys_dag.segment(y_segment(0),y_segment(1)),
                    ys_dist.segment(y_segment(0),y_segment(1)),
-                   resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+                   resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)),
                    matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
                    sample_size.col(v).segment(y_segment(0),y_segment(1)));
 
@@ -240,15 +240,15 @@ Type staRVe_model(objective_function<Type>* obj) {
         // have_set_pred_cache = true;
       } else {}
 
-      nll -= (v == 0 ? 1 : 0)*(process.loglikelihood()
-                + obs.resp_w_loglikelihood())
+      nll -= (v == 0 ? Type(1.0) : Type(0.0))*process.loglikelihood()
+                + obs.resp_w_loglikelihood()
                 + obs.y_loglikelihood();
 
       SIMULATE{
         if( !conditional_sim ) {
           // Simulate new random effecst
           proc_w.col(time) = process.simulate();
-          resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+          resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
         } else {}
         // Simulate new response data
         obs_y.col(v).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
