@@ -662,7 +662,7 @@ setMethod(f = "TMB_in",
     model = "staRVe_model",
     # Convert distribution and link (char) to (int)
     distribution_code = .distribution_to_code(response_distribution(x)),
-    link_code = .link_to_code(link_function(x)),
+    link_code = .link_to_code(link_function(x)[[1]]),
     # Get time index, observations, and graph for observations
     y_time = c(dat(x)[,.time_name(x),drop=T]),
     obs_y = .response_from_formula(formula(x),dat(x))[[1]], # ONLY FIRST VARIABLE
@@ -706,56 +706,60 @@ setMethod(f = "TMB_in",
   ### but if they're fixed leave them as is.
   ### Need to convert the natural scale parameters to working scale as well
   para<- list(
-    working_response_pars = switch(response_distribution(x)[[1]], # ONLY FIRST VARIABLE
-      gaussian = ifelse( # Normal; std. dev. > 0
-            response_parameters(x)[[1]]["sd","par"] > 0 ||
-            response_parameters(x)[[1]]["sd","fixed"] == T,
-          log(response_parameters(x)[[1]]["sd","par"]),
-          log(1)
-        ),
-      poisson = numeric(0), # Poisson; NA
-      `negative binomial` = ifelse( # Neg. Binom.; overdispersion >= 1
-            response_parameters(x)[[1]]["overdispersion","par"] >= 1 ||
-            response_parameters(x)[[1]]["overdispersion","fixed"] == T,
-          log(response_parameters(x)[[1]]["overdispersion","par"]-1),
-          log(1)
-        ),
-      bernoulli = numeric(0), # Bernoulli; NA
-      gamma = ifelse( # Gamma; std. dev. > 0
-            response_parameters(x)[[1]]["sd","par"] > 0 ||
-            response_parameters(x)[[1]]["sd","fixed"] == T,
-          log(response_parameters(x)[[1]]["sd","par"]),
-          log(1)
-        ), # Gamma; std. dev.
-      lognormal = ifelse( # Log-Normal; std. dev. > 0
-            response_parameters(x)[[1]]["sd","par"] > 0 ||
-            response_parameters(x)[[1]]["sd","fixed"] == T,
-          log(response_parameters(x)[[1]]["sd","par"]),
-          log(1)
-        ), # Log-normal; std. dev.
-      binomial = numeric(0), # Binomial; NA
-      atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
-      compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
-            response_parameters(x)[[1]]["dispersion","par"] > 0 ||
-            response_parameters(x)[[1]]["dispersion","fixed"] == T,
-          -log(response_parameters(x)[[1]]["dispersion","par"]),
-          # negative sign since we want >0 to be over-dispersion
-          -log(1)
-        ),
-      tweedie = c( # tweedie
-        ifelse( # dispersion>0
-          response_parameters(x)[[1]]["dispersion","par"] > 0 ||
-          response_parameters(x)[[1]]["dispersion","fixed"] == T,
-          log(response_parameters(x)[[1]]["dispersion","par"]),
-          log(1)
-        ),
-        ifelse( # 1<power<2
-          (0 < response_parameters(x)[[1]]["power","par"] &&
-           response_parameters(x)[[1]]["power","par"] < 1) ||
-          response_parameters(x)[[1]]["power","par"] == T,
-          qlogis(response_parameters(x)[[1]]["power","par"]-1),
-          qlogis(1.5-1)
-        )
+    working_response_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(rdi) {
+        switch(response_distribution(x)[[rdi]],
+          gaussian = ifelse( # Normal; std. dev. > 0
+                response_parameters(x)[[rdi]]["sd","par"] > 0 ||
+                response_parameters(x)[[rdi]]["sd","fixed"] == T,
+              log(response_parameters(x)[[rdi]]["sd","par"]),
+              log(1)
+            ),
+          poisson = numeric(0), # Poisson; NA
+          `negative binomial` = ifelse( # Neg. Binom.; overdispersion >= 1
+                response_parameters(x)[[rdi]]["overdispersion","par"] >= 1 ||
+                response_parameters(x)[[rdi]]["overdispersion","fixed"] == T,
+              log(response_parameters(x)[[rdi]]["overdispersion","par"]-1),
+              log(1)
+            ),
+          bernoulli = numeric(0), # Bernoulli; NA
+          gamma = ifelse( # Gamma; std. dev. > 0
+                response_parameters(x)[[rdi]]["sd","par"] > 0 ||
+                response_parameters(x)[[rdi]]["sd","fixed"] == T,
+              log(response_parameters(x)[[rdi]]["sd","par"]),
+              log(1)
+            ), # Gamma; std. dev.
+          lognormal = ifelse( # Log-Normal; std. dev. > 0
+                response_parameters(x)[[rdi]]["sd","par"] > 0 ||
+                response_parameters(x)[[rdi]]["sd","fixed"] == T,
+              log(response_parameters(x)[[rdi]]["sd","par"]),
+              log(1)
+            ), # Log-normal; std. dev.
+          binomial = numeric(0), # Binomial; NA
+          atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
+          compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
+                response_parameters(x)[[rdi]]["dispersion","par"] > 0 ||
+                response_parameters(x)[[rdi]]["dispersion","fixed"] == T,
+              -log(response_parameters(x)[[rdi]]["dispersion","par"]),
+              # negative sign since we want >0 to be over-dispersion
+              -log(1)
+            ),
+          tweedie = c( # tweedie
+            ifelse( # dispersion>0
+              response_parameters(x)[[rdi]]["dispersion","par"] > 0 ||
+              response_parameters(x)[[rdi]]["dispersion","fixed"] == T,
+              log(response_parameters(x)[[rdi]]["dispersion","par"]),
+              log(1)
+            ),
+            ifelse( # 1<power<2
+              (0 < response_parameters(x)[[rdi]]["power","par"] &&
+               response_parameters(x)[[rdi]]["power","par"] < 1) ||
+              response_parameters(x)[[rdi]]["power","par"] == T,
+              qlogis(response_parameters(x)[[rdi]]["power","par"]-1),
+              qlogis(1.5-1)
+            )
+          )
+        )}
       )
     ),
     mean_pars = fixed_effects(x)[[1]][colnames(data$mean_design),"par"],
@@ -814,14 +818,22 @@ setMethod(f = "TMB_in",
   ### Which parameters should be fixed at their value and not estimated?
   ###
   map<- list(
-    working_response_pars = switch((length(para$working_response_pars) > 0)+1,
-      logical(0),
-      response_parameters(x)[[1]][,"fixed"]
+    working_response_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        switch((nrow(response_parameters(x)[[v]]) > 0)+1,
+          logical(0),
+          response_parameters(x)[[v]][,"fixed"]
+        )
+      })
     ),
     mean_pars = fixed_effects(x)[[1]][colnames(data$mean_design),"fixed"],
     working_space_pars = spatial_parameters(x)[[1]][,"fixed"],
     working_time_pars = time_parameters(x)[[1]][,"fixed"]
   )
+  map<- lapply(map,function(x) {
+    x[is.na(x)]<- TRUE
+    return(x)
+  })
   map<- lapply(map,.logical_to_map)
 
   return(list(
@@ -868,10 +880,11 @@ setMethod(f = "update_staRVe_model",
   fixed_effects(x)[[1]]$par<- sdr_est$mean_pars
   fixed_effects(x)[[1]]$se<- sdr_se$mean_pars
 
-
   # Response distribution parameters
-  response_parameters(x)[[1]]$par<- sdr_est$response_pars
-  response_parameters(x)[[1]]$se<- sdr_se$response_pars
+  for( i in seq(.n_response(formula(x))) ) {
+    response_parameters(x)[[i]]$par<- sdr_est$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
+    response_parameters(x)[[i]]$se<- sdr_se$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
+  }
 
   # Update the random effects corresponding to the observations
   resp_w_idx<- 1

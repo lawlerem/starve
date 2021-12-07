@@ -127,6 +127,17 @@ NULL
 
 # C
 
+# cbind.matrix but instead of recycling short vectors it pads with NA
+.cbind_no_recycle<- function(...) {
+  args<- list(...)
+  n<- max(do.call(c,lapply(args,length)))
+  args<- lapply(args,function(x) {
+    length(x)<- n
+    return(x)
+  })
+  return(do.call(cbind,args))
+}
+
 #' Retrieve a spatial covariance function from a formula.
 #'
 #' @param x A formula object with a space(covariance,nu) term. The covariance

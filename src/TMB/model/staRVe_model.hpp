@@ -6,7 +6,7 @@
 template<class Type>
 Type staRVe_model(objective_function<Type>* obj) {
   // Read in data / parameters / random effects from R
-  DATA_INTEGER(distribution_code);
+  DATA_IVECTOR(distribution_code);
   DATA_INTEGER(link_code);
 
   DATA_IVECTOR(y_time);
@@ -29,7 +29,8 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   DATA_INTEGER(conditional_sim); // If true, don't simulate w
 
-  PARAMETER_VECTOR(working_response_pars); // Response distribution parameters except for mean
+  PARAMETER_MATRIX(working_response_pars); // Response distribution parameters [par,var]
+  // Columns may have trailing NAs if distribution haven't different # of parameters
   PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
   PARAMETER_VECTOR(resp_w);
   PARAMETER_VECTOR(working_space_pars);
@@ -42,21 +43,23 @@ Type staRVe_model(objective_function<Type>* obj) {
   // Convert parameters from working scale to natural scale
 
   // Cross-check distribution_code order with family.hpp
-  vector<Type> response_pars = working_response_pars;
-  switch(distribution_code) {
-    case 0 : response_pars(0) = exp(working_response_pars(0)); break; // Normal, sd>0
-    case 1 : break; // Poisson, NA
-    case 2 : response_pars(0) = exp(working_response_pars(0))+1; break; // Neg. Binom., overdispersion > 1
-    case 3 : break; // Bernoulli, NA
-    case 4 : response_pars(0) = exp(working_response_pars(0)); break; // Gamma, sd>0
-    case 5 : response_pars(0) = exp(working_response_pars(0)); break; // Log-Normal, sd>0
-    case 6 : break; // Binomial, NA
-    case 7 : break; // atLeastOneBinomial, NA
-    case 8 : response_pars(0) = exp(working_response_pars(0)); break; // Conway-Maxwell-Poisson, dispersion > 0
-    case 9 : response_pars(0) = exp(working_response_pars(0)); // Tweedie, scale > 0
-             // response_pars(1) = plogis(working_response_pars(0))+1; break;// 1 < power < 2
-             response_pars(1) = 1.0/(1.0+exp(-working_response_pars(1)))+1.0; break;
-    default : response_pars(0) = exp(-1*working_response_pars(0)); break; // Normal, sd>0
+  matrix<Type> response_pars = working_response_pars;
+  for(int v=0; v<distribution_code.size(); v++) {
+    switch(distribution_code(v)) {
+      case 0 : response_pars(0,v) = exp(working_response_pars(0,v)); break; // Normal, sd>0
+      case 1 : break; // Poisson, NA
+      case 2 : response_pars(0,v) = exp(working_response_pars(0,v))+1; break; // Neg. Binom., overdispersion > 1
+      case 3 : break; // Bernoulli, NA
+      case 4 : response_pars(0,v) = exp(working_response_pars(0,v)); break; // Gamma, sd>0
+      case 5 : response_pars(0,v) = exp(working_response_pars(0,v)); break; // Log-Normal, sd>0
+      case 6 : break; // Binomial, NA
+      case 7 : break; // atLeastOneBinomial, NA
+      case 8 : response_pars(0,v) = exp(working_response_pars(0,v)); break; // Conway-Maxwell-Poisson, dispersion > 0
+      case 9 : response_pars(0,v) = exp(working_response_pars(0,v)); // Tweedie, scale > 0
+               // response_pars(1) = plogis(working_response_pars(0))+1; break;// 1 < power < 2
+               response_pars(1,v) = 1.0/(1.0+exp(-working_response_pars(1,v)))+1.0; break;
+      default : response_pars(0,v) = exp(-1*working_response_pars(0,v)); break; // Normal, sd>0
+    }
   }
   vector<Type> space_pars = working_space_pars;
   switch(covar_code) {
@@ -166,7 +169,11 @@ Type staRVe_model(objective_function<Type>* obj) {
                          resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                          matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
                          sample_size.segment(y_segment(0),y_segment(1)),
-                         glm<Type>({link_code},{distribution_code},mean_pars,response_pars));
+                         glm<Type>({link_code},
+                                   {distribution_code(0)},
+                                   mean_pars,
+                                   vector<Type>(response_pars.col(0)))
+                        );
 
   // pred_ws_dag = edge list for predictions
   // pred_ws_dist = distances for predictions
