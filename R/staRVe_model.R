@@ -893,8 +893,10 @@ setMethod(f = "update_staRVe_model",
   # Response distribution parameters
   for( i in seq(.n_response(formula(x))) ) {
     # Need seq(nrow(respone_parameters... to get rid of trailing NAs
-    response_parameters(x)[[i]]$par<- sdr_est$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
-    response_parameters(x)[[i]]$se<- sdr_se$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
+    if( nrow(response_parameters(x)[[i]]) > 0 ) {
+      response_parameters(x)[[i]]$par<- sdr_est$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
+      response_parameters(x)[[i]]$se<- sdr_se$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
+    } else {}
   }
 
   # Update the random effects corresponding to the observations

@@ -146,109 +146,111 @@ Type staRVe_model(objective_function<Type>* obj) {
   // proc_w = spatio-temporal random effects for this time
   // ws_dag = edge list for persistent graph
   // ws_dist = distances for persistent graph
-  nngp<Type> process(covariance<Type>(space_pars(0),space_pars(1),space_pars(2),covar_code),
-                     proc_w.col(0),
-                     time_effects(0)+0*proc_w.col(0),
-                     // ^ gives constant mean
-                     ws_dag,
-                     ws_dist);
+  for(int v=0; v<obs_y.cols(); v++) {
+    nngp<Type> process(covariance<Type>(space_pars(0),space_pars(1),space_pars(2),covar_code),
+                       proc_w.col(0),
+                       time_effects(0)+0*proc_w.col(0),
+                       // ^ gives constant mean
+                       ws_dag,
+                       ws_dist);
 
-  // process = spatio-temporal random effects, and related utilities
-  // obs_y = response data
-  // ys_dag = edge list for transient graph
-  // ys_dist = distances for transient graph
-  // resp_w = additional spatio-temporal random effects needed for transient graph
-  // mean_design = covariate data
-  // sample.size = sample size info for binomial distribution
-  // family = response distribution and link function
-  // Set up the response distribution and link function
-  observations<Type> obs(process,
-                         obs_y.col(0).segment(y_segment(0),y_segment(1)),
-                         ys_dag.segment(y_segment(0),y_segment(1)),
-                         ys_dist.segment(y_segment(0),y_segment(1)),
-                         resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
-                         matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-                         sample_size.col(0).segment(y_segment(0),y_segment(1)),
-                         glm<Type>({link_code(0)},
-                                   {distribution_code(0)},
-                                   mean_pars.col(0),
-                                   vector<Type>(response_pars.col(0)))
-                        );
+    // process = spatio-temporal random effects, and related utilities
+    // obs_y = response data
+    // ys_dag = edge list for transient graph
+    // ys_dist = distances for transient graph
+    // resp_w = additional spatio-temporal random effects needed for transient graph
+    // mean_design = covariate data
+    // sample.size = sample size info for binomial distribution
+    // family = response distribution and link function
+    // Set up the response distribution and link function
+    observations<Type> obs(process,
+                           obs_y.col(v).segment(y_segment(0),y_segment(1)),
+                           ys_dag.segment(y_segment(0),y_segment(1)),
+                           ys_dist.segment(y_segment(0),y_segment(1)),
+                           resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+                           matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+                           sample_size.col(v).segment(y_segment(0),y_segment(1)),
+                           glm<Type>({link_code(v)},
+                                     {distribution_code(v)},
+                                     mean_pars.col(v),
+                                     vector<Type>(response_pars.col(v)))
+                          );
 
-  // pred_ws_dag = edge list for predictions
-  // pred_ws_dist = distances for predictions
-  // pred_w = spatio-temporal random effects for predictions
-  // pred_nll = likelihood component for predictions, passed by reference
-  //   so it's updated by calling predict_w
-  bool have_set_pred_cache = false;
-  if( pred_w_segment(1) > 0 ) {
-    process.predict_w(pred_ws_dag,
-                      pred_ws_dist,
-                      pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                      pred_nll,
-                      have_set_pred_cache, // Don't use cache (doesn't exist yet)
-                      not have_set_pred_cache); // Write the cache
-    // have_set_pred_cache = true;
-  } else {}
-
-  // Add likelihood components to joint likelihood
-  nll -= process.loglikelihood()
-            + obs.resp_w_loglikelihood()
-            + obs.y_loglikelihood();
-  SIMULATE{
-    if( !conditional_sim ) {
-      // Simulate new random effects, if desired
-      proc_w.col(0) = process.simulate();
-      resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
-    } else {}
-    // Simulate new response data
-    obs_y.col(0).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
-  }
-
-
-  // Update process and observations for each time step,
-  // add their likelihood contributions
-  for(int time=1; time<proc_w.cols(); time++) {
-    // Get indices for this time
-    y_segment = get_time_segment(y_time,time);
-    resp_w_segment = get_time_segment(resp_w_time,time);
-    pred_w_segment = get_time_segment(pred_w_time,time);
-
-    // Update the random effects and the mean function
-    // the mean function here ensures a marginal AR(1) process at each location
-    process.update_w(proc_w.col(time),
-                     time_effects(time) + time_pars(1)*(process.get_w()-time_effects(time-1)));
-    // Update the data, covariates, transient graph, and extra random effects
-    obs.update_y(obs_y.col(0).segment(y_segment(0),y_segment(1)),
-                 ys_dag.segment(y_segment(0),y_segment(1)),
-                 ys_dist.segment(y_segment(0),y_segment(1)),
-                 resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
-                 matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
-                 sample_size.col(0).segment(y_segment(0),y_segment(1)));
-
-    // Likelihood component for predictions
+    // pred_ws_dag = edge list for predictions
+    // pred_ws_dist = distances for predictions
+    // pred_w = spatio-temporal random effects for predictions
+    // pred_nll = likelihood component for predictions, passed by reference
+    //   so it's updated by calling predict_w
+    bool have_set_pred_cache = false;
     if( pred_w_segment(1) > 0 ) {
-    process.predict_w(pred_ws_dag,
-                      pred_ws_dist,
-                      pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
-                      pred_nll,
-                      have_set_pred_cache, // Use cache
-                      not have_set_pred_cache); // Don't overwrite cache
+      process.predict_w(pred_ws_dag,
+                        pred_ws_dist,
+                        pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                        pred_nll,
+                        have_set_pred_cache, // Don't use cache (doesn't exist yet)
+                        not have_set_pred_cache); // Write the cache
       // have_set_pred_cache = true;
     } else {}
 
-    nll -= process.loglikelihood()
-              + obs.resp_w_loglikelihood()
+    // Add likelihood components to joint likelihood
+    nll -= (v==0 ? 1 : 0)*(process.loglikelihood()
+              + obs.resp_w_loglikelihood())
               + obs.y_loglikelihood();
-
     SIMULATE{
       if( !conditional_sim ) {
-        // Simulate new random effecst
-        proc_w.col(time) = process.simulate();
+        // Simulate new random effects, if desired
+        proc_w.col(0) = process.simulate();
         resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
-      obs_y.col(0).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+      obs_y.col(v).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+    }
+
+
+    // Update process and observations for each time step,
+    // add their likelihood contributions
+    for(int time=1; time<proc_w.cols(); time++) {
+      // Get indices for this time
+      y_segment = get_time_segment(y_time,time);
+      resp_w_segment = get_time_segment(resp_w_time,time);
+      pred_w_segment = get_time_segment(pred_w_time,time);
+
+      // Update the random effects and the mean function
+      // the mean function here ensures a marginal AR(1) process at each location
+      process.update_w(proc_w.col(time),
+                       time_effects(time) + time_pars(1)*(process.get_w()-time_effects(time-1)));
+      // Update the data, covariates, transient graph, and extra random effects
+      obs.update_y(obs_y.col(v).segment(y_segment(0),y_segment(1)),
+                   ys_dag.segment(y_segment(0),y_segment(1)),
+                   ys_dist.segment(y_segment(0),y_segment(1)),
+                   resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
+                   matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
+                   sample_size.col(v).segment(y_segment(0),y_segment(1)));
+
+      // Likelihood component for predictions
+      if( pred_w_segment(1) > 0 ) {
+      process.predict_w(pred_ws_dag,
+                        pred_ws_dist,
+                        pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                        pred_nll,
+                        have_set_pred_cache, // Use cache
+                        not have_set_pred_cache); // Don't overwrite cache
+        // have_set_pred_cache = true;
+      } else {}
+
+      nll -= (v == 0 ? 1 : 0)*(process.loglikelihood()
+                + obs.resp_w_loglikelihood())
+                + obs.y_loglikelihood();
+
+      SIMULATE{
+        if( !conditional_sim ) {
+          // Simulate new random effecst
+          proc_w.col(time) = process.simulate();
+          resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+        } else {}
+        // Simulate new response data
+        obs_y.col(v).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+      }
     }
   }
 
