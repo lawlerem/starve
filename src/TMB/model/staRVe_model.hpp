@@ -6,11 +6,11 @@
 template<class Type>
 Type staRVe_model(objective_function<Type>* obj) {
   // Read in data / parameters / random effects from R
-  DATA_IVECTOR(distribution_code);
-  DATA_IVECTOR(link_code);
+  DATA_IVECTOR(distribution_code); // [var]
+  DATA_IVECTOR(link_code); // [var]
 
   DATA_IVECTOR(y_time);
-  DATA_VECTOR(obs_y);
+  DATA_MATRIX(obs_y); // [idx,var]
   DATA_STRUCT(ys_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(ys_dists,dag_dists); // See data_in.hpp
 
@@ -163,7 +163,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   // family = response distribution and link function
   // Set up the response distribution and link function
   observations<Type> obs(process,
-                         obs_y.segment(y_segment(0),y_segment(1)),
+                         obs_y.col(0).segment(y_segment(0),y_segment(1)),
                          ys_dag.segment(y_segment(0),y_segment(1)),
                          ys_dist.segment(y_segment(0),y_segment(1)),
                          resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
@@ -202,7 +202,7 @@ Type staRVe_model(objective_function<Type>* obj) {
       resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
     } else {}
     // Simulate new response data
-    obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+    obs_y.col(0).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
   }
 
 
@@ -219,7 +219,7 @@ Type staRVe_model(objective_function<Type>* obj) {
     process.update_w(proc_w.col(time),
                      time_effects(time) + time_pars(1)*(process.get_w()-time_effects(time-1)));
     // Update the data, covariates, transient graph, and extra random effects
-    obs.update_y(obs_y.segment(y_segment(0),y_segment(1)),
+    obs.update_y(obs_y.col(0).segment(y_segment(0),y_segment(1)),
                  ys_dag.segment(y_segment(0),y_segment(1)),
                  ys_dist.segment(y_segment(0),y_segment(1)),
                  resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
@@ -248,7 +248,7 @@ Type staRVe_model(objective_function<Type>* obj) {
         resp_w.segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
-      obs_y.segment(y_segment(0),y_segment(1)) = obs.simulate_y();
+      obs_y.col(0).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
     }
   }
 

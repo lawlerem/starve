@@ -665,7 +665,7 @@ setMethod(f = "TMB_in",
     link_code = .link_to_code(link_function(x)),
     # Get time index, observations, and graph for observations
     y_time = c(dat(x)[,.time_name(x),drop=T]),
-    obs_y = .response_from_formula(formula(x),dat(x))[[1]], # ONLY FIRST VARIABLE
+    obs_y = as.matrix(.response_from_formula(formula(x),dat(x))),
     ys_edges = edges(idxR_to_C(graph(x)$transient_graph)),
     ys_dists = distances(graph(x)$transient_graph),
     # Get time index of random effects in transient graph
