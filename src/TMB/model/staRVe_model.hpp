@@ -36,7 +36,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_MATRIX(working_space_pars); // [par,var]
   PARAMETER_VECTOR(time_effects);
   PARAMETER_VECTOR(working_time_pars);
-  PARAMETER_ARRAY(proc_w);
+  PARAMETER_ARRAY(proc_w); // [space,time,var]
   PARAMETER_VECTOR(pred_w);
 
 
@@ -150,8 +150,8 @@ Type staRVe_model(objective_function<Type>* obj) {
   // ws_dist = distances for persistent graph
   for(int v=0; v<obs_y.cols(); v++) {
     nngp<Type> process(covariance<Type>(space_pars(0,v),space_pars(1,v),space_pars(2,v),covar_code(v)),
-                       proc_w.col(0),
-                       time_effects(0)+0*proc_w.col(0),
+                       proc_w.col(v).col(0),
+                       time_effects(0)+0*proc_w.col(v).col(0),
                        // ^ gives constant mean
                        ws_dag,
                        ws_dist);
@@ -195,13 +195,14 @@ Type staRVe_model(objective_function<Type>* obj) {
     } else {}
 
     // Add likelihood components to joint likelihood
-    nll -= (v==0 ? Type(1.0) : Type(0.0))*process.loglikelihood()
+    nll -= process.loglikelihood()
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
+
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effects, if desired
-        proc_w.col(0) = process.simulate();
+        proc_w.col(v).col(0) = process.simulate();
         resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
@@ -211,7 +212,7 @@ Type staRVe_model(objective_function<Type>* obj) {
 
     // Update process and observations for each time step,
     // add their likelihood contributions
-    for(int time=1; time<proc_w.cols(); time++) {
+    for(int time=1; time<proc_w.col(v).cols(); time++) {
       // Get indices for this time
       y_segment = get_time_segment(y_time,time);
       resp_w_segment = get_time_segment(resp_w_time,time);
@@ -219,7 +220,7 @@ Type staRVe_model(objective_function<Type>* obj) {
 
       // Update the random effects and the mean function
       // the mean function here ensures a marginal AR(1) process at each location
-      process.update_w(proc_w.col(time),
+      process.update_w(proc_w.col(v).col(time),
                        time_effects(time) + time_pars(1)*(process.get_w()-time_effects(time-1)));
       // Update the data, covariates, transient graph, and extra random effects
       obs.update_y(obs_y.col(v).segment(y_segment(0),y_segment(1)),
@@ -240,14 +241,14 @@ Type staRVe_model(objective_function<Type>* obj) {
         // have_set_pred_cache = true;
       } else {}
 
-      nll -= (v == 0 ? Type(1.0) : Type(0.0))*process.loglikelihood()
+      nll -= process.loglikelihood()
                 + obs.resp_w_loglikelihood()
                 + obs.y_loglikelihood();
 
       SIMULATE{
         if( !conditional_sim ) {
           // Simulate new random effecst
-          proc_w.col(time) = process.simulate();
+          proc_w.col(v).col(time) = process.simulate();
           resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
         } else {}
         // Simulate new response data

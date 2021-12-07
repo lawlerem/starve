@@ -814,7 +814,7 @@ setMethod(f = "TMB_in",
         log(1)
       )
     ),
-    proc_w = random_effects(x)[["w"]][,,1],
+    proc_w = random_effects(x)[["w"]],
     pred_w = numeric(0)
   )
 
@@ -892,8 +892,8 @@ setMethod(f = "update_staRVe_model",
   time_effects(x)$se[,1]<- sdr_se$time_effects
 
   # Spatio-temporal random effects
-  random_effects(x)$w[,,1]<- sdr_est$proc_w
-  random_effects(x)$se[,,1]<- sdr_se$proc_w
+  random_effects(x)$w<- sdr_est$proc_w
+  random_effects(x)$se<- sdr_se$proc_w
 
   # Fixed effects
   for( i in seq(.n_response(formula(x))) ) {
