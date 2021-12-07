@@ -91,6 +91,85 @@ setMethod(f = "staRVe_fit",
   return(fit)
 })
 
+
+
+#' @param model A staRVe_model
+#' @param conditional logical. If true, new observations are simulated conditional
+#'   on the random effect values in \code{random_effects(model)}.
+#'   If false, new random effects and new observations are simulated.
+#' @export
+#' @describeIn staRVe_model Simulate from the model
+setMethod(f = "staRVe_simulate",
+          signature = "staRVe_model",
+          def = function(model,
+                         conditional = F,
+                         ...) {
+  TMB_input<- TMB_in(model)
+  if( conditional ) {
+    # If conditional, the random effects are not re-simulated
+    TMB_input$data$conditional_sim<- conditional
+  } else {}
+
+  obj<- TMB::MakeADFun(
+    data = TMB_input$data,
+    para = TMB_input$para,
+    random = TMB_input$rand,
+    map = TMB_input$map,
+    DLL = "staRVe_model",
+    silent = T,
+    ...
+  )
+
+  # Parameters are simulated from, not estimated, so get rid of standard errors
+  for( i in seq_along(.response_names(formula(model))) ) {
+    spatial_parameters(model)[[i]]$se<- NA
+    time_parameters(model)[[i]]$se<- NA
+    response_parameters(model)[[i]]$se<- rep(NA,nrow(response_parameters(model)[[i]]))
+    fixed_effects(model)[[i]]$se<- rep(NA,nrow(fixed_effects(model)[[i]]))
+  }
+
+  # Simulated random effects
+  sims<- obj$simulate()
+  time_effects(model)$w[,1]<- sims$time_effects
+  time_effects(model)$se[,1]<- NA
+  random_effects(model)$w[,,1]<- sims$proc_w
+  random_effects(model)$se[,,1]<- NA
+
+  # Update random effects used for observations
+  resp_w_idx<- 1
+  for( i in seq(nrow(dat(model))) ) {
+    if( length(edges(graph(model)$transient_graph)[[i]][["from"]]) == 1 ) {
+      # If length == 1, take random effects from persistent graph
+      this_year<- dat(model)[i,.time_name(model),drop=T]
+      predictions(data_predictions(model))$w[i,1]<- as.numeric(
+        random_effects(model)["w",
+                              edges(graph(model)$transient_graph)[[i]][["from"]],
+                              which(stars::st_get_dimension_values(random_effects(model),.time_name(model))==this_year),
+                              1,
+                              drop=T]
+      )
+    } else {
+      # If length > 1, use random effects from resp_w
+      predictions(data_predictions(model))$w[i,1]<- sims$resp_w[resp_w_idx]
+      resp_w_idx<- resp_w_idx+1
+    }
+  }
+  predictions(data_predictions(model))$w_se[]<- NA
+
+  # Simulated values don't have standard errors, update linear and response predictions
+  # to correspond to the simulated random effects
+  data_predictions(model)<- .predict_linear(model,data_predictions(model),se = F)
+  data_predictions(model)<- .predict_response(model,data_predictions(model),se=F)
+
+  # Update response observations to be the simulated value
+  dat(model)[,attr(.response_from_formula(formula(settings(model)),
+                                          dat(model)),"name")]<- sims$obs_y
+
+  return(model)
+})
+
+
+
 #' @param locations An sf object for prediction locations and times, with covariates
 #'
 #' @export
@@ -199,81 +278,6 @@ setMethod(f = "staRVe_predict",
 })
 
 
-
-#' @param model A staRVe_model
-#' @param conditional logical. If true, new observations are simulated conditional
-#'   on the random effect values in \code{random_effects(model)}.
-#'   If false, new random effects and new observations are simulated.
-#' @export
-#' @describeIn staRVe_model Simulate from the model
-setMethod(f = "staRVe_simulate",
-          signature = "staRVe_model",
-          def = function(model,
-                         conditional = F,
-                         ...) {
-  TMB_input<- TMB_in(model)
-  if( conditional ) {
-    # If conditional, the random effects are not re-simulated
-    TMB_input$data$conditional_sim<- conditional
-  } else {}
-
-  obj<- TMB::MakeADFun(
-    data = TMB_input$data,
-    para = TMB_input$para,
-    random = TMB_input$rand,
-    map = TMB_input$map,
-    DLL = "staRVe_model",
-    silent = T,
-    ...
-  )
-
-  # Parameters are simulated from, not estimated, so get rid of standard errors
-  for( i in seq_along(.response_names(formula(model))) ) {
-    spatial_parameters(model)[[i]]$se<- NA
-    time_parameters(model)[[i]]$se<- NA
-    response_parameters(model)[[i]]$se<- rep(NA,nrow(response_parameters(model)[[i]]))
-    fixed_effects(model)[[i]]$se<- rep(NA,nrow(fixed_effects(model)[[i]]))
-  }
-
-  # Simulated random effects
-  sims<- obj$simulate()
-  time_effects(model)$w[,1]<- sims$time_effects
-  time_effects(model)$se[,1]<- NA
-  random_effects(model)$w[,,1]<- sims$proc_w
-  random_effects(model)$se[,,1]<- NA
-
-  # Update random effects used for observations
-  resp_w_idx<- 1
-  for( i in seq(nrow(dat(model))) ) {
-    if( length(edges(graph(model)$transient_graph)[[i]][["from"]]) == 1 ) {
-      # If length == 1, take random effects from persistent graph
-      this_year<- dat(model)[i,.time_name(model),drop=T]
-      predictions(data_predictions(model))$w[i,1]<- as.numeric(
-        random_effects(model)["w",
-                              edges(graph(model)$transient_graph)[[i]][["from"]],
-                              which(stars::st_get_dimension_values(random_effects(model),.time_name(model))==this_year),
-                              1,
-                              drop=T]
-      )
-    } else {
-      # If length > 1, use random effects from resp_w
-      predictions(data_predictions(model))$w[i,1]<- sims$resp_w[resp_w_idx]
-      resp_w_idx<- resp_w_idx+1
-    }
-  }
-  predictions(data_predictions(model))$w_se[]<- NA
-
-  # Simulated values don't have standard errors, update linear and response predictions
-  # to correspond to the simulated random effects
-  data_predictions(model)<- .predict_linear(model,data_predictions(model),se = F)
-  data_predictions(model)<- .predict_response(model,data_predictions(model),se=F)
-
-  # Update response observations to be the simulated value
-  dat(model)[,attr(.response_from_formula(formula(settings(model)),
-                                          dat(model)),"name")]<- sims$obs_y
-
-  return(model)
-})
 
 #' Predict random effects from likelihood function
 #'

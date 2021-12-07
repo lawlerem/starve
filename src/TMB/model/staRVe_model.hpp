@@ -19,7 +19,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_MATRIX(mean_design);
   DATA_MATRIX(sample_size); // [idx,var]
 
-  DATA_INTEGER(covar_code);
+  DATA_IVECTOR(covar_code); // [var]
   DATA_STRUCT(ws_edges,directed_graph);
   DATA_STRUCT(ws_dists,dag_dists);
 
@@ -33,7 +33,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   // Columns may have trailing NAs if distribution haven't different # of parameters
   PARAMETER_MATRIX(mean_pars); // Fixed effects B*X [covariate,var]
   PARAMETER_VECTOR(resp_w);
-  PARAMETER_VECTOR(working_space_pars);
+  PARAMETER_MATRIX(working_space_pars); // [par,var]
   PARAMETER_VECTOR(time_effects);
   PARAMETER_VECTOR(working_time_pars);
   PARAMETER_ARRAY(proc_w);
@@ -61,9 +61,11 @@ Type staRVe_model(objective_function<Type>* obj) {
       default : response_pars(0,v) = exp(-1*working_response_pars(0,v)); break; // Normal, sd>0
     }
   }
-  vector<Type> space_pars = working_space_pars;
-  switch(covar_code) {
-    default : space_pars = exp(working_space_pars); break; // Matern-types
+  matrix<Type> space_pars = working_space_pars;
+  for(int v=0; v<covar_code.size(); v++) {
+    switch(covar_code(v)) {
+      default : space_pars.col(v) = exp(vector<Type>(working_space_pars.col(v))); break; // Matern-types
+    }
   }
   vector<Type> time_pars = working_time_pars;
   time_pars(0) = working_time_pars(0); // mu
@@ -147,7 +149,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   // ws_dag = edge list for persistent graph
   // ws_dist = distances for persistent graph
   for(int v=0; v<obs_y.cols(); v++) {
-    nngp<Type> process(covariance<Type>(space_pars(0),space_pars(1),space_pars(2),covar_code),
+    nngp<Type> process(covariance<Type>(space_pars(0,v),space_pars(1,v),space_pars(2,v),covar_code(v)),
                        proc_w.col(0),
                        time_effects(0)+0*proc_w.col(0),
                        // ^ gives constant mean

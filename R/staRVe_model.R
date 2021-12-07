@@ -677,7 +677,7 @@ setMethod(f = "TMB_in",
     mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
     sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
     # Convert covariance function (char) to (int)
-    covar_code = .covariance_to_code(covariance_function(x))[[1]], # ONLY FIRST VARIABLE
+    covar_code = .covariance_to_code(covariance_function(x)),
     # Get time index and graph for spatio-temporal random effects
     ws_edges = edges(idxR_to_C(graph(x)$persistent_graph)),
     ws_dists = distances(graph(x)$persistent_graph),
@@ -770,26 +770,30 @@ setMethod(f = "TMB_in",
     resp_w = numeric(
         sum(sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1) # How many extra random effects?
       ),
-    working_space_pars = switch(covariance_function(x)[[1]],
-      c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
-        ifelse( # std. dev. > 0
-            spatial_parameters(x)[[1]]["sd","par"] > 0 ||
-            spatial_parameters(x)[[1]]["sd","fixed"] == T,
-          log(spatial_parameters(x)[[1]]["sd","par"]),
-          log(1)
-        ),
-        ifelse( # rho > 0
-          spatial_parameters(x)[[1]]["range","par"] > 0 ||
-          spatial_parameters(x)[[1]]["range","fixed"] == T,
-          log(spatial_parameters(x)[[1]]["range","par"]),
-          log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
-        ),
-        ifelse( # nu > 0
-            spatial_parameters(x)[[1]]["nu","par"] > 0 ||
-            spatial_parameters(x)[[1]]["nu","fixed"] == T,
-          log(spatial_parameters(x)[[1]]["nu","par"]),
-          log(0.5)
-        )
+    working_space_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        switch(covariance_function(x)[[v]],
+          c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
+            ifelse( # std. dev. > 0
+                spatial_parameters(x)[[v]]["sd","par"] > 0 ||
+                spatial_parameters(x)[[v]]["sd","fixed"] == T,
+              log(spatial_parameters(x)[[v]]["sd","par"]),
+              log(1)
+            ),
+            ifelse( # rho > 0
+              spatial_parameters(x)[[v]]["range","par"] > 0 ||
+              spatial_parameters(x)[[v]]["range","fixed"] == T,
+              log(spatial_parameters(x)[[v]]["range","par"]),
+              log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
+            ),
+            ifelse( # nu > 0
+                spatial_parameters(x)[[v]]["nu","par"] > 0 ||
+                spatial_parameters(x)[[v]]["nu","fixed"] == T,
+              log(spatial_parameters(x)[[v]]["nu","par"]),
+              log(0.5)
+            )
+          )
+        )}
       )
     ),
     time_effects = time_effects(x)[["w"]][,1],
@@ -835,7 +839,11 @@ setMethod(f = "TMB_in",
         fixed_effects(x)[[v]][colnames(data$mean_design),"fixed"]
       })
     ),
-    working_space_pars = spatial_parameters(x)[[1]][,"fixed"],
+    working_space_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        spatial_parameters(x)[[v]][,"fixed"]
+      })
+    ),
     working_time_pars = time_parameters(x)[[1]][,"fixed"]
   )
   map<- lapply(map,function(x) {
@@ -869,8 +877,10 @@ setMethod(f = "update_staRVe_model",
   par_names<- character(0)
 
   # Spatial parameters
-  spatial_parameters(x)[[1]]$par<- sdr_est$space_pars
-  spatial_parameters(x)[[1]]$se<- sdr_se$space_pars
+  for( i in seq(.n_response(formula(x))) ) {
+    spatial_parameters(x)[[i]]$par<- sdr_est$space_pars[,i]
+    spatial_parameters(x)[[i]]$se<- sdr_se$space_pars[,i]
+  }
 
   # Time parameters
   time_parameters(x)[[1]]$par<- sdr_est$time_pars
