@@ -662,7 +662,7 @@ setMethod(f = "TMB_in",
     model = "staRVe_model",
     # Convert distribution and link (char) to (int)
     distribution_code = .distribution_to_code(response_distribution(x)),
-    link_code = .link_to_code(link_function(x)[[1]]),
+    link_code = .link_to_code(link_function(x)),
     # Get time index, observations, and graph for observations
     y_time = c(dat(x)[,.time_name(x),drop=T]),
     obs_y = .response_from_formula(formula(x),dat(x))[[1]], # ONLY FIRST VARIABLE

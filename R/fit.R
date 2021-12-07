@@ -88,9 +88,6 @@ setMethod(f = "staRVe_fit",
   data_predictions(fit)<- .predict_linear(fit,data_predictions(fit))
   data_predictions(fit)<- .predict_response(fit,data_predictions(fit))
 
-  # dat(fit)[,c("linear","linear_se")]<- .predict_linear(fit,unique(w_predictions),dat(fit))[,c("linear","linear_se"),drop=T]
-  # dat(fit)[,c("response","response_se")]<- .predict_response(fit,dat(fit))[,c("response","response_se"),drop=T]
-
   return(fit)
 })
 

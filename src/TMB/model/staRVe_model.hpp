@@ -7,7 +7,7 @@ template<class Type>
 Type staRVe_model(objective_function<Type>* obj) {
   // Read in data / parameters / random effects from R
   DATA_IVECTOR(distribution_code);
-  DATA_INTEGER(link_code);
+  DATA_IVECTOR(link_code);
 
   DATA_IVECTOR(y_time);
   DATA_VECTOR(obs_y);
@@ -169,7 +169,7 @@ Type staRVe_model(objective_function<Type>* obj) {
                          resp_w.segment(resp_w_segment(0),resp_w_segment(1)),
                          matrix_row_segment(mean_design,y_segment(0),y_segment(1)),
                          sample_size.segment(y_segment(0),y_segment(1)),
-                         glm<Type>({link_code},
+                         glm<Type>({link_code(0)},
                                    {distribution_code(0)},
                                    mean_pars,
                                    vector<Type>(response_pars.col(0)))
