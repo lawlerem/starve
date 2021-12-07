@@ -31,7 +31,7 @@ Type staRVe_model(objective_function<Type>* obj) {
 
   PARAMETER_MATRIX(working_response_pars); // Response distribution parameters [par,var]
   // Columns may have trailing NAs if distribution haven't different # of parameters
-  PARAMETER_VECTOR(mean_pars); // Fixed effects B*X
+  PARAMETER_MATRIX(mean_pars); // Fixed effects B*X [covariate,var]
   PARAMETER_VECTOR(resp_w);
   PARAMETER_VECTOR(working_space_pars);
   PARAMETER_VECTOR(time_effects);
@@ -171,7 +171,7 @@ Type staRVe_model(objective_function<Type>* obj) {
                          sample_size.col(0).segment(y_segment(0),y_segment(1)),
                          glm<Type>({link_code(0)},
                                    {distribution_code(0)},
-                                   mean_pars,
+                                   mean_pars.col(0),
                                    vector<Type>(response_pars.col(0)))
                         );
 
