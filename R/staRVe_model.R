@@ -797,22 +797,25 @@ setMethod(f = "TMB_in",
         )}
       )
     ),
-    time_effects = time_effects(x)[["w"]][,1],
-    working_time_pars = c(
-      time_parameters(x)[[1]]["mu","par"],
-      ifelse( # -1 <= ar1 <= +1
-          (time_parameters(x)[[1]]["ar1","par"] >= -1
-            && time_parameters(x)[[1]]["ar1","par"] <= 1) ||
-          time_parameters(x)[[1]]["ar1","fixed"] == T,
-        qlogis(0.5*(1+time_parameters(x)[[1]]["ar1","par"])),
-        qlogis(0.5*(1+0))
-      ),
-      ifelse( # sd > 0
-          time_parameters(x)[[1]]["sd","par"] > 0 ||
-          time_parameters(x)[[1]]["sd","fixed"] == T,
-        log(time_parameters(x)[[1]]["sd","par"]),
-        log(1)
-      )
+    time_effects = time_effects(x)[["w"]],
+    working_time_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        c(time_parameters(x)[[v]]["mu","par"],
+          ifelse( # -1 <= ar1 <= +1
+              (time_parameters(x)[[v]]["ar1","par"] >= -1
+                && time_parameters(x)[[v]]["ar1","par"] <= 1) ||
+              time_parameters(x)[[v]]["ar1","fixed"] == T,
+            qlogis(0.5*(1+time_parameters(x)[[v]]["ar1","par"])),
+            qlogis(0.5*(1+0))
+          ),
+          ifelse( # sd > 0
+              time_parameters(x)[[v]]["sd","par"] > 0 ||
+              time_parameters(x)[[v]]["sd","fixed"] == T,
+            log(time_parameters(x)[[v]]["sd","par"]),
+            log(1)
+          )
+        )
+      })
     ),
     proc_w = random_effects(x)[["w"]],
     pred_w = numeric(0)
@@ -845,7 +848,11 @@ setMethod(f = "TMB_in",
         spatial_parameters(x)[[v]][,"fixed"]
       })
     ),
-    working_time_pars = time_parameters(x)[[1]][,"fixed"]
+    working_time_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        time_parameters(x)[[v]][,"fixed"]
+      })
+    )
   )
   map<- lapply(map,function(x) {
     x[is.na(x)]<- TRUE
@@ -884,12 +891,14 @@ setMethod(f = "update_staRVe_model",
   }
 
   # Time parameters
-  time_parameters(x)[[1]]$par<- sdr_est$time_pars
-  time_parameters(x)[[1]]$se<- sdr_se$time_pars
+  for( i in seq(.n_response(formula(x))) ) {
+    time_parameters(x)[[i]]$par<- sdr_est$time_pars[,i]
+    time_parameters(x)[[i]]$se<- sdr_se$time_pars[,i]
+  }
 
   # Temporal random effects
-  time_effects(x)$w[,1]<- sdr_est$time_effects
-  time_effects(x)$se[,1]<- sdr_se$time_effects
+  time_effects(x)$w<- sdr_est$time_effects
+  time_effects(x)$se<- sdr_se$time_effects
 
   # Spatio-temporal random effects
   random_effects(x)$w<- sdr_est$proc_w

@@ -34,17 +34,51 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_MATRIX(mean_pars); // Fixed effects B*X [covariate,var]
   PARAMETER_MATRIX(resp_w); // [idx,var]
   PARAMETER_MATRIX(working_space_pars); // [par,var]
-  PARAMETER_VECTOR(time_effects);
-  PARAMETER_VECTOR(working_time_pars);
+  PARAMETER_MATRIX(time_effects); // [time,var]
+  PARAMETER_MATRIX(working_time_pars); // [par,var]
   PARAMETER_ARRAY(proc_w); // [space,time,var]
   PARAMETER_VECTOR(pred_w);
+
+
+  int nv=distribution_code.size();
+
+  // Get graphs
+
+  // Transient graph
+  vector<vector<vector<int> > > ys_dag = ys_edges.dag;
+  vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
+
+  // Persistent graph
+  vector<vector<vector<int> > > ws_dag = ws_edges.dag;
+  vector<matrix<Type> > ws_dist = ws_dists.dag_dist;
+
+  // Graph for predictions
+  vector<vector<vector<int> > > pred_ws_dag = pred_ws_edges.dag;
+  vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
+
+  Type mean_dist = 0.0;
+  Type n = 0.0;
+  for( int i=0; i<ws_dist.size(); i++ ) {
+    mean_dist += ws_dist(i).sum();
+    n += ws_dist(i).size();
+  }
+  mean_dist *= 1/n;
+  for( int i=0; i<ys_dist.size(); i++ ) {
+    ys_dist(i) = ys_dist(i)/mean_dist;
+  }
+  for( int i=0; i<ws_dist.size(); i++ ) {
+    ws_dist(i) = ws_dist(i)/mean_dist;
+  }
+  for( int i=0; i<pred_ws_dist.size(); i++ ) {
+    pred_ws_dist(i) = pred_ws_dist(i)/mean_dist;
+  }
 
 
   // Convert parameters from working scale to natural scale
 
   // Cross-check distribution_code order with family.hpp
   matrix<Type> response_pars = working_response_pars;
-  for(int v=0; v<distribution_code.size(); v++) {
+  for(int v=0; v<nv; v++) {
     switch(distribution_code(v)) {
       case 0 : response_pars(0,v) = exp(working_response_pars(0,v)); break; // Normal, sd>0
       case 1 : break; // Poisson, NA
@@ -62,30 +96,20 @@ Type staRVe_model(objective_function<Type>* obj) {
     }
   }
   matrix<Type> space_pars = working_space_pars;
-  for(int v=0; v<covar_code.size(); v++) {
+  for(int v=0; v<nv; v++) {
     switch(covar_code(v)) {
       default : space_pars.col(v) = exp(vector<Type>(working_space_pars.col(v))); break; // Matern-types
     }
+    // standardizes range, which then standardizes sd
+    space_pars(1,v) = space_pars(1,v)/mean_dist;
   }
-  vector<Type> time_pars = working_time_pars;
-  time_pars(0) = working_time_pars(0); // mu
-  time_pars(1) = 2*invlogit(working_time_pars(1))-1; // -1 < ar1 < +1
-  time_pars(2) = exp(working_time_pars(2)); // sd>0
 
-  // Get graphs
-
-  // Transient graph
-  vector<vector<vector<int> > > ys_dag = ys_edges.dag;
-  vector<matrix<Type> > ys_dist = ys_dists.dag_dist;
-
-  // Persistent graph
-  vector<vector<vector<int> > > ws_dag = ws_edges.dag;
-  vector<matrix<Type> > ws_dist = ws_dists.dag_dist;
-
-  // Graph for predictions
-  vector<vector<vector<int> > > pred_ws_dag = pred_ws_edges.dag;
-  vector<matrix<Type> > pred_ws_dist = pred_ws_dists.dag_dist;
-
+  matrix<Type> time_pars = working_time_pars;
+  for(int v=0; v<nv; v++) {
+    time_pars(0,v) = working_time_pars(0,v); // mu
+    time_pars(1,v) = 2*invlogit(working_time_pars(1,v))-1; // -1 < ar1 < +1
+    time_pars(2,v) = exp(working_time_pars(2,v)); // sd>0
+  }
 
   // Initialize all the objects used. The main objects of focus are
   // nngp<Type> process which can calculate the nll component for the random effects, and
@@ -104,36 +128,40 @@ Type staRVe_model(objective_function<Type>* obj) {
   Type pred_nll = 0.0;
 
   // AR1 process for time effects
-  if( time_effects.size() == 1 ) {
+  if( time_effects.rows() == 1 ) {
     // If there's only one time, force temporal random effect to be approx. equal
     // to mu
     Type smallNumber = pow(10,-5);
-
-    nll -= dnorm(time_effects(0),time_pars(0),smallNumber,true);
-    SIMULATE{
-      if( !conditional_sim ) {
-        time_effects(0) = time_pars(0);
-      } else {}
+    for(int v=0; v<nv; v++) {
+      nll -= dnorm(time_effects(0,v),time_pars(0,v),smallNumber,true);
+      SIMULATE{
+        if( !conditional_sim ) {
+          time_effects(0,v) = time_pars(0,v);
+        } else {}
+      }
     }
   } else {
     // More than one time, use AR1 covariance structure
-    matrix<Type> time_cov(time_effects.size(),time_effects.size());
-    for(int i=0; i<time_cov.rows(); i++) {
-      for(int j=0; j<time_cov.cols(); j++) {
-        time_cov(i,j) = pow(time_pars(1),abs(i-j));
+    for(int v=0; v<nv; v++) {
+      matrix<Type> time_cov(time_effects.rows(),time_effects.rows());
+      for(int i=0; i<time_cov.rows(); i++) {
+        for(int j=0; j<time_cov.cols(); j++) {
+          time_cov(i,j) = pow(time_pars(1,v),abs(i-j));
+        }
       }
-    }
-    time_cov *= pow(time_pars(2),2);
-    // time_cov *= pow(time_sd,2)/(1-pow(time_ar1,2)); // time_sd gives sd of
-    // innovations, this coefficient is the marginal variance
-    MVNORM_t<Type> time_dist(time_cov);
+      time_cov *= pow(time_pars(2,v),2);
+      // time_cov *= pow(time_sd,2)/(1-pow(time_ar1,2)); // time_sd gives sd of
+      // innovations, this coefficient is the marginal variance
+      MVNORM_t<Type> time_dist(time_cov);
 
-    nll += time_dist(time_effects-time_pars(0));
-    SIMULATE{
-      if( !conditional_sim ) {
-        time_dist.simulate(time_effects);
-        time_effects = time_effects+time_pars(0);
-      } else {}
+      nll += time_dist(vector<Type>(time_effects.col(v))-time_pars(0,v));
+      SIMULATE{
+        if( !conditional_sim ) {
+          vector<Type> sim_time_effects(time_effects.rows());
+          time_dist.simulate(sim_time_effects);
+          time_effects.col(v) = sim_time_effects+time_pars(0,v);
+        } else {}
+      }
     }
   }
 
@@ -148,10 +176,10 @@ Type staRVe_model(objective_function<Type>* obj) {
   // proc_w = spatio-temporal random effects for this time
   // ws_dag = edge list for persistent graph
   // ws_dist = distances for persistent graph
-  for(int v=0; v<obs_y.cols(); v++) {
+  for(int v=0; v<nv; v++) {
     nngp<Type> process(covariance<Type>(space_pars(0,v),space_pars(1,v),space_pars(2,v),covar_code(v)),
                        proc_w.col(v).col(0),
-                       time_effects(0)+0*proc_w.col(v).col(0),
+                       time_effects(0,v)+0*proc_w.col(v).col(0),
                        // ^ gives constant mean
                        ws_dag,
                        ws_dist);
@@ -212,7 +240,7 @@ Type staRVe_model(objective_function<Type>* obj) {
 
     // Update process and observations for each time step,
     // add their likelihood contributions
-    for(int time=1; time<proc_w.col(v).cols(); time++) {
+    for(int time=1; time<time_effects.rows(); time++) {
       // Get indices for this time
       y_segment = get_time_segment(y_time,time);
       resp_w_segment = get_time_segment(resp_w_time,time);
@@ -221,7 +249,7 @@ Type staRVe_model(objective_function<Type>* obj) {
       // Update the random effects and the mean function
       // the mean function here ensures a marginal AR(1) process at each location
       process.update_w(proc_w.col(v).col(time),
-                       time_effects(time) + time_pars(1)*(process.get_w()-time_effects(time-1)));
+                       time_effects(time,v) + time_pars(1)*(process.get_w()-time_effects(time-1,v)));
       // Update the data, covariates, transient graph, and extra random effects
       obs.update_y(obs_y.col(v).segment(y_segment(0),y_segment(1)),
                    ys_dag.segment(y_segment(0),y_segment(1)),
@@ -268,6 +296,10 @@ Type staRVe_model(objective_function<Type>* obj) {
   REPORT(response_pars);
   ADREPORT(response_pars);
 
+  for(int v=0; v<nv; v++) {
+    // Spatial range back to natural scale
+    space_pars(1,v) = space_pars(1,v)*mean_dist;
+  }
   REPORT(space_pars);
   ADREPORT(space_pars);
 
