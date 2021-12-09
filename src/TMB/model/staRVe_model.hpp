@@ -166,17 +166,16 @@ Type staRVe_model(objective_function<Type>* obj) {
   }
 
   // Likelihood contributions for spatio-temporal random effects and observations
-
-  // Initial time segments
-  y_segment = get_time_segment(y_time,0);
-  resp_w_segment = get_time_segment(resp_w_time,0);
-  pred_w_segment = get_time_segment(pred_w_time,0);
-
-  // cov = covariance function
-  // proc_w = spatio-temporal random effects for this time
-  // ws_dag = edge list for persistent graph
-  // ws_dist = distances for persistent graph
   for(int v=0; v<nv; v++) {
+    // Initial time segments
+    y_segment = get_time_segment(y_time,0);
+    resp_w_segment = get_time_segment(resp_w_time,0);
+    pred_w_segment = get_time_segment(pred_w_time,0);
+
+    // cov = covariance function
+    // proc_w = spatio-temporal random effects for this time
+    // ws_dag = edge list for persistent graph
+    // ws_dist = distances for persistent graph
     nngp<Type> process(covariance<Type>(space_pars(0,v),space_pars(1,v),space_pars(2,v),covar_code(v)),
                        proc_w.col(v).col(0),
                        time_effects(0,v)+0*proc_w.col(v).col(0),
@@ -227,6 +226,7 @@ Type staRVe_model(objective_function<Type>* obj) {
               + obs.resp_w_loglikelihood()
               + obs.y_loglikelihood();
 
+
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effects, if desired
@@ -272,6 +272,7 @@ Type staRVe_model(objective_function<Type>* obj) {
       nll -= process.loglikelihood()
                 + obs.resp_w_loglikelihood()
                 + obs.y_loglikelihood();
+
 
       SIMULATE{
         if( !conditional_sim ) {
