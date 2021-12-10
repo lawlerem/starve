@@ -818,7 +818,7 @@ setMethod(f = "TMB_in",
       })
     ),
     proc_w = random_effects(x)[["w"]],
-    pred_w = numeric(0)
+    pred_w = matrix(0,nrow=0,ncol=.n_response(formula(x)))
   )
 
   ###

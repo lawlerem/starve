@@ -85,8 +85,8 @@ setMethod(f = "staRVe_fit",
   )
 
   # Get random effects, predictions on link scale, and predictions on response scale
-  # data_predictions(fit)<- .predict_linear(fit,data_predictions(fit))
-  # data_predictions(fit)<- .predict_response(fit,data_predictions(fit))
+  data_predictions(fit)<- .predict_linear(fit,data_predictions(fit))
+  data_predictions(fit)<- .predict_response(fit,data_predictions(fit))
 
   return(fit)
 })
@@ -351,7 +351,7 @@ setMethod(f = "staRVe_predict",
   TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))[!intersection_idx]
   TMB_input$data$pred_ws_dists<- distances(dag)[!intersection_idx]
 
-  TMB_input$para$pred_w<- predictions(full_predictions)$w[!intersection_all_idx,1]
+  TMB_input$para$pred_w<- predictions(full_predictions)$w[!intersection_all_idx,]
 
   # Create the TMB object and evaluate it at the ML estimates
   obj<- TMB::MakeADFun(
@@ -390,8 +390,8 @@ setMethod(f = "staRVe_predict",
     predictions(full_predictions)$w[intersection_all_idx]<- intersection_w
     predictions(full_predictions)$w_se[intersection_all_idx]<- intersection_se
   } else {}
-  predictions(full_predictions)$w[!intersection_idx,1]<- as.list(sdr,"Estimate")$pred_w
-  predictions(full_predictions)$w_se[!intersection_idx,1]<- as.list(sdr,"Std. Error")$pred_w
+  predictions(full_predictions)$w[!intersection_idx,]<- as.list(sdr,"Estimate")$pred_w
+  predictions(full_predictions)$w_se[!intersection_idx,]<- as.list(sdr,"Std. Error")$pred_w
 
 
   # Pick out year / location combos that were in original
@@ -405,8 +405,8 @@ setMethod(f = "staRVe_predict",
     id<- idx[[t]]$col.id + (t-1)*nrow(locs) # locs is unique(locations)
     return(id)
   }))
-  predictions(predictions)$w[,1]<- predictions(full_predictions)$w[idx,1]
-  predictions(predictions)$w_se[,1]<- predictions(full_predictions)$w_se[idx,1]
+  predictions(predictions)$w<- predictions(full_predictions)$w[idx,]
+  predictions(predictions)$w_se<- predictions(full_predictions)$w_se[idx,]
 
   return(predictions)
 }
@@ -427,8 +427,8 @@ setMethod(f = "staRVe_predict",
   ### No intercept since it's already taken care of in predict_w
   if( length(.names_from_formula(formula(x))) == 0 ) {
     # If there are no covariates, there's nothing to do
-    predictions(predictions)$linear[,1]<- predictions(predictions)$w[,1]
-    if( se ) { predictions(predictions)$linear_se[,1]<- predictions(predictions)$w_se[,1] }
+    predictions(predictions)$linear<- predictions(predictions)$w
+    if( se ) { predictions(predictions)$linear_se<- predictions(predictions)$w_se }
       else { predictions(predictions)$linear_se[]<- NA }
   } else {
     # Create design matrix from covariates
@@ -436,27 +436,34 @@ setMethod(f = "staRVe_predict",
                                                  locations(predictions)))
 
     # Create linear predictions
-    beta<- fixed_effects(x)[[1]][,"par"]
-    names(beta)<- rownames(fixed_effects(x)[[1]])
-    predictions(predictions)$linear[,1]<- design %*% beta + cbind(predictions(predictions)$w[,1])
+    for( v in seq(.n_response(formula(x))) ) {
+      beta<- fixed_effects(x)[[v]][,"par"]
+      names(beta)<- rownames(fixed_effects(x)[[v]])
+      predictions(predictions)$linear[,v]<- design %*% beta + cbind(predictions(predictions)$w[,v])
+    }
 
     if( se ) {
-      # Create parameter covariance estimate for fixed effects
-      par_cov<- matrix(0,ncol=length(beta),nrow=length(beta))
-      colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(x)[[1]])
+      for( v in seq(.n_response(formula(x))) ) {
+        # Create parameter covariance estimate for fixed effects
+        par_cov<- matrix(0,ncol=nrow(fixed_effects(x)[[v]]),nrow=nrow(fixed_effects(x)[[v]]))
+        colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(x)[[v]])
 
-      # Fill in the covariance matrix with the standard errors for fixed effect
-      # coefficients.
-      parameter_covariance<- parameter_covariance(tracing(x))
-      par_idx<- rownames(parameter_covariance) %in% c("mean_pars")
-      par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F] # Drop = F to keep matrix
-      # Keep fixed fixed effects with an standard error of 0
-      par_idx<- names(beta)[fixed_effects(parameters(x))[[1]][,"fixed"] == F]
-      par_cov[par_idx,par_idx]<- par_sdreport
+        # Fill in the covariance matrix with the standard errors for fixed effect
+        # coefficients.
+        parameter_covariance<- parameter_covariance(tracing(x))
+        par_idx<- rownames(parameter_covariance) %in% c("mean_pars")
+        par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F] # Drop = F to keep matrix
+        vlengths<- do.call(c,lapply(fixed_effects(x),nrow))
+        vstarts<- c(1,1+cumsum(vlengths))
+        vpar_idx<- seq(vstarts[[v]],vstarts[[v]]+vlengths[[v]]-1) # mean pars for variable v
+        # Keep fixed fixed effects with an standard error of 0
+        par_idx<- names(beta)[fixed_effects(parameters(x))[[v]][,"fixed"] == F]
+        par_cov[par_idx,par_idx]<- par_sdreport[vpar_idx,vpar_idx]
 
-      # The commented and uncommented methods are the same
-      # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
-      predictions(predictions)$linear_se[,1]<- sqrt(rowSums((design %*% par_cov) * design) + predictions(predictions)$w_se[,1]^2)
+        # The commented and uncommented methods are the same
+        # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
+        predictions(predictions)$linear_se[,v]<- sqrt(rowSums((design %*% par_cov) * design) + predictions(predictions)$w_se[,v]^2)
+      }
     } else {
       predictions(predictions)$linear_se[]<- NA
     }
@@ -480,42 +487,44 @@ setMethod(f = "staRVe_predict",
 .predict_response<- function(x,
                              predictions,
                              se = T) {
-  # Just need to specify which link function is used
-  # Will get the function and gradient from TMB, evaluated at
-  # linear and linear_se
-  data<- list(
-    model = "family",
-    link_code = .link_to_code(link_function(x))
-  )
-  para<- list(x = 0)
-  link_function<- TMB::MakeADFun(
-    data = data,
-    para = para,
-    DLL = "staRVe_model",
-    silent = T
-  )
+  for( v in seq(.n_response(formula(x))) ) {
+    # Just need to specify which link function is used
+    # Will get the function and gradient from TMB, evaluated at
+    # linear and linear_se
+    data<- list(
+      model = "family",
+      link_code = .link_to_code(link_function(x)[[v]])
+    )
+    para<- list(x = 0)
+    link_function<- TMB::MakeADFun(
+      data = data,
+      para = para,
+      DLL = "staRVe_model",
+      silent = T
+    )
 
-  if( se ) {
-    # Mean prediction = f(linear) + 0.5 * f''(linear) * linear_se^2
-    second_order_mean<- Vectorize(function(linear,linear_se) {
-      mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
-      return(as.numeric(mean))
-    },SIMPLIFY = "array")
-    predictions(predictions)$response[,1]<- second_order_mean(predictions(predictions)$linear[,1],
-                                                              predictions(predictions)$linear_se[,1])
+    if( se ) {
+      # Mean prediction = f(linear) + 0.5 * f''(linear) * linear_se^2
+      second_order_mean<- Vectorize(function(linear,linear_se) {
+        mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
+        return(as.numeric(mean))
+      },SIMPLIFY = "array")
+      predictions(predictions)$response[,v]<- second_order_mean(predictions(predictions)$linear[,v],
+                                                                predictions(predictions)$linear_se[,v])
 
-    # Standard error =  f'(linear)^2*linear_se^2 + 0.5 * f''(linear)^2*linear_se^4
-    second_order_se<- Vectorize(function(linear,linear_se) {
-      se<- sqrt(link_function$gr(linear)^2*linear_se^2
-        + 0.5*link_function$he(linear)^2*linear_se^4)
-      return(as.numeric(se))
-    },SIMPLIFY = "array")
-    predictions(predictions)$response_se[,1]<- second_order_se(predictions(predictions)$linear[,1],
-                                                               predictions(predictions)$linear_se[,1])
-  } else {
-    # No standard error for second order delta method, just apply link function
-    predictions(predictions)$response[,1]<- Vectorize(link_function$fn,SIMPLIFY = "array")(predictions(predictions)$linear[,1])
-    predictions(predictions)$response_se<- NA
+      # Standard error =  f'(linear)^2*linear_se^2 + 0.5 * f''(linear)^2*linear_se^4
+      second_order_se<- Vectorize(function(linear,linear_se) {
+        se<- sqrt(link_function$gr(linear)^2*linear_se^2
+          + 0.5*link_function$he(linear)^2*linear_se^4)
+        return(as.numeric(se))
+      },SIMPLIFY = "array")
+      predictions(predictions)$response_se[,v]<- second_order_se(predictions(predictions)$linear[,v],
+                                                                 predictions(predictions)$linear_se[,v])
+    } else {
+      # No standard error for second order delta method, just apply link function
+      predictions(predictions)$response[,v]<- Vectorize(link_function$fn,SIMPLIFY = "array")(predictions(predictions)$linear[,v])
+      predictions(predictions)$response_se[]<- NA
+    }
   }
 
   return(predictions)

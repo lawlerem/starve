@@ -37,7 +37,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_MATRIX(time_effects); // [time,var]
   PARAMETER_MATRIX(working_time_pars); // [par,var]
   PARAMETER_ARRAY(proc_w); // [space,time,var]
-  PARAMETER_VECTOR(pred_w);
+  PARAMETER_MATRIX(pred_w); // [idx,var]
 
 
   int nv=distribution_code.size();
@@ -214,7 +214,7 @@ Type staRVe_model(objective_function<Type>* obj) {
     if( pred_w_segment(1) > 0 ) {
       process.predict_w(pred_ws_dag,
                         pred_ws_dist,
-                        pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                        pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1)),
                         pred_nll,
                         have_set_pred_cache, // Don't use cache (doesn't exist yet)
                         not have_set_pred_cache); // Write the cache
@@ -262,7 +262,7 @@ Type staRVe_model(objective_function<Type>* obj) {
       if( pred_w_segment(1) > 0 ) {
       process.predict_w(pred_ws_dag,
                         pred_ws_dist,
-                        pred_w.segment(pred_w_segment(0),pred_w_segment(1)),
+                        pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1)),
                         pred_nll,
                         have_set_pred_cache, // Use cache
                         not have_set_pred_cache); // Don't overwrite cache
