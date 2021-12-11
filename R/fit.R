@@ -162,8 +162,8 @@ setMethod(f = "staRVe_simulate",
 
   # Simulated values don't have standard errors, update linear and response predictions
   # to correspond to the simulated random effects
-  # data_predictions(model)<- .predict_linear(model,data_predictions(model),se = F)
-  # data_predictions(model)<- .predict_response(model,data_predictions(model),se=F)
+  data_predictions(model)<- .predict_linear(model,data_predictions(model),se = F)
+  data_predictions(model)<- .predict_response(model,data_predictions(model),se=F)
 
   # Update response observations to be the simulated value
   dat(model)[,attr(.response_from_formula(formula(settings(model)),
