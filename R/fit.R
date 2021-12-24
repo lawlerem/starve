@@ -351,7 +351,7 @@ setMethod(f = "staRVe_predict",
   TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))[!intersection_idx]
   TMB_input$data$pred_ws_dists<- distances(dag)[!intersection_idx]
 
-  TMB_input$para$pred_w<- predictions(full_predictions)$w[!intersection_all_idx,]
+  TMB_input$para$pred_w<- predictions(full_predictions)$w[!intersection_all_idx,,drop=FALSE]
 
   # Create the TMB object and evaluate it at the ML estimates
   obj<- TMB::MakeADFun(
