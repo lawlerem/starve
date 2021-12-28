@@ -854,10 +854,6 @@ setMethod(f = "TMB_in",
       })
     )
   )
-  map<- lapply(map,function(x) {
-    x[is.na(x)]<- TRUE
-    return(x)
-  })
   map<- lapply(map,.logical_to_map)
 
   return(list(

@@ -141,7 +141,7 @@ construct_dag<- function(x,
   dist_matrix<- as.matrix(units::set_units(sf::st_distance(x),
                                            distance_units(settings),
                                            mode="standard"))
-  dag<- .dist_to_dag(d=dist_matrix,n_neighbours=min(nrow(x),n_neighbours(settings)))
+  dag<- .rcpp_dist_to_dag(d=dist_matrix,n_neighbours=min(nrow(x),n_neighbours(settings)))
   x<- x[dag$order+1,]
   dag<- new("dag",
             edges = dag$edge_list,

@@ -196,9 +196,9 @@ NULL
   covar_code<- pmatch(covariance,get_staRVe_distributions("covariance"),duplicates.ok=TRUE)
   if( is.na(covar_code) || covar_code == 0 ) {
     stop("Supplied covariance function is not implemented, or matches multiple covariance functions.")
-  } else {
-    covar_code<- covar_code - 1 # Convert to cpp
-  }
+  } else {}
+  covar_code<- covar_code - 1 # Convert to cpp
+  return(covar_code)
 }
 
 
@@ -220,10 +220,8 @@ NULL
   distribution_code<- pmatch(distribution,get_staRVe_distributions("distribution"),duplicates.ok=TRUE)
   if( is.na(distribution_code) || distribution_code == 0  ) {
     stop("Supplied distribution is not implemented, or matches multiple distributions.")
-  } else {
-    distribution_code<- distribution_code - 1 # Convert to cpp
-  }
-
+  } else {}
+  distribution_code<- distribution_code - 1 # Convert to cpp
   return(distribution_code)
 }
 
@@ -560,10 +558,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   link_code<- pmatch(link,get_staRVe_distributions("link"),duplicates.ok=TRUE)
   if( is.na(link_code) || link_code == 0 ) {
     stop("Supplied link function is not implemented, or matches multiple link functions.")
-  } else {
-    link_code<- link_code - 1 # Convert to cpp
-  }
-
+  } else {}
+  link_code<- link_code - 1 # Convert to cpp
   return(link_code)
 }
 
@@ -587,6 +583,11 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @noRd
 .logical_to_map<- function(x) {
+  x[is.na(x)]<- TRUE
+  if( any( !is.logical(x) ) ) {
+    stop("Only logical values can be converted to a TMB `map` list.")
+  } else {}
+
   y<- seq_along(x)
   y[x]<- NA
   y<- as.factor(y)

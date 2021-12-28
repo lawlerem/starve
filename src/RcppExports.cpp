@@ -11,6 +11,29 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// order_d_matrix
+Eigen::VectorXi order_d_matrix(Eigen::MatrixXd& d);
+RcppExport SEXP _staRVe_order_d_matrix(SEXP dSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type d(dSEXP);
+    rcpp_result_gen = Rcpp::wrap(order_d_matrix(d));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lowest_k
+Eigen::VectorXi lowest_k(const Eigen::VectorXd& d, const int k);
+RcppExport SEXP _staRVe_lowest_k(SEXP dSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type d(dSEXP);
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(lowest_k(d, k));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dist_to_dag
 SEXP dist_to_dag(const Eigen::Map<Eigen::MatrixXd>& d, const int n_neighbours);
 RcppExport SEXP _staRVe_dist_to_dag(SEXP dSEXP, SEXP n_neighboursSEXP) {
@@ -25,6 +48,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_staRVe_order_d_matrix", (DL_FUNC) &_staRVe_order_d_matrix, 1},
+    {"_staRVe_lowest_k", (DL_FUNC) &_staRVe_lowest_k, 2},
     {"_staRVe_dist_to_dag", (DL_FUNC) &_staRVe_dist_to_dag, 2},
     {NULL, NULL, 0}
 };
