@@ -70,3 +70,58 @@ test_that("Distance matrix to dag",{
   )
   expect_equal(.rcpp_dist_to_dag(d,3),e)
 })
+
+test_that("Construct obs_dag",{
+  frompoints<- cbind(1:5,0)
+  frompoints<- apply(frompoints,1,sf::st_point,simplify=FALSE)
+  frompoints<- sf::st_sf(geom=sf::st_sfc(frompoints))
+
+  topoints<- cbind(c(1,3,5,0,1.5,3.5),0)
+  topoints<- apply(topoints,1,sf::st_point,simplify=FALSE)
+  topoints<- sf::st_sf(geom=sf::st_sfc(topoints))
+  edges<- list(
+    list(to=1,from=1), # 1
+    list(to=2,from=3), # 3
+    list(to=3,from=5), # 5
+    list(to=4,from=c(1,2,3)), # 0
+    list(to=5,from=c(1,2,3)), # 1.5
+    list(to=6,from=c(3,4,2)) # 3.5
+  )
+  dists<- list(
+    matrix(0),
+    matrix(0),
+    matrix(0),
+    # 0 1 2 3
+    rbind(c(0,1,2,3),
+          c(1,0,1,2),
+          c(2,1,0,1),
+          c(3,2,1,0)),
+    # 1.5 1 2 3
+    rbind(c(0,0.5,0.5,1.5),
+          c(0.5,0,1,2),
+          c(0.5,1,0,1),
+          c(1.5,2,1,0)),
+    # 3.5 3 4 2
+    rbind(c(0,0.5,0.5,1.5),
+          c(0.5,0,1,1),
+          c(0.5,1,0,2),
+          c(1.5,1,2,0))
+  )
+  e<- new("dag",edges=edges,distances=dists,distance_units="m")
+  settings<- new("staRVe_settings")
+  settings@n_neighbours<- 3
+  settings@distance_units<- "m"
+
+  expect_equal(construct_obs_dag(topoints,frompoints,settings=settings),e)
+
+  edges<- list(
+    list(to=1,from=1),
+    list(to=2,from=3),
+    list(to=3,from=5),
+    list(to=4,from=c(1,2,3)),
+    list(to=1,from=c(1,2,3)),
+    list(to=2,from=c(3,4,2))
+  )
+  e<- new("dag",edges=edges,distances=dists,distance_units="m")
+  expect_equal(construct_obs_dag(topoints,frompoints,time=c(0,0,0,0,1,1),settings=settings),e)
+})
