@@ -19,12 +19,12 @@ setMethod(
   definition = function(.Object,
                         time_effects = stars::st_as_stars(
                           list(w = array(0,dim=c(1,1)),
-                               se = array(NA,dim=c(1,1))),
+                               se = array(0,dim=c(1,1))),
                           dimensions = stars::st_dimensions(time=0,variable="y")
                         ),
                         random_effects = stars::st_as_stars(
                           list(w = array(0,dim=c(1,1,1)),
-                               se = array(NA,dim=c(1,1,1))),
+                               se = array(0,dim=c(1,1,1))),
                           dimensions = stars::st_dimensions(
                             geom = sf::st_sfc(sf::st_point(c(0,0))),
                             time = 0,
@@ -162,7 +162,7 @@ prepare_staRVe_process<- function(nodes,
   # time_effects = "data.frame"
   time_effects(process)<- stars::st_as_stars(
     list(w = array(0,dim=c(length(time_seq),.n_response(formula(settings)))),
-         se = array(NA,dim=c(length(time_seq),.n_response(formula(settings))))
+         se = array(0,dim=c(length(time_seq),.n_response(formula(settings))))
     ),
     dimensions = stars::st_dimensions(time = time_seq,variable = .response_names(formula(settings)))
   )

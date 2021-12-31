@@ -47,7 +47,7 @@ NULL
     new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
   } else {}
   relist<- lapply(relist,function(va) {
-    dimnames(va)[[2]]<- stars::st_get_dimension_values(new_dims,.time_name(x))
+    dimnames(va)<- NULL
     return(va)
   })
   random_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
@@ -76,6 +76,10 @@ NULL
     })
     new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
   } else {}
+  relist<- lapply(relist,function(va) {
+    dimnames(va)<- NULL
+    return(va)
+  })
   time_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
 
   return(x)
