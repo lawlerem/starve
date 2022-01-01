@@ -4,7 +4,7 @@
 \alias{.sf_to_stars}
 \title{Convert an sf data.frame to a stars object}
 \usage{
-.sf_to_stars(x, time_column)
+.sf_to_stars(x, time_column = "time", var_column = "variable")
 }
 \arguments{
 \item{x}{An sf object}
@@ -15,5 +15,5 @@
 Takes the sf geometry and the time column as the dimensions for a stars object
   with the remaining columns taken as attributes. If any location / time combination
   is not present in x, then the corresponding entry of the stars object will be NA.
-Inverse operation of st_as_sf(x,long=T)
+Inverse operation of sf::st_as_sf(x,long=T) when the dimensions of x are space, time, and variable.
 }

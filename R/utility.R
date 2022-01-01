@@ -974,18 +974,26 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' Takes the sf geometry and the time column as the dimensions for a stars object
 #'   with the remaining columns taken as attributes. If any location / time combination
 #'   is not present in x, then the corresponding entry of the stars object will be NA.
-#' Inverse operation of st_as_sf(x,long=T)
+#' Inverse operation of sf::st_as_sf(x,long=T) when the dimensions of x are space, time, and variable.
+#' (sf_as_sf converts character to factors)
 #'
 #' @param x An sf object
 #' @param time_column The name of the column in x giving the time index
-.sf_to_stars<- function(x,time_column) {
+.sf_to_stars<- function(x,time_column="time",var_column="variable") {
+  if( !(time_column %in% colnames(x)) ) {
+    stop(paste(time_column,"not present in column names of x"))
+  } else {}
+  if( !(var_column %in% colnames(x)) ) {
+    stop(paste(var_column,"not present in column names of x"))
+  } else {}
   # Get stars dimensions object
   dim_list<- list(
     loc = sf::st_as_sfc(unique(sf::st_geometry(x))),
-    time = unique(x[,time_column,drop=TRUE])
+    time = unique(x[,time_column,drop=TRUE]),
+    variable = unique(x[,var_column,drop=TRUE])
   )
   sf::st_crs(dim_list$loc)<- sf::st_crs(x)
-  names(dim_list)<- c(attr(x,"sf_column"),time_column)
+  names(dim_list)<- c(attr(x,"sf_column"),time_column,"variable")
   dims<- do.call(stars::st_dimensions,dim_list)
 
   # Reshape x into 3d array
@@ -993,6 +1001,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   var_cols<- setdiff(colnames(x),names(dims))
   x_stars<- stars::st_as_stars(lapply(var_cols,function(name) {
     a[rbind(apply(as.matrix(x[names(dims)]),2,as.character))]<- x[,name,drop=T]
+    dimnames(a)<- NULL
+    names(dim(a))<- NULL
     return(a)
   }),dimensions=dims)
   names(x_stars)<- var_cols
