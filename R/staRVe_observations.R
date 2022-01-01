@@ -167,7 +167,7 @@ prepare_staRVe_observations<- function(data,
     transient_graph(observations)<- construct_obs_dag(
       x = data,
       y = .locations_from_stars(random_effects(process)),
-      time = c(dat(observations)[,.time_name(settings),drop=T]),
+      time = c(dat(observations)[,.time_name(settings),drop=TRUE]),
       settings = settings,
     )
   } else {
@@ -197,7 +197,7 @@ prepare_staRVe_observations<- function(data,
     return(data.frame(
       par = numeric(length(nff)),
       se = rep(NA,length(nff)),
-      fixed = rep(F,length(nff)),
+      fixed = rep(FALSE,length(nff)),
       row.names = nff
     ))
   })

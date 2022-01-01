@@ -59,25 +59,25 @@ setReplaceMethod(f = "response_distribution",
     switch(rd,
       gaussian = data.frame(par = 0,
                             se = 0,
-                            fixed = F,
+                            fixed = FALSE,
                             row.names = "sd"),
       poisson = data.frame(par = numeric(0),
                            se = numeric(0),
                            fixed = logical(0)),
       `negative binomial` = data.frame(par = 0,
                                        se = 0,
-                                       fixed = F,
+                                       fixed = FALSE,
                                        row.names = "overdispersion"),
       bernoulli = data.frame(par = numeric(0),
                              se = numeric(0),
                              fixed = logical(0)),
       gamma = data.frame(par = 0,
                          se = 0,
-                         fixed = F,
+                         fixed = FALSE,
                          row.names = "sd"),
       lognormal = data.frame(par = 0,
                              se = 0,
-                             fixed = F,
+                             fixed = FALSE,
                              row.names = "sd"),
       binomial = data.frame(par = numeric(0),
                             se = numeric(0),
@@ -87,11 +87,11 @@ setReplaceMethod(f = "response_distribution",
                                       fixed = logical(0)),
       compois = data.frame(par = 0,
                            se = 0,
-                           fixed = F,
+                           fixed = FALSE,
                            row.names = "dispersion"),
       tweedie = data.frame(par = numeric(2),
                            se = numeric(2),
-                           fixed = c(F,F),
+                           fixed = c(FALSE,FALSE),
                            row.names = c("dispersion","power"))
     )
   })
@@ -159,7 +159,7 @@ setReplaceMethod(f = "link_function",
                  definition = function(x,value) {
   x@link_function<- unname(
     get_staRVe_distributions("link")[
-      pmatch(value,get_staRVe_distributions("link"),duplicates.ok=T)
+      pmatch(value,get_staRVe_distributions("link"),duplicates.ok=TRUE)
     ]
   )
   return(x)

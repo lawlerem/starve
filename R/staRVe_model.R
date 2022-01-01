@@ -442,7 +442,7 @@ setReplaceMethod(f = "formula",
     data.frame(
       par = numeric(ncol(design)),
       se = rep(NA,ncol(design)),
-      fixed = rep(F,ncol(design)),
+      fixed = rep(FALSE,ncol(design)),
       row.names = colnames(design)
     )
   })
@@ -572,9 +572,9 @@ setMethod(f = "graph",
 #'  the supplied \code{distance_units}.
 #' @param distance_units Which units should be used for distances?
 #' @param fit Should the model be fit in this call? If true, returns a fitted model.
-#' @param ... Extra options to pass to staRVe_fit if fit=T
+#' @param ... Extra options to pass to staRVe_fit if fit=TRUE
 #'
-#' @return A staRVe_model object. If fit=T, a staRVe_fit object.
+#' @return A staRVe_model object. If fit=TRUE, a staRVe_fit object.
 #'
 #' @export
 prepare_staRVe_model<- function(formula,
@@ -586,10 +586,10 @@ prepare_staRVe_model<- function(formula,
                                 transient_graph = NA,
                                 distribution = "gaussian",
                                 link = "default",
-                                silent = T,
+                                silent = TRUE,
                                 max_dist = Inf,
                                 distance_units = "km",
-                                fit = F,
+                                fit = FALSE,
                                 ...) {
   # Need to find name of time column
   time_form<- .time_from_formula(formula,data)
@@ -624,7 +624,7 @@ prepare_staRVe_model<- function(formula,
   process(model)<- prepare_staRVe_process(
     nodes = nodes,
     persistent_graph = persistent_graph,
-    time = as.data.frame(data)[,.time_name(model),drop=F],
+    time = as.data.frame(data)[,.time_name(model),drop=FALSE],
     settings = settings(model)
   )
 
@@ -638,7 +638,7 @@ prepare_staRVe_model<- function(formula,
     link = link
   )
 
-  if( fit == T ) {
+  if( fit ) {
     model<- staRVe_fit(model,silent = silent,...)
   } else {}
 
@@ -664,7 +664,7 @@ setMethod(f = "TMB_in",
     distribution_code = .distribution_to_code(response_distribution(x)),
     link_code = .link_to_code(link_function(x)),
     # Get time index, observations, and graph for observations
-    y_time = c(dat(x)[,.time_name(x),drop=T]),
+    y_time = c(dat(x)[,.time_name(x),drop=TRUE]),
     obs_y = as.matrix(.response_from_formula(formula(x),dat(x))),
     ys_edges = edges(idxR_to_C(graph(x)$transient_graph)),
     ys_dists = distances(graph(x)$transient_graph),
@@ -672,7 +672,7 @@ setMethod(f = "TMB_in",
     # If length>0, need an additional random effect
     resp_w_time = c(dat(x)[
         sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1, # Which edges have more than 1 in-node?
-        .time_name(x),drop=T]),
+        .time_name(x),drop=TRUE]),
     # Get covariates, and sample.size for binomial
     mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
     sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
@@ -686,7 +686,7 @@ setMethod(f = "TMB_in",
     pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
     pred_ws_dists = vector(mode="list",length=0),
     # conditional_sim only used in simulations
-    conditional_sim = F
+    conditional_sim = FALSE
   )
 
   # Subtract off minimum year so all time indices start at 0
@@ -711,27 +711,27 @@ setMethod(f = "TMB_in",
         switch(response_distribution(x)[[v]],
           gaussian = ifelse( # Normal; std. dev. > 0
                 response_parameters(x)[[v]]["sd","par"] > 0 ||
-                response_parameters(x)[[v]]["sd","fixed"] == T,
+                response_parameters(x)[[v]]["sd","fixed"] == TRUE,
               log(response_parameters(x)[[v]]["sd","par"]),
               log(1)
             ),
           poisson = numeric(0), # Poisson; NA
           `negative binomial` = ifelse( # Neg. Binom.; overdispersion >= 1
                 response_parameters(x)[[v]]["overdispersion","par"] >= 1 ||
-                response_parameters(x)[[v]]["overdispersion","fixed"] == T,
+                response_parameters(x)[[v]]["overdispersion","fixed"] == TRUE,
               log(response_parameters(x)[[v]]["overdispersion","par"]-1),
               log(1)
             ),
           bernoulli = numeric(0), # Bernoulli; NA
           gamma = ifelse( # Gamma; std. dev. > 0
                 response_parameters(x)[[v]]["sd","par"] > 0 ||
-                response_parameters(x)[[v]]["sd","fixed"] == T,
+                response_parameters(x)[[v]]["sd","fixed"] == TRUE,
               log(response_parameters(x)[[v]]["sd","par"]),
               log(1)
             ), # Gamma; std. dev.
           lognormal = ifelse( # Log-Normal; std. dev. > 0
                 response_parameters(x)[[v]]["sd","par"] > 0 ||
-                response_parameters(x)[[v]]["sd","fixed"] == T,
+                response_parameters(x)[[v]]["sd","fixed"] == TRUE,
               log(response_parameters(x)[[v]]["sd","par"]),
               log(1)
             ), # Log-normal; std. dev.
@@ -739,7 +739,7 @@ setMethod(f = "TMB_in",
           atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
           compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
                 response_parameters(x)[[v]]["dispersion","par"] > 0 ||
-                response_parameters(x)[[v]]["dispersion","fixed"] == T,
+                response_parameters(x)[[v]]["dispersion","fixed"] == TRUE,
               -log(response_parameters(x)[[v]]["dispersion","par"]),
               # negative sign since we want >0 to be over-dispersion
               -log(1)
@@ -747,14 +747,14 @@ setMethod(f = "TMB_in",
           tweedie = c( # tweedie
             ifelse( # dispersion>0
               response_parameters(x)[[v]]["dispersion","par"] > 0 ||
-              response_parameters(x)[[v]]["dispersion","fixed"] == T,
+              response_parameters(x)[[v]]["dispersion","fixed"] == TRUE,
               log(response_parameters(x)[[v]]["dispersion","par"]),
               log(1)
             ),
             ifelse( # 1<power<2
               (0 < response_parameters(x)[[v]]["power","par"] &&
                response_parameters(x)[[v]]["power","par"] < 1) ||
-              response_parameters(x)[[v]]["power","par"] == T,
+              response_parameters(x)[[v]]["power","par"] == TRUE,
               qlogis(response_parameters(x)[[v]]["power","par"]-1),
               qlogis(1.5-1)
             )
@@ -777,19 +777,19 @@ setMethod(f = "TMB_in",
           c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
             ifelse( # std. dev. > 0
                 spatial_parameters(x)[[v]]["sd","par"] > 0 ||
-                spatial_parameters(x)[[v]]["sd","fixed"] == T,
+                spatial_parameters(x)[[v]]["sd","fixed"] == TRUE,
               log(spatial_parameters(x)[[v]]["sd","par"]),
               log(1)
             ),
             ifelse( # rho > 0
               spatial_parameters(x)[[v]]["range","par"] > 0 ||
-              spatial_parameters(x)[[v]]["range","fixed"] == T,
+              spatial_parameters(x)[[v]]["range","fixed"] == TRUE,
               log(spatial_parameters(x)[[v]]["range","par"]),
               log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
             ),
             ifelse( # nu > 0
                 spatial_parameters(x)[[v]]["nu","par"] > 0 ||
-                spatial_parameters(x)[[v]]["nu","fixed"] == T,
+                spatial_parameters(x)[[v]]["nu","fixed"] == TRUE,
               log(spatial_parameters(x)[[v]]["nu","par"]),
               log(0.5)
             )
@@ -804,13 +804,13 @@ setMethod(f = "TMB_in",
           ifelse( # -1 <= ar1 <= +1
               (time_parameters(x)[[v]]["ar1","par"] >= -1
                 && time_parameters(x)[[v]]["ar1","par"] <= 1) ||
-              time_parameters(x)[[v]]["ar1","fixed"] == T,
+              time_parameters(x)[[v]]["ar1","fixed"] == TRUE,
             qlogis(0.5*(1+time_parameters(x)[[v]]["ar1","par"])),
             qlogis(0.5*(1+0))
           ),
           ifelse( # sd > 0
               time_parameters(x)[[v]]["sd","par"] > 0 ||
-              time_parameters(x)[[v]]["sd","fixed"] == T,
+              time_parameters(x)[[v]]["sd","fixed"] == TRUE,
             log(time_parameters(x)[[v]]["sd","par"]),
             log(1)
           )
@@ -865,7 +865,7 @@ setMethod(f = "TMB_in",
 })
 
 
-#' Update staRVe_model parameters / random effects from a fitted TMB::MakeADFUn object
+#' Update staRVe_model parameters / random effects from a fitted TMB::MakeADFun object
 #'
 #' @return A staRVe_model object with ML estimates
 #'
@@ -920,13 +920,13 @@ setMethod(f = "update_staRVe_model",
   for( i in seq(nrow(dat(x))) ) {
     if( length(edges(graph(x)$transient_graph)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effect from persistent graph
-      this_year<- dat(x)[i,.time_name(x),drop=T]
+      this_year<- dat(x)[i,.time_name(x),drop=TRUE]
       for( v in seq(.n_response(formula(x))) ) {
         w_se<- as.numeric(random_effects(x)[c("w","se"),
                                             edges(graph(x)$transient_graph)[[i]][["from"]],
                                             which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
                                             v,
-                                            drop=T])
+                                            drop=TRUE])
         predictions(data_predictions(x))[["w"]][i,v]<- w_se[[v]]
         predictions(data_predictions(x))[["w_se"]][i,v]<- w_se[[v]]
       }

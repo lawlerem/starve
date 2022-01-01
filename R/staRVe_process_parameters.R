@@ -18,7 +18,7 @@ setMethod(
                         covariance_function = "exponential",
                         time_parameters = list(data.frame(par = c(0,0,0),
                                                           se = c(0,0,0),
-                                                          fixed = c(F,F,F),
+                                                          fixed = c(FALSE,FALSE,FALSE),
                                                           row.names = c("mu","ar1","sd")))) {
     covariance_function(.Object)<- covariance_function
     # covariance function takes care of spatial parameters
@@ -59,19 +59,19 @@ setReplaceMethod(f = "covariance_function",
     switch(cf,
       exponential = data.frame(par = c(0,0,0.5),
                                se = c(0,0,0),
-                               fixed = c(F,F,T),
+                               fixed = c(FALSE,FALSE,TRUE),
                                row.names = c("sd","range","nu")),
       gaussian = data.frame(par = c(0,0,Inf),
                                se = c(0,0,0),
-                               fixed = c(F,F,T),
+                               fixed = c(FALSE,FALSE,TRUE),
                                row.names = c("sd","range","nu")),
       matern = data.frame(par = c(0,0,0.5),
                           se = c(0,0,0),
-                          fixed = c(F,F,F),
+                          fixed = c(FALSE,FALSE,FALSE),
                           row.names = c("sd","range","nu")),
       matern32 = data.frame(par = c(0,0,1.5),
                             se = c(0,0,0),
-                            fixed = c(F,F,T),
+                            fixed = c(FALSE,FALSE,TRUE),
                             row.names = c("sd","range","nu")),
     )
   })

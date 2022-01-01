@@ -176,7 +176,7 @@ prepare_staRVe_process<- function(nodes,
     distance_units(persistent_graph)<- distance_units(settings)
     persistent_graph(process)<- persistent_graph
   } else {
-    graph<- construct_dag(uniq_nodes,settings=settings,silent=T)
+    graph<- construct_dag(uniq_nodes,settings=settings,silent=TRUE)
     uniq_nodes<- graph$locations
     persistent_graph(process)<- graph$dag
   }
@@ -203,7 +203,7 @@ prepare_staRVe_process<- function(nodes,
   for( i in seq_along(covariance$nu) ) {
     if( covariance$covariance[[i]] == "matern" & !is.na(covariance$nu[[i]]) ) {
       spatial_parameters(parameters)[[i]]["nu","par"]<- covariance$nu[[i]]
-      spatial_parameters(parameters)[[i]]["nu","fixed"]<- T
+      spatial_parameters(parameters)[[i]]["nu","fixed"]<- TRUE
     } else {}
   }
   names(spatial_parameters(parameters))<- .response_names(formula(settings))
@@ -217,17 +217,17 @@ prepare_staRVe_process<- function(nodes,
                      rw = 1),
               0),
       se = NA,
-      fixed = c(F,
+      fixed = c(FALSE,
                 switch(tt,
-                       ar1 = F,
-                       independent = T,
-                       rw = T),
-                F),
+                       ar1 = FALSE,
+                       independent = TRUE,
+                       rw = TRUE),
+                FALSE),
       row.names = c("mu","ar1","sd")
     )
     if( length(unique(time_seq)) == 1 ) {
       # If purely spatial data, we don't need time parameters
-      df[c("ar1","sd"),"fixed"]<- c(T,T)
+      df[c("ar1","sd"),"fixed"]<- c(TRUE,TRUE)
     } else {}
     return(df)
   })

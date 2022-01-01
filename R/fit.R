@@ -7,7 +7,7 @@
 #'   and random effects
 setMethod(f = "staRVe_fit",
           signature = "staRVe_model",
-          definition = function(x,silent = F,...) {
+          definition = function(x,silent = FALSE,...) {
   TMB_input<- TMB_in(x)
 
   TMB_out<- new("TMB_out")
@@ -69,7 +69,7 @@ setMethod(f = "staRVe_fit",
       obj(TMB_out),
       par.fixed = opt(TMB_out)$par,
       hessian.fixed = parameter_hessian(tracing),
-      getReportCovariance = F,
+      getReportCovariance = FALSE,
       ...
     )
   }) -> sdr_time(tracing)
@@ -102,7 +102,7 @@ setMethod(f = "staRVe_fit",
 setMethod(f = "staRVe_simulate",
           signature = "staRVe_model",
           def = function(model,
-                         conditional = F,
+                         conditional = FALSE,
                          ...) {
   TMB_input<- TMB_in(model)
   if( conditional ) {
@@ -116,7 +116,7 @@ setMethod(f = "staRVe_simulate",
     random = TMB_input$rand,
     map = TMB_input$map,
     DLL = "staRVe_model",
-    silent = T,
+    silent = TRUE,
     ...
   )
 
@@ -140,14 +140,14 @@ setMethod(f = "staRVe_simulate",
   for( i in seq(nrow(dat(model))) ) {
     if( length(edges(graph(model)$transient_graph)[[i]][["from"]]) == 1 ) {
       # If length == 1, take random effects from persistent graph
-      this_year<- dat(model)[i,.time_name(model),drop=T]
+      this_year<- dat(model)[i,.time_name(model),drop=TRUE]
       for( v in seq(.n_response(formula(model))) ) {
         predictions(data_predictions(model))$w[i,v]<- as.numeric(
           random_effects(model)["w",
                                 edges(graph(model)$transient_graph)[[i]][["from"]],
                                 which(stars::st_get_dimension_values(random_effects(model),.time_name(model))==this_year),
                                 v,
-                                drop=T]
+                                drop=TRUE]
         )
       }
     } else {
@@ -162,8 +162,8 @@ setMethod(f = "staRVe_simulate",
 
   # Simulated values don't have standard errors, update linear and response predictions
   # to correspond to the simulated random effects
-  data_predictions(model)<- .predict_linear(model,data_predictions(model),se = F)
-  data_predictions(model)<- .predict_response(model,data_predictions(model),se=F)
+  data_predictions(model)<- .predict_linear(model,data_predictions(model),se = FALSE)
+  data_predictions(model)<- .predict_response(model,data_predictions(model),se=FALSE)
 
   # Update response observations to be the simulated value
   dat(model)[,attr(.response_from_formula(formula(settings(model)),
@@ -219,10 +219,10 @@ setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","RasterLayer"),
           definition = function(x,locations,covariates,time="model") {
   # Convert raster to sf
-  uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=T))
+  uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=TRUE))
   uniq_prediction_points<- uniq_prediction_points[,attr(uniq_prediction_points,"sf_column")]
   if( identical(time,"model") ) {
-    time<- seq(min(dat(x)[,.time_name(x),drop=T]),max(dat(x)[,.time_name(x),drop=T]))
+    time<- seq(min(dat(x)[,.time_name(x),drop=TRUE]),max(dat(x)[,.time_name(x),drop=TRUE]))
   } else {
     time<- seq(min(time),max(time))
   }
@@ -245,9 +245,9 @@ setMethod(f = "staRVe_predict",
     sf::st_geometry(prediction_points)<- attr(covar_points,"sf_column")
     prediction_points<- do.call(rbind,Map(
       sf::st_join,
-      split(prediction_points,prediction_points[,.time_name(x),drop=T]),
-      split(covar_points,covar_points[,.time_name(x),drop=T]),
-      suffix = lapply(unique(covar_points[,.time_name(x),drop=T]),function(t) return(c("",".a")))
+      split(prediction_points,prediction_points[,.time_name(x),drop=TRUE]),
+      split(covar_points,covar_points[,.time_name(x),drop=TRUE]),
+      suffix = lapply(unique(covar_points[,.time_name(x),drop=TRUE]),function(t) return(c("",".a")))
     ))
 
     prediction_points[,paste0(.time_name(x),".a")]<- NULL
@@ -259,7 +259,7 @@ setMethod(f = "staRVe_predict",
   # should have dimension 4 : x coordinate, y coordinate, time, variable
   var_stars<- lapply(seq_along(.n_response(formula(x))),function(i) {
     pred_sf_list<- cbind(do.call(cbind,predictions(pred)[,,i]),locations(pred))
-    pred_sf_list<- lapply(split(pred_sf_list,pred_sf_list[,.time_name(x),drop=T]),
+    pred_sf_list<- lapply(split(pred_sf_list,pred_sf_list[,.time_name(x),drop=TRUE]),
                           stars::st_rasterize,
                           template = stars::st_as_stars(locations))
     pred_stars<- do.call(c,c(pred_sf_list,list(along = .time_name(x))))
@@ -268,7 +268,7 @@ setMethod(f = "staRVe_predict",
 
   if( length(var_stars) == 1 ) {
     pred_stars<- do.call(c,c(var_stars,var_stars,list(along = "variable")))
-    pred_stars<- pred_stars[,,,,1,drop=F]
+    pred_stars<- pred_stars[,,,,1,drop=FALSE]
   } else {
     pred_stars<- do.call(c,c(var_stars,list(along = "variable")))
   }
@@ -304,7 +304,7 @@ setMethod(f = "staRVe_predict",
   # Set up prediction data.frame
   # Each location is used each prediction time
   locs<- unique(locations(predictions)[,attr(locations(predictions),"sf_column")])
-  pred_times<- unique(locations(predictions)[,.time_name(x),drop=T])
+  pred_times<- unique(locations(predictions)[,.time_name(x),drop=TRUE])
   full_predictions<- new("staRVe_predictions",
                          sf::st_sf(data.frame(time = rep(pred_times,each=nrow(locs)),
                                               geom = rep(sf::st_geometry(locs),length(pred_times)))),
@@ -317,7 +317,7 @@ setMethod(f = "staRVe_predict",
     x = locs,
     y = .locations_from_stars(random_effects(x)),
     time = 0, # Use the same graph every year
-    check_intersection = T,
+    check_intersection = TRUE,
     settings = settings(x)
   )
   # intersection_idx is the same every year
@@ -346,7 +346,7 @@ setMethod(f = "staRVe_predict",
   # Prepare input for TMB, TMB_in(x) doesn't take care of pred_* things
   # except pred_w is already declared as a random effect
   TMB_input<- TMB_in(x)
-  TMB_input$data$pred_w_time<- c(locations(full_predictions)[,.time_name(x),drop=T]
+  TMB_input$data$pred_w_time<- c(locations(full_predictions)[,.time_name(x),drop=TRUE]
     - min(stars::st_get_dimension_values(random_effects(x),.time_name(x))))[!intersection_all_idx]
   TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))[!intersection_idx]
   TMB_input$data$pred_ws_dists<- distances(dag)[!intersection_idx]
@@ -369,7 +369,7 @@ setMethod(f = "staRVe_predict",
   sdr<- TMB::sdreport(obj,
                       par.fixed = opt(TMB_out(x))$par,
                       hessian.fixed = parameter_hessian(tracing(x)),
-                      getReportCovariance = F)
+                      getReportCovariance = FALSE)
 
   # intersection_w_idx is the same every year
   intersection_w_idx<- do.call(c,lapply(edges(dag)[intersection_idx],function(e) {
@@ -397,9 +397,9 @@ setMethod(f = "staRVe_predict",
   # Pick out year / location combos that were in original
   idx<- lapply(Map(
     st_intersects,
-    split(locations(predictions),locations(predictions)[,.time_name(x),drop=T]),
-    split(locations(full_predictions),locations(full_predictions)[,.time_name(x),drop=T]),
-    sparse = T
+    split(locations(predictions),locations(predictions)[,.time_name(x),drop=TRUE]),
+    split(locations(full_predictions),locations(full_predictions)[,.time_name(x),drop=TRUE]),
+    sparse = TRUE
   ),as.data.frame)
   idx<- do.call(c,lapply(seq_along(idx),function(t) {
     id<- idx[[t]]$col.id + (t-1)*nrow(locs) # locs is unique(locations)
@@ -413,7 +413,7 @@ setMethod(f = "staRVe_predict",
 
 #' Update random effect predictions to include covariates (link scale)
 #'
-#' @param x A staRVe_model object. If se = T, should be a staRVe_model_fit object.
+#' @param x A staRVe_model object. If se = TRUE, should be a staRVe_model_fit object.
 #' @param predictions A staRVe_predictions object, typically the output of .predict_w.
 #'   Should contain covariate data in slot 'locations'
 #' @param se Should standard errors be calculated?
@@ -423,7 +423,7 @@ setMethod(f = "staRVe_predict",
 #' @noRd
 .predict_linear<- function(x,
                            predictions,
-                           se = T) {
+                           se = TRUE) {
   ### No intercept since it's already taken care of in predict_w
   if( length(.names_from_formula(formula(x))) == 0 ) {
     # If there are no covariates, there's nothing to do
@@ -452,12 +452,12 @@ setMethod(f = "staRVe_predict",
         # coefficients.
         parameter_covariance<- parameter_covariance(tracing(x))
         par_idx<- rownames(parameter_covariance) %in% c("mean_pars")
-        par_sdreport<- parameter_covariance[par_idx,par_idx,drop=F] # Drop = F to keep matrix
+        par_sdreport<- parameter_covariance[par_idx,par_idx,drop=FALSE] # Drop = FALSE to keep matrix
         vlengths<- do.call(c,lapply(fixed_effects(x),nrow))
         vstarts<- c(1,1+cumsum(vlengths))
         vpar_idx<- seq(vstarts[[v]],vstarts[[v]]+vlengths[[v]]-1) # mean pars for variable v
         # Keep fixed fixed effects with an standard error of 0
-        par_idx<- names(beta)[fixed_effects(parameters(x))[[v]][,"fixed"] == F]
+        par_idx<- names(beta)[fixed_effects(parameters(x))[[v]][,"fixed"] == FALSE]
         par_cov[par_idx,par_idx]<- par_sdreport[vpar_idx,vpar_idx]
 
         # The commented and uncommented methods are the same
@@ -475,7 +475,7 @@ setMethod(f = "staRVe_predict",
 #'
 #' A second-order Taylor approximation (delta method) is used
 #'
-#' @param x A staRVe_model object. If se = T, should be a staRVe_model_fit object.
+#' @param x A staRVe_model object. If se = TRUE, should be a staRVe_model_fit object.
 #' @param predictions A data.frame, typically the output of .predict_linear.
 #'   Must contain at least the columns linear and linear_se.
 #' @param se Should standard errors be calculated?
@@ -486,7 +486,7 @@ setMethod(f = "staRVe_predict",
 #' @noRd
 .predict_response<- function(x,
                              predictions,
-                             se = T) {
+                             se = TRUE) {
   for( v in seq(.n_response(formula(x))) ) {
     # Just need to specify which link function is used
     # Will get the function and gradient from TMB, evaluated at
@@ -500,7 +500,7 @@ setMethod(f = "staRVe_predict",
       data = data,
       para = para,
       DLL = "staRVe_model",
-      silent = T
+      silent = TRUE
     )
 
     if( se ) {

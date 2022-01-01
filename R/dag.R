@@ -137,7 +137,7 @@ NULL
 #' @export
 construct_dag<- function(x,
                          settings = new("staRVe_settings"),
-                         silent = T) {
+                         silent = TRUE) {
   dist_matrix<- as.matrix(units::set_units(sf::st_distance(x),
                                            distance_units(settings),
                                            mode="standard"))
@@ -161,8 +161,8 @@ construct_obs_dag<- function(x,
                              y,
                              time = 0,
                              settings = new("staRVe_settings"),
-                             check_intersection = T,
-                             silent = T) {
+                             check_intersection = TRUE,
+                             silent = TRUE) {
   colnames(y)[colnames(y) == attr(y,"sf_column")]<- attr(x,"sf_column")
   st_geometry(y)<- attr(x,"sf_column")
   # Parents won't be eligible if their distance is too far
@@ -200,8 +200,8 @@ construct_obs_dag<- function(x,
     suppressMessages({
       nn_list<- nngeo::st_nn(x = x[nn_idx,],
                              y = y,
-                             returnDist = F,
-                             sparse = T,
+                             returnDist = FALSE,
+                             sparse = TRUE,
                              progress = !silent,
                              k = switch(obs_dag_method(settings),
                                         standard = n_neighbours(settings),
@@ -272,13 +272,13 @@ construct_obs_dag<- function(x,
         })
         dists[,1]<- dists[1,]
 
-        if( !requireNamespace("MASS",quietly=T) ) {
+        if( !requireNamespace("MASS",quietly=TRUE) ) {
           stop("Package MASS needed to use inla.mesh for nodes. Please install it.",
             call. = FALSE)
         } else {}
-        dists<-  dist(MASS::isoMDS(dists,trace=F)$points,
-                      diag = T,
-                      upper = T)
+        dists<-  dist(MASS::isoMDS(dists,trace=FALSE)$points,
+                      diag = TRUE,
+                      upper = TRUE)
         return(as.matrix(dists))
       }
     })

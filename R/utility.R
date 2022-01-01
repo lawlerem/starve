@@ -30,7 +30,7 @@ NULL
       return(abind::abind(array(0,dim = c(dim(va)[[1]],min(model_times)-min(times),dim(va)[[3]])),
                           va,
                           along = which(names(new_dims) == .time_name(x)),
-                          use.first.dimnames = F
+                          use.first.dimnames = FALSE
                         ))
     })
     new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
@@ -41,7 +41,7 @@ NULL
       return(abind::abind(va,
                           array(0,dim = c(dim(va)[[1]],max(times)-max(model_times),dim(va)[[3]])),
                           along = which(names(new_dims) == .time_name(x)),
-                          use.first.dimnames = T
+                          use.first.dimnames = TRUE
                         ))
     })
     new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
@@ -60,7 +60,7 @@ NULL
       return(abind::abind(array(0,dim = c(min(model_times)-min(times),dim(va)[[2]])),
                           va,
                           along = which(names(new_dims) == .time_name(x)),
-                          use.first.dimnames = F
+                          use.first.dimnames = FALSE
                         ))
     })
     new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
@@ -71,7 +71,7 @@ NULL
       return(abind::abind(va,
                           array(0,dim = c(max(times)-max(model_times),dim(va)[[2]])),
                           along = which(names(new_dims) == .time_name(x)),
-                          use.first.dimnames = T
+                          use.first.dimnames = TRUE
                         ))
     })
     new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
@@ -96,7 +96,7 @@ NULL
 #'
 #' Run by entering \code{staRVe:::.birdFit()}
 #'
-#' @return A list with outputs from prepare_staRVe_model(...,fit=T), staRVe_simulate,
+#' @return A list with outputs from prepare_staRVe_model(...,fit=TRUE), staRVe_simulate,
 #'   and staRVe_predict (with forecasts).
 #'
 #' @noRd
@@ -109,7 +109,7 @@ NULL
     cnt~x+I(x^2)+time(year),
     small_bird,
     distribution="poisson",
-    fit=T
+    fit=TRUE
   )
   sim<- staRVe_simulate(fit)
   pred_years<- 2000:2010
@@ -493,19 +493,19 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     }
   })
   dist_matrix<- matrix(dist_matrix,nrow=nrow(m))
-  igraph<- igraph::graph_from_adjacency_matrix(dist_matrix,weighted=T)
+  igraph<- igraph::graph_from_adjacency_matrix(dist_matrix,weighted=TRUE)
   dist_matrix<- igraph::distances(igraph)
 
-  if( !requireNamespace("MASS",quietly=T) ) {
+  if( !requireNamespace("MASS",quietly=TRUE) ) {
     stop("Package MASS needed to use inla.mesh for nodes. Please install it.",
       call. = FALSE)
   } else {}
   dist_list<- lapply(edge_list,function(edges) {
     all_v<- c(edges$to,edges$from)
     dists<- dist_matrix[all_v,all_v]
-    dists<-  dist(MASS::isoMDS(dists,trace=F)$points,
-                  diag = T,
-                  upper = T)
+    dists<-  dist(MASS::isoMDS(dists,trace=FALSE)$points,
+                  diag = TRUE,
+                  upper = TRUE)
     return(as.matrix(dists))
   })
 
@@ -639,12 +639,12 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     # create the model.matrix (no expansion). Does expand poly() (and other specials?)
     model.frame = model.frame(the_terms,data=data),
     # Returns the subset of the original the data.frame
-    all.vars = data[,all.vars(formula(the_terms)),drop=F]
+    all.vars = data[,all.vars(formula(the_terms)),drop=FALSE]
   ))
   attr(the_df,"terms")<- NULL
   attr(the_df,"assign")<- NULL
   attr(the_df,"constrasts")<- NULL
-  if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=F]}
+  if( "(Intercept)" %in% colnames(the_df) ) {the_df<- the_df[,-grep("(Intercept)",colnames(the_df)),drop=FALSE]}
 
   rownames(the_df)<- NULL
   return(the_df)
@@ -772,7 +772,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     if( !(paste(var_call) %in% colnames(data)) ) {
       stop(paste("Response variable",var_call,"not present in data."))
     } else {}
-    response<- data[,paste(var_call),drop=F]
+    response<- data[,paste(var_call),drop=FALSE]
   } else {
     # Multivariate
     if( !(paste(var_call[[1]]) == "cbind") ) {
@@ -874,7 +874,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     if( length(char_vars) == 0 ) {
       sample.size<- as.data.frame(matrix(1,nrow=nrow(data),ncol=0))
     } else {
-      sample.size<- data[,char_vars,drop=F]
+      sample.size<- data[,char_vars,drop=FALSE]
     }
   } else {
     sample.size<-  as.data.frame(matrix(1,nrow=nrow(data),ncol=.n_response(x)))
@@ -884,7 +884,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
       } else if( is.numeric(var_call[[i]]) ) {
         sample.size[,i]<- as.data.frame(matrix(var_call[[i]],nrow=nrow(data),ncol=1))
       } else {
-        sample.size[,i]<- data[,paste(var_call[[i]]),drop=F]
+        sample.size[,i]<- data[,paste(var_call[[i]]),drop=FALSE]
         colnames(sample.size)[[i]]<- paste(var_call[[i]])
       }
     }
@@ -918,9 +918,9 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     layer_list<- lapply(layer_names,function(name) {
       # This lapply takes the covariates for a single time and converts the
       # raster layer to an sf object
-      numeric_name<- as.numeric(gsub("t","",name,ignore.case=T))
-      sf_layer<- sf::st_as_sf(raster::rasterToPoints(raster_brick[[name]],spatial=T))
-      sf_layer<- cbind(sf_layer[,name,drop=T],
+      numeric_name<- as.numeric(gsub("t","",name,ignore.case=TRUE))
+      sf_layer<- sf::st_as_sf(raster::rasterToPoints(raster_brick[[name]],spatial=TRUE))
+      sf_layer<- cbind(sf_layer[,name,drop=TRUE],
                        numeric_name,
                        sf_layer[,attr(sf_layer,"st_geometry")])
       colnames(sf_layer)[1:2]<- c("value",time_name)
@@ -937,7 +937,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
   # Get the times and locations needed
   unique_times<- lapply(sf_list, function(x) {
-    return(unique(x[,time_name,drop=T]))
+    return(unique(x[,time_name,drop=TRUE]))
   })
   unique_times<- sort(unique(do.call(c,unique_times)))
   unique_geoms<- unique(sf_list[[1]][,attr(sf_list[[1]],"st_geometry")]) # This
@@ -949,7 +949,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     time_sf<- cbind(time,unique_geoms)
     # Add in the covariates with a spatial join
     var_columns<- lapply(sf_list,function(var) {
-      var_time<- var[var[,time_name,drop=T]==time,] # Get covariates for this time
+      var_time<- var[var[,time_name,drop=TRUE]==time,] # Get covariates for this time
       var_time[,time_name]<- NULL # Get rid of time column
       suppressMessages(var_time<- sf::st_join(unique_geoms,var_time))
       var_time<- sf::st_drop_geometry(var_time) # Drop geometry so it isn't duplicated
@@ -974,7 +974,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' Takes the sf geometry and the time column as the dimensions for a stars object
 #'   with the remaining columns taken as attributes. If any location / time combination
 #'   is not present in x, then the corresponding entry of the stars object will be NA.
-#' Inverse operation of sf::st_as_sf(x,long=T) when the dimensions of x are space, time, and variable.
+#' Inverse operation of sf::st_as_sf(x,long=TRUE) when the dimensions of x are space, time, and variable.
 #' (sf_as_sf converts character to factors)
 #'
 #' @param x An sf object
@@ -1000,7 +1000,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   a<- array(NA,dim(dims),dimnames=dim_list)
   var_cols<- setdiff(colnames(x),names(dims))
   x_stars<- stars::st_as_stars(lapply(var_cols,function(name) {
-    a[rbind(apply(as.matrix(x[names(dims)]),2,as.character))]<- x[,name,drop=T]
+    a[rbind(apply(as.matrix(x[names(dims)]),2,as.character))]<- x[,name,drop=TRUE]
     dimnames(a)<- NULL
     names(dim(a))<- NULL
     return(a)
@@ -1037,16 +1037,16 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     if( !(time_var %in% colnames(data)) ) {
       stop(paste("Time variable",time_var,"not present in data."))
     } else {}
-    if( !is.numeric(data[,time_var,drop=T]) ) {
+    if( !is.numeric(data[,time_var,drop=TRUE]) ) {
       stop(paste("Time variable must be numeric. Supplied variable",time_var,"is",class(time_var)))
     } else {}
-    if( !isTRUE(all.equal(floor(data[,time_var,drop=T]),data[,time_var,drop=T])) ) {
+    if( !isTRUE(all.equal(floor(data[,time_var,drop=TRUE]),data[,time_var,drop=TRUE])) ) {
       warning(paste("Time variable",time_var,"will be rounded down to integer values."))
-      data[,time_var]<- floor(data[,time_var,drop=T])
+      data[,time_var]<- floor(data[,time_var,drop=TRUE])
     } else {}
     # Find the closest match for type of temporal structure
     # Why is this not in get_staRVe_distributions? They're not really different structures?
-    time_col<- as.data.frame(data)[,time_var,drop=F]
+    time_col<- as.data.frame(data)[,time_var,drop=FALSE]
     type<- pmatch(type,c("ar1","rw","independent"),duplicates.ok=TRUE)
     type<- c("ar1","rw","independent")[type]
     attr(time_col,"type")<- rep(type,length.out=.n_response(x))
@@ -1074,7 +1074,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 .time_name_from_formula<- function(x) {
   the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
-  the_call<- grep("^time",term.labels,value=T)
+  the_call<- grep("^time",term.labels,value=TRUE)
 
   # If the "time" term is missing, create a dummy Time variable where all
   # observations happen at the same time. Type = independent because there
