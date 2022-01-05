@@ -7,7 +7,8 @@ NULL
 ###           ###
 #################
 
-#' @param locations An sf object with a time column and point geometryies
+#' @param locations An sf object with a time column and point geometries
+#' @param var_names A character vector
 #'
 #' @rdname staRVe-construct
 setMethod(

@@ -39,9 +39,9 @@
 \alias{graph,staRVe_model-method}
 \title{An S4 class describing a staRVe model.}
 \usage{
-\S4method{staRVe_fit}{staRVe_model}(x, silent = F, ...)
+\S4method{staRVe_fit}{staRVe_model}(x, silent = FALSE, ...)
 
-\S4method{staRVe_simulate}{staRVe_model}(model, conditional = F, ...)
+\S4method{staRVe_simulate}{staRVe_model}(model, conditional = FALSE, ...)
 
 \S4method{show}{staRVe_model}(object)
 

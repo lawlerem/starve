@@ -10,10 +10,13 @@
 \item{x}{An sf object}
 
 \item{time_column}{The name of the column in x giving the time index}
+
+\item{var_column}{The name of the column in x giving the variable}
 }
 \description{
 Takes the sf geometry and the time column as the dimensions for a stars object
   with the remaining columns taken as attributes. If any location / time combination
   is not present in x, then the corresponding entry of the stars object will be NA.
-Inverse operation of sf::st_as_sf(x,long=T) when the dimensions of x are space, time, and variable.
+Inverse operation of sf::st_as_sf(x,long=TRUE) when the dimensions of x are space, time, and variable.
+(sf_as_sf converts character to factors)
 }

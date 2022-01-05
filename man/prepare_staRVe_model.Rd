@@ -14,10 +14,10 @@ prepare_staRVe_model(
   transient_graph = NA,
   distribution = "gaussian",
   link = "default",
-  silent = T,
+  silent = TRUE,
   max_dist = Inf,
   distance_units = "km",
-  fit = F,
+  fit = FALSE,
   ...
 )
 }
@@ -63,10 +63,10 @@ the supplied \code{distance_units}.}
 
 \item{fit}{Should the model be fit in this call? If true, returns a fitted model.}
 
-\item{...}{Extra options to pass to staRVe_fit if fit=T}
+\item{...}{Extra options to pass to staRVe_fit if fit=TRUE}
 }
 \value{
-A staRVe_model object. If fit=T, a staRVe_fit object.
+A staRVe_model object. If fit=TRUE, a staRVe_fit object.
 }
 \description{
 'prepare_staRVe_model' is used to take an existing `simple features` data.frame

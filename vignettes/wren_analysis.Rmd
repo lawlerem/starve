@@ -1,0 +1,238 @@
+---
+title: "Wren Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Wren Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+
+```r
+library("staRVe")
+library("raster")
+library("rnaturalearth")
+library("tmap")
+library("stars")
+#> Loading required package: abind
+library("DHARMa")
+#> This is DHARMa 0.4.2. For overview type '?DHARMa'. For recent changes, type news(package = 'DHARMa') Note: Syntax of plotResiduals has changed in 0.3.0, see ?plotResiduals for details
+library("parallel")
+```
+
+
+
+
+```r
+bird_fit<- prepare_staRVe_model(
+  cnt ~ time(year),
+  data = bird_survey,
+  distribution = "poisson",
+  fit = T
+)
+```
+
+
+
+```r
+pois<- staRVe_simulate(bird_fit,conditional=T)
+```
+
+
+```r
+pois_sim<- do.call(cbind,mclapply(seq(100),function(i) {
+  sim<- staRVe_simulate(bird_fit,conditional=T)
+  return(dat(sim)$cnt)
+},mc.cores=8))
+bird_dharma<- createDHARMa(simulated=pois_sim,
+                           observed=dat(bird_fit)$cnt,
+                           integer=T)
+```
+
+
+```r
+pois_dharma<- createDHARMa(simulated=pois_sim,
+                           observed=dat(pois)$cnt,
+                           integer=T)
+#> No fitted predicted response provided, using the mean of the simulations
+```
+
+
+```r
+negBin<- bird_fit
+response_distribution(negBin)<- "negative binomial"
+response_parameters(negBin)[[1]]<- data.frame(par = 1.5,
+                                              se = NA,
+                                              fixed = F,
+                                              row.names = "overdispersion")
+negBin<-staRVe_simulate(negBin,conditional=T)
+negBin_dharma<- createDHARMa(simulated=pois_sim,
+                             observed=dat(negBin)$cnt,
+                             integer=T)
+#> No fitted predicted response provided, using the mean of the simulations
+```
+
+
+```r
+compois<- bird_fit
+response_distribution(compois)<- "compois"
+response_parameters(compois)[[1]]<- data.frame(par = 0.5,
+                                          se = NA,
+                                          fixed=F,
+                                          row.names = "dispersion")
+compois<- staRVe_simulate(compois,conditional=T)
+compois_dharma<- createDHARMa(simulated=pois_sim,
+                              observed=dat(compois)$cnt,
+                              integer=T)
+#> No fitted predicted response provided, using the mean of the simulations
+```
+
+```r
+bird_resid<- sort(bird_dharma$scaledResiduals)
+true_resid<- sort(pois_dharma$scaledResiduals)
+overdispersed_resid<- sort(negBin_dharma$scaledResiduals)
+underdispersed_resid<- sort(compois_dharma$scaledResiduals)
+qqunif<- seq(0,1,length=length(bird_resid))
+
+png("qqplot.png",width=600,height=600,pointsize=20)
+plot(x=c(0,1),
+     y=c(0,1),
+     main = "Q-Q Plot",
+     ylab = "Observed",
+     xlab = "Expected (Relative to Poisson)",
+     type = "n")
+lines(x=qqunif,y=bird_resid,lty=2)
+lines(x=qqunif,y=underdispersed_resid,col="blue")
+lines(x=qqunif,y=true_resid)
+lines(x=qqunif,y=overdispersed_resid,col="red")
+legend("topleft",
+       legend = c("Bird Data","Under-dispersed","Poisson","Over-dispersed"),
+       col = c("black","blue","black","red"),
+       lty = c(2,1,1,1))
+dev.off()
+#> png 
+#>   2
+```
+
+\begin{figure}
+ \centering
+ \includegraphics[width=0.6\textwidth]{qqplot.png}
+ \caption{Q-Q plot comparing residual patterns for data sources with possible under- or over-dispersion. The observed dataset has residuals consistent with under-dispersion.}
+ \label{fig::birdQQplot}
+\end{figure}
+
+
+
+```r
+bird_compois<- prepare_staRVe_model(
+  cnt~time(year),
+  bird_survey,
+  distribution="compois",
+  fit=T
+)
+```
+
+
+
+```r
+missouri<- subset(ne_states(iso_a2 = "US",returnclass="sf"),
+	name == "Missouri",
+	select = "name")
+st_crs(missouri)<- 4326
+raster_to_pred<- rasterize(missouri,raster(missouri,nrow=20,ncol=20),getCover=T)
+raster_to_pred[raster_to_pred == 0]<- NA
+bird_stars<- staRVe_predict(bird_compois,raster_to_pred)
+```
+
+
+```r
+bird_stars_resample<- st_as_stars(
+  st_bbox(missouri),
+  nx=150,ny=150,
+  nz = length(st_get_dimension_values(bird_stars,"year"))
+)
+bird_stars_resample<- do.call(c,lapply(names(bird_stars),function(var) {
+  warped<- st_warp(bird_stars[var,,,,1,drop=T],bird_stars_resample,use_gdal=T,method="bilinear")
+  names(warped)<- var
+  return(warped)
+}))
+names(st_dimensions(bird_stars_resample))[[3]]<- "year"
+st_dimensions(bird_stars_resample)$year<- st_dimensions(bird_stars)$year
+
+orig.res<- res(as(bird_stars[,,,1,1,drop=T],"Raster"))
+new.res<- res(as(bird_stars_resample[,,,1,drop=T],"Raster"))
+```
+
+
+
+```r
+raster_format<- list(
+  style = "cont",
+  palette = "plasma",
+  legend.show = T,
+  legend.reverse = T
+)
+
+dots_format<- list(
+	style = "cont",
+	palette = "plasma",
+	legend.show=T,
+	legend.col.reverse = T,
+	size=0.4,
+	border.col="black",
+	border.lwd=0.3,
+	shape=21
+)
+
+legend_format<- list(
+  legend.outside.size = 0.2,
+  legend.text.size = 0.8,
+  legend.title.size = 0.8,
+  legend.outside.position = "left",
+  legend.position = c("RIGHT","center"),
+  legend.stack = "vertical"
+)
+
+tmap_options(between.margin = 0)
+
+years<- unique(bird_survey$year)
+years<- years
+raster_years<- paste0("X",years)
+
+leg.len<- 4
+max.count<- ceiling(max(subset(bird_survey,year %in% years)$cnt))
+max.count<- leg.len*ceiling(max.count/leg.len)
+max.mean<- ceiling(max(bird_stars_resample$response[,,years-min(bird_survey$year)+1],na.rm=T))
+max.mean<- leg.len*ceiling(max.mean/leg.len)
+max.var<- ceiling(max(bird_stars_resample$response[,,years-min(bird_survey$year)+1],na.rm=T))
+max.var<- leg.len*ceiling(max.var/leg.len)
+```
+
+
+```r
+missouri_tm<- tm_shape(missouri,is.master=T) + tm_polygons()
+
+bird_count_tm<- tm_shape(subset(bird_survey,year %in% years)) +
+	do.call(tm_dots,c(list(col="cnt",
+                           title = "Count",
+                           breaks = seq(0,max.count,length.out=leg.len+1)),
+                           dots_format)) +
+	tm_facets(by = "year")
+
+bird_raster_tm<- tm_shape(bird_stars_resample["response"]) +
+  do.call(tm_raster,c(list(title = "Intensity",
+                           breaks = seq(0,max.mean,length.out=leg.len+1)),
+                      raster_format))
+
+bird_raster_se_tm<- tm_shape(bird_stars_resample["response_se"]) +
+  do.call(tm_raster,c(list(title = "Std.Err.",
+                           breaks = seq(0,max.var,length.out=leg.len+1)),
+                      raster_format))
+
+facets<- tm_facets(sync=T,ncol=5,free.coords=F,free.scales=F)
+
+fullBirdPred<- missouri_tm + bird_raster_tm + facets + bird_count_tm + do.call(tm_layout,c(list(panel.labels = years),legend_format))
+fullBirdSE<- missouri_tm + bird_raster_se_tm + facets + bird_count_tm + do.call(tm_layout,c(list(panel.labels = years),legend_format))
+```

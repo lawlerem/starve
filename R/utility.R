@@ -980,6 +980,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'
 #' @param x An sf object
 #' @param time_column The name of the column in x giving the time index
+#' @param var_column The name of the column in x giving the variable
 .sf_to_stars<- function(x,time_column="time",var_column="variable") {
   if( !(time_column %in% colnames(x)) ) {
     stop(paste(time_column,"not present in column names of x"))

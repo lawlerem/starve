@@ -49,8 +49,8 @@
 \S4method{initialize}{staRVe_process_parameters}(
   .Object,
   covariance_function = "exponential",
-  time_parameters = list(data.frame(par = c(0, 0, 0), se = c(0, 0, 0), fixed = c(F, F,
-    F), row.names = c("mu", "ar1", "sd")))
+  time_parameters = list(data.frame(par = c(0, 0, 0), se = c(0, 0, 0), fixed = c(FALSE,
+    FALSE, FALSE), row.names = c("mu", "ar1", "sd")))
 )
 
 \S4method{initialize}{staRVe_parameters}(
@@ -146,7 +146,9 @@
 
 \item{observation_parameters}{A staRVe_observation_parameters object}
 
-\item{locations}{An sf object with a time column and point geometryies}
+\item{locations}{An sf object with a time column and point geometries}
+
+\item{var_names}{A character vector}
 
 \item{time_effects}{A stars object}
 

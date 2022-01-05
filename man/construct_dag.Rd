@@ -5,15 +5,15 @@
 \alias{construct_obs_dag}
 \title{Construct directed acyclic graphs}
 \usage{
-construct_dag(x, settings = new("staRVe_settings"), silent = T)
+construct_dag(x, settings = new("staRVe_settings"), silent = TRUE)
 
 construct_obs_dag(
   x,
   y,
   time = 0,
   settings = new("staRVe_settings"),
-  check_intersection = T,
-  silent = T
+  check_intersection = TRUE,
+  silent = TRUE
 )
 }
 \arguments{
