@@ -1,6 +1,6 @@
 Package: staRVe
 Title: Spatio-Temporal Analysis of Research Vessel data
-Version: 0.16.0
+Version: 0.17.0
 Authors@R:
     person(given = "Ethan",
            family = "Lawler",
