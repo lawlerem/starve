@@ -14,6 +14,7 @@ class nngp {
   private:
     covariance<Type> cov; // Covariance Function
     vector<Type> w; // Spatial random effects
+    vector<Type> w_std; // Standardized version of random effects
     vector<Type> mean; // Mean of spatial
     vector<vector<vector<int> > > ws_graph; // Edge list for persistent graph
     vector<matrix<Type> > ws_dists; // Distances for persistent graph
@@ -48,11 +49,13 @@ class nngp {
 
     vector<Type> get_w() { return w; }
 
+    vector<Type> get_standard_w();
+
     // Compute loglikelihood for random effects
     Type loglikelihood();
 
     // Simulate random effects
-    vector<Type> simulate();
+    vector<Type> simulate(vector<Type> standard_w);
 
     // Compute kriging predictor for new locations, and add their
     // likelihood contribution to a likelihood function (passed by reference,
@@ -113,6 +116,9 @@ nngp<Type>::nngp(covariance<Type> cov,
 }
 
 
+// Outputs kriging predictor for a location(s) given the dag component and distances
+//   to random effect nodes.
+//
 // graph = list with to and from vertices
 // dists = distance from prediction point to predictor locations
 // marginal_mean = marginal mean of prediction point
@@ -142,6 +148,9 @@ kriging<Type> nngp<Type>::fieldPred(vector<vector<int> > graph,
 }
 
 
+// Updates random effects to new values, updates marginal means, updates
+//   conditional means in ws_krigs. Don't need to update ws_joints because it only
+//   holds the covariance matrix.
 template<class Type>
 void nngp<Type>::update_w(vector<Type> new_w,
                           vector<Type> new_mean) {
@@ -164,7 +173,7 @@ void nngp<Type>::update_w(vector<Type> new_w,
 }
 
 
-// Get covariance matrix, random effects, and mean
+// Get covariance matrix, random effects, and mean given nodes and distance matrix.
 template<class Type>
 mvnorm<Type> nngp<Type>::joint(vector<int> nodes,
                                matrix<Type> dists) {
@@ -177,6 +186,32 @@ mvnorm<Type> nngp<Type>::joint(vector<int> nodes,
   }
   mvnorm<Type> ans = {covMat, wVec, meanVec};
   return ans;
+}
+
+
+
+// Compute standardized random effects
+template<class Type>
+vector<Type> nngp<Type>::get_standard_w() {
+  for(int i=0; i<ws_graph.size(); i++) {
+    vector<Type> tmp_std;
+    if( ws_graph(i)(1).size() == 0 ) { // If no parents
+      mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
+      tmp_std.resizeLike(mvn.w);
+      tmp_std = spd_sqrt(ws_joints(i).Q)*vector<Type>(mvn.w-mvn.mu);
+    } else {
+      vector<Type> this_w(ws_graph(i)(0).size());
+      for(int j=0; j<ws_graph(i)(0).size(); j++) {
+        this_w(j) = w(ws_graph(i)(0)(j));
+      }
+      tmp_std.resizeLike(this_w);
+      tmp_std = spd_sqrt(ws_krigs(i).Q())*vector<Type>(this_w-ws_krigs(i).mean());
+    }
+    for(int j=0; j<ws_graph(i)(0).size(); j++) {
+      w_std(ws_graph(i)(0)(j)) = tmp_std(j);
+    }
+  }
+  return w_std;
 }
 
 
@@ -202,15 +237,18 @@ Type nngp<Type>::loglikelihood() {
 }
 
 template<class Type>
-vector<Type> nngp<Type>::simulate() {
-  Type ans = 0.0;
+vector<Type> nngp<Type>::simulate(vector<Type> standard_w) {
+  w_std = standard_w;
   for(int i=0; i<ws_graph.size(); i++) {
+    vector<Type> this_standard_w(ws_graph(i)(0).size());
+    vector<Type> sim_w;
+    for(int j=0; j<this_standard_w.size(); j++) {
+      this_standard_w(j) = standard_w(ws_graph(i)(0)(j));
+    }
+    sim_w.resizeLike(this_standard_w);
     if( ws_graph(i)(1).size() == 0 ) { // If no parents
       mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
-      vector<Type> simW = ws_joints(i).simulate()+mvn.mu;
-      for(int j=0; j<simW.size(); j++) {
-        w(ws_graph(i)(0)(j)) = simW(j);
-      }
+      sim_w = spd_sqrt(ws_joints(i).Sigma)*this_standard_w + mvn.mu;
     } else {
       vector<int> all_nodes(ws_graph(i)(0).size()+ws_graph(i)(1).size());
       for(int j=0; j<all_nodes.size(); j++) {
@@ -222,12 +260,18 @@ vector<Type> nngp<Type>::simulate() {
       }
       ws_krigs(i).update_mean(w(ws_graph(i)(1)),
                               mean(all_nodes));
-      vector<Type> simW = MVNORM(ws_krigs(i).cov()).simulate()+ws_krigs(i).mean();
-      for(int j=0; j<simW.size(); j++) {
-        w(ws_graph(i)(0)(j)) = simW(j);
-      }
+      sim_w = spd_sqrt(ws_krigs(i).cov())*this_standard_w + ws_krigs(i).mean();
+    }
+    for(int j=0; j<sim_w.size(); j++) {
+      w(ws_graph(i)(0)(j)) = sim_w(j);
     }
   }
+
+  vector<Type> foo = get_standard_w();
+  for(int i=0; i<foo.size(); i++) {
+    Rcout << "w_std in: " << standard_w(i) << "   w_std out: " << foo(i) << "\n";
+  }
+  Rcout << "\n\n";
 
   return w;
 }

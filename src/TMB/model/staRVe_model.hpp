@@ -40,7 +40,18 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_MATRIX(pred_w); // [idx,var]
 
 
-  int nv=distribution_code.size();
+  int ns=proc_w.col(0).col(0).cols();
+  int nt=proc_w.col(0).cols();
+  int nv=proc_w.cols();
+
+  array<Type> standard_w(ns,nt,nv);
+  for(int i=0; i<ns; i++) {
+    for(int j=0; j<nt; j++) {
+      for(int k=0; k<nv; k++) {
+        standard_w(i,j,k) = rnorm(0.0,1.0);
+      }
+    }
+  }
 
   // Get graphs
 
@@ -230,7 +241,7 @@ Type staRVe_model(objective_function<Type>* obj) {
     SIMULATE{
       if( !conditional_sim ) {
         // Simulate new random effects, if desired
-        proc_w.col(v).col(0) = process.simulate();
+        proc_w.col(v).col(0) = process.simulate(standard_w.col(v).col(0));
         resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
       } else {}
       // Simulate new response data
@@ -277,7 +288,7 @@ Type staRVe_model(objective_function<Type>* obj) {
       SIMULATE{
         if( !conditional_sim ) {
           // Simulate new random effecst
-          proc_w.col(v).col(time) = process.simulate();
+          proc_w.col(v).col(time) = process.simulate(standard_w.col(v).col(time));
           resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
         } else {}
         // Simulate new response data

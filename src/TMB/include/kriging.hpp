@@ -7,6 +7,7 @@ class kriging {
   private:
     vector<Type> krig_mean; // Conditional mean of prediction points given predictors
     matrix<Type> krig_cov; // Conditional covariance of prediction points given predictors
+    matrix<Type> krig_Q; // Inverse of krig_cov
 
     matrix<Type> c_SigmaInv; // Sigma_12 * Sigma_22^-1
     bool interpolate_mean;
@@ -25,6 +26,7 @@ class kriging {
     vector<Type> mean() { return this->krig_mean; }
     // Type sd() { return this->ans_sd; }
     matrix<Type> cov() { return this->krig_cov; }
+    matrix<Type> Q() { return this->krig_Q; }
 };
 
 // Some utility functions for kriging
@@ -60,6 +62,7 @@ kriging<Type>::kriging(matrix<Type> full_covariance,
 
   // krig. var = Sigma_11 - Sigma_12 * Sigma_22^-1 * Sigma_12^T
   this->krig_cov = pred_covariance - c_SigmaInv * cross_covariance.transpose();
+  this->krig_Q = atomic::matinv(this->krig_cov);
 
   update_mean(predictor_vals,full_mean);
 }
