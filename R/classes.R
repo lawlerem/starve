@@ -66,7 +66,8 @@ setClass(
   slots = c(
     covariance_function = "character",
     spatial_parameters = "list",
-    time_parameters = "list"
+    time_parameters = "list",
+    copula_parameters = "data.frame"
   )
 )
 

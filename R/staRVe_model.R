@@ -223,6 +223,27 @@ setReplaceMethod(f = "time_parameters",
   return(x)
 })
 
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_model Get copula parameters
+setMethod(f = "copula_parameters",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(copula_parameters(parameters(x)))
+})
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_model Set copula parameters
+setReplaceMethod(f = "copula_parameters",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  copula_parameters(parameters(x))<- value
+  return(x)
+})
+
 
 
 ### From staRVe_observations
@@ -818,7 +839,22 @@ setMethod(f = "TMB_in",
       })
     ),
     proc_w = random_effects(x)[["w"]],
-    pred_w = matrix(0,nrow=0,ncol=.n_response(formula(x)))
+    pred_w = matrix(0,nrow=0,ncol=.n_response(formula(x))),
+    logit_copula_corr = (function(tmp) {
+      if( nrow(tmp) == 0 ) {
+        return(numeric(0));
+      } else if( nrow(tmp) == 1 ) {
+        return(ifelse((tmp["corr","par"] >= -1
+                         && tmp["corr","par"] <= 1) ||
+                      tmp["corr","fixed"] == TRUE,
+                qlogis(0.5*(1+tmp["corr","par"])),
+                qlogis(0.6*(1+0))
+              )
+        )
+      } else {
+        stop("only one or two copula parameters allowed.")
+      }
+    })(copula_parameters(x))
   )
 
   ###
@@ -891,6 +927,9 @@ setMethod(f = "update_staRVe_model",
     time_parameters(x)[[i]]$par<- sdr_est$time_pars[,i]
     time_parameters(x)[[i]]$se<- sdr_se$time_pars[,i]
   }
+
+  copula_parameters(x)$par<- sdr_est$copula_corr
+  copula_parameters(x)$se<- sdr_se$copula_corr
 
   # Temporal random effects
   time_effects(x)$w<- sdr_est$time_effects

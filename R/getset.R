@@ -39,6 +39,17 @@ setGeneric(name = "convergence",
            def = function(x) standardGeneric("convergence")
 )
 
+#' @describeIn staRVe-access Get copula parameters
+#' @export
+setGeneric(name = "copula_parameters",
+           def = function(x) standardGeneric("copula_parameters")
+)
+#' @describeIn staRVe-access Set copula parmaeters
+#' @export
+setGeneric(name = "copula_parameters<-",
+           def = function(x,value) standardGeneric("copula_parameters<-")
+)
+
 #' @describeIn staRVe-access Get covariance function
 #' @export
 setGeneric(name = "covariance_function",

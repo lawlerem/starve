@@ -50,7 +50,9 @@
   .Object,
   covariance_function = "exponential",
   time_parameters = list(data.frame(par = c(0, 0, 0), se = c(0, 0, 0), fixed = c(FALSE,
-    FALSE, FALSE), row.names = c("mu", "ar1", "sd")))
+    FALSE, FALSE), row.names = c("mu", "ar1", "sd"))),
+  copula_parameters = data.frame(par = c(0), se = c(0), fixed = c(FALSE), row.names =
+    c("corr"))
 )
 
 \S4method{initialize}{staRVe_parameters}(

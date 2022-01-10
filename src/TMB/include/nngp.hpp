@@ -85,6 +85,7 @@ nngp<Type>::nngp(covariance<Type> cov,
   mean(mean),
   ws_graph(ws_graph),
   ws_dists(ws_dists) {
+  w_std.resizeLike(w);
   // Fill in kriging predictors for nodes with parents
   ws_krigs.resizeLike(ws_graph);
   avg_forecast_sd = 0.0;
@@ -267,11 +268,11 @@ vector<Type> nngp<Type>::simulate(vector<Type> standard_w) {
     }
   }
 
-  vector<Type> foo = get_standard_w();
-  for(int i=0; i<foo.size(); i++) {
-    Rcout << "w_std in: " << standard_w(i) << "   w_std out: " << foo(i) << "\n";
-  }
-  Rcout << "\n\n";
+  // vector<Type> foo = get_standard_w();
+  // for(int i=0; i<foo.size(); i++) {
+  //   Rcout << "w_std in: " << standard_w(i) << "   w_std out: " << foo(i) << "\n";
+  // }
+  // Rcout << "\n\n";
 
   return w;
 }

@@ -233,6 +233,23 @@ prepare_staRVe_process<- function(nodes,
   })
   names(time_parameters(parameters))<- .response_names(formula(settings))
 
+  if( length(.response_names(formula(settings))) == 1 ) {
+    copula_parameters(parameters)<- data.frame(
+      par = numeric(0),
+      se = numeric(0),
+      fixed = logical(0)
+    )
+  } else if( length(.response_names(formula(settings))) == 2 ) {
+    copula_parameters(parameters)<- data.frame(
+      par = numeric(1),
+      se = numeric(1),
+      fixed = logical(1),
+      row.names = "corr"
+    )
+  } else {
+    stop("Only one or two response variables are allowed.")
+  }
+
   parameters(process)<- parameters
 
   return(process)

@@ -5,6 +5,8 @@ using namespace density;
 #include "include/staRVe_atomic.hpp"
 #include "include/data_in.hpp"
 #include "include/time_segment.hpp"
+
+#include "include/copula.hpp"
 #include "include/family.hpp"
 #include "include/glm.hpp"
 

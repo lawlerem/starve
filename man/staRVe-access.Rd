@@ -3,6 +3,8 @@
 \name{staRVe-access}
 \alias{staRVe-access}
 \alias{convergence}
+\alias{copula_parameters}
+\alias{copula_parameters<-}
 \alias{covariance_function}
 \alias{covariance_function<-}
 \alias{dat}
@@ -59,6 +61,10 @@
 \title{Access methods for the staRVe package}
 \usage{
 convergence(x)
+
+copula_parameters(x)
+
+copula_parameters(x) <- value
 
 covariance_function(x)
 
@@ -179,6 +185,10 @@ Access methods for the staRVe package
 \section{Functions}{
 \itemize{
 \item \code{convergence}: Get convergence message
+
+\item \code{copula_parameters}: Get copula parameters
+
+\item \code{copula_parameters<-}: Set copula parmaeters
 
 \item \code{covariance_function}: Get covariance function
 

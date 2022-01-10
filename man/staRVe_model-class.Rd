@@ -18,6 +18,8 @@
 \alias{spatial_parameters<-,staRVe_model-method}
 \alias{time_parameters,staRVe_model-method}
 \alias{time_parameters<-,staRVe_model-method}
+\alias{copula_parameters,staRVe_model-method}
+\alias{copula_parameters<-,staRVe_model-method}
 \alias{dat,staRVe_model-method}
 \alias{dat<-,staRVe_model-method}
 \alias{data_predictions,staRVe_model-method}
@@ -66,6 +68,10 @@
 \S4method{time_parameters}{staRVe_model}(x)
 
 \S4method{time_parameters}{staRVe_model}(x) <- value
+
+\S4method{copula_parameters}{staRVe_model}(x)
+
+\S4method{copula_parameters}{staRVe_model}(x) <- value
 
 \S4method{dat}{staRVe_model}(x)
 
@@ -157,6 +163,10 @@ Setting the covariance function also overwrites the spatial parameters.
 \item \code{time_parameters}: Get time parameters
 
 \item \code{time_parameters<-}: Set time parameters
+
+\item \code{copula_parameters}: Get copula parameters
+
+\item \code{copula_parameters<-}: Set copula parameters
 
 \item \code{dat}: Get data
 

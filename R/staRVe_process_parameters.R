@@ -19,10 +19,15 @@ setMethod(
                         time_parameters = list(data.frame(par = c(0,0,0),
                                                           se = c(0,0,0),
                                                           fixed = c(FALSE,FALSE,FALSE),
-                                                          row.names = c("mu","ar1","sd")))) {
+                                                          row.names = c("mu","ar1","sd"))),
+                        copula_parameters = data.frame(par = c(0),
+                                                       se = c(0),
+                                                       fixed = c(FALSE),
+                                                       row.names = c("corr"))) {
     covariance_function(.Object)<- covariance_function
     # covariance function takes care of spatial parameters
     time_parameters(.Object)<- time_parameters
+    copula_parameters(.Object)<- copula_parameters
 
     return(.Object)
   }
@@ -120,5 +125,26 @@ setReplaceMethod(f = "time_parameters",
                  signature = "staRVe_process_parameters",
                  definition = function(x,value) {
   x@time_parameters<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_process_parameters Get copula parameters
+setMethod(f = "copula_parameters",
+          signature = "staRVe_process_parameters",
+          definition = function(x) return(x@copula_parameters)
+)
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_process_parameters Set copula parameters
+setReplaceMethod(f = "copula_parameters",
+                 signature = "staRVe_process_parameters",
+                 definition = function(x,value) {
+  x@copula_parameters<- value
   return(x)
 })

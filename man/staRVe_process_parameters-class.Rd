@@ -9,6 +9,8 @@
 \alias{spatial_parameters<-,staRVe_process_parameters-method}
 \alias{time_parameters,staRVe_process_parameters-method}
 \alias{time_parameters<-,staRVe_process_parameters-method}
+\alias{copula_parameters,staRVe_process_parameters-method}
+\alias{copula_parameters<-,staRVe_process_parameters-method}
 \title{An S4 class to hold process parameters for a staRVe model.}
 \usage{
 \S4method{covariance_function}{staRVe_process_parameters}(x)
@@ -22,6 +24,10 @@
 \S4method{time_parameters}{staRVe_process_parameters}(x)
 
 \S4method{time_parameters}{staRVe_process_parameters}(x) <- value
+
+\S4method{copula_parameters}{staRVe_process_parameters}(x)
+
+\S4method{copula_parameters}{staRVe_process_parameters}(x) <- value
 }
 \arguments{
 \item{x}{An object}
@@ -46,6 +52,10 @@ Setting the covariance function also overwrites the spatial parameters.
 \item \code{time_parameters}: Get time parameters
 
 \item \code{time_parameters<-}: Set time parameters
+
+\item \code{copula_parameters}: Get copula parameters
+
+\item \code{copula_parameters<-}: Set copula parameters
 }}
 
 \section{Slots}{
