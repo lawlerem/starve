@@ -169,6 +169,11 @@ setMethod(f = "staRVe_simulate",
   dat(model)[,attr(.response_from_formula(formula(settings(model)),
                                           dat(model)),"name")]<- sims$obs_y
 
+  # Turn into staRVe_fit so you have access to TMB obj
+  model<- new("staRVe_model_fit",staRVe_model = model)
+  opt(TMB_out(model))$message<- "Simulated realization from model"
+  obj(TMB_out(model))<- obj
+
   return(model)
 })
 
