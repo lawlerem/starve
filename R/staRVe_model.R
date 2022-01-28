@@ -888,7 +888,8 @@ setMethod(f = "TMB_in",
       lapply(seq(.n_response(formula(x))),function(v) {
         time_parameters(x)[[v]][,"fixed"]
       })
-    )
+    ),
+    logit_copula_corr = copula_parameters(x)["corr","fixed"]
   )
   map<- lapply(map,.logical_to_map)
 
