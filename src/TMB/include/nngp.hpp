@@ -63,12 +63,14 @@ class nngp {
     vector<Type> predict_w(vector<vector<vector<int> > > pred_graph,
                            vector<matrix<Type> > dists,
                            vector<Type> pred_w,
+                           vector<Type> &std_pred_w,
                            Type &nll,
                            bool use_cache=false,
                            bool overwrite_cache=false);
 
     // Simulate random effects for random effects not part of persistent graph
-    vector<Type> simulate_resp_w(vector<vector<vector<int> > > resp_w_graph,
+    vector<Type> simulate_resp_w(vector<Type> sim_standard_resp_w,
+                                 vector<vector<vector<int> > > resp_w_graph,
                                  vector<matrix<Type> > resp_w_dists);
 };
 
@@ -282,11 +284,14 @@ template<class Type>
 vector<Type> nngp<Type>::predict_w(vector<vector<vector<int> > > pred_graph,
                                    vector<matrix<Type> > dists,
                                    vector<Type> pred_w,
+                                   vector<Type> &std_pred_w,
                                    Type &nll,
                                    bool use_cache,
                                    bool overwrite_cache) {
   for(int i=0; i<pred_graph.size(); i++) {
-    vector<Type> this_w = pred_w(pred_graph(i)(0));
+    vector<int> this_w_idx = pred_graph(i)(0);
+    vector<Type> this_w = pred_w(this_w_idx);
+    vector<Type> this_std_w = this_w;
     pred_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
     kriging<Type> krig;
     if( use_cache ) {
@@ -311,23 +316,30 @@ vector<Type> nngp<Type>::predict_w(vector<vector<vector<int> > > pred_graph,
       pred_krigs(i) = krig;
     } else {}
     nll += MVNORM(krig.cov())(this_w-krig.mean());
+    this_std_w = spd_sqrt(krig.Q())*vector<Type>(this_w-krig.mean());
+
+    for(int j=0; j<this_std_w.size(); j++) {
+      std_pred_w(this_w_idx(j)) = this_std_w(j);
+    }
   }
   return pred_w;
 }
 
 template<class Type>
-vector<Type> nngp<Type>::simulate_resp_w(vector<vector<vector<int> > > resp_w_graph,
+vector<Type> nngp<Type>::simulate_resp_w(vector<Type> sim_standard_resp_w,
+                                         vector<vector<vector<int> > > resp_w_graph,
                                          vector<matrix<Type> > resp_w_dists) {
   vector<Type> sim_w(resp_w_graph.size());
   for(int i=0; i<resp_w_graph.size(); i++) {
     vector<int> this_w = resp_w_graph(i)(0);
+    vector<Type> this_sim_standard_resp_w = sim_standard_resp_w(this_w);
     resp_w_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
     kriging<Type> krig = fieldPred(resp_w_graph(i),
                                    resp_w_dists(i),
                                    true); // Interpolate the mean
-    vector<Type> small_sim_w = MVNORM(krig.cov()).simulate()+krig.mean();
-    for(int j=0; j<small_sim_w.size(); j++) {
-      sim_w(this_w(j)) = small_sim_w(j);
+    vector<Type> this_sim_w = spd_sqrt(krig.cov())*this_sim_standard_resp_w + krig.mean();
+    for(int j=0; j<this_sim_w.size(); j++) {
+      sim_w(this_w(j)) = this_sim_w(j);
     }
   }
 

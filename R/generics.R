@@ -119,6 +119,18 @@ setGeneric(name = "idxR_to_C",
 
 # R
 
+#' Retrieve a summarized distance from each random effect to data locations
+#'
+#' @param x A staRVe_model object
+
+#' @return A list of arrays with units giving the distances from each random effect
+#'   location to the data locations in of each response variable each year
+#'
+#' @noRd
+setGeneric(name = ".find_re_to_data_distances",
+           def = function(x,...) standardGeneric(".find_re_to_data_distances")
+)
+
 
 
 

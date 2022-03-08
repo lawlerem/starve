@@ -5,6 +5,8 @@
 \alias{convergence}
 \alias{copula_parameters}
 \alias{copula_parameters<-}
+\alias{copula_weight_funs}
+\alias{copula_weight_funs<-}
 \alias{covariance_function}
 \alias{covariance_function<-}
 \alias{dat}
@@ -42,6 +44,8 @@
 \alias{predictions<-}
 \alias{random_effects}
 \alias{random_effects<-}
+\alias{.re_to_data_distances}
+\alias{.re_to_data_distances<-}
 \alias{response_distribution}
 \alias{response_distribution<-}
 \alias{response_parameters}
@@ -65,6 +69,10 @@ convergence(x)
 copula_parameters(x)
 
 copula_parameters(x) <- value
+
+copula_weight_funs(x)
+
+copula_weight_funs(x) <- value
 
 covariance_function(x)
 
@@ -140,6 +148,10 @@ random_effects(x)
 
 random_effects(x) <- value
 
+.re_to_data_distances(x)
+
+.re_to_data_distances(x) <- value
+
 response_distribution(x)
 
 response_distribution(x) <- value
@@ -189,6 +201,10 @@ Access methods for the staRVe package
 \item \code{copula_parameters}: Get copula parameters
 
 \item \code{copula_parameters<-}: Set copula parmaeters
+
+\item \code{copula_weight_funs}: Get copula_weight_funs
+
+\item \code{copula_weight_funs<-}: Set copula_weight_funs
 
 \item \code{covariance_function}: Get covariance function
 
@@ -263,6 +279,10 @@ Access methods for the staRVe package
 \item \code{random_effects}: Get random effects
 
 \item \code{random_effects<-}: Set random effects
+
+\item \code{.re_to_data_distances}: Get re_to_data_distances
+
+\item \code{.re_to_data_distances<-}: Set re_to_data_distances
 
 \item \code{response_distribution}: Get response distribution
 

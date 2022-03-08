@@ -1,3 +1,8 @@
+template<class Type>
+bool isNA(Type x){
+  return R_IsNA(asDouble(x));
+}
+
 // A class to represent the response distribution conditional on random effects
 //
 // Used to compute likelihood for observations, predict a response mean, and
@@ -12,6 +17,7 @@ class observations {
     // The "to" list should have length 1
     vector<matrix<Type> > ys_dists; // Distances for transient graph
     vector<Type> resp_w; // Extra random effects needed for transient graph
+    vector<Type> standard_resp_w; // Standardized version of resp_w
     matrix<Type> mean_design; // Covariate observations
     vector<Type> sample_size; // Sample size for binomial observations
     glm<Type> family; // link function and response distribution
@@ -46,8 +52,9 @@ class observations {
     // Get predicted means given random effects and covariates
     vector<Type> predict_y(vector<Type> pred_w,
                            matrix<Type> pred_mean_design);
-    vector<Type> simulate_resp_w();
+    vector<Type> simulate_resp_w(vector<Type> sim_standard_resp_w);
     vector<Type> simulate_y();
+    vector<Type> get_standard_resp_w() { return this->standard_resp_w; }
 };
 
 // Constructor
@@ -69,6 +76,7 @@ observations<Type>::observations(nngp<Type> &process,
   sample_size(sample_size),
   family(family) {
   this->response = find_response();
+  this->standard_resp_w.resizeLike(resp_w);
 }
 
 template<class Type>
@@ -82,6 +90,7 @@ void observations<Type>::update_y(vector<Type> new_y,
   y = new_y;
   ys_dists = new_dists;
   resp_w = new_resp_w;
+  standard_resp_w.resizeLike(resp_w);
   mean_design = new_mean_design;
   sample_size = new_sample_size;
   this->response = find_response();
@@ -135,13 +144,14 @@ Type observations<Type>::resp_w_loglikelihood() {
   }
 
   // Compute the likelihood for extra random effects
-  process.predict_w(resp_w_edges,resp_w_dists,resp_w,ans,false,false);
+  // Also updates standard_resp_w
+  process.predict_w(resp_w_edges,resp_w_dists,resp_w,standard_resp_w,ans,false,false);
   return -1*ans;
 }
 
 // Use process to simulate new extra transient graph random effects
 template<class Type>
-vector<Type> observations<Type>::simulate_resp_w() {
+vector<Type> observations<Type>::simulate_resp_w(vector<Type> sim_standard_resp_w) {
   int resp_w_idx = 0;
   vector<vector<vector<int> > > resp_w_edges(resp_w.size());
   vector<matrix<Type> > resp_w_dists(resp_w.size());
@@ -163,7 +173,7 @@ vector<Type> observations<Type>::simulate_resp_w() {
   }
 
   // Simulate the extra random effects
-  resp_w = process.simulate_resp_w(resp_w_edges,resp_w_dists);
+  resp_w = process.simulate_resp_w(sim_standard_resp_w,resp_w_edges,resp_w_dists);
 
   return resp_w;
 }
@@ -176,7 +186,9 @@ Type observations<Type>::y_loglikelihood() {
   response = find_response(); // Make sure the response means are up-to-date
   for(int i=0; i<ys_graph.size(); i++) {
     idx = ys_graph(i)(0)(0);
-    ans += family.log_density(Type(y(idx)), response(idx), sample_size(idx));
+    if( !isNA(Type(y(idx))) ) {
+      ans += family.log_density(Type(y(idx)), response(idx), sample_size(idx));
+    } else {}
   }
   return ans;
 }

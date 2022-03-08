@@ -22,6 +22,7 @@ setMethod(
     process(.Object)<- process
     observations(.Object)<- observations
     settings(.Object)<- settings
+    .re_to_data_distances(.Object)<- list(array(0,dim=c(0,0,0)))
 
     return(.Object)
   }
@@ -66,6 +67,24 @@ setReplaceMethod(f = "observations",
                  signature = "staRVe_model",
                  definition = function(x,value) {
   x@observations<- value
+  return(x)
+})
+
+
+
+#' Get/set re_to_data_distances
+#'
+#' @param x An object
+#'
+#' @noRd
+setMethod(f = ".re_to_data_distances",
+          signature = "staRVe_model",
+          definition = function(x) return(x@re_to_data_distances)
+)
+setReplaceMethod(f = ".re_to_data_distances",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  x@re_to_data_distances<- value
   return(x)
 })
 
@@ -474,6 +493,22 @@ setReplaceMethod(f = "formula",
 })
 
 
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_settings Get copula_weight_funs
+setMethod(f = "copula_weight_funs",
+          signature = "staRVe_model",
+          definition = function(x) return(copula_weight_funs(settings(x)))
+)
+setReplaceMethod(f = "copula_weight_funs",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  copula_weight_funs(settings(x))<- value
+  return(x)
+})
+
+
 setMethod(f = ".time_name",
           signature = "staRVe_model",
           definition = function(x) {
@@ -528,6 +563,31 @@ setMethod(f = "graph",
 ### Utility ###
 ###         ###
 ###############
+
+setMethod(f = ".find_re_to_data_distances",
+          signature = "staRVe_model",
+          definition = function(x) {
+  re<- random_effects(x)
+  re_locs<- .locations_from_stars(re)
+  data_locs<- dat(x)
+  # dists<- array(0,dim=dim(re))
+  # for( t in seq(dim(dists)[[2]]) ) {
+  dists<- lapply(seq(dim(re)[[2]]),function(t) {
+    tt<- stars::st_get_dimension_values(re,.time_name(x))[[t]]
+    this_year_dat_locs<- data_locs[data_locs[,.time_name(x),drop=TRUE]==tt,]
+    this_year_dists<- sf::st_distance(re_locs,this_year_dat_locs)
+    this_year_dists<- units::set_units(this_year_dists,distance_units(x),mode="standard")
+    var_dists<- lapply(.response_names(formula(x)),function(v) {
+      # Remove distances for which this response variable has no observation
+      d<- this_year_dists
+      d[,is.na(this_year_dat_locs[,v,drop=TRUE])]<- Inf
+      return(d)
+    })
+    return(abind(var_dists,along=3))
+  })
+  return(dists)
+})
+
 
 #' Create an object of class \code{staRVe_model}.
 #'
@@ -659,6 +719,8 @@ prepare_staRVe_model<- function(formula,
     link = link
   )
 
+  .re_to_data_distances(model)<- .find_re_to_data_distances(model,...)
+
   if( fit ) {
     model<- staRVe_fit(model,silent = silent,...)
   } else {}
@@ -706,6 +768,11 @@ setMethod(f = "TMB_in",
     pred_w_time = numeric(0),
     pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
     pred_ws_dists = vector(mode="list",length=0),
+    # likelihood weights for copula component
+    copula_weights = do.call(.distances_to_weights,c(
+      list(d = .re_to_data_distances(x)),
+      copula_weight_funs(x)
+    )),
     # conditional_sim only used in simulations
     conditional_sim = FALSE
   )
@@ -840,19 +907,19 @@ setMethod(f = "TMB_in",
     ),
     proc_w = random_effects(x)[["w"]],
     pred_w = matrix(0,nrow=0,ncol=.n_response(formula(x))),
-    logit_copula_corr = (function(tmp) {
+    logit_copula_cor = (function(tmp) {
       if( nrow(tmp) == 0 ) {
         return(numeric(0));
       } else if( nrow(tmp) == 1 ) {
-        return(ifelse((tmp["corr","par"] >= -1
-                         && tmp["corr","par"] <= 1) ||
-                      tmp["corr","fixed"] == TRUE,
-                qlogis(0.5*(1+tmp["corr","par"])),
+        return(ifelse((tmp["cor","par"] >= -1
+                         && tmp["cor","par"] <= 1) ||
+                      tmp["cor","fixed"] == TRUE,
+                qlogis(0.5*(1+tmp["cor","par"])),
                 qlogis(0.6*(1+0))
               )
         )
       } else {
-        stop("only one or two copula parameters allowed.")
+        stop("only one or two response variables allowed.")
       }
     })(copula_parameters(x))
   )
@@ -889,7 +956,7 @@ setMethod(f = "TMB_in",
         time_parameters(x)[[v]][,"fixed"]
       })
     ),
-    logit_copula_corr = copula_parameters(x)["corr","fixed"]
+    logit_copula_cor = if(nrow(copula_parameters(x))>0) copula_parameters(x)["cor","fixed"] else logical(0)
   )
   map<- lapply(map,.logical_to_map)
 
@@ -929,8 +996,8 @@ setMethod(f = "update_staRVe_model",
     time_parameters(x)[[i]]$se<- sdr_se$time_pars[,i]
   }
 
-  copula_parameters(x)$par<- sdr_est$copula_corr
-  copula_parameters(x)$se<- sdr_se$copula_corr
+  copula_parameters(x)$par<- sdr_est$copula_cor
+  copula_parameters(x)$se<- sdr_se$copula_cor
 
   # Temporal random effects
   time_effects(x)$w<- sdr_est$time_effects

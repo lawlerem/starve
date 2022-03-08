@@ -37,6 +37,7 @@
   distance_units = "km",
   max_distance = Inf,
   obs_dag_method = "standard",
+  copula_weight_funs = list(),
   extras = vector(mode = "list", length = 0)
 )
 
@@ -52,7 +53,7 @@
   time_parameters = list(data.frame(par = c(0, 0, 0), se = c(0, 0, 0), fixed = c(FALSE,
     FALSE, FALSE), row.names = c("mu", "ar1", "sd"))),
   copula_parameters = data.frame(par = c(0), se = c(0), fixed = c(FALSE), row.names =
-    c("corr"))
+    c("cor"))
 )
 
 \S4method{initialize}{staRVe_parameters}(
@@ -133,6 +134,8 @@
 \item{max_distance}{A positive number}
 
 \item{obs_dag_method}{The method used to create the transient graph}
+
+\item{copula_weight_funs}{A list of functions to compute copula weights}
 
 \item{extras}{A list of extra settings}
 

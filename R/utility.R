@@ -213,6 +213,42 @@ NULL
 
 # D
 
+#' Convert an array of distances from random effects to observations into a weight matrix
+#'
+#' @param d A list of arrays. Each entry in the list must correspond to a single year. Each array is of dimension [# random effects,# observations,# response variables] where entry i,j,k is the distance from random effect i to observation j of response variable k. If variable k has no observation at j then the corresponding entry should be Inf.
+#' @param invarfun A function to summarize the distance from each random effect to the observations of a single response variable.
+#' @param betweenvarfun A function to summarize the distance from each random effect to the summarized distances (output of invarfun) of all the response variables.
+#' @param weightfun A function that takes a distance and outputs a weight. The range of this function should be between 0 and 1, where typically f(0) = 1 and f(Inf) = 0.
+#' @param normalize Logical. Should the weights have mean 1?
+#'
+#' @return A matrix with dimensions [# random effects, # times] where entry i,j is the weight for random effect i at time j.
+.distances_to_weights<- function(
+    d,
+    invarfun=base::min,
+    betweenvarfun=base::max,
+    weightfun=base::Vectorize(function(x) return(1)),
+    normalize=FALSE,
+    ...) {
+  w<- lapply(d,function(x) {
+    x<- apply(x,c(1,3),invarfun)
+    x<- apply(x,1,betweenvarfun)
+    w<- weightfun(x)
+  })
+  w<- do.call(cbind,w)
+
+  if( any(w < 0) ) {
+    stop("Some copula weights are negative, use a non-negative weight function.")
+  } else if( all(w == 0) ) {
+    warning("All copula weights computed as zero; model will instead set all weights to 1.")
+    w[]<- 1
+  } else {}
+  if( normalize ) {
+    w<- w/mean(w) # Normalize so mean of weights is 1
+  }
+  return(w)
+}
+
+
 #' Convert response distribution (character) to (int)
 #'
 #' @param distribution Name of the response_distribution to use. Check
@@ -819,8 +855,6 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
   return(response_names)
 }
-
-
 
 
 

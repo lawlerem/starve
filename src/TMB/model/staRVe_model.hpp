@@ -27,6 +27,8 @@ Type staRVe_model(objective_function<Type>* obj) {
   DATA_STRUCT(pred_ws_edges,directed_graph); // See data_in.hpp
   DATA_STRUCT(pred_ws_dists,dag_dists); // See data_in.hpp
 
+  DATA_MATRIX(copula_weights); // [space,time]
+
   DATA_INTEGER(conditional_sim); // If true, don't simulate w
 
   PARAMETER_MATRIX(working_response_pars); // Response distribution parameters [par,var]
@@ -38,7 +40,7 @@ Type staRVe_model(objective_function<Type>* obj) {
   PARAMETER_MATRIX(working_time_pars); // [par,var]
   PARAMETER_ARRAY(proc_w); // [space,time,var]
   PARAMETER_MATRIX(pred_w); // [idx,var]
-  PARAMETER_VECTOR(logit_copula_corr);
+  PARAMETER_VECTOR(logit_copula_cor);
 
 
   int ns=proc_w.col(0).col(0).cols();
@@ -115,28 +117,37 @@ Type staRVe_model(objective_function<Type>* obj) {
   }
 
 
-  vector<Type> copula_corr = 2*invlogit(logit_copula_corr)-1;
+  vector<Type> copula_cor = 2*invlogit(logit_copula_cor)-1;
   matrix<Type> R(nv,nv);
   R.setIdentity();
-  if( copula_corr.size() == 1 ) {
-    R(1,0) = copula_corr(0);
-    R(0,1) = copula_corr(0);
+  if( copula_cor.size() == 1 ) {
+    R(1,0) = copula_cor(0);
+    R(0,1) = copula_cor(0);
   }
   mvn_copula<Type> copula(R);
 
   array<Type> standard_w(ns,nt,nv);
-  array<Type> og_standard_w(ns,nt,nv);
+  array<Type> standard_resp_w(resp_w.rows(),nv);
   array<Type> t_standard_w(nv,nt,ns);
+  array<Type> t_standard_resp_w(nv,resp_w.rows());
+
   SIMULATE{
     for(int s=0; s<ns; s++) {
       for(int t=0; t<nt; t++) {
         t_standard_w.col(s).col(t) = copula.simulate();
       }
     }
+
+    for(int i=0; i<t_standard_resp_w.cols(); i++) {
+      t_standard_resp_w.col(i) = copula.simulate();
+    }
+
     standard_w = t_standard_w.transpose();
-    og_standard_w = standard_w;
-    REPORT(og_standard_w);
+    standard_resp_w = t_standard_resp_w.transpose();
   }
+
+  matrix<Type> standard_pred_w = pred_w;
+  matrix<Type> t_standard_pred_w = standard_pred_w.transpose();
 
   // Initialize all the objects used. The main objects of focus are
   // nngp<Type> process which can calculate the nll component for the random effects, and
@@ -235,17 +246,21 @@ Type staRVe_model(objective_function<Type>* obj) {
     // pred_ws_dag = edge list for predictions
     // pred_ws_dist = distances for predictions
     // pred_w = spatio-temporal random effects for predictions
+    // this_std_pred_w = vector to hold standard version of pred_w, passed by reference
     // pred_nll = likelihood component for predictions, passed by reference
     //   so it's updated by calling predict_w
     bool have_set_pred_cache = false;
     if( pred_w_segment(1) > 0 ) {
+      vector<Type> this_pred_w = pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1));
       process.predict_w(pred_ws_dag,
                         pred_ws_dist,
                         pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1)),
+                        this_pred_w,
                         pred_nll,
                         have_set_pred_cache, // Don't use cache (doesn't exist yet)
                         not have_set_pred_cache); // Write the cache
       // have_set_pred_cache = true;
+      standard_pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1)) = this_pred_w;
     } else {}
 
     // Add likelihood components to joint likelihood
@@ -257,7 +272,9 @@ Type staRVe_model(objective_function<Type>* obj) {
       if( !conditional_sim ) {
         // Simulate new random effects, if desired
         proc_w.col(v).col(0) = process.simulate(standard_w.col(v).col(0));
-        resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+        resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w(
+          standard_resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1))
+        );
       } else {}
       // Simulate new response data
       obs_y.col(v).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
@@ -266,6 +283,7 @@ Type staRVe_model(objective_function<Type>* obj) {
     // Update standard_w AFTER simulations with proc_w. Otherwise the random effects
     // won't be simulated correctly
     standard_w.col(v).col(0) = process.get_standard_w();
+    standard_resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.get_standard_resp_w();
 
     // Update process and observations for each time step,
     // add their likelihood contributions
@@ -289,13 +307,16 @@ Type staRVe_model(objective_function<Type>* obj) {
 
       // Likelihood component for predictions
       if( pred_w_segment(1) > 0 ) {
+      vector<Type> this_pred_w = pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1));
       process.predict_w(pred_ws_dag,
                         pred_ws_dist,
                         pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1)),
+                        this_pred_w,
                         pred_nll,
                         have_set_pred_cache, // Use cache
                         not have_set_pred_cache); // Don't overwrite cache
         // have_set_pred_cache = true;
+        standard_pred_w.col(v).segment(pred_w_segment(0),pred_w_segment(1)) = this_pred_w;
       } else {}
 
       nll -= process.loglikelihood()
@@ -307,7 +328,9 @@ Type staRVe_model(objective_function<Type>* obj) {
         if( !conditional_sim ) {
           // Simulate new random effecst
           proc_w.col(v).col(time) = process.simulate(standard_w.col(v).col(time));
-          resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w();
+          resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.simulate_resp_w(
+            standard_resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1))
+          );
         } else {}
         // Simulate new response data
         obs_y.col(v).segment(y_segment(0),y_segment(1)) = obs.simulate_y();
@@ -316,27 +339,39 @@ Type staRVe_model(objective_function<Type>* obj) {
       // Update standard_w AFTER simulations with proc_w. Otherwise the random effects
       // won't be simulated correctly
       standard_w.col(v).col(time) = process.get_standard_w();
+      standard_resp_w.col(v).segment(resp_w_segment(0),resp_w_segment(1)) = obs.get_standard_resp_w();
     }
   }
 
-  t_standard_w = standard_w.transpose();
+  t_standard_w = standard_w.transpose(); // [var,time,space]
+  t_standard_resp_w = standard_resp_w.transpose(); // [var,idx]
+  t_standard_pred_w = standard_pred_w.transpose();
 
   for(int s=0; s<ns; s++) {
     for(int t=0; t<nt; t++) {
       vector<Type> wrow = t_standard_w.col(s).col(t);
-      // Rcout << wrow << "\n";
-      // Rcout << copula(wrow) << "\n\n";
-      nll += copula(wrow);
+      nll += copula_weights(s,t)*copula(wrow);
     }
+  }
+
+  // NOTE: Still need to weight this if I keep the weights
+  for(int i=0; i<t_standard_resp_w.cols(); i++) {
+    vector<Type> wrow = t_standard_resp_w.col(i);
+    nll += copula(wrow);
+  }
+
+  for(int i=0; i<t_standard_pred_w.cols(); i++) {
+    vector<Type> wrow = t_standard_pred_w.col(i);
+    nll += copula(wrow);
   }
 
   // Report back the simulated random effects and data to R
   SIMULATE{
     REPORT(time_effects);
+    REPORT(t_standard_w.transpose());
     REPORT(proc_w);
     REPORT(resp_w);
     REPORT(obs_y);
-    REPORT(og_standard_w);
   }
 
   REPORT(standard_w);
@@ -354,8 +389,8 @@ Type staRVe_model(objective_function<Type>* obj) {
   REPORT(time_pars);
   ADREPORT(time_pars);
 
-  REPORT(copula_corr);
-  ADREPORT(copula_corr);
+  REPORT(copula_cor);
+  ADREPORT(copula_cor);
 
   return(nll+pred_nll);
 }

@@ -244,7 +244,7 @@ prepare_staRVe_process<- function(nodes,
       par = numeric(1),
       se = numeric(1),
       fixed = logical(1),
-      row.names = "corr"
+      row.names = "cor"
     )
   } else {
     stop("Only one or two response variables are allowed.")

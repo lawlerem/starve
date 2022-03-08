@@ -143,6 +143,7 @@ setClass(
 #' @slot max_distance The maximum distance to look for parents. Does not affect
 #'   parents coming from p_far_neighbours.
 #' @slot obs_dag_method Which method should be used for constructing the transient graph?
+#' @slot copula_weight_funs A list with three functions -- invarfun, betweenvarfun, and weightfun -- and a boolean -- normalize. See ?.distances_to_weights.
 #' @slot extras Any additional settings that aren't essential for the model. E.g.
 #'   could hold an inla.mesh object.
 #'
@@ -156,6 +157,7 @@ setClass(
     distance_units = "character",
     max_distance = "numeric",
     obs_dag_method = "character",
+    copula_weight_funs = "list",
     extras = "list"
   )
 )
@@ -172,6 +174,7 @@ setClass(
   slots = c(
     process = "staRVe_process",
     observations = "staRVe_observations",
+    re_to_data_distances = "list",
     settings = "staRVe_settings"
   )
 )

@@ -23,7 +23,7 @@ setMethod(
                         copula_parameters = data.frame(par = c(0),
                                                        se = c(0),
                                                        fixed = c(FALSE),
-                                                       row.names = c("corr"))) {
+                                                       row.names = c("cor"))) {
     covariance_function(.Object)<- covariance_function
     # covariance function takes care of spatial parameters
     time_parameters(.Object)<- time_parameters

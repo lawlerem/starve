@@ -50,6 +50,17 @@ setGeneric(name = "copula_parameters<-",
            def = function(x,value) standardGeneric("copula_parameters<-")
 )
 
+#' @describeIn staRVe-access Get copula_weight_funs
+#' @export
+setGeneric(name = "copula_weight_funs",
+           def = function(x) standardGeneric("copula_weight_funs")
+)
+#' @describeIn staRVe-access Set copula_weight_funs
+#' @export
+setGeneric(name = "copula_weight_funs<-",
+           def = function(x,value) standardGeneric("copula_weight_funs<-")
+)
+
 #' @describeIn staRVe-access Get covariance function
 #' @export
 setGeneric(name = "covariance_function",
@@ -410,6 +421,16 @@ setGeneric(name = "random_effects<-",
            def = function(x,value) standardGeneric("random_effects<-")
 )
 
+#' @describeIn staRVe-access Get re_to_data_distances
+#' @export
+setGeneric(name = ".re_to_data_distances",
+           def = function(x) standardGeneric(".re_to_data_distances")
+)
+#' @describeIn staRVe-access Set re_to_data_distances
+#' @export
+setGeneric(name = ".re_to_data_distances<-",
+           def = function(x,value) standardGeneric(".re_to_data_distances<-")
+)
 #' @describeIn staRVe-access Get response distribution
 #' @export
 setGeneric(name = "response_distribution",

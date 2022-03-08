@@ -13,6 +13,7 @@ NULL
 #' @param distance_units Which distance units to use
 #' @param max_distance A positive number
 #' @param obs_dag_method The method used to create the transient graph
+#' @param copula_weight_funs A list of functions to compute copula weights
 #' @param extras A list of extra settings
 #'
 #' @rdname staRVe-construct
@@ -26,6 +27,7 @@ setMethod(
                         distance_units = "km",
                         max_distance = Inf,
                         obs_dag_method = "standard",
+                        copula_weight_funs = list(),
                         extras = vector(mode="list",length=0)) {
     formula(.Object)<- formula
     n_neighbours(.Object)<- n_neighbours
@@ -33,6 +35,7 @@ setMethod(
     .Object@distance_units<- distance_units
     max_distance(.Object)<- max_distance
     obs_dag_method(.Object)<- obs_dag_method
+    copula_weight_funs(.Object)<- copula_weight_funs
     extras<- extras
 
     return(.Object)
@@ -153,6 +156,22 @@ setReplaceMethod(f = "obs_dag_method",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
   x@obs_dag_method<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_settings Get copula_weight_funs
+setMethod(f = "copula_weight_funs",
+          signature = "staRVe_settings",
+          definition = function(x) return(x@copula_weight_funs)
+)
+setReplaceMethod(f = "copula_weight_funs",
+                 signature = "staRVe_settings",
+                 definition = function(x,value) {
+  x@copula_weight_funs<- value
   return(x)
 })
 
