@@ -9,7 +9,26 @@ Type testing(objective_function<Type>* obj) {
 
     PARAMETER(dummy);
 
-    if(test == "persistent_graph") {
+    if(test == "time_series") {
+      DATA_ARRAY(ts_re);
+      DATA_ARRAY(ts_pars);
+
+      time_series<Type> ts(
+        ts_re,
+        ts_pars
+      );
+
+      array<Type> small_t_re = ts.slice_t(2,3).get_re();
+      REPORT(small_t_re);
+      array<Type> small_v_re = ts.slice_v(0,1).get_re();
+      REPORT(small_v_re);
+
+      // Type loglikelihood = ts.slice_v(0,1).slice_t(0,1).loglikelihood();
+      Type loglikelihood = ts.loglikelihood();
+      REPORT(loglikelihood);
+      array<Type> sim = ts.simulate();
+      REPORT(sim);
+    } else if(test == "persistent_graph") {
       DATA_ARRAY(pg_re); // [space,time,var]
       DATA_STRUCT(pg_edges,directed_graph);
       DATA_STRUCT(pg_dists,dag_dists);
@@ -88,10 +107,18 @@ Type testing(objective_function<Type>* obj) {
       conditional_normal<Type> cn(sigma,2);
       vector<Type> conditional_mean = cn.conditional_mean(x,mu);
       REPORT(conditional_mean);
+      matrix<Type> conditional_sigma = cn.conditional_cov();
+      REPORT(conditional_sigma);
       Type loglikelihood = cn(x,mu);
       REPORT(loglikelihood);
       vector<Type> sim = cn.simulate(x,mu);
       REPORT(sim);
+
+      conditional_normal<Type> cn_zero(sigma,0);
+      vector<Type> marginal_mean = cn_zero.conditional_mean(x,mu);
+      REPORT(marginal_mean);
+      matrix<Type> marginal_sigma = cn_zero.conditional_cov();
+      REPORT(marginal_sigma);
     } else {}
 
 

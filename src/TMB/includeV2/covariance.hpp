@@ -16,6 +16,8 @@ class covariance2 {
     template<typename T> T operator() (T d);
     template<typename T> vector<T> operator() (vector<T> d);
     template<typename T> matrix<T> operator() (matrix<T> d);
+
+    void update_marginal_sd(Type new_sd);
 };
 
 template<class Type>
@@ -62,4 +64,15 @@ matrix<T> covariance2<Type>::operator() (matrix<T> d) {
     }
   }
   return ans;
+}
+
+template<class Type>
+void covariance2<Type>::update_marginal_sd(Type new_sd) {
+  switch(covar_code) {
+    case 0 : pars(1) = pow(new_sd/pars(0),2); // Exponential
+    case 1 : pars(1) = new_sd; // Gaussian
+    case 2 : pars(1) = pow(new_sd/pars(0),1.0/pars(2)); // Matern
+    case 3 : pars(1) = pow(new_sd/pars(0),1.0/(3.0/2.0)); // Matern32
+    default : pars(1) = pow(new_sd/pars(0),2); // Exponential
+  }
 }

@@ -14,11 +14,13 @@ using namespace density;
 
 
 #include "includeV2/utils.hpp"
+#include "includeV2/time_series.hpp"
 #include "includeV2/dag.hpp"
-#include "includeV2/covariance.hpp"
-#include "includeV2/kriging.hpp"
 #include "includeV2/persistent_graph.hpp"
 #include "includeV2/transient_graph.hpp"
+#include "includeV2/covariance.hpp"
+#include "includeV2/conditional_normal.hpp"
+#include "includeV2/pg_cache.hpp"
 
 #include "model/staRVe_model.hpp"
 #include "model/family.hpp"

@@ -18,6 +18,41 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   c(0.75,0.75)
 )),coords=c(1,2))
 
+
+# test_that("C++ time series",{
+  ts_re<- array(seq(6*3),dim=c(6,3))
+  ts_pars<- cbind(c(0,0.6,2),
+                  c(4,-0.2,0.5),
+                  c(-4,-0.9,0.1))
+  obj<- TMB::MakeADFun(
+    data = list(
+      model = "testing",
+      test = "time_series",
+      ts_re = ts_re,
+      ts_pars = ts_pars
+    ),
+    para = list(
+      dummy = 0
+    ),
+    DLL = "staRVe_model"
+  )
+  report<- obj$report()
+
+  expect_equal(report$small_t_re,ts_re[3:5,,drop=FALSE])
+  expect_equal(report$small_v_re,ts_re[,1,drop=FALSE])
+  expect_equal(report$loglikelihood,
+    do.call(sum,lapply(1:3,function(v) {
+      mvtnorm::dmvnorm(
+        ts_re[,v],
+        rep(ts_pars[1,v],nrow(ts_re)),
+        ts_pars[3,v]^2*ts_pars[2,v]^abs(outer(seq(nrow(ts_re)),seq(nrow(ts_re)),`-`)),
+        log = TRUE
+      )
+    }))
+  )
+  expect_equal(dim(report$sim),dim(re))
+#})
+
 # test_that("C++ persistent_graph",{
   pg_re<- array(seq(6*3*2),dim=c(6,3,2))
   pg_graph<- construct_dag(
@@ -47,9 +82,6 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(report$small_t_re, pg_re[,2:3,,drop=FALSE])
   expect_equal(report$small_v_re, pg_re[,,2,drop=FALSE])
 # })
-
-library(staRVe)
-library(testthat)
 
 # test_that("C++ transient_graph",{
   tg_re<- array(seq(6*2),dim=c(6,2))
@@ -83,19 +115,12 @@ library(testthat)
   expect_equal(report$small_tg_re,rbind(tg_re[edges(tg_graph)[[3]]$to,,drop=FALSE],
                                         pg_re[,1,,drop=TRUE][edges(tg_graph)[[3]]$from,,drop=FALSE]))
   expect_equal(report$small_tg_di,distances(tg_graph)[[3]])
-
 # })
 
 
-
-
-
-
-library(staRVe)
-library(testthat)
 # test_that("C++ conditional normal",{
   x<- 1:4
-  mu<- 10:14
+  mu<- 10:13
   sigma<- 0.6^abs(outer(1:4,1:4,`-`))
   obj<- TMB::MakeADFun(
     data = list(
@@ -110,9 +135,13 @@ library(testthat)
     ),
     DLL = "staRVe_model"
   )
-
   report<- obj$report()
-  expect_equal(report$conditional_mean,condMVNorm::condMVN(mu,sigma,1:2,3:4,x[3:4]))
+
+  expect_equal(report$conditional_mean,condMVNorm::condMVN(mu,sigma,1:2,3:4,x[3:4])$condMean)
+  expect_equal(report$conditional_sigma,condMVNorm::condMVN(mu,sigma,1:2,3:4,x[3:4])$condVar)
   expect_equal(-1*report$loglikelihood,condMVNorm::dcmvnorm(x[1:2],mu,sigma,1:2,3:4,x[3:4],log=TRUE))
   expect_equal(length(report$sim),2)
+
+  expect_equal(report$marginal_mean,mu)
+  expect_equal(report$marginal_sigma,sigma)
 # })

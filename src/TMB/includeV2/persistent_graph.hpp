@@ -20,6 +20,7 @@ class persistent_graph {
 
     // Accessor methods
     array<Type> get_re() { return re; }
+    dag<Type> get_graph() { return graph; }
     array<Type> subset_re_by_s(vector<int> idx);
     persistent_graph_node<Type> operator() (int idx);
     persistent_graph_node<Type> operator() (int idx,int t,int v);
