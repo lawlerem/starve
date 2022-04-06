@@ -117,7 +117,7 @@ vector<Type> time_series<Type>::propagate_structure(
       if( t==0 ) {
         pred(s) = re(0,v);
       } else {
-        pred(s) = pars(1,v)*(new_re(s,t-1) - re(t-1,v)) + re(t,v);
+        pred(s) = pars(1,v)*(new_re(s,t-1,v) - re(t-1,v)) + re(t,v);
       }
     }
 

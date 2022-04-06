@@ -78,7 +78,7 @@ array<Type> persistent_graph<Type>::subset_re_by_s(vector<int> idx) {
 // Don't return a persistent_graph because subsetting the edges/dists will not work.
 template<class Type>
 array<Type> persistent_graph<Type>::subset_mean_by_s(vector<int> idx) {
-  array<Type> new_mean(re.dim(2),re.dim(1),idx.size()); // [var,time,space]
+  array<Type> new_mean(mean.dim(2),mean.dim(1),idx.size()); // [var,time,space]
   for(int s=0; s<idx.size(); s++) {
     new_mean.col(s) = mean.transpose().col(idx(s));
   }
@@ -151,7 +151,7 @@ persistent_graph<Type> persistent_graph<Type>::slice_t(int start,int length) {
   array<Type> perm_re = re.perm(permv);
   array<Type> perm_mean = mean.perm(permv);
   array<Type> new_re(re.dim(0),re.dim(2),length); // [space,var,time]
-  array<Type> new_mean = new_re;
+  array<Type> new_mean(mean.dim(0),mean.dim(2),length);
   for(int t=0; t<length; t++) {
     new_re.col(t) = perm_re.col(t+start);
     new_mean.col(t) = perm_mean.col(t+start);
@@ -171,10 +171,10 @@ persistent_graph<Type> persistent_graph<Type>::slice_t(int start,int length) {
 template<class Type>
 persistent_graph<Type> persistent_graph<Type>::slice_v(int start,int length) {
   array<Type> new_re(re.dim(0),re.dim(1),length);
-  array<Type> new_mean = new_re;
+  array<Type> new_mean(mean.dim(0),mean.dim(1),length);
   for(int v=0; v<length; v++) {
     new_re.col(v) = re.col(v+start);
-    new_mean.col(v) = new_mean.col(v+start);
+    new_mean.col(v) = mean.col(v+start);
   }
 
   persistent_graph<Type> new_pg(

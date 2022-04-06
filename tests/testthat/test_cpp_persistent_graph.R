@@ -54,6 +54,9 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(dim(report$sim),dim(ts_re))
 #})
 
+
+
+
 # test_that("C++ persistent_graph",{
   pg_re<- array(seq(6*3*2),dim=c(6,3,2))
   pg_graph<- construct_dag(
@@ -75,17 +78,33 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   )
   report<- obj$report()
 
-  expect_equal(report$one_g_re, pg_re[do.call(c,edges(pg_graph$dag)[[2]]),1,1,drop=FALSE])
   expect_equal(report$small_s_re, pg_re[c(1,3,5),,,drop=FALSE])
+  expect_equal(report$small_s_mean, pg_re[c(1,3,5),,,drop=FALSE])
+
   expect_equal(report$small_g_re, pg_re[do.call(c,edges(pg_graph$dag)[[2]]),,])
+  expect_equal(report$small_g_mean, pg_re[do.call(c,edges(pg_graph$dag)[[2]]),,])
   expect_equal(report$small_g_di, distances(pg_graph$dag)[[2]])
+
   expect_equal(report$one_g_re, pg_re[do.call(c,edges(pg_graph$dag)[[2]]),1,1,drop=FALSE])
+  expect_equal(report$one_g_mean, pg_re[do.call(c,edges(pg_graph$dag)[[2]]),1,1,drop=FALSE])
+
   expect_equal(report$small_t_re, pg_re[,2:3,,drop=FALSE])
+  expect_equal(report$small_t_mean, pg_re[,2:3,,drop=FALSE])
+
   expect_equal(report$small_v_re, pg_re[,,2,drop=FALSE])
+  expect_equal(report$small_v_mean, pg_re[,,2,drop=FALSE])
+
 
   pg_re[edges(pg_graph$dag)[[1]]$to,1,1]<- c(-0.5,-1.0)
   expect_equal(report$overwrite_re, pg_re)
   expect_equal(report$after_overwrite_re, pg_re)
+  expect_equal(report$overwrite_re1, pg_re[edges(pg_graph$dag)[[1]]$to,1,1])
+
+  pg_mean<- pg_re
+  pg_mean[edges(pg_graph$dag)[[1]]$to,1,1]<- c(-20,-21)
+  expect_equal(report$overwrite_mean, pg_mean)
+  expect_equal(report$after_overwrite_mean, pg_mean)
+  expect_equal(report$overwrite_mean1, pg_mean[edges(pg_graph$dag)[[1]]$to,1,1])
 # })
 
 # test_that("C++ transient_graph",{
@@ -151,8 +170,12 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(report$marginal_sigma,sigma)
 # })
 
+
+
+
+
 # test_that("C++ nngp",{
-  nt<- 20
+  nt<- 4
   ts_re<- array(seq(nt*2),dim=c(nt,2))
   ts_pars<- cbind(c(0,0.6,2),
                   c(4,-0.2,0.5))
@@ -197,4 +220,8 @@ points<- sf::st_as_sf(as.data.frame(rbind(
     DLL = "staRVe_model"
   )
   report<- obj$report()
+
+  plot.ts(data.frame(report$ts_sim),plot.type="single")
+  plot.ts(data.frame(t(report$sim_nngp_pg_re[,,1])),plot.type="single")
+  plot.ts(data.frame(t(report$sim_nngp_pg_re[,,2])),plot.type="single")
 # })

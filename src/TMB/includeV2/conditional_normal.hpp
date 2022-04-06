@@ -14,6 +14,8 @@ class conditional_normal {
     conditional_normal() = default;
 
     // Compute conditional negative log-likelihood
+    vector<Type> interpolate_mean(vector<Type> mu);
+
     Type loglikelihood(
       vector<Type> x,
       vector<Type> mu,
@@ -90,24 +92,38 @@ vector<Type> conditional_normal<Type>::conditional_mean(
     vector<Type> mu,
     bool interpolate_mu
   ) {
+  if( interpolate_mu ) {
+    mu = interpolate_mean(mu);
+  } else {}
+
   vector<Type> x_p = x.segment(0,np);
   vector<Type> mu_p = mu.segment(0,np);
   vector<Type> x_c = x.segment(np,nc);
   vector<Type> mu_c = mu.segment(np,nc);
 
-  if( interpolate_mu ) {
-    vector<Type> num = vector<Type>(c_sigma_inv * mu_c.matrix());
-    vector<Type> ones(nc); ones.setZero(); ones = 1.0+ones;
-    vector<Type> denom = vector<Type>(c_sigma_inv * ones.matrix());
-    for(int p=0; p<np; p++) {
-      if( denom(p) == 0 ) {
-        mu_p(p) = 0.0;
-      } else {
-        mu_p(p) = num(p)/denom(p);
-      }
-    }
-  } else {}
   vector<Type> conditional_mean = mu_p + vector<Type>(c_sigma_inv * (x_c - mu_c).matrix());
 
   return conditional_mean;
+}
+
+
+template<class Type>
+vector<Type> conditional_normal<Type>::interpolate_mean(vector<Type> mu) {
+  vector<Type> mu_p(np);
+  vector<Type> mu_c = mu.segment(np,nc);
+
+  vector<Type> num = vector<Type>(c_sigma_inv * mu_c.matrix());
+  vector<Type> ones(nc); ones.setZero(); ones = 1.0+ones;
+  vector<Type> denom = vector<Type>(c_sigma_inv * ones.matrix());
+  for(int p=0; p<np; p++) {
+    if( denom(p) == 0 ) {
+      mu_p(p) = 0.0;
+    } else {
+      mu_p(p) = num(p)/denom(p);
+    }
+  }
+
+  mu << mu_p, mu_c;
+
+  return mu;
 }

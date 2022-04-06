@@ -45,22 +45,33 @@ Type testing(objective_function<Type>* obj) {
       idx << 0,2,4;
       array<Type> small_s_re = pg.subset_re_by_s(idx);
       REPORT(small_s_re);
+      array<Type> small_s_mean = pg.subset_mean_by_s(idx);
+      REPORT(small_s_mean);
 
       persistent_graph_node<Type> pgnode = pg(1);
       array<Type> small_g_re = pgnode.re;
+      array<Type> small_g_mean = pgnode.mean;
       matrix<Type> small_g_di = pgnode.node.d;
       REPORT(small_g_re);
+      REPORT(small_g_mean);
       REPORT(small_g_di);
 
       persistent_graph_node<Type> one_node = pg(1,0,0);
       array<Type> one_g_re = one_node.re;
+      array<Type> one_g_mean = one_node.mean;
       REPORT(one_g_re);
+      REPORT(one_g_mean);
 
       array<Type> small_t_re = pg.slice_t(1,2).get_re();
+      array<Type> small_t_mean = pg.slice_t(1,2).get_mean();
       REPORT(small_t_re);
+      REPORT(small_t_mean);
 
       array<Type> small_v_re = pg.slice_v(1,1).get_re();
+      array<Type> small_v_mean = pg.slice_v(1,1).get_mean();
       REPORT(small_v_re);
+      REPORT(small_v_mean);
+
 
       vector<Type> new_vals(pg(0).node.to.size());
       for(int i=0; i<new_vals.size(); i++) {
@@ -70,6 +81,18 @@ Type testing(objective_function<Type>* obj) {
       REPORT(overwrite_re);
       array<Type> after_overwrite_re = pg.get_re();
       REPORT(after_overwrite_re);
+
+      vector<Type> overwrite_re1 = pg(0,0,0).re;
+      REPORT(overwrite_re1);
+
+      new_vals << -20.0, -21.0;
+      array<Type> overwrite_mean = pg.set_mean_by_to_g(new_vals,0,0,0).get_mean();
+      REPORT(overwrite_mean);
+      array<Type> after_overwrite_mean = pg.get_mean();
+      REPORT(after_overwrite_mean);
+
+      vector<Type> overwrite_mean1 = pg(0,0,0).mean;
+      REPORT(overwrite_mean1);
     } else if(test == "transient_graph" ) {
       DATA_ARRAY(pg_re); // [space,time,var]
       DATA_STRUCT(pg_edges,directed_graph);

@@ -80,12 +80,14 @@ nngp2<Type> nngp2<Type>::pg_simulate(time_series<Type> ts) {
   for(int v=0; v<pg.dim_v(); v++) {
     for(int t=0; t<pg.dim_t(); t++) {
       for(int node=0; node<pg.dim_g(); node++) {
-        persistent_graph_node<Type> pg_node = pg(node,t,v);
-        vector<Type> to_mean = ts.propagate_structure(pg.subset_re_by_s(pg_node.node.to),t,v);
+        persistent_graph_node<Type> pg_node = pg(node);
+        vector<Type> to_mean = ts.propagate_structure(pg_node.re,t,v);
+        pg.set_mean_by_to_g(to_mean.segment(0,pg_node.node.to.size()),node,t,v);
 
+        pg_node = pg(node,t,v);
         // "to" nodes for pg_node.re won't be used
-        vector<Type> sim = pg_c(v)(node).simulate(pg_node.re,to_mean);
-        pg.set_mean_by_to_g(to_mean,node,t,v);
+        vector<Type> sim = pg_c(v)(node).simulate(pg_node.re,pg_node.mean);
+
         pg.set_re_by_to_g(sim,node,t,v);
       }
     }
@@ -117,6 +119,18 @@ Type nngp2<Type>::tg_loglikelihood(time_series<Type> ts) {
 //   for v in variables
 //     for t in years
 //       for node in tg.nodes
-//
+//         1.) interpolate and store mean for tg
+//           ---- DO NOT need to propagate mean
+//         2.) simulate from conditional normal
+//         3.) update random effects and mean in transient graph
 //   */
+//   for(int v=0; v<tg.dim_v(); v++) {
+//     for(int t=0; t<tg.dim_t(); t++) {
+//       for(int node=0; node<tg.dim_g(t); node++) {
+//         transient_graph_node<Type> tg_node = tg(node,t,v,pg);
+//         vector<Type> inter_mu = tg_c(v)(node,t).interpolate_mean(tg_node.mean);
+//         vector<Type> sim = tg_c(v)(node,t).simulate(tg_node.re,inter
+//       }
+//     }
+//   }
 // }
