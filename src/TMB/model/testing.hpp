@@ -85,7 +85,9 @@ Type testing(objective_function<Type>* obj) {
       vector<Type> overwrite_re1 = pg(0,0,0).re;
       REPORT(overwrite_re1);
 
-      new_vals << -20.0, -21.0;
+      for(int i=0; i<new_vals.size(); i++) {
+        new_vals(i) = -20.0-Type(i);
+      }
       array<Type> overwrite_mean = pg.set_mean_by_to_g(new_vals,0,0,0).get_mean();
       REPORT(overwrite_mean);
       array<Type> after_overwrite_mean = pg.get_mean();
@@ -120,20 +122,48 @@ Type testing(objective_function<Type>* obj) {
         pg.dim_t() // # of times
       );
 
-      array<Type> foo = tg.get_re();
-      REPORT(foo);
+      array<Type> full_re = tg.get_re();
+      REPORT(full_re);
+      array<Type> full_mean = tg.get_mean();
+      REPORT(full_mean);
 
       array<Type> small_t_re = tg.slice_t(0,1).get_re();
       REPORT(small_t_re);
+      array<Type> small_t_mean = tg.slice_t(0,1).get_mean();
+      REPORT(small_t_mean);
 
       array<Type> small_v_re = tg.slice_v(1,1).get_re();
       REPORT(small_v_re);
+      array<Type> small_v_mean = tg.slice_v(1,1).get_mean();
+      REPORT(small_v_mean);
 
       transient_graph_node<Type> tg_node = tg(2,0,pg);
       array<Type> small_tg_re = tg_node.re;
+      array<Type> small_tg_mean = tg_node.mean;
       matrix<Type> small_tg_di = tg_node.node.d;
       REPORT(small_tg_re);
+      REPORT(small_tg_mean);
       REPORT(small_tg_di);
+
+      vector<Type> new_vals(tg(0,0,pg).node.to.size());
+      for(int i=0; i<new_vals.size(); i++) {
+        new_vals(i) = -1.0*Type(i+1)/2.0;
+      }
+      array<Type> overwrite_re = tg.set_re_by_to_g(new_vals,0,0,0,pg).get_re();
+      REPORT(overwrite_re);
+      array<Type> after_overwrite_re = tg.get_re();
+      REPORT(after_overwrite_re);
+
+      for(int i=0; i<new_vals.size(); i++) {
+        new_vals(i) = -20.0-Type(i);
+      }
+      array<Type> overwrite_mean = tg.set_mean_by_to_g(new_vals,0,0,0,pg).get_mean();
+      REPORT(overwrite_mean);
+      array<Type> after_overwrite_mean = tg.get_mean();
+      REPORT(after_overwrite_mean);
+
+      vector<Type> overwrite_mean1 = tg(0,0,0,pg.slice_v(0,1)).mean;
+      REPORT(overwrite_mean1);
     } else if(test == "conditional_normal") {
       DATA_VECTOR(x);
       DATA_VECTOR(mu);
@@ -206,10 +236,23 @@ Type testing(objective_function<Type>* obj) {
       array<Type> nngp_pg_re = process.get_pg_re();
       REPORT(nngp_pg_re);
 
+      // ts.simulate();
+      // process.simulate(ts);
+      //
+      // array<Type> ts_sim = ts.get_re();
+      // REPORT(ts_sim);
+      // array<Type> sim_nngp_pg_re = process.get_pg_re();
+      // REPORT(sim_nngp_pg_re);
+      // array<Type> sim_nngp_tg_re = process.get_tg_re();
+      // REPORT(sim_nngp_tg_re);
+
       array<Type> ts_sim = ts.simulate().get_re();
       REPORT(ts_sim);
       array<Type> sim_nngp_pg_re = process.simulate(ts).get_pg_re();
       REPORT(sim_nngp_pg_re);
+      array<Type> sim_nngp_tg_re = process.get_tg_re();
+      REPORT(sim_nngp_tg_re);
+
 
     } else {}
 

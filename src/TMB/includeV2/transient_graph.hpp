@@ -45,6 +45,21 @@ class transient_graph {
       int v,
       persistent_graph<Type> pg
     ) { return slice_v(v,1)(idx,t,pg.slice_v(v,1)); }
+    transient_graph<Type> set_re_by_to_g(
+      vector<Type> new_re,
+      int idx,
+      int t,
+      int v,
+      persistent_graph<Type> pg
+    );
+    transient_graph<Type> set_mean_by_to_g(
+      vector<Type> new_mean,
+      int idx,
+      int t,
+      int v,
+      persistent_graph<Type> pg
+    );
+
     transient_graph<Type> slice_t(int start, int length);
     transient_graph<Type> slice_v(int start, int length);
 };
@@ -68,7 +83,7 @@ transient_graph<Type>::transient_graph(
     re(i) = matrix_row_segment(all_re.matrix(),t_segment(0),t_segment(1)).array();
 
     mean(i) = array<Type>(t_segment(1),all_mean.cols());
-    re(i) = matrix_row_segment(all_mean.matrix(),t_segment(0),t_segment(1)).array();
+    mean(i) = matrix_row_segment(all_mean.matrix(),t_segment(0),t_segment(1)).array();
 
     graph(i) = dag<Type>(all_graph.segment(t_segment(0),t_segment(1)));
   }
@@ -157,6 +172,41 @@ transient_graph_node<Type> transient_graph<Type>::operator() (
 
     return tg_node;
 }
+
+
+template<class Type>
+transient_graph<Type> transient_graph<Type>::set_re_by_to_g(
+    vector<Type> new_re,
+    int idx,
+    int t,
+    int v,
+    persistent_graph<Type> pg
+  ) {
+    dag_node<Type> node = operator()(idx,t,v,pg).node;
+    for(int i=0; i<node.to.size(); i++) {
+      re(t)(node.to(i),v) = new_re(i);
+    }
+
+    return *this;
+}
+
+template<class Type>
+transient_graph<Type> transient_graph<Type>::set_mean_by_to_g(
+    vector<Type> new_mean,
+    int idx,
+    int t,
+    int v,
+    persistent_graph<Type> pg
+  ) {
+    dag_node<Type> node = operator()(idx,t,v,pg).node;
+    for(int i=0; i<node.to.size(); i++) {
+      mean(t)(node.to(i),v) = new_mean(i);
+    }
+
+    return *this;
+}
+
+
 
 
 template<class Type>

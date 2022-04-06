@@ -21,10 +21,10 @@ class nngp2 {
     );
 
     array<Type> get_pg_re() { return pg.get_re(); }
+    array<Type> get_tg_re() { return tg.get_re(); }
 
     Type loglikelihood(time_series<Type> ts) { return pg_loglikelihood(ts)+tg_loglikelihood(ts); }
-    // nngp2<Type> simulate(time_series<Type> ts) { return pg_simulate(ts).tg_simulate(ts); }
-    nngp2<Type> simulate(time_series<Type> ts) { return pg_simulate(ts); }
+    nngp2<Type> simulate(time_series<Type> ts) { pg_simulate(ts); tg_simulate(ts); return *this; }
 };
 
 
@@ -113,24 +113,31 @@ Type nngp2<Type>::tg_loglikelihood(time_series<Type> ts) {
 }
 
 
-// template<class Type>
-// nngp2<Type> nngp2<Type>::tg_simulate(time_series<Type> ts) {
-//   /*
-//   for v in variables
-//     for t in years
-//       for node in tg.nodes
-//         1.) interpolate and store mean for tg
-//           ---- DO NOT need to propagate mean
-//         2.) simulate from conditional normal
-//         3.) update random effects and mean in transient graph
-//   */
-//   for(int v=0; v<tg.dim_v(); v++) {
-//     for(int t=0; t<tg.dim_t(); t++) {
-//       for(int node=0; node<tg.dim_g(t); node++) {
-//         transient_graph_node<Type> tg_node = tg(node,t,v,pg);
-//         vector<Type> inter_mu = tg_c(v)(node,t).interpolate_mean(tg_node.mean);
-//         vector<Type> sim = tg_c(v)(node,t).simulate(tg_node.re,inter
-//       }
-//     }
-//   }
-// }
+template<class Type>
+nngp2<Type> nngp2<Type>::tg_simulate(time_series<Type> ts) {
+  /*
+  for v in variables
+    for t in years
+      for node in tg.nodes
+        1.) interpolate and store mean for tg
+          ---- DO NOT need to propagate mean
+        2.) simulate from conditional normal
+        3.) update random effects and mean in transient graph
+  */
+  for(int v=0; v<tg.dim_v(); v++) {
+    for(int t=0; t<tg.dim_t(); t++) {
+      for(int node=0; node<tg.dim_g(t); node++) {
+        transient_graph_node<Type> tg_node = tg(node,t,v,pg);
+        vector<Type> inter_mu = tg_c(v)(node,t).interpolate_mean(tg_node.mean);
+        tg.set_mean_by_to_g(inter_mu,node,t,v,pg);
+
+        tg_node = tg(node,t,v,pg);
+        vector<Type> sim = tg_c(v)(node,t).simulate(tg_node.re,tg_node.mean);
+
+        tg.set_re_by_to_g(sim,node,t,v,pg);
+      }
+    }
+  }
+
+  return *this;
+}

@@ -108,6 +108,12 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 # })
 
 # test_that("C++ transient_graph",{
+  pg_re<- array(seq(6*3*2),dim=c(6,3,2))
+  pg_graph<- construct_dag(
+    points[1:6,],
+    new("staRVe_settings",n_neighbours=2)
+  )
+
   tg_re<- array(seq(6*2),dim=c(6,2))
   tg_graph<- construct_obs_dag(
     points[7:12,],
@@ -134,11 +140,30 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   )
   report<- obj$report()
 
+  expect_equal(report$full_re,tg_re)
+  expect_equal(report$full_mean,tg_re)
+
   expect_equal(report$small_t_re,tg_re[1:3,,drop=FALSE])
+  expect_equal(report$small_t_mean,tg_re[1:3,,drop=FALSE])
+
   expect_equal(report$small_v_re,tg_re[,2,drop=FALSE])
+  expect_equal(report$small_v_mean,tg_re[,2,drop=FALSE])
+
   expect_equal(report$small_tg_re,rbind(tg_re[edges(tg_graph)[[3]]$to,,drop=FALSE],
                                         pg_re[,1,,drop=TRUE][edges(tg_graph)[[3]]$from,,drop=FALSE]))
+  expect_equal(report$small_tg_mean,rbind(tg_re[edges(tg_graph)[[3]]$to,,drop=FALSE],
+                                          pg_re[,1,,drop=TRUE][edges(tg_graph)[[3]]$from,,drop=FALSE]))
   expect_equal(report$small_tg_di,distances(tg_graph)[[3]])
+
+  tg_re[edges(tg_graph)[[1]]$to,1]<- c(-0.5)
+  expect_equal(report$overwrite_re, tg_re)
+  expect_equal(report$after_overwrite_re, tg_re)
+
+  tg_re[edges(tg_graph)[[1]]$to,1]<- c(-20.0)
+  expect_equal(report$overwrite_mean, tg_re)
+  expect_equal(report$after_overwrite_mean, tg_re)
+  expect_equal(report$overwrite_mean1, c(tg_re[edges(tg_graph)[[1]]$to,1],
+                                         pg_re[edges(tg_graph)[[1]]$from,1,1]))
 # })
 
 
@@ -175,7 +200,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 
 
 # test_that("C++ nngp",{
-  nt<- 4
+  nt<- 10
   ts_re<- array(seq(nt*2),dim=c(nt,2))
   ts_pars<- cbind(c(0,0.6,2),
                   c(4,-0.2,0.5))
@@ -186,11 +211,12 @@ points<- sf::st_as_sf(as.data.frame(rbind(
     new("staRVe_settings",n_neighbours=2)
   )
 
-  tg_re<- array(seq(6*2),dim=c(6,2))
+  tg_re<- array(seq(nt*2),dim=c(nt,2))
+  tg_time<- seq(nt)-1
   tg_graph<- construct_obs_dag(
-    points[7:12,],
+    points[rep(8,nt),],
     pg_graph$locations,
-    time = c(0,0,0,2,3,3),
+    time = tg_time,
     new("staRVe_settings",n_neighbours=2)
   )
 
@@ -210,7 +236,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
       tg_re = tg_re,
       tg_edges = edges(staRVe:::idxR_to_C(tg_graph)),
       tg_dists = distances(tg_graph),
-      t = c(0,0,0,2,3,3),
+      t = tg_time,
       cv_pars = cv_pars,
       cv_code = cv_code
     ),
@@ -221,7 +247,9 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   )
   report<- obj$report()
 
-  plot.ts(data.frame(report$ts_sim),plot.type="single")
-  plot.ts(data.frame(t(report$sim_nngp_pg_re[,,1])),plot.type="single")
-  plot.ts(data.frame(t(report$sim_nngp_pg_re[,,2])),plot.type="single")
+  par(mfrow=c(4,1))
+    plot.ts(data.frame(report$ts_sim),plot.type="single",lty=c(1,2))
+    plot.ts(data.frame(t(report$sim_nngp_pg_re[,,1])),plot.type="single",lty=1)
+    plot.ts(data.frame(t(report$sim_nngp_pg_re[,,2])),plot.type="single",lty=2)
+    plot.ts(data.frame(report$sim_nngp_tg_re),plot.type="single",lty=c(1,2))
 # })
