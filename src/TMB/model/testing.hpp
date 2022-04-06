@@ -66,7 +66,7 @@ Type testing(objective_function<Type>* obj) {
       for(int i=0; i<new_vals.size(); i++) {
         new_vals(i) = -1.0*Type(i+1)/2.0;
       }
-      array<Type> overwrite_re = pg.set_to_re_by_g(new_vals,0,0,0).get_re();
+      array<Type> overwrite_re = pg.set_re_by_to_g(new_vals,0,0,0).get_re();
       REPORT(overwrite_re);
       array<Type> after_overwrite_re = pg.get_re();
       REPORT(after_overwrite_re);

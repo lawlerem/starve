@@ -17,8 +17,7 @@ class time_series {
 
     Type loglikelihood();
     time_series<Type> simulate();
-    Type propagate_structure(vector<Type> new_re,int t,int v);
-    vector<Type> propagate_structure(vector<Type> new_re,int v);
+    vector<Type> propagate_structure(array<Type> new_re,int t,int v);
     array<Type> propagate_structure(array<Type> new_re);
 };
 
@@ -108,31 +107,20 @@ time_series<Type> time_series<Type>::simulate() {
 
 
 template<class Type>
-Type time_series<Type>::propagate_structure(
-  vector<Type> new_re,
+vector<Type> time_series<Type>::propagate_structure(
+  array<Type> new_re,
   int t,
   int v
   ) {
-    Type pred;
-    if( t==0 ) {
-      pred = re(0,v);
-    } else {
-      pred = pars(1,v)*(new_re(t-1) - re(t-1,v)) + re(t,v);
+    vector<Type> pred(new_re.dim(0));
+    for(int s=0; s<new_re.dim(0); s++) {
+      if( t==0 ) {
+        pred(s) = re(0,v);
+      } else {
+        pred(s) = pars(1,v)*(new_re(s,t-1) - re(t-1,v)) + re(t,v);
+      }
     }
 
-    return pred;
-}
-
-
-template<class Type>
-vector<Type> time_series<Type>::propagate_structure(
-    vector<Type> new_re, // Needs to have same # times as time series
-    int v
-  ) {
-    vector<Type> pred(new_re.size());
-    for(int t=0; t<new_re.size(); t++) {
-      pred(t) = propagate_structure(new_re,t,v);
-    }
     return pred;
 }
 
@@ -141,9 +129,11 @@ template<class Type>
 array<Type> time_series<Type>::propagate_structure(
     array<Type> new_re
   ) {
-  array<Type> pred(new_re.dim(0),new_re.dim(1));
-  for(int v=0; v<new_re.cols(); v++) {
-    pred.col(v) = propagate_structure(new_re.col(v),v);
+  array<Type> pred(new_re.dim(0),new_re.dim(1),new_re.dim(2));
+  for(int v=0; v<new_re.dim(2); v++) {
+    for(int t=0; t<new_re.dim(1); t++) {
+      pred.col(v).col(t) = propagate_structure(new_re.col(v),t,v);
+    }
   }
   return pred;
 }

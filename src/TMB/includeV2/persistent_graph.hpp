@@ -39,8 +39,8 @@ class persistent_graph {
     array<Type> subset_mean_by_s(vector<int> idx);
     persistent_graph_node<Type> operator() (int idx);
     persistent_graph_node<Type> operator() (int idx,int t,int v);
-    persistent_graph<Type> set_to_re_by_g(vector<Type> new_re,int idx,int t,int v);
-    persistent_graph<Type> set_to_mean_by_g(vector<Type> new_mean,int idx,int t,int v);
+    persistent_graph<Type> set_re_by_to_g(vector<Type> new_re,int idx,int t,int v);
+    persistent_graph<Type> set_mean_by_to_g(vector<Type> new_mean,int idx,int t,int v);
 
 
     persistent_graph<Type> slice_t(int start, int length);
@@ -112,7 +112,7 @@ persistent_graph_node<Type> persistent_graph<Type>::operator() (int idx,int t, i
 
 
 template<class Type>
-persistent_graph<Type> persistent_graph<Type>::set_to_re_by_g(
+persistent_graph<Type> persistent_graph<Type>::set_re_by_to_g(
     vector<Type> new_re,
     int idx,
     int t,
@@ -128,7 +128,7 @@ persistent_graph<Type> persistent_graph<Type>::set_to_re_by_g(
 
 
 template<class Type>
-persistent_graph<Type> persistent_graph<Type>::set_to_mean_by_g(
+persistent_graph<Type> persistent_graph<Type>::set_mean_by_to_g(
     vector<Type> new_mean,
     int idx,
     int t,

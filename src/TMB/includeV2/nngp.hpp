@@ -50,15 +50,7 @@ nngp2<Type>::nngp2(
 template<class Type>
 Type nngp2<Type>::pg_loglikelihood(time_series<Type> ts) {
   // Create marginal means for pg
-  vector<int> perm(3);
-  perm << 2, 3, 1; // [space,time,var] -> [time,var,space]
-  array<Type> pg_re = pg.get_re().permute(perm);
-  array<Type> pg_mean = pg_re;
-  for(int s=0; s<pg_re.cols(); s++) {
-    pg_mean.col(s) = ts.propagate_structure(pg_re.col(s));
-  }
-  perm << 3, 1, 2; // [time,var,space] -> [space,time,var]
-  pg.set_mean(pg_mean.permute(perm));
+  pg.set_mean(ts.propagate_structure(pg.get_re()));
 
   // Use pg_cache to compute loglikelihood
   Type pg_ll = 0.0;
@@ -89,15 +81,12 @@ nngp2<Type> nngp2<Type>::pg_simulate(time_series<Type> ts) {
     for(int t=0; t<pg.dim_t(); t++) {
       for(int node=0; node<pg.dim_g(); node++) {
         persistent_graph_node<Type> pg_node = pg(node,t,v);
-        vector<Type> to_mean(pg_node.node.to.size());
-        for(int i=0; i<to_mean.size(); i++) {
-          to_mean(i) = ts.propagate_structure(pg.subset_mean_by_s(pg_node.node.to.segment(i,1)),t,v);
-        }
+        vector<Type> to_mean = ts.propagate_structure(pg.subset_re_by_s(pg_node.node.to),t,v);
 
         // "to" nodes for pg_node.re won't be used
         vector<Type> sim = pg_c(v)(node).simulate(pg_node.re,to_mean);
-        pg.set_to_mean_by_g(to_mean,node,t,v);
-        pg.set_to_re_by_g(sim,node,t,v);
+        pg.set_mean_by_to_g(to_mean,node,t,v);
+        pg.set_re_by_to_g(sim,node,t,v);
       }
     }
   }
@@ -120,3 +109,14 @@ Type nngp2<Type>::tg_loglikelihood(time_series<Type> ts) {
 
   return tg_ll;
 }
+
+
+// template<class Type>
+// nngp2<Type> nngp2<Type>::tg_simulate(time_series<Type> ts) {
+//   /*
+//   for v in variables
+//     for t in years
+//       for node in tg.nodes
+//
+//   */
+// }
