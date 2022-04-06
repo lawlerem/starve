@@ -26,7 +26,7 @@ Type testing(objective_function<Type>* obj) {
       // Type loglikelihood = ts.slice_v(0,1).slice_t(0,1).loglikelihood();
       Type loglikelihood = ts.loglikelihood();
       REPORT(loglikelihood);
-      array<Type> sim = ts.simulate();
+      array<Type> sim = ts.simulate().get_re();
       REPORT(sim);
     } else if(test == "persistent_graph") {
       DATA_ARRAY(pg_re); // [space,time,var]
@@ -36,6 +36,7 @@ Type testing(objective_function<Type>* obj) {
       dag<Type> pg_g(pg_edges.dag,pg_dists.dag_dist);
 
       persistent_graph<Type> pg(
+        pg_re,
         pg_re,
         pg_g
       );
@@ -60,6 +61,15 @@ Type testing(objective_function<Type>* obj) {
 
       array<Type> small_v_re = pg.slice_v(1,1).get_re();
       REPORT(small_v_re);
+
+      vector<Type> new_vals(pg(0).node.to.size());
+      for(int i=0; i<new_vals.size(); i++) {
+        new_vals(i) = -1.0*Type(i+1)/2.0;
+      }
+      array<Type> overwrite_re = pg.set_to_re_by_g(new_vals,0,0,0).get_re();
+      REPORT(overwrite_re);
+      array<Type> after_overwrite_re = pg.get_re();
+      REPORT(after_overwrite_re);
     } else if(test == "transient_graph" ) {
       DATA_ARRAY(pg_re); // [space,time,var]
       DATA_STRUCT(pg_edges,directed_graph);
@@ -67,6 +77,7 @@ Type testing(objective_function<Type>* obj) {
       dag<Type> pg_g(pg_edges.dag,pg_dists.dag_dist);
 
       persistent_graph<Type> pg(
+        pg_re,
         pg_re,
         pg_g
       );
@@ -80,9 +91,10 @@ Type testing(objective_function<Type>* obj) {
 
       transient_graph<Type> tg(
         tg_re,
+        tg_re,
         tg_g,
         t,
-        pg.get_re().col(0).cols() // # of times
+        pg.dim_t() // # of times
       );
 
       array<Type> foo = tg.get_re();
@@ -94,12 +106,12 @@ Type testing(objective_function<Type>* obj) {
       array<Type> small_v_re = tg.slice_v(1,1).get_re();
       REPORT(small_v_re);
 
-      transient_graph_node<Type> tg_node = tg(0,2,pg);
+      transient_graph_node<Type> tg_node = tg(2,0,pg);
       array<Type> small_tg_re = tg_node.re;
       matrix<Type> small_tg_di = tg_node.node.d;
       REPORT(small_tg_re);
       REPORT(small_tg_di);
-    } else if(test == "kriging") {
+    } else if(test == "conditional_normal") {
       DATA_VECTOR(x);
       DATA_VECTOR(mu);
       DATA_MATRIX(sigma);
@@ -109,7 +121,7 @@ Type testing(objective_function<Type>* obj) {
       REPORT(conditional_mean);
       matrix<Type> conditional_sigma = cn.conditional_cov();
       REPORT(conditional_sigma);
-      Type loglikelihood = cn(x,mu);
+      Type loglikelihood = cn.loglikelihood(x,mu);
       REPORT(loglikelihood);
       vector<Type> sim = cn.simulate(x,mu);
       REPORT(sim);
@@ -119,6 +131,63 @@ Type testing(objective_function<Type>* obj) {
       REPORT(marginal_mean);
       matrix<Type> marginal_sigma = cn_zero.conditional_cov();
       REPORT(marginal_sigma);
+    } else if(test == "nngp") {
+      DATA_ARRAY(ts_re);
+      DATA_ARRAY(ts_pars);
+
+      time_series<Type> ts(
+        ts_re,
+        ts_pars
+      );
+
+      DATA_ARRAY(pg_re); // [space,time,var]
+      DATA_STRUCT(pg_edges,directed_graph);
+      DATA_STRUCT(pg_dists,dag_dists);
+      dag<Type> pg_g(pg_edges.dag,pg_dists.dag_dist);
+
+      persistent_graph<Type> pg(
+        pg_re,
+        pg_re,
+        pg_g
+      );
+
+      DATA_ARRAY(tg_re);
+      DATA_STRUCT(tg_edges,directed_graph);
+      DATA_STRUCT(tg_dists,dag_dists);
+      dag<Type> tg_g(tg_edges.dag,tg_dists.dag_dist);
+
+      DATA_IVECTOR(t);
+
+      transient_graph<Type> tg(
+        tg_re,
+        tg_re,
+        tg_g,
+        t,
+        pg.dim_t() // # of times
+      );
+
+      DATA_ARRAY(cv_pars);
+      DATA_IVECTOR(cv_code);
+
+      vector<covariance2<Type> > cv(pg.dim_v());
+      for(int v=0; v<pg.dim_v(); v++) {
+        cv(v) = covariance2<Type>(vector<Type>(cv_pars.col(v)),cv_code(v));
+      }
+
+      nngp2<Type> process(
+        pg,
+        tg,
+        cv
+      );
+
+      array<Type> nngp_pg_re = process.get_pg_re();
+      REPORT(nngp_pg_re);
+
+      array<Type> ts_sim = ts.simulate().get_re();
+      REPORT(ts_sim);
+      array<Type> sim_nngp_pg_re = process.simulate(ts).get_pg_re();
+      REPORT(sim_nngp_pg_re);
+
     } else {}
 
 

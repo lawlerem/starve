@@ -17,6 +17,7 @@ class dag {
     dag(vector<dag_node<Type> > nodes) : nodes(nodes) {};
     dag() = default;
 
+    int size() { return nodes.size(); }
     vector<dag_node<Type> > get_nodes() { return nodes; }
     dag_node<Type> operator() (int i) { return nodes(i); }
     dag<Type> segment(int start, int length) { return dag(nodes.segment(start,length)); }

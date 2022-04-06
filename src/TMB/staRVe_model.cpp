@@ -21,6 +21,8 @@ using namespace density;
 #include "includeV2/covariance.hpp"
 #include "includeV2/conditional_normal.hpp"
 #include "includeV2/pg_cache.hpp"
+#include "includeV2/tg_cache.hpp"
+#include "includeV2/nngp.hpp"
 
 #include "model/staRVe_model.hpp"
 #include "model/family.hpp"
