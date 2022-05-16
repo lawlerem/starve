@@ -1,10 +1,3 @@
-template<class Type>
-struct persistent_graph_node {
-  array<Type> re;
-  array<Type> mean;
-  dag_node<Type> node;
-};
-
 // A class to hold the random effects and graph structure for the persistent random effects
 template<class Type>
 class persistent_graph {
@@ -37,8 +30,8 @@ class persistent_graph {
 
     array<Type> subset_re_by_s(vector<int> idx);
     array<Type> subset_mean_by_s(vector<int> idx);
-    persistent_graph_node<Type> operator() (int idx);
-    persistent_graph_node<Type> operator() (int idx,int t,int v);
+    re_dag_node<Type> operator() (int idx);
+    re_dag_node<Type> operator() (int idx,int t,int v);
     persistent_graph<Type> set_re_by_to_g(vector<Type> new_re,int idx,int t,int v);
     persistent_graph<Type> set_mean_by_to_g(vector<Type> new_mean,int idx,int t,int v);
 
@@ -89,7 +82,7 @@ array<Type> persistent_graph<Type>::subset_mean_by_s(vector<int> idx) {
 
 
 template<class Type>
-persistent_graph_node<Type> persistent_graph<Type>::operator() (int idx) {
+re_dag_node<Type> persistent_graph<Type>::operator() (int idx) {
   dag_node<Type> node = graph(idx);
 
   vector<int> node_idx(node.to.size()+node.from.size());
@@ -97,15 +90,15 @@ persistent_graph_node<Type> persistent_graph<Type>::operator() (int idx) {
   array<Type> node_re = subset_re_by_s(node_idx);
   array<Type> node_mean = subset_mean_by_s(node_idx);
 
-  persistent_graph_node<Type> pg_node = {node_re,node_mean,node};
+  re_dag_node<Type> pg_node = {node_re,node_mean,node};
 
   return pg_node;
 }
 
 
 template<class Type>
-persistent_graph_node<Type> persistent_graph<Type>::operator() (int idx,int t, int v) {
-  persistent_graph_node<Type> node = slice_t(t,1).slice_v(v,1)(idx);
+re_dag_node<Type> persistent_graph<Type>::operator() (int idx,int t, int v) {
+  re_dag_node<Type> node = slice_t(t,1).slice_v(v,1)(idx);
 
   return node;
 }

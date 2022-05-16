@@ -6,6 +6,14 @@ struct dag_node {
 };
 
 template<class Type>
+struct re_dag_node {
+  array<Type> re;
+  array<Type> mean;
+  dag_node<Type> node;
+};
+
+
+template<class Type>
 class dag {
   private:
     vector<dag_node<Type> > nodes;

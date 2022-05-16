@@ -1,11 +1,4 @@
 template<class Type>
-struct transient_graph_node {
-  array<Type> re;
-  array<Type> mean;
-  dag_node<Type> node;
-};
-
-template<class Type>
 class transient_graph {
   private:
     vector<array<Type> > re; // [time[idx,var] ]
@@ -34,12 +27,12 @@ class transient_graph {
 
     array<Type> get_re();
     array<Type> get_mean();
-    transient_graph_node<Type> operator() (
+    re_dag_node<Type> operator() (
       int idx,
       int t,
       persistent_graph<Type> pg
     );
-    transient_graph_node<Type> operator() (
+    re_dag_node<Type> operator() (
       int idx,
       int t,
       int v,
@@ -146,7 +139,7 @@ array<Type> transient_graph<Type>::get_mean() {
 
 
 template<class Type>
-transient_graph_node<Type> transient_graph<Type>::operator() (
+re_dag_node<Type> transient_graph<Type>::operator() (
     int idx,
     int t,
     persistent_graph<Type> pg
@@ -168,7 +161,7 @@ transient_graph_node<Type> transient_graph<Type>::operator() (
       node_mean.col(i+node.to.size()) = from_mean.perm(permv).col(t).col(i);
     }
 
-    transient_graph_node<Type> tg_node = {node_re.transpose(),node_mean.transpose(),node};
+    re_dag_node<Type> tg_node = {node_re.transpose(),node_mean.transpose(),node};
 
     return tg_node;
 }

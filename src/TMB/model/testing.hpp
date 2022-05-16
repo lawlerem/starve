@@ -48,7 +48,7 @@ Type testing(objective_function<Type>* obj) {
       array<Type> small_s_mean = pg.subset_mean_by_s(idx);
       REPORT(small_s_mean);
 
-      persistent_graph_node<Type> pgnode = pg(1);
+      re_dag_node<Type> pgnode = pg(1);
       array<Type> small_g_re = pgnode.re;
       array<Type> small_g_mean = pgnode.mean;
       matrix<Type> small_g_di = pgnode.node.d;
@@ -56,7 +56,7 @@ Type testing(objective_function<Type>* obj) {
       REPORT(small_g_mean);
       REPORT(small_g_di);
 
-      persistent_graph_node<Type> one_node = pg(1,0,0);
+      re_dag_node<Type> one_node = pg(1,0,0);
       array<Type> one_g_re = one_node.re;
       array<Type> one_g_mean = one_node.mean;
       REPORT(one_g_re);
@@ -137,7 +137,7 @@ Type testing(objective_function<Type>* obj) {
       array<Type> small_v_mean = tg.slice_v(1,1).get_mean();
       REPORT(small_v_mean);
 
-      transient_graph_node<Type> tg_node = tg(2,0,pg);
+      re_dag_node<Type> tg_node = tg(2,0,pg);
       array<Type> small_tg_re = tg_node.re;
       array<Type> small_tg_mean = tg_node.mean;
       matrix<Type> small_tg_di = tg_node.node.d;
@@ -236,24 +236,12 @@ Type testing(objective_function<Type>* obj) {
       array<Type> nngp_pg_re = process.get_pg_re();
       REPORT(nngp_pg_re);
 
-      // ts.simulate();
-      // process.simulate(ts);
-      //
-      // array<Type> ts_sim = ts.get_re();
-      // REPORT(ts_sim);
-      // array<Type> sim_nngp_pg_re = process.get_pg_re();
-      // REPORT(sim_nngp_pg_re);
-      // array<Type> sim_nngp_tg_re = process.get_tg_re();
-      // REPORT(sim_nngp_tg_re);
-
       array<Type> ts_sim = ts.simulate().get_re();
       REPORT(ts_sim);
       array<Type> sim_nngp_pg_re = process.simulate(ts).get_pg_re();
       REPORT(sim_nngp_pg_re);
       array<Type> sim_nngp_tg_re = process.get_tg_re();
       REPORT(sim_nngp_tg_re);
-
-
     } else {}
 
 
