@@ -5,6 +5,7 @@ struct dag_node {
   matrix<Type> d;
 };
 
+// This is more of a convenience class than it is a structural class
 template<class Type>
 struct re_dag_node {
   array<Type> re;
@@ -19,16 +20,16 @@ class dag {
     vector<dag_node<Type> > nodes;
   public:
     dag(
-      vector<vector<vector<int> > > edges,
-      vector<matrix<Type> > dists
+      const vector<vector<vector<int> > >& edges,
+      const vector<matrix<Type> >& dists
     );
-    dag(vector<dag_node<Type> > nodes) : nodes(nodes) {};
-    dag() = default;
+    dag(const vector<dag_node<Type> >& nodes) : nodes{nodes} {};
+    dag() {nodes.resize(0);}
 
     int size() { return nodes.size(); }
     vector<dag_node<Type> > get_nodes() { return nodes; }
     dag_node<Type> operator() (int i) { return nodes(i); }
-    dag<Type> segment(int start, int length) { return dag(nodes.segment(start,length)); }
+    dag<Type> segment(int start, int length) const { return dag {nodes.segment(start,length)}; }
     vector<vector<vector<int> > > edges();
     vector<matrix<Type> > dists();
 };
@@ -37,8 +38,8 @@ class dag {
 
 template<class Type>
 dag<Type>::dag(
-    vector<vector<vector<int> > > edges,
-    vector<matrix<Type> > dists
+    const vector<vector<vector<int> > >& edges,
+    const vector<matrix<Type> >& dists
   ) {
     nodes.resizeLike(edges);
     for(int i=0; i<edges.size(); i++) {

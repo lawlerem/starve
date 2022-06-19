@@ -8,45 +8,49 @@ class conditional_normal {
     MVNORM_t<Type> mvn;
   public:
     conditional_normal(
-      matrix<Type> full_sigma,
+      const matrix<Type>& full_sigma,
       int nc // The last nc components will be conditioned on
     );
     conditional_normal() = default;
 
-    // Compute conditional negative log-likelihood
-    vector<Type> interpolate_mean(vector<Type> mu);
+    // Interpolate marginal mean of conditional variables as weighted average of conditioning variables means
+    // MAYBE SEE IF YOU WANT TO MAKE THIS A NON-CONST REFERENCE???
+    vector<Type> interpolate_mean(const vector<Type>& mu);
 
-    Type loglikelihood(
-      vector<Type> x,
+    // Compute conditional mean
+    vector<Type> conditional_mean(
+      const vector<Type>& x,
       vector<Type> mu,
       bool interpolate_mu=false
     );
 
+    // Compute conditional negative log-likelihood
+    Type loglikelihood(
+      const vector<Type>& x,
+      const vector<Type>& mu,
+      bool interpolate_mu=false
+    );
+
+    // simulate new
     vector<Type> simulate(
       vector<Type> x,
       vector<Type> mu,
       bool interpolate_mu=false
     );
 
-    vector<Type> conditional_mean(
-      vector<Type> x,
-      vector<Type> mu,
-      bool interpolate_mu=false
-    );
-
+    // Compute condiitonal covariance matrix
     matrix<Type> conditional_cov() { return mvn.cov(); }
 };
 
 
 template<class Type>
 conditional_normal<Type>::conditional_normal(
-    matrix<Type> full_sigma,
+    const matrix<Type>& full_sigma,
     int nc
   ) :
-  full_sigma(full_sigma),
-  nc(nc) {
-    np = full_sigma.rows() - nc;
-
+  full_sigma{full_sigma},
+  nc{nc},
+  np{static_cast<int>(full_sigma.rows())-nc} {
     matrix<Type> sigma11 = full_sigma.topLeftCorner(np,np);
     matrix<Type> sigma12 = full_sigma.topRightCorner(np,nc);
     matrix<Type> sigma22 = full_sigma.bottomRightCorner(nc,nc);
@@ -62,33 +66,32 @@ conditional_normal<Type>::conditional_normal(
 
 
 template<class Type>
-Type conditional_normal<Type>::loglikelihood(
-    vector<Type> x,
-    vector<Type> mu,
-    bool interpolate_mu
-  ) {
-  vector<Type> x_p = x.segment(0,np);
-  vector<Type> mu_p = conditional_mean(x,mu,interpolate_mu);
-  return -1.0*mvn(x_p-mu_p);
+vector<Type> conditional_normal<Type>::interpolate_mean(const vector<Type>& mu) {
+  vector<Type> mu_p(np);
+  vector<Type> mu_c = mu.segment(np,nc);
+
+  vector<Type> num = vector<Type>(c_sigma_inv * mu_c.matrix());
+  vector<Type> ones(nc); ones.setZero(); ones = 1.0+ones;
+  vector<Type> denom = vector<Type>(c_sigma_inv * ones.matrix());
+  for(int p=0; p<np; p++) {
+    if( denom(p) == 0 ) {
+      mu_p(p) = 0.0;
+    } else {
+      mu_p(p) = num(p)/denom(p);
+    }
+  }
+
+  vector<Type> new_mu(mu.size());
+  new_mu << mu_p, mu_c;
+
+  return new_mu;
 }
 
-
-template<class Type>
-vector<Type> conditional_normal<Type>::simulate(
-    vector<Type> x,
-    vector<Type> mu,
-    bool interpolate_mu
-  ) {
-  vector<Type> mu_p = conditional_mean(x,mu,interpolate_mu);
-  vector<Type> x_p = mvn.simulate() + mu_p;
-
-  return x_p;
-}
 
 
 template<class Type>
 vector<Type> conditional_normal<Type>::conditional_mean(
-    vector<Type> x,
+    const vector<Type>& x,
     vector<Type> mu,
     bool interpolate_mu
   ) {
@@ -107,23 +110,28 @@ vector<Type> conditional_normal<Type>::conditional_mean(
 }
 
 
+
+
 template<class Type>
-vector<Type> conditional_normal<Type>::interpolate_mean(vector<Type> mu) {
-  vector<Type> mu_p(np);
-  vector<Type> mu_c = mu.segment(np,nc);
+Type conditional_normal<Type>::loglikelihood(
+    const vector<Type>& x,
+    const vector<Type>& mu,
+    bool interpolate_mu
+  ) {
+  vector<Type> x_p = x.segment(0,np);
+  vector<Type> mu_p = conditional_mean(x,mu,interpolate_mu);
+  return -1.0*mvn(x_p-mu_p);
+}
 
-  vector<Type> num = vector<Type>(c_sigma_inv * mu_c.matrix());
-  vector<Type> ones(nc); ones.setZero(); ones = 1.0+ones;
-  vector<Type> denom = vector<Type>(c_sigma_inv * ones.matrix());
-  for(int p=0; p<np; p++) {
-    if( denom(p) == 0 ) {
-      mu_p(p) = 0.0;
-    } else {
-      mu_p(p) = num(p)/denom(p);
-    }
-  }
 
-  mu << mu_p, mu_c;
+template<class Type>
+vector<Type> conditional_normal<Type>::simulate(
+    vector<Type> x,
+    vector<Type> mu,
+    bool interpolate_mu
+  ) {
+  vector<Type> mu_p = conditional_mean(x,mu,interpolate_mu);
+  vector<Type> x_p = mvn.simulate() + mu_p;
 
-  return mu;
+  return x_p;
 }

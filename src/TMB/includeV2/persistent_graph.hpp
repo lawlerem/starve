@@ -8,11 +8,10 @@ class persistent_graph {
   public:
     // Constructor
     persistent_graph(
-      array<Type> re,
-      array<Type> mean,
-      dag<Type> graph
-    );
-    persistent_graph() = default;
+      const array<Type>& re,
+      const array<Type>& mean,
+      const dag<Type>& graph
+    ) : re{re}, mean{mean}, graph{graph} {};
 
     // Accessor methods
     int dim_g() { return graph.size(); }
@@ -21,19 +20,19 @@ class persistent_graph {
     int dim_v() { return re.dim(2); }
 
     array<Type> get_re() { return re; }
-    persistent_graph<Type> set_re(array<Type> new_re) { re = new_re; return *this;}
+    persistent_graph<Type> set_re(const array<Type>& new_re) { re = new_re; return *this;} // return *this so you get the whole graph as return value
 
     array<Type> get_mean() { return mean; }
-    persistent_graph<Type> set_mean(array<Type> new_mean) { mean = new_mean; return *this;}
+    persistent_graph<Type> set_mean(const array<Type>& new_mean) { mean = new_mean; return *this;}
 
     dag<Type> get_graph() { return graph; }
 
-    array<Type> subset_re_by_s(vector<int> idx);
-    array<Type> subset_mean_by_s(vector<int> idx);
-    re_dag_node<Type> operator() (int idx);
+    array<Type> subset_re_by_s(const vector<int>& idx);
+    array<Type> subset_mean_by_s(const vector<int>& idx);
+    re_dag_node<Type> operator() (int idx); // Why not return a persistent_graph? Because the nodes wont be complete
     re_dag_node<Type> operator() (int idx,int t,int v);
-    persistent_graph<Type> set_re_by_to_g(vector<Type> new_re,int idx,int t,int v);
-    persistent_graph<Type> set_mean_by_to_g(vector<Type> new_mean,int idx,int t,int v);
+    persistent_graph<Type> set_re_by_to_g(const vector<Type>& new_re,int idx,int t,int v);
+    persistent_graph<Type> set_mean_by_to_g(const vector<Type>& new_mean,int idx,int t,int v);
 
 
     persistent_graph<Type> slice_t(int start, int length);
@@ -41,28 +40,18 @@ class persistent_graph {
 };
 
 
-// Constructor
-template<class Type>
-persistent_graph<Type>::persistent_graph(
-    array<Type> re,
-    array<Type> mean,
-    dag<Type> graph
-  ) :
-  re(re),
-  mean(mean),
-  graph(graph) {
-    // Nothing left to initialize
-}
-
 
 // Don't return a persistent_graph because subsetting the edges/dists will not work.
 template<class Type>
-array<Type> persistent_graph<Type>::subset_re_by_s(vector<int> idx) {
-  array<Type> new_re(re.dim(2),re.dim(1),idx.size()); // [var,time,space]
+array<Type> persistent_graph<Type>::subset_re_by_s(const vector<int>& idx) {
+  array<Type> new_re(idx.size(),re.dim(1),re.dim(2)); // [var,time,space]
   for(int s=0; s<idx.size(); s++) {
-    new_re.col(s) = re.transpose().col(idx(s));
+    for(int t=0; t<re.dim(1); t++) {
+      for(int v=0; v<re.dim(2); v++) {
+        new_re(s,t,v) = re(idx(s),t,v);
+      }
+    }
   }
-  new_re = new_re.transpose(); // [space,time,var]
 
   return new_re;
 }
@@ -70,12 +59,15 @@ array<Type> persistent_graph<Type>::subset_re_by_s(vector<int> idx) {
 
 // Don't return a persistent_graph because subsetting the edges/dists will not work.
 template<class Type>
-array<Type> persistent_graph<Type>::subset_mean_by_s(vector<int> idx) {
-  array<Type> new_mean(mean.dim(2),mean.dim(1),idx.size()); // [var,time,space]
+array<Type> persistent_graph<Type>::subset_mean_by_s(const vector<int>& idx) {
+  array<Type> new_mean(idx.size(),mean.dim(1),mean.dim(2));
   for(int s=0; s<idx.size(); s++) {
-    new_mean.col(s) = mean.transpose().col(idx(s));
+    for(int t=0; t<re.dim(1); t++) {
+      for(int v=0; v<re.dim(2); v++) {
+        new_mean(s,t,v) = mean(idx(s),t,v);
+      }
+    }
   }
-  new_mean = new_mean.transpose(); // [space,time,var]
 
   return new_mean;
 }
@@ -90,23 +82,19 @@ re_dag_node<Type> persistent_graph<Type>::operator() (int idx) {
   array<Type> node_re = subset_re_by_s(node_idx);
   array<Type> node_mean = subset_mean_by_s(node_idx);
 
-  re_dag_node<Type> pg_node = {node_re,node_mean,node};
-
-  return pg_node;
+  return re_dag_node<Type> {node_re, node_mean, node};
 }
 
 
 template<class Type>
 re_dag_node<Type> persistent_graph<Type>::operator() (int idx,int t, int v) {
-  re_dag_node<Type> node = slice_t(t,1).slice_v(v,1)(idx);
-
-  return node;
+  return slice_t(t,1).slice_v(v,1)(idx);
 }
 
 
 template<class Type>
 persistent_graph<Type> persistent_graph<Type>::set_re_by_to_g(
-    vector<Type> new_re,
+    const vector<Type>& new_re,
     int idx,
     int t,
     int v
@@ -122,7 +110,7 @@ persistent_graph<Type> persistent_graph<Type>::set_re_by_to_g(
 
 template<class Type>
 persistent_graph<Type> persistent_graph<Type>::set_mean_by_to_g(
-    vector<Type> new_mean,
+    const vector<Type>& new_mean,
     int idx,
     int t,
     int v
@@ -139,42 +127,32 @@ persistent_graph<Type> persistent_graph<Type>::set_mean_by_to_g(
 
 template<class Type>
 persistent_graph<Type> persistent_graph<Type>::slice_t(int start,int length) {
-  vector<int> permv(3);
-  permv << 0, 2, 1; // [space,time,var] <-> [space,var,time]
-  array<Type> perm_re = re.perm(permv);
-  array<Type> perm_mean = mean.perm(permv);
-  array<Type> new_re(re.dim(0),re.dim(2),length); // [space,var,time]
-  array<Type> new_mean(mean.dim(0),mean.dim(2),length);
-  for(int t=0; t<length; t++) {
-    new_re.col(t) = perm_re.col(t+start);
-    new_mean.col(t) = perm_mean.col(t+start);
+  array<Type> new_re(re.dim(0),length,re.dim(2));
+  array<Type> new_mean(mean.dim(0),length,mean.dim(2));
+  for(int s=0; s<re.dim(0); s++) {
+    for(int t=0; t<length; t++) {
+      for(int v=0; v<re.dim(2); v++) {
+        new_re(s,t,v) = re(s,t+start,v);
+        new_mean(s,t,v) = mean(s,t+start,v);
+      }
+    }
   }
-  new_re = new_re.perm(permv);
-  new_mean = new_mean.perm(permv);
 
-  persistent_graph<Type> new_pg(
-    new_re,
-    new_mean,
-    graph
-  );
-
-  return new_pg;
+  return persistent_graph<Type> {new_re, new_mean, graph};
 }
 
 template<class Type>
 persistent_graph<Type> persistent_graph<Type>::slice_v(int start,int length) {
   array<Type> new_re(re.dim(0),re.dim(1),length);
   array<Type> new_mean(mean.dim(0),mean.dim(1),length);
-  for(int v=0; v<length; v++) {
-    new_re.col(v) = re.col(v+start);
-    new_mean.col(v) = mean.col(v+start);
+  for(int s=0; s<re.dim(0); s++) {
+    for(int t=0; t<re.dim(1); t++) {
+      for(int v=0; v<length; v++) {
+        new_re(s,t,v) = re(s,t,v+start);
+        new_mean(s,t,v) = mean(s,t,v+start);
+      }
+    }
   }
 
-  persistent_graph<Type> new_pg(
-    new_re,
-    new_mean,
-    graph
-  );
-
-  return new_pg;
+  return persistent_graph<Type> {new_re, new_mean, graph};
 }

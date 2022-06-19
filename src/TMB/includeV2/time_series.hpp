@@ -5,48 +5,39 @@ class time_series {
     array<Type> pars; // parameters [par,var], par = [mu,ar1,sd]
   public:
     time_series(
-      array<Type> re,
-      array<Type> pars
-    );
-    time_series() = default;
+      const array<Type>& re,
+      const array<Type>& pars
+    ) : re{re}, pars{pars} {};
 
     // Accessor methods
-    array<Type> get_re() { return re; }
-    time_series<Type> slice_t(int start, int length);
-    time_series<Type> slice_v(int start, int length);
+    array<Type> get_re() { return re; } // return random effect array
+    time_series<Type> slice_t(int start, int length); // Get a segment of time t:t+k
+    time_series<Type> slice_v(int start, int length); // Get a segment of variable v:v+k
 
+    // Compute log-likelihood
     Type loglikelihood();
+
+    // Simulate
     time_series<Type> simulate();
-    vector<Type> propagate_structure(array<Type> new_re,int t,int v);
-    array<Type> propagate_structure(array<Type> new_re);
+
+    // Get the predicted value of new_re at time t, using the time_series structure of this
+    vector<Type> propagate_structure(array<Type>& new_re,int t,int v);
+    array<Type> propagate_structure(array<Type>& new_re);
 };
 
 
-template<class Type>
-time_series<Type>::time_series(
-    array<Type> re,
-    array<Type> pars
-  ) :
-  re(re),
-  pars(pars) {
-    // Nothing left to initialize
-}
 
 
 template<class Type>
 time_series<Type> time_series<Type>::slice_t(int start,int length) {
-  array<Type> new_re(re.dim(1),length);
+  array<Type> new_re(length,re.dim(1));
   for(int t=0; t<length; t++) {
-    new_re.col(t) = re.transpose().col(t+start);
+    for(int v=0; v<re.dim(1); v++) {
+      new_re(t,v) = re(t+start,v);
+    }
   }
-  new_re = new_re.transpose();
 
-  time_series<Type> new_ts(
-    new_re,
-    pars
-  );
-
-  return new_ts;
+  return time_series<Type> {new_re, pars};
 }
 
 
@@ -54,17 +45,18 @@ template<class Type>
 time_series<Type> time_series<Type>::slice_v(int start,int length) {
   array<Type> new_re(re.dim(0),length);
   array<Type> new_pars(pars.dim(0),length);
-  for(int v=0; v<length; v++) {
-    new_re.col(v) = re.col(v+start);
-    new_pars.col(v) = pars.col(v+start);
+  for(int t=0; t<re.dim(0); t++) {
+    for(int v=0; v<length; v++) {
+      new_re(t,v) = re(t,v+start);
+    }
+  }
+  for(int t=0; t<pars.dim(0); t++) {
+    for(int v=0; v<length; v++) {
+      new_pars(t,v) = pars(t,v+start);
+    }
   }
 
-  time_series<Type> new_ts(
-    new_re,
-    new_pars
-  );
-
-  return new_ts;
+  return time_series<Type> {new_re, new_pars};
 }
 
 
@@ -108,7 +100,7 @@ time_series<Type> time_series<Type>::simulate() {
 
 template<class Type>
 vector<Type> time_series<Type>::propagate_structure(
-  array<Type> new_re,
+  array<Type>& new_re,
   int t,
   int v
   ) {
@@ -127,7 +119,7 @@ vector<Type> time_series<Type>::propagate_structure(
 
 template<class Type>
 array<Type> time_series<Type>::propagate_structure(
-    array<Type> new_re
+    array<Type>& new_re
   ) {
   array<Type> pred(new_re.dim(0),new_re.dim(1),new_re.dim(2));
   for(int v=0; v<new_re.dim(2); v++) {

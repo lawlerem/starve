@@ -6,18 +6,17 @@ class transient_graph {
     vector<dag<Type> > graph; // [time[graph] ]
   public:
     transient_graph(
-      array<Type> all_re, // [idx,var]
-      array<Type> all_mean, // [idx,var]
-      dag<Type> all_graph,
-      vector<int> t,
+      array<Type>& all_re, // [idx,var] can't do const-reference
+      array<Type>& all_mean, // [idx,var] can't do const-reference
+      const dag<Type>& all_graph,
+      const vector<int>& t,
       int tmax
     );
     transient_graph(
-      vector<array<Type> > re, // [time[idx,var] ]
-      vector<array<Type> > mean,
-      vector<dag<Type> > graph // [time[graph] ]
-    );
-    transient_graph() = default;
+      const vector<array<Type> >& re, // [time[idx,var] ]
+      const vector<array<Type> >& mean,
+      const vector<dag<Type> >& graph // [time[graph] ]
+    ) : re{re}, mean{mean}, graph{graph} {};
 
     // Accessor methods
     int dim_g(int t) { return graph(t).size(); }
@@ -30,27 +29,27 @@ class transient_graph {
     re_dag_node<Type> operator() (
       int idx,
       int t,
-      persistent_graph<Type> pg
+      persistent_graph<Type>& pg
     );
     re_dag_node<Type> operator() (
       int idx,
       int t,
       int v,
-      persistent_graph<Type> pg
-    ) { return slice_v(v,1)(idx,t,pg.slice_v(v,1)); }
+      persistent_graph<Type>& pg
+    );
     transient_graph<Type> set_re_by_to_g(
-      vector<Type> new_re,
+      const vector<Type>& new_re,
       int idx,
       int t,
       int v,
-      persistent_graph<Type> pg
+      persistent_graph<Type>& pg
     );
     transient_graph<Type> set_mean_by_to_g(
-      vector<Type> new_mean,
+      const vector<Type>& new_mean,
       int idx,
       int t,
       int v,
-      persistent_graph<Type> pg
+      persistent_graph<Type>& pg
     );
 
     transient_graph<Type> slice_t(int start, int length);
@@ -61,10 +60,10 @@ class transient_graph {
 // Constructor
 template<class Type>
 transient_graph<Type>::transient_graph(
-    array<Type> all_re,
-    array<Type> all_mean,
-    dag<Type> all_graph,
-    vector<int> t,
+    array<Type>& all_re,
+    array<Type>& all_mean,
+    const dag<Type>& all_graph,
+    const vector<int>& t,
     int tmax
   ) {
   re.resize(tmax+1);
@@ -78,20 +77,8 @@ transient_graph<Type>::transient_graph(
     mean(i) = array<Type>(t_segment(1),all_mean.cols());
     mean(i) = matrix_row_segment(all_mean.matrix(),t_segment(0),t_segment(1)).array();
 
-    graph(i) = dag<Type>(all_graph.segment(t_segment(0),t_segment(1)));
+    graph(i) = dag<Type>(all_graph.segment(t_segment(0), t_segment(1)));
   }
-}
-
-template<class Type>
-transient_graph<Type>::transient_graph(
-    vector<array<Type> > re,
-    vector<array<Type> > mean,
-    vector<dag<Type> > graph
-  ) :
-  re(re),
-  mean(mean),
-  graph(graph) {
-    // Nothing left to initialize
 }
 
 
@@ -99,19 +86,18 @@ template<class Type>
 array<Type> transient_graph<Type>::get_re() {
   int n_re = 0;
   for(int i=0; i<re.size(); i++) {
-    n_re += re(i).rows();
+    n_re += re(i).dim(0);
   }
-  array<Type> ans(re(0).cols(),n_re); // [var,idx
 
+  array<Type> ans(n_re,re(0).dim(1)); // [idx,var]
   int cntr=0;
   for(int i=0; i<re.size(); i++) {
-    if( re(i).rows() == 0 ) {continue;}
-    for(int j=0; j<re(i).rows(); j++) {
-      ans.col(cntr) = re(i).transpose().col(j);
-      cntr++;
+    for(int j=0; j<re(i).dim(0); j++) {
+      for(int v=0; v<re(i).dim(1); v++) {
+        ans(cntr,v) = re(i)(j,v);
+      }
     }
   }
-  ans = ans.transpose();
 
   return ans;
 }
@@ -120,60 +106,87 @@ template<class Type>
 array<Type> transient_graph<Type>::get_mean() {
   int n_mean = 0;
   for(int i=0; i<mean.size(); i++) {
-    n_mean += mean(i).rows();
+    n_mean += mean(i).dim(0);
   }
-  array<Type> ans(mean(0).cols(),n_mean); // [var,idx
 
+  array<Type> ans(n_mean,mean(0).dim(1)); // [idx,var]
   int cntr=0;
   for(int i=0; i<mean.size(); i++) {
-    if( mean(i).rows() == 0 ) {continue;}
-    for(int j=0; j<re(i).rows(); j++) {
-      ans.col(cntr) = mean(i).transpose().col(j);
-      cntr++;
+    for(int j=0; j<mean(i).dim(0); j++) {
+      for(int v=0; v<mean(i).dim(1); v++) {
+        ans(cntr,v) = mean(i)(j,v);
+      }
     }
   }
-  ans = ans.transpose();
 
   return ans;
 }
+
+
 
 
 template<class Type>
 re_dag_node<Type> transient_graph<Type>::operator() (
     int idx,
     int t,
-    persistent_graph<Type> pg
+    persistent_graph<Type>& pg
   ) {
-    dag_node<Type> node = graph(t)(idx);
+    re_dag_node<Type> node = {array<Type>(), array<Type>(), graph(t)(idx)};
 
-    array<Type> node_re(re(0).cols(),node.to.size()+node.from.size()); // [var,idx]
-    array<Type> node_mean(mean(0).cols(),node.to.size()+node.from.size()); // [var,idx]
-    for(int i=0; i<node.to.size(); i++) {
-      node_re.col(i) = re(t).transpose().col(node.to(i)); // Gets node.to(i) row
-      node_mean.col(i) = mean(t).transpose().col(node.to(i));
+    node.re.resize(node.node.to.size()+node.node.from.size(), re(0).dim(1)); // [idx,var]
+    node.mean.resize(node.node.to.size()+node.node.from.size(), mean(0).dim(1)); // [idx,var]
+    for(int i=0; i<node.node.to.size(); i++) {
+      for(int v=0; v<re(0).dim(1); v++) {
+        node.re(i,v) = re(t)(node.node.to(i),v);
+        node.mean(i,v) = mean(t)(node.node.to(i),v);
+      }
     }
-    for(int i=0; i<node.from.size(); i++) {
-      array<Type> from_re = pg.subset_re_by_s(node.from);
-      array<Type> from_mean = pg.subset_mean_by_s(node.from);
-      vector<int> permv(3);
-      permv << 2, 0, 1; // [space,time,var] <-> [var,space,time]
-      node_re.col(i+node.to.size()) = from_re.perm(permv).col(t).col(i);
-      node_mean.col(i+node.to.size()) = from_mean.perm(permv).col(t).col(i);
+    for(int i=0; i<node.node.from.size(); i++) {
+      for(int v=0; v<re(0).dim(1); v++) {
+        array<Type> from_re = pg.subset_re_by_s(node.node.from);
+        array<Type> from_mean = pg.subset_mean_by_s(node.node.from);
+        node.re(i+node.node.to.size(),v) = from_re(i,t,v);
+        node.mean(i+node.node.to.size(),v) = from_mean(i,t,v);
+      }
     }
 
-    re_dag_node<Type> tg_node = {node_re.transpose(),node_mean.transpose(),node};
-
-    return tg_node;
+    return node;
 }
+
+template<class Type>
+re_dag_node<Type> transient_graph<Type>::operator() (
+    int idx,
+    int t,
+    int v,
+    persistent_graph<Type>& pg
+  ) {
+    re_dag_node<Type> node = {array<Type>(), array<Type>(), graph(t)(idx)};
+
+    node.re.resize(node.node.to.size()+node.node.from.size(), 1); // [idx,var]
+    node.mean.resize(node.node.to.size()+node.node.from.size(), 1); // [idx,var]
+    for(int i=0; i<node.node.to.size(); i++) {
+      node.re(i,v) = re(t)(node.node.to(i),v);
+      node.mean(i,v) = mean(t)(node.node.to(i),v);
+    }
+    for(int i=0; i<node.node.from.size(); i++) {
+      array<Type> from_re = pg.subset_re_by_s(node.node.from);
+      array<Type> from_mean = pg.subset_mean_by_s(node.node.from);
+      node.re(i+node.node.to.size(),v) = from_re(i,t,v);
+      node.mean(i+node.node.to.size(),v) = from_mean(i,t,v);
+    }
+
+    return node;
+}
+
 
 
 template<class Type>
 transient_graph<Type> transient_graph<Type>::set_re_by_to_g(
-    vector<Type> new_re,
+    const vector<Type>& new_re,
     int idx,
     int t,
     int v,
-    persistent_graph<Type> pg
+    persistent_graph<Type>& pg
   ) {
     dag_node<Type> node = operator()(idx,t,v,pg).node;
     for(int i=0; i<node.to.size(); i++) {
@@ -185,11 +198,11 @@ transient_graph<Type> transient_graph<Type>::set_re_by_to_g(
 
 template<class Type>
 transient_graph<Type> transient_graph<Type>::set_mean_by_to_g(
-    vector<Type> new_mean,
+    const vector<Type>& new_mean,
     int idx,
     int t,
     int v,
-    persistent_graph<Type> pg
+    persistent_graph<Type>& pg
   ) {
     dag_node<Type> node = operator()(idx,t,v,pg).node;
     for(int i=0; i<node.to.size(); i++) {
@@ -204,13 +217,11 @@ transient_graph<Type> transient_graph<Type>::set_mean_by_to_g(
 
 template<class Type>
 transient_graph<Type> transient_graph<Type>::slice_t(int start,int length) {
-  transient_graph<Type> new_tg(
+  return transient_graph<Type> {
     re.segment(start,length),
     mean.segment(start,length),
     graph.segment(start,length)
-  );
-
-  return(new_tg);
+  };
 }
 
 template<class Type>

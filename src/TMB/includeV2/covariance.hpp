@@ -9,32 +9,22 @@ class covariance2 {
 
   public:
     // Constructor
-    covariance2(vector<Type> pars, int covar_code);
-    covariance2() = default;
+    covariance2(const vector<Type>& pars, const int& covar_code) : pars{pars}, covar_code{covar_code} {};
+    covariance2() : pars{vector<Type>()}, covar_code(0) {};
 
     // Compute covariances
-    template<typename T> T operator() (T d);
-    template<typename T> vector<T> operator() (vector<T> d);
-    template<typename T> matrix<T> operator() (matrix<T> d);
+    template<typename T> T operator() (const T& d);
+    template<typename T> vector<T> operator() (const vector<T>& d);
+    template<typename T> matrix<T> operator() (const matrix<T>& d);
 
-    void update_marginal_sd(Type new_sd);
+    void update_marginal_sd(const Type& new_sd);
 };
-
-template<class Type>
-covariance2<Type>::covariance2(
-    vector<Type> pars,
-    int covar_code
-  ) :
-  pars(pars),
-  covar_code(covar_code) {
-    // Nothing left to initialize
-}
 
 
 
 template<class Type>
 template<typename T>
-T covariance2<Type>::operator() (T d) {
+T covariance2<Type>::operator() (const T& d) {
   switch(covar_code) {
     case 0 : return (T) pow(pars(0),2) * pars(1) * exp( -d/(T)pars(1) ); // Exponential [sd, range]
     case 1 : return (T) pow(pars(0),2) * exp( -pow(d/(T)pars(1),2) ); // Gaussian [marg_sd, range]
@@ -46,7 +36,7 @@ T covariance2<Type>::operator() (T d) {
 
 template<class Type>
 template<typename T>
-vector<T> covariance2<Type>::operator() (vector<T> d) {
+vector<T> covariance2<Type>::operator() (const vector<T>& d) {
   vector<T> ans(d.size());
   for(int i=0; i<d.size(); i++) {
     ans(i) = operator()(d(i));
@@ -56,7 +46,7 @@ vector<T> covariance2<Type>::operator() (vector<T> d) {
 
 template<class Type>
 template<typename T>
-matrix<T> covariance2<Type>::operator() (matrix<T> d) {
+matrix<T> covariance2<Type>::operator() (const matrix<T>& d) {
   matrix<T> ans(d.rows(),d.cols());
   for(int i=0; i<d.rows(); i++) {
     for(int j=0; j<d.cols(); j++) {
@@ -67,7 +57,7 @@ matrix<T> covariance2<Type>::operator() (matrix<T> d) {
 }
 
 template<class Type>
-void covariance2<Type>::update_marginal_sd(Type new_sd) {
+void covariance2<Type>::update_marginal_sd(const Type& new_sd) {
   switch(covar_code) {
     case 0 : pars(1) = pow(new_sd/pars(0),2); // Exponential
     case 1 : pars(1) = new_sd; // Gaussian

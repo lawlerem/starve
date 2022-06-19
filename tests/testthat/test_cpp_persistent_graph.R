@@ -20,6 +20,58 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 
 
 
+# test_that("C++ covariance",{
+  pars<- c(1,2)
+  covar_code<- 0
+  d<- as.matrix(dist(1:4,diag=TRUE,upper=TRUE))
+  obj<- TMB::MakeADFun(
+    data = list(
+      model = "testing",
+      test = "covariance",
+      pars = pars,
+      covar_code = covar_code,
+      d = d
+    ),
+    para = list(
+      dummy = 0
+    ),
+    DLL = "staRVe_model"
+  )
+  # Just want to check that obj can be created
+#}
+
+
+# test_that("C++ conditional normal",{
+  x<- 1:4
+  mu<- 10:13
+  sigma<- 0.6^abs(outer(1:4,1:4,`-`))
+  obj<- TMB::MakeADFun(
+    data = list(
+      model = "testing",
+      test = "conditional_normal",
+      x = x,
+      mu = mu,
+      sigma = sigma
+    ),
+    para = list(
+      dummy = 0
+    ),
+    DLL = "staRVe_model"
+  )
+  report<- obj$report()
+
+  expect_equal(report$conditional_mean,condMVNorm::condMVN(mu,sigma,1:2,3:4,x[3:4])$condMean)
+  expect_equal(report$conditional_sigma,condMVNorm::condMVN(mu,sigma,1:2,3:4,x[3:4])$condVar)
+  expect_equal(report$loglikelihood,condMVNorm::dcmvnorm(x[1:2],mu,sigma,1:2,3:4,x[3:4],log=TRUE))
+  expect_equal(length(report$sim),2)
+
+  expect_equal(report$marginal_mean,mu)
+  expect_equal(report$marginal_sigma,sigma)
+# })
+
+
+
+
 # test_that("C++ time series",{
   ts_re<- array(seq(20*3),dim=c(20,3))
   ts_pars<- cbind(c(0,0.6,2),
@@ -107,6 +159,10 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(report$overwrite_mean1, pg_mean[edges(pg_graph$dag)[[1]]$to,1,1])
 # })
 
+
+
+
+
 # test_that("C++ transient_graph",{
   pg_re<- array(seq(6*3*2),dim=c(6,3,2))
   pg_graph<- construct_dag(
@@ -167,39 +223,31 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 # })
 
 
-# test_that("C++ conditional normal",{
-  x<- 1:4
-  mu<- 10:13
-  sigma<- 0.6^abs(outer(1:4,1:4,`-`))
-  obj<- TMB::MakeADFun(
-    data = list(
-      model = "testing",
-      test = "conditional_normal",
-      x = x,
-      mu = mu,
-      sigma = sigma
-    ),
-    para = list(
-      dummy = 0
-    ),
-    DLL = "staRVe_model"
-  )
-  report<- obj$report()
-
-  expect_equal(report$conditional_mean,condMVNorm::condMVN(mu,sigma,1:2,3:4,x[3:4])$condMean)
-  expect_equal(report$conditional_sigma,condMVNorm::condMVN(mu,sigma,1:2,3:4,x[3:4])$condVar)
-  expect_equal(report$loglikelihood,condMVNorm::dcmvnorm(x[1:2],mu,sigma,1:2,3:4,x[3:4],log=TRUE))
-  expect_equal(length(report$sim),2)
-
-  expect_equal(report$marginal_mean,mu)
-  expect_equal(report$marginal_sigma,sigma)
-# })
-
-
 
 
 
 # test_that("C++ nngp",{
+  library(staRVe)
+  library(testthat)
+
+  points<- sf::st_as_sf(as.data.frame(rbind(
+    # persistent graph nodes
+    c(0,0),
+    c(0.5,0),
+    c(1,0),
+    c(0.5,0.5),
+    c(1,0.5),
+    c(1,1),
+    # transient graph nodes
+    c(0.25,0.25),
+    c(0.75,0.5),
+    c(0.75,0.75),
+    c(0.75,0.5),
+    c(0.75,0.75),
+    c(0.75,0.75)
+  )),coords=c(1,2))
+
+
   nt<- 10
   ts_re<- array(seq(nt*2),dim=c(nt,2))
   ts_pars<- cbind(c(0,0.6,2),

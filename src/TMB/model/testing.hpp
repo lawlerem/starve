@@ -9,14 +9,46 @@ Type testing(objective_function<Type>* obj) {
 
     PARAMETER(dummy);
 
-    if(test == "time_series") {
+
+    if(test == "covariance") {
+      DATA_VECTOR(pars);
+      DATA_INTEGER(covar_code);
+      DATA_MATRIX(d);
+
+      covariance2<Type> cv {pars, covar_code};
+
+      matrix<Type> sigma = cv(d);
+      REPORT(sigma);
+
+    } else if(test == "conditional_normal") {
+      DATA_VECTOR(x);
+      DATA_VECTOR(mu);
+      DATA_MATRIX(sigma);
+
+      conditional_normal<Type> cn {sigma, 2};
+      vector<Type> conditional_mean = cn.conditional_mean(x,mu);
+      REPORT(conditional_mean);
+      matrix<Type> conditional_sigma = cn.conditional_cov();
+      REPORT(conditional_sigma);
+      Type loglikelihood = cn.loglikelihood(x,mu);
+      REPORT(loglikelihood);
+      vector<Type> sim = cn.simulate(x,mu);
+      REPORT(sim);
+
+      conditional_normal<Type> cn_zero(sigma,0);
+      vector<Type> marginal_mean = cn_zero.conditional_mean(x,mu);
+      REPORT(marginal_mean);
+      matrix<Type> marginal_sigma = cn_zero.conditional_cov();
+      REPORT(marginal_sigma);
+
+
+
+
+    } else if(test == "time_series") {
       DATA_ARRAY(ts_re);
       DATA_ARRAY(ts_pars);
 
-      time_series<Type> ts(
-        ts_re,
-        ts_pars
-      );
+      time_series<Type> ts {ts_re, ts_pars};
 
       array<Type> small_t_re = ts.slice_t(2,3).get_re();
       REPORT(small_t_re);
@@ -28,18 +60,22 @@ Type testing(objective_function<Type>* obj) {
       REPORT(loglikelihood);
       array<Type> sim = ts.simulate().get_re();
       REPORT(sim);
+
+
+
+
+
+
+
+
     } else if(test == "persistent_graph") {
       DATA_ARRAY(pg_re); // [space,time,var]
       DATA_STRUCT(pg_edges,directed_graph);
       DATA_STRUCT(pg_dists,dag_dists);
 
-      dag<Type> pg_g(pg_edges.dag,pg_dists.dag_dist);
+      dag<Type> pg_g {pg_edges.dag, pg_dists.dag_dist};
 
-      persistent_graph<Type> pg(
-        pg_re,
-        pg_re,
-        pg_g
-      );
+      persistent_graph<Type> pg {pg_re, pg_re, pg_g};
 
       vector<int> idx(3);
       idx << 0,2,4;
@@ -95,32 +131,34 @@ Type testing(objective_function<Type>* obj) {
 
       vector<Type> overwrite_mean1 = pg(0,0,0).mean;
       REPORT(overwrite_mean1);
+
+
+
+
+
+
     } else if(test == "transient_graph" ) {
       DATA_ARRAY(pg_re); // [space,time,var]
       DATA_STRUCT(pg_edges,directed_graph);
       DATA_STRUCT(pg_dists,dag_dists);
       dag<Type> pg_g(pg_edges.dag,pg_dists.dag_dist);
 
-      persistent_graph<Type> pg(
-        pg_re,
-        pg_re,
-        pg_g
-      );
+      persistent_graph<Type> pg {pg_re ,pg_re ,pg_g};
 
       DATA_ARRAY(tg_re);
       DATA_STRUCT(tg_edges,directed_graph);
       DATA_STRUCT(tg_dists,dag_dists);
-      dag<Type> tg_g(tg_edges.dag,tg_dists.dag_dist);
+      dag<Type> tg_g{tg_edges.dag, tg_dists.dag_dist};
 
       DATA_IVECTOR(t);
 
-      transient_graph<Type> tg(
+      transient_graph<Type> tg {
         tg_re,
         tg_re,
         tg_g,
         t,
         pg.dim_t() // # of times
-      );
+      };
 
       array<Type> full_re = tg.get_re();
       REPORT(full_re);
@@ -145,6 +183,9 @@ Type testing(objective_function<Type>* obj) {
       REPORT(small_tg_mean);
       REPORT(small_tg_di);
 
+
+
+
       vector<Type> new_vals(tg(0,0,pg).node.to.size());
       for(int i=0; i<new_vals.size(); i++) {
         new_vals(i) = -1.0*Type(i+1)/2.0;
@@ -162,28 +203,13 @@ Type testing(objective_function<Type>* obj) {
       array<Type> after_overwrite_mean = tg.get_mean();
       REPORT(after_overwrite_mean);
 
-      vector<Type> overwrite_mean1 = tg(0,0,0,pg.slice_v(0,1)).mean;
+      vector<Type> overwrite_mean1 = tg(0,0,0,pg).mean;
       REPORT(overwrite_mean1);
-    } else if(test == "conditional_normal") {
-      DATA_VECTOR(x);
-      DATA_VECTOR(mu);
-      DATA_MATRIX(sigma);
 
-      conditional_normal<Type> cn(sigma,2);
-      vector<Type> conditional_mean = cn.conditional_mean(x,mu);
-      REPORT(conditional_mean);
-      matrix<Type> conditional_sigma = cn.conditional_cov();
-      REPORT(conditional_sigma);
-      Type loglikelihood = cn.loglikelihood(x,mu);
-      REPORT(loglikelihood);
-      vector<Type> sim = cn.simulate(x,mu);
-      REPORT(sim);
 
-      conditional_normal<Type> cn_zero(sigma,0);
-      vector<Type> marginal_mean = cn_zero.conditional_mean(x,mu);
-      REPORT(marginal_mean);
-      matrix<Type> marginal_sigma = cn_zero.conditional_cov();
-      REPORT(marginal_sigma);
+
+
+
     } else if(test == "nngp") {
       DATA_ARRAY(ts_re);
       DATA_ARRAY(ts_pars);
@@ -227,11 +253,7 @@ Type testing(objective_function<Type>* obj) {
         cv(v) = covariance2<Type>(vector<Type>(cv_pars.col(v)),cv_code(v));
       }
 
-      nngp2<Type> process(
-        pg,
-        tg,
-        cv
-      );
+      nngp2<Type> process {pg,tg,cv};
 
       array<Type> nngp_pg_re = process.get_pg_re();
       REPORT(nngp_pg_re);

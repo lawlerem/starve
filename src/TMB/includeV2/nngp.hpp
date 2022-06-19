@@ -5,7 +5,7 @@ class nngp2 {
     transient_graph<Type> tg;
     vector<covariance2<Type> > cv; // Vector elements hold covariance for different variables
 
-    vector<pg_cache<Type> > pg_c;
+    pg_cache<Type> pg_c; // vector elements hold pg_cache for different variables
     vector<tg_cache<Type> > tg_c;
 
     Type pg_loglikelihood(time_series<Type> ts);
@@ -34,14 +34,13 @@ nngp2<Type>::nngp2(
     transient_graph<Type> tg,
     vector<covariance2<Type> > cv
   ) :
-  pg(pg),
-  tg(tg),
-  cv(cv) {
-  // Set up persistent graph cache
-  pg_c = vector<pg_cache<Type> >(cv.size());
+  pg{pg},
+  tg{tg},
+  cv{cv} {
+  pg_c = pg_cache<Type>(pg,cv);
+  // Set up transient graph cache
   tg_c = vector<tg_cache<Type> >(cv.size());
   for(int v=0; v<cv.size(); v++) {
-    pg_c(v) = pg_cache<Type>(pg,cv(v));
     tg_c(v) = tg_cache<Type>(tg,pg,cv(v));
   }
 }
@@ -57,8 +56,7 @@ Type nngp2<Type>::pg_loglikelihood(time_series<Type> ts) {
   for(int v=0; v<pg.dim_v(); v++) {
     for(int t=0; t<pg.dim_t(); t++) {
       for(int node=0; node<pg.dim_g(); node++) {
-        persistent_graph_node<Type> pg_node = pg(node,t,v);
-        pg_ll += pg_c(v)(node).loglikelihood(pg_node.re,pg_node.mean);
+        pg_ll += pg_c(node,v).loglikelihood(pg(node,t,v).re,pg(node,t,v).mean);
       }
     }
   }
@@ -80,13 +78,13 @@ nngp2<Type> nngp2<Type>::pg_simulate(time_series<Type> ts) {
   for(int v=0; v<pg.dim_v(); v++) {
     for(int t=0; t<pg.dim_t(); t++) {
       for(int node=0; node<pg.dim_g(); node++) {
-        persistent_graph_node<Type> pg_node = pg(node);
+        re_dag_node<Type> pg_node = pg(node);
         vector<Type> to_mean = ts.propagate_structure(pg_node.re,t,v);
         pg.set_mean_by_to_g(to_mean.segment(0,pg_node.node.to.size()),node,t,v);
 
         pg_node = pg(node,t,v);
         // "to" nodes for pg_node.re won't be used
-        vector<Type> sim = pg_c(v)(node).simulate(pg_node.re,pg_node.mean);
+        vector<Type> sim = pg_c(node,v).simulate(pg_node.re,pg_node.mean);
 
         pg.set_re_by_to_g(sim,node,t,v);
       }
@@ -103,8 +101,7 @@ Type nngp2<Type>::tg_loglikelihood(time_series<Type> ts) {
   for(int v=0; v<tg.dim_v(); v++) {
     for(int t=0; t<tg.dim_t(); t++) {
       for(int node=0; node<tg.dim_g(t); node++) {
-        transient_graph_node<Type> tg_node = tg(node,t,v,pg);
-        tg_ll += tg_c(v)(node,t)(tg_node.re,tg_node.mean,true); // true -> interpolate mu
+        tg_ll += tg_c(v)(node,t)(tg(node,t,v,pg).re,tg(node,t,v,pg).mean,true); // true -> interpolate mu
       }
     }
   }
@@ -127,7 +124,7 @@ nngp2<Type> nngp2<Type>::tg_simulate(time_series<Type> ts) {
   for(int v=0; v<tg.dim_v(); v++) {
     for(int t=0; t<tg.dim_t(); t++) {
       for(int node=0; node<tg.dim_g(t); node++) {
-        transient_graph_node<Type> tg_node = tg(node,t,v,pg);
+        re_dag_node<Type> tg_node = tg(node,t,v,pg);
         vector<Type> inter_mu = tg_c(v)(node,t).interpolate_mean(tg_node.mean);
         tg.set_mean_by_to_g(inter_mu,node,t,v,pg);
 
