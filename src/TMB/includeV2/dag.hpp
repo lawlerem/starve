@@ -16,9 +16,8 @@ struct re_dag_node {
 
 template<class Type>
 class dag {
-  private:
-    vector<dag_node<Type> > nodes;
   public:
+    vector<dag_node<Type> > nodes;
     dag(
       const vector<vector<vector<int> > >& edges,
       const vector<matrix<Type> >& dists
@@ -27,7 +26,6 @@ class dag {
     dag() {nodes.resize(0);}
 
     int size() { return nodes.size(); }
-    vector<dag_node<Type> > get_nodes() { return nodes; }
     dag_node<Type> operator() (int i) { return nodes(i); }
     dag<Type> segment(int start, int length) const { return dag {nodes.segment(start,length)}; }
     vector<vector<vector<int> > > edges();

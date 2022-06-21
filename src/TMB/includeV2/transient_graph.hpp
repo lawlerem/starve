@@ -6,8 +6,8 @@ class transient_graph {
     vector<dag<Type> > graph; // [time[graph] ]
   public:
     transient_graph(
-      array<Type>& all_re, // [idx,var] can't do const-reference
-      array<Type>& all_mean, // [idx,var] can't do const-reference
+      array<Type> all_re, // [idx,var] can't do const-reference
+      array<Type> all_mean, // [idx,var] can't do const-reference
       const dag<Type>& all_graph,
       const vector<int>& t,
       int tmax
@@ -26,6 +26,8 @@ class transient_graph {
 
     array<Type> get_re();
     array<Type> get_mean();
+    vector<dag<Type> > get_graph() { return graph; }
+
     re_dag_node<Type> operator() (
       int idx,
       int t,
@@ -60,8 +62,8 @@ class transient_graph {
 // Constructor
 template<class Type>
 transient_graph<Type>::transient_graph(
-    array<Type>& all_re,
-    array<Type>& all_mean,
+    array<Type> all_re,
+    array<Type> all_mean,
     const dag<Type>& all_graph,
     const vector<int>& t,
     int tmax
@@ -96,6 +98,7 @@ array<Type> transient_graph<Type>::get_re() {
       for(int v=0; v<re(i).dim(1); v++) {
         ans(cntr,v) = re(i)(j,v);
       }
+      cntr++;
     }
   }
 
@@ -116,6 +119,7 @@ array<Type> transient_graph<Type>::get_mean() {
       for(int v=0; v<mean(i).dim(1); v++) {
         ans(cntr,v) = mean(i)(j,v);
       }
+      cntr++;
     }
   }
 
@@ -131,10 +135,10 @@ re_dag_node<Type> transient_graph<Type>::operator() (
     int t,
     persistent_graph<Type>& pg
   ) {
-    re_dag_node<Type> node = {array<Type>(), array<Type>(), graph(t)(idx)};
+    int n = graph(t)(idx).to.size() + graph(t)(idx).from.size();
+    re_dag_node<Type> node {array<Type>(n,re(0).dim(1)),
+                            array<Type>(n,mean(0).dim(1)), graph(t)(idx)};
 
-    node.re.resize(node.node.to.size()+node.node.from.size(), re(0).dim(1)); // [idx,var]
-    node.mean.resize(node.node.to.size()+node.node.from.size(), mean(0).dim(1)); // [idx,var]
     for(int i=0; i<node.node.to.size(); i++) {
       for(int v=0; v<re(0).dim(1); v++) {
         node.re(i,v) = re(t)(node.node.to(i),v);
@@ -160,19 +164,20 @@ re_dag_node<Type> transient_graph<Type>::operator() (
     int v,
     persistent_graph<Type>& pg
   ) {
-    re_dag_node<Type> node = {array<Type>(), array<Type>(), graph(t)(idx)};
+    int n = graph(t)(idx).to.size() + graph(t)(idx).from.size();
+    re_dag_node<Type> node {array<Type>(n,1),
+                            array<Type>(n,1),
+                            graph(t)(idx)};
 
-    node.re.resize(node.node.to.size()+node.node.from.size(), 1); // [idx,var]
-    node.mean.resize(node.node.to.size()+node.node.from.size(), 1); // [idx,var]
     for(int i=0; i<node.node.to.size(); i++) {
-      node.re(i,v) = re(t)(node.node.to(i),v);
-      node.mean(i,v) = mean(t)(node.node.to(i),v);
+      node.re(i,0) = re(t)(node.node.to(i),v);
+      node.mean(i,0) = mean(t)(node.node.to(i),v);
     }
     for(int i=0; i<node.node.from.size(); i++) {
       array<Type> from_re = pg.subset_re_by_s(node.node.from);
       array<Type> from_mean = pg.subset_mean_by_s(node.node.from);
-      node.re(i+node.node.to.size(),v) = from_re(i,t,v);
-      node.mean(i+node.node.to.size(),v) = from_mean(i,t,v);
+      node.re(i+node.node.to.size(),0) = from_re(i,t,v);
+      node.mean(i+node.node.to.size(),0) = from_mean(i,t,v);
     }
 
     return node;

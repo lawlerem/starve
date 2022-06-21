@@ -20,7 +20,7 @@ class conditional_normal {
     // Compute conditional mean
     vector<Type> conditional_mean(
       const vector<Type>& x,
-      vector<Type> mu,
+      vector<Type> mu, // don't pass by ref because I would need to create a new copy anyway
       bool interpolate_mu=false
     );
 
@@ -33,8 +33,8 @@ class conditional_normal {
 
     // simulate new
     vector<Type> simulate(
-      vector<Type> x,
-      vector<Type> mu,
+      const vector<Type>& x,
+      const vector<Type>& mu,
       bool interpolate_mu=false
     );
 
@@ -126,8 +126,8 @@ Type conditional_normal<Type>::loglikelihood(
 
 template<class Type>
 vector<Type> conditional_normal<Type>::simulate(
-    vector<Type> x,
-    vector<Type> mu,
+    const vector<Type>& x,
+    const vector<Type>& mu,
     bool interpolate_mu
   ) {
   vector<Type> mu_p = conditional_mean(x,mu,interpolate_mu);

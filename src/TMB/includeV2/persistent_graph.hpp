@@ -1,11 +1,11 @@
 // A class to hold the random effects and graph structure for the persistent random effects
 template<class Type>
 class persistent_graph {
-  private:
+  public:
     array<Type> re; // [space,time,var], the space dimension should have the same length as graph
     array<Type> mean; // same dimensions as re
     dag<Type> graph;
-  public:
+
     // Constructor
     persistent_graph(
       const array<Type>& re,
@@ -19,17 +19,12 @@ class persistent_graph {
     int dim_t() { return re.dim(1); }
     int dim_v() { return re.dim(2); }
 
-    array<Type> get_re() { return re; }
-    persistent_graph<Type> set_re(const array<Type>& new_re) { re = new_re; return *this;} // return *this so you get the whole graph as return value
-
-    array<Type> get_mean() { return mean; }
-    persistent_graph<Type> set_mean(const array<Type>& new_mean) { mean = new_mean; return *this;}
-
-    dag<Type> get_graph() { return graph; }
-
     array<Type> subset_re_by_s(const vector<int>& idx);
     array<Type> subset_mean_by_s(const vector<int>& idx);
+
+    // operator(idx) subsets by the idx'th graph node
     re_dag_node<Type> operator() (int idx); // Why not return a persistent_graph? Because the nodes wont be complete
+    re_dag_node<Type> operator() (int idx,int t);
     re_dag_node<Type> operator() (int idx,int t,int v);
     persistent_graph<Type> set_re_by_to_g(const vector<Type>& new_re,int idx,int t,int v);
     persistent_graph<Type> set_mean_by_to_g(const vector<Type>& new_mean,int idx,int t,int v);
@@ -85,6 +80,10 @@ re_dag_node<Type> persistent_graph<Type>::operator() (int idx) {
   return re_dag_node<Type> {node_re, node_mean, node};
 }
 
+template<class Type>
+re_dag_node<Type> persistent_graph<Type>::operator() (int idx,int t) {
+  return slice_t(t,1)(idx);
+}
 
 template<class Type>
 re_dag_node<Type> persistent_graph<Type>::operator() (int idx,int t, int v) {

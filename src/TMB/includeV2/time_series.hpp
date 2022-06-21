@@ -122,9 +122,15 @@ array<Type> time_series<Type>::propagate_structure(
     array<Type>& new_re
   ) {
   array<Type> pred(new_re.dim(0),new_re.dim(1),new_re.dim(2));
-  for(int v=0; v<new_re.dim(2); v++) {
-    for(int t=0; t<new_re.dim(1); t++) {
-      pred.col(v).col(t) = propagate_structure(new_re.col(v),t,v);
+  for(int s=0; s<new_re.dim(0); s++) {
+    for(int v=0; v<new_re.dim(2); v++) {
+      for(int t=0; t<new_re.dim(1); t++) {
+        if( t==0 ) {
+          pred(s,t,v) = re(0,v);
+        } else {
+          pred(s,t,v) = pars(1,v)*(new_re(s,t-1,v) - re(t-1,v)) + re(t,v);
+        }
+      }
     }
   }
   return pred;

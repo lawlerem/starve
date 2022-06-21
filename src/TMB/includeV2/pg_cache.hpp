@@ -1,13 +1,12 @@
 template<class Type>
 class pg_cache {
   private:
-    vector<vector<conditional_normal<Type> > > conditional_normals; // one conditional normal for each node in pg.graph [idx[var]]
+    vector<vector<conditional_normal<Type> > > conditional_normals; // one conditional normal for each node in pg.graph [idx[var]]; don't need time because we can re-use it for each year
   public:
     pg_cache(
-      persistent_graph<Type> pg,
-      vector<covariance2<Type> > cv
+      persistent_graph<Type>& pg,
+      vector<covariance2<Type> >& cv
     );
-    pg_cache() = default;
 
     vector<conditional_normal<Type> > operator() (int idx) { return conditional_normals(idx); }
     conditional_normal<Type> operator() (int idx,int v) { return conditional_normals(idx)(v); }
@@ -16,8 +15,8 @@ class pg_cache {
 
 template<class Type>
 pg_cache<Type>::pg_cache(
-    persistent_graph<Type> pg,
-    vector<covariance2<Type> > cv
+    persistent_graph<Type>& pg,
+    vector<covariance2<Type> >& cv
   ) {
     conditional_normals.resize(pg.dim_g());
     for(int i=0; i<conditional_normals.size(); i++) {
