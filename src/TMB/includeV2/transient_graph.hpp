@@ -1,10 +1,9 @@
 template<class Type>
 class transient_graph {
-  private:
+  public:
     vector<array<Type> > re; // [time[idx,var] ]
     vector<array<Type> > mean; // [time[idx,var] ]
     vector<dag<Type> > graph; // [time[graph] ]
-  public:
     transient_graph(
       array<Type> all_re, // [idx,var] can't do const-reference
       array<Type> all_mean, // [idx,var] can't do const-reference

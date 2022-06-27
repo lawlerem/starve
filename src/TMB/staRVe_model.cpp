@@ -23,6 +23,8 @@ using namespace density;
 #include "includeV2/transient_graph.hpp"
 #include "includeV2/tg_cache.hpp"
 #include "includeV2/nngp.hpp"
+#include "includeV2/family.hpp"
+#include "includeV2/observations.hpp"
 
 #include "model/staRVe_model.hpp"
 #include "model/family.hpp"

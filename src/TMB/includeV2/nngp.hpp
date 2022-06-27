@@ -8,11 +8,11 @@ class nngp2 {
     pg_cache<Type> pg_c;
     tg_cache<Type> tg_c;
 
-    Type pg_loglikelihood(time_series<Type> ts);
-    Type tg_loglikelihood(time_series<Type> ts);
+    Type pg_loglikelihood(time_series<Type>& ts);
+    Type tg_loglikelihood(time_series<Type>& ts);
 
-    nngp2<Type> pg_simulate(time_series<Type> ts);
-    nngp2<Type> tg_simulate(time_series<Type> ts);
+    nngp2<Type> pg_simulate(time_series<Type>& ts);
+    nngp2<Type> tg_simulate(time_series<Type>& ts);
   public:
     nngp2(
       persistent_graph<Type>& pg,
@@ -33,13 +33,11 @@ class nngp2 {
     array<Type> get_tg_mean() { return tg.get_mean(); }
     dag<Type> get_tg_graph() { return tg.get_graph(); }
 
+    // Returns just the random effect for [location, time, var]
+    Type operator() (int s,int t, int v) {return (s<pg.dim_s() ? pg.re(s,t,v) : tg.re(t)(s-pg.dim_s(),v));}
 
-    // no operator(int idx) because tg doesn't have one
-    re_dag_node<Type> operator() (int idx,int t) {return (idx<pg.dim_g() ?  pg(idx,t) : tg(idx-pg.dim_g(),t,pg));}
-    re_dag_node<Type> operator() (int idx,int t,int v) {return (idx<pg.dim_g() ? pg(idx,t,v) : tg(idx-pg.dim_g(),t,v,pg));}
-
-    Type loglikelihood(time_series<Type> ts) { return pg_loglikelihood(ts)+tg_loglikelihood(ts); }
-    nngp2<Type> simulate(time_series<Type> ts) { pg_simulate(ts); tg_simulate(ts); return *this; }
+    Type loglikelihood(time_series<Type>& ts) { return pg_loglikelihood(ts)+tg_loglikelihood(ts); }
+    nngp2<Type> simulate(time_series<Type>& ts) { pg_simulate(ts); tg_simulate(ts); return *this; }
 };
 
 
@@ -47,7 +45,7 @@ class nngp2 {
 
 
 template<class Type>
-Type nngp2<Type>::pg_loglikelihood(time_series<Type> ts) {
+Type nngp2<Type>::pg_loglikelihood(time_series<Type>& ts) {
   // Create marginal means for pg
   pg.mean = ts.propagate_structure(pg.re);
 
@@ -66,7 +64,7 @@ Type nngp2<Type>::pg_loglikelihood(time_series<Type> ts) {
 
 
 template<class Type>
-nngp2<Type> nngp2<Type>::pg_simulate(time_series<Type> ts) {
+nngp2<Type> nngp2<Type>::pg_simulate(time_series<Type>& ts) {
   /*
   for v in variables
     for t in years
@@ -96,7 +94,7 @@ nngp2<Type> nngp2<Type>::pg_simulate(time_series<Type> ts) {
 
 
 template<class Type>
-Type nngp2<Type>::tg_loglikelihood(time_series<Type> ts) {
+Type nngp2<Type>::tg_loglikelihood(time_series<Type>& ts) {
   Type tg_ll = 0.0;
   for(int v=0; v<tg.dim_v(); v++) {
     for(int t=0; t<tg.dim_t(); t++) {
@@ -111,7 +109,7 @@ Type nngp2<Type>::tg_loglikelihood(time_series<Type> ts) {
 
 
 template<class Type>
-nngp2<Type> nngp2<Type>::tg_simulate(time_series<Type> ts) {
+nngp2<Type> nngp2<Type>::tg_simulate(time_series<Type>& ts) {
   /*
   for v in variables
     for t in years

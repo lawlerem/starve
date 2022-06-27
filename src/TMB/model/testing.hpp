@@ -257,23 +257,6 @@ Type testing(objective_function<Type>* obj) {
 
       transient_graph<Type> tg {tg_re,tg_re,tg_g,t,pg.dim_t()};
 
-      vector<int> dim_g(tg.dim_t());
-      for(int t=0; t<tg.dim_t(); t++) {
-        dim_g(t) = tg.dim_g(t);
-      }
-      vector<int> dim_s(tg.dim_t());
-      for(int t=0; t<tg.dim_t(); t++) {
-        dim_s(t) = tg.dim_s(t);
-      }
-      int dim_t = tg.dim_t();
-      int dim_v = tg.dim_v();
-      REPORT(dim_g);
-      REPORT(dim_s);
-      REPORT(dim_t);
-      REPORT(dim_v);
-
-
-
       DATA_ARRAY(cv_pars);
       DATA_IVECTOR(cv_code);
 
@@ -290,35 +273,11 @@ Type testing(objective_function<Type>* obj) {
       REPORT(bnngp_pg_mean);
 
 
-      re_dag_node<Type> pgnode = process(1,0);
-      array<Type> small_g_re = pgnode.re;
-      array<Type> small_g_mean = pgnode.mean;
-      matrix<Type> small_g_di = pgnode.node.d;
-      REPORT(small_g_re);
-      REPORT(small_g_mean);
-      REPORT(small_g_di);
+      Type one_pg_re = process(1,0,0);
+      REPORT(one_pg_re);
 
-      re_dag_node<Type> one_node = process(1,0,0);
-      array<Type> one_g_re = one_node.re;
-      array<Type> one_g_mean = one_node.mean;
-      REPORT(one_g_re);
-      REPORT(one_g_mean);
-
-      re_dag_node<Type> tg_node = process(pg.dim_g()+2,0);
-      array<Type> small_tg_re = tg_node.re;
-      array<Type> small_tg_mean = tg_node.mean;
-      matrix<Type> small_tg_di = tg_node.node.d;
-      REPORT(small_tg_re);
-      REPORT(small_tg_mean);
-      REPORT(small_tg_di);
-
-      re_dag_node<Type> stg_node = process(pg.dim_g()+2,0,0);
-      array<Type> ssmall_tg_re = stg_node.re;
-      array<Type> ssmall_tg_mean = stg_node.mean;
-      matrix<Type> ssmall_tg_di = stg_node.node.d;
-      REPORT(ssmall_tg_re);
-      REPORT(ssmall_tg_mean);
-      REPORT(ssmall_tg_di);
+      Type one_tg_re = process(pg.dim_s()+2,0,1);
+      REPORT(one_tg_re);
 
 
       Type nngp2_ll = process.loglikelihood(ts);
@@ -338,6 +297,163 @@ Type testing(objective_function<Type>* obj) {
 
       Type nngp2_sim_ll = process.loglikelihood(ts);
       REPORT(nngp2_sim_ll);
+
+
+
+
+
+
+    } else if(test == "inv_link_function") {
+      DATA_VECTOR(x);
+
+      array<Type> ans(x.size(),3);
+      for(int code=0; code<3; code++) { // code < # of cases in inv_link_function
+        for(int i=0; i<x.size(); i++) {
+          ans(i,code) = inv_link_function2{code}(x(i));
+        }
+      }
+      REPORT(ans);
+
+
+
+
+
+    } else if(test == "distribution") {
+      DATA_MATRIX(x);
+      DATA_VECTOR(mean);
+      DATA_MATRIX(pars);
+      DATA_MATRIX(size);
+
+      matrix<Type> ans = x;
+      for(int code=0; code<10; code++) { // code < # of cases in distribution
+        for(int i=0; i<x.rows(); i++) {
+          ans(i,code) = distribution<Type>{code,pars.col(code)}(x(i,code),mean(code),size(i,code));
+        }
+      }
+      REPORT(ans);
+
+
+
+
+
+
+    } else if(test == "family") {
+      // No tests needed
+      DATA_MATRIX(x);
+      DATA_VECTOR(mean);
+      DATA_MATRIX(pars);
+      DATA_MATRIX(size);
+
+      matrix<Type> ans = x;
+      for(int code=0; code<10; code++) {
+        int link_code=0;
+        switch(code) {
+          case 0 : link_code=0; break; // Normal - identity
+          case 1 : link_code=1; break; // Poisson - log
+          case 2 : link_code=1; break; // Neg. Binom - log
+          case 3 : link_code=2; break; // Bernoulli - logit
+          case 4 : link_code=1; break; // Gamma - log
+          case 5 : link_code=0; break; // Log-normal - identity
+          case 6 : link_code=2; break; // Binomial - logit
+          case 7 : link_code=2; break; // atLeastOneBinomial - logit
+          case 8 : link_code=1; break; // Compois - log
+          case 9 : link_code=1; break; // Tweedie - log
+        };
+        for(int i=0; i<x.rows(); i++) {
+          ans(i,code) = family2<Type>{
+            {link_code},
+            {code,pars.col(code)}
+          }(x(i,code),mean(code),size(i,code));
+        }
+      }
+      REPORT(ans);
+
+
+
+
+
+
+
+
+    } else if(test == "observations") {
+      DATA_ARRAY(ts_re);
+      DATA_ARRAY(ts_pars);
+
+      time_series<Type> ts {ts_re,ts_pars};
+
+      DATA_ARRAY(pg_re); // [space,time,var]
+      DATA_STRUCT(pg_edges,directed_graph);
+      DATA_STRUCT(pg_dists,dag_dists);
+      dag<Type> pg_g(pg_edges.dag,pg_dists.dag_dist);
+
+      persistent_graph<Type> pg {pg_re,pg_re,pg_g};
+
+      DATA_ARRAY(tg_re);
+      DATA_STRUCT(tg_edges,directed_graph);
+      DATA_STRUCT(tg_dists,dag_dists);
+      dag<Type> tg_g(tg_edges.dag,tg_dists.dag_dist);
+
+      DATA_IVECTOR(t);
+
+      transient_graph<Type> tg {tg_re,tg_re,tg_g,t,pg.dim_t()};
+
+      DATA_ARRAY(cv_pars);
+      DATA_IVECTOR(cv_code);
+
+      vector<covariance2<Type> > cv(pg.dim_v());
+      for(int v=0; v<pg.dim_v(); v++) {
+        cv(v) = covariance2<Type>(vector<Type>(cv_pars.col(v)),cv_code(v));
+      }
+
+      nngp2<Type> process {pg,tg,cv};
+
+
+      DATA_VECTOR(obs);
+      DATA_IARRAY(idx);
+      DATA_VECTOR(sample_size);
+      DATA_MATRIX(mean_design);
+      DATA_MATRIX(beta);
+      DATA_IARRAY(family_codes);
+      DATA_ARRAY(family_pars);
+
+      vector<family2<Type> > families(family_codes.cols());
+      for(int v=0; v<family_codes.cols(); v++) {
+        families(v) = family2<Type> {
+          {family_codes(0,v)},
+          {family_codes(1,v), family_pars.col(v)}
+        };
+      }
+
+      observations2<Type> glmm {obs,idx,sample_size,mean_design,beta,families};
+
+      vector<Type> mm = glmm.get_link_mean(process);
+      REPORT(mm);
+
+      Type ll = glmm.loglikelihood(process);
+      REPORT(ll);
+
+      ts.simulate();
+      process.simulate(ts);
+      glmm.simulate(process);
+
+      array<Type> new_ts = ts.get_re();
+      REPORT(new_ts);
+
+      array<Type> new_pg = process.get_pg_re();
+      REPORT(new_pg);
+      array<Type> new_tg = process.get_tg_re();
+      REPORT(new_tg);
+
+      vector<Type> new_obs = glmm.obs;
+      REPORT(new_obs);
+
+
+      vector<Type> new_mm = glmm.get_link_mean(process);
+      REPORT(new_mm);
+
+      Type new_ll = glmm.loglikelihood(process);
+      REPORT(new_ll);
+
     } else {}
 
 

@@ -39,7 +39,7 @@ class persistent_graph {
 // Don't return a persistent_graph because subsetting the edges/dists will not work.
 template<class Type>
 array<Type> persistent_graph<Type>::subset_re_by_s(const vector<int>& idx) {
-  array<Type> new_re(idx.size(),re.dim(1),re.dim(2)); // [var,time,space]
+  array<Type> new_re(idx.size(),re.dim(1),re.dim(2));
   for(int s=0; s<idx.size(); s++) {
     for(int t=0; t<re.dim(1); t++) {
       for(int v=0; v<re.dim(2); v++) {
