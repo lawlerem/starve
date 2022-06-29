@@ -408,9 +408,9 @@ Type testing(objective_function<Type>* obj) {
       nngp2<Type> process {pg,tg,cv};
 
 
-      DATA_VECTOR(obs);
+      DATA_ARRAY(obs);
       DATA_IARRAY(idx);
-      DATA_VECTOR(sample_size);
+      DATA_ARRAY(sample_size);
       DATA_MATRIX(mean_design);
       DATA_MATRIX(beta);
       DATA_IARRAY(family_codes);
@@ -426,7 +426,7 @@ Type testing(objective_function<Type>* obj) {
 
       observations2<Type> glmm {obs,idx,sample_size,mean_design,beta,families};
 
-      vector<Type> mm = glmm.get_link_mean(process);
+      array<Type> mm = glmm.get_link_mean(process);
       REPORT(mm);
 
       Type ll = glmm.loglikelihood(process);
@@ -444,11 +444,11 @@ Type testing(objective_function<Type>* obj) {
       array<Type> new_tg = process.get_tg_re();
       REPORT(new_tg);
 
-      vector<Type> new_obs = glmm.obs;
+      array<Type> new_obs = glmm.obs;
       REPORT(new_obs);
 
 
-      vector<Type> new_mm = glmm.get_link_mean(process);
+      array<Type> new_mm = glmm.get_link_mean(process);
       REPORT(new_mm);
 
       Type new_ll = glmm.loglikelihood(process);

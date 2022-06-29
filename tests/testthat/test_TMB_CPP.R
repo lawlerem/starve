@@ -568,16 +568,17 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   cv_code<- c(0,0)
 
   nobs<- 30
-  obs<- seq(nobs)
+  obs<- matrix(seq(nobs*2),ncol=2)
+  obs[c(2,6),1]<- NA
+  obs[c(3,7),2]<- NA
 
   set.seed(1234)
-  idx<- matrix(0,nrow=nobs,ncol=3)
+  idx<- matrix(0,nrow=nobs,ncol=2)
   idx[,2]<- sort(sample(nt,nobs,replace=TRUE))
-  idx[,3]<- c(1,2) # variable
   obspert<- tabulate(idx[,2])
   locspert<- 6+tabulate(tg_time+1)
   idx[,1]<- do.call(c,Map(sample,x=locspert,size=obspert,replace=TRUE))
-  idx[1,]<- c(locspert[[1]],1,1) # Ensure a transient graph node
+  idx[1,]<- c(locspert[[1]],1) # Ensure a transient graph node
 
   sample_size<- obs
   mean_design<- matrix(rnorm(nobs*2),ncol=2)
@@ -625,32 +626,34 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   # Compute means before simulation
   mm<- obs
   fixed<- mean_design %*% beta
-  for( i in seq_along(mm) ) {
-    s<- idx[i,1]
-    t<- idx[i,2]
-    v<- idx[i,3]
-    mm[[i]]<- fixed[i,v] + c(pg_re[,t,v],tg_re[(tg_time+1)==t,v])[[s]]
+  for( i in seq(nrow(mm)) ) {
+    for( v in seq(ncol(mm)) ) {
+      s<- idx[i,1]
+      t<- idx[i,2]
+      mm[[i,v]]<- fixed[i,v] + c(pg_re[,t,v],tg_re[(tg_time+1)==t,v])[[s]]
+    }
   }
-  ll<- sum(ifelse(idx[,3] == 1,
-    dnorm(obs,mm,family_pars[,1],log=TRUE),
-    dpois(obs,exp(mm),log=TRUE)
-  ))
+  ll<- sum(c(
+    dnorm(obs[,1],mm[,1],family_pars[,1],log=TRUE),
+    dpois(obs[,2],exp(mm[,2]),log=TRUE)
+  ),na.rm=TRUE)
   expect_equal(report$mm, mm)
   expect_equal(report$ll, ll)
 
   # Compute means after simulation
   new_mm<- obs
   fixed<- mean_design %*% beta
-  for( i in seq(mm) ) {
-    s<- idx[i,1]
-    t<- idx[i,2]
-    v<- idx[i,3]
-    new_mm[[i]]<- fixed[i,v] + c(report$new_pg[,t,v],report$new_tg[(tg_time+1)==t,v])[[s]]
+  for( i in seq(nrow(mm)) ) {
+    for( v in seq(ncol(mm)) ) {
+      s<- idx[i,1]
+      t<- idx[i,2]
+      new_mm[[i,v]]<- fixed[i,v] + c(report$new_pg[,t,v],report$new_tg[(tg_time+1)==t,v])[[s]]
+    }
   }
-  new_ll<- sum(ifelse(idx[,3] == 1,
-    dnorm(report$new_obs,new_mm,family_pars[,1],log=TRUE),
-    dpois(trunc(report$new_obs),exp(new_mm),log=TRUE)
-  ))
+  new_ll<- sum(c(
+    dnorm(report$new_obs[,1],new_mm[,1],family_pars[,1],log=TRUE),
+    dpois(report$new_obs[,2],exp(new_mm[,2]),log=TRUE)
+  ),na.rm=TRUE)
   expect_equal(report$new_mm, new_mm)
   expect_equal(report$new_ll, new_ll)
 

@@ -68,3 +68,9 @@ matrix<Type> matrix_row_segment(const matrix<Type>& full_matrix, int position, i
   }
   return small_matrix;
 }
+
+
+template<class Type>
+bool isNA(Type x){
+  return R_IsNA(asDouble(x));
+}

@@ -12,7 +12,7 @@ class persistent_graph {
       const array<Type>& mean,
       const dag<Type>& graph
     ) : re{re}, mean{mean}, graph{graph} {};
-
+    
     // Accessor methods
     int dim_g() { return graph.size(); }
     int dim_s() { return re.dim(0); }

@@ -27,6 +27,7 @@ using namespace density;
 #include "includeV2/observations.hpp"
 
 #include "model/staRVe_model.hpp"
+#include "model/staRVe_model2.hpp"
 #include "model/family.hpp"
 #include "model/testing.hpp"
 
@@ -35,6 +36,8 @@ Type objective_function<Type>::operator() () {
   DATA_STRING(model);
   if(model == "staRVe_model") {
     return staRVe_model(this);
+  } else if(model == "staRVe_model2") {
+    return staRVe_model2(this);
   } else if(model == "family") {
     return family(this);
   } else if(model == "testing") {
