@@ -5,23 +5,32 @@
 \alias{staRVe_process-class}
 \alias{time_effects,staRVe_process-method}
 \alias{time_effects<-,staRVe_process-method}
-\alias{random_effects,staRVe_process-method}
-\alias{random_effects<-,staRVe_process-method}
+\alias{pg_re,staRVe_process-method}
+\alias{pg_re<-,staRVe_process-method}
+\alias{tg_re,staRVe_process-method}
+\alias{tg_re<-,staRVe_process-method}
 \alias{parameters,staRVe_process-method}
 \alias{parameters<-,staRVe_process,ANY-method}
+\alias{random_effects,staRVe_process-method}
 \title{An S4 class to hold the process information for a staRVe model.}
 \usage{
 \S4method{time_effects}{staRVe_process}(x)
 
 \S4method{time_effects}{staRVe_process}(x) <- value
 
-\S4method{random_effects}{staRVe_process}(x)
+\S4method{pg_re}{staRVe_process}(x)
 
-\S4method{random_effects}{staRVe_process}(x) <- value
+\S4method{pg_re}{staRVe_process}(x) <- value
+
+\S4method{tg_re}{staRVe_process}(x)
+
+\S4method{tg_re}{staRVe_process}(x) <- value
 
 \S4method{parameters}{staRVe_process}(x)
 
 \S4method{parameters}{staRVe_process,ANY}(x) <- value
+
+\S4method{random_effects}{staRVe_process}(x)
 }
 \arguments{
 \item{x}{An object}
@@ -37,13 +46,19 @@ An S4 class to hold the process information for a staRVe model.
 
 \item \code{time_effects<-}: Set temporal random effects
 
-\item \code{random_effects}: Get spatio-temporal random effects
+\item \code{pg_re}: Get spatio-temporal random effects for persistent graph
 
-\item \code{random_effects<-}: Set spatio-temporal random effects
+\item \code{pg_re<-}: Set spatio-temporal random effects for persistent graph
+
+\item \code{tg_re}: Get spatio-temporal random effects for transient graph
+
+\item \code{tg_re<-}: Set spatio-temporal random effects for transient graph
 
 \item \code{parameters}: Set parameters
 
 \item \code{parameters<-}: Set parameters
+
+\item \code{random_effects}: Get list of random effects
 }}
 
 \section{Slots}{

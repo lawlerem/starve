@@ -4,123 +4,65 @@
 template<class Type>
 class covariance {
   private:
-    Type scaleTau; // Identifiable ratio of variance to range (= marg_var / rho^(2*nu))
-    Type nu; // Smoothness parameter
-
+    vector<Type> pars;
     int covar_code; // Which covariance function to use?
-
-    template<typename T> T dist(T d); // Compute distances (can update later for anisotropy)
-    template<typename T> T covFun(T d); // Compute covariance given distance
 
   public:
     // Constructor
-    covariance(Type scaleTau, Type rho, Type nu, int covar_code);
-    covariance() = default;
-
-    Type marg_var; // Marginal variance
-    Type rho; // Spatial range
-    Type get_scaleTau() { return this->scaleTau; } // Get scale tau
-
-    // Set value for scaleTau, range held constat, marg_var re-computed
-    void update_scaleTau(Type new_tau);
-    // Set value for marginal variance, scaleTau held constant, range re-computed
-    void update_marg_sd(Type new_marg_sd);
+    covariance(const vector<Type>& pars, const int& covar_code) : pars{pars}, covar_code{covar_code} {};
+    covariance() : pars{vector<Type>()}, covar_code(0) {};
 
     // Compute covariances
-    template<typename T> T operator() (T d);
-    template<typename T> vector<T> operator() (vector<T> d);
-    template<typename T> matrix<T> operator() (matrix<T> D);
+    template<typename T> T operator() (const T& d);
+    template<typename T> vector<T> operator() (const vector<T>& d);
+    template<typename T> matrix<T> operator() (const matrix<T>& d);
+
+    void update_marginal_sd(const Type& new_sd);
 };
 
 
-// Constructor
+
 template<class Type>
-covariance<Type>::covariance(Type scaleTau, Type rho, Type nu, int covar_code) :
-  scaleTau(scaleTau),
-  rho(rho),
-  nu(nu),
-  covar_code(covar_code) {
+template<typename T>
+T covariance<Type>::operator() (const T& d) {
   switch(covar_code) {
-    case 1 : this->marg_var = pow(scaleTau,2); break; // Gaussian, nu=Inf so let marg_var=scaleTau
-    default : this->marg_var = pow(scaleTau*pow(rho,nu),2); break;
+    case 0 : return (T) pow(pars(0),2) * pars(1) * exp( -d/(T)pars(1) ); // Exponential [sd, range]
+    case 1 : return (T) pow(pars(0),2) * exp( -pow(d/(T)pars(1),2) ); // Gaussian [marg_sd, range]
+    case 2 : return (T) pow(pars(0),2) * pow(pars(1),2*pars(2)) * matern(d,pars(1),pars(2)); // Matern [sd, range, nu]
+    case 3 : return (T) pow(pars(0),2) * (1+sqrt(3.0)*d/(T)pars(1)) * exp( -sqrt(3.0)*d/(T)pars(1) ); // Matern32 [sd, range]
+    default : return (T) pow(pars(0),2) * pars(1) * exp( -d/(T)pars(1) ); // Exponential [sd, range]
   }
 }
 
 template<class Type>
-void covariance<Type>::update_scaleTau(Type new_tau) {
-  this->scaleTau = new_tau;
-  switch(covar_code) {
-    case 1 : this->marg_var = pow(new_tau,2); break; // Gaussian
-    default : this->marg_var = pow(new_tau*pow(rho,nu),2); break; // Matern
-  }
-}
-
-/*
-var = pow(tau*pow(rho,nu),2)
-sd = tau*pow(rho,nu)
-sd / tau = rho^nu
-rho = nu-rt(sd / tau)
-*/
-
-template<class Type>
-void covariance<Type>::update_marg_sd(Type new_marg_sd) {
-  this->marg_var = pow(new_marg_sd,2);
-  switch(covar_code) {
-    case 1 : break; // Gaussian, don't change rho
-    default : this->rho = pow(sqrt(marg_var)/scaleTau,1/nu); break; // Matern
-  }
-}
-
-
-
-// Distance function
-template<class Type>
 template<typename T>
-T covariance<Type>::dist(T d) {
-  T ans = sqrt(d*d);
-  return ans;
-}
-
-// Covariance function
-template<class Type>
-template<typename T>
-T covariance<Type>::covFun(T d) {
-  switch(covar_code) {
-    case 0 : return (T) marg_var * exp( -dist(d)/(T)rho ); // Exponential
-    case 1 : return (T) marg_var * exp( -pow(dist(d)/(T)rho,2) ); // Gaussian
-    case 2 : return (T) marg_var * matern(d, rho, nu); // Matern
-    case 3 : return (T) marg_var * (1 + sqrt(3)*dist(d)/(T)rho) * exp( -sqrt(3)*dist(d)/(T)rho ); // Matern32 (nu = 1.5)
-    default : return (T) marg_var * matern(d, rho, nu); // Matern
-  }
-}
-
-// Covariance function operator -- single
-template<class Type>
-template<typename T>
-T covariance<Type>::operator() (T d) {
-  return covFun(d);
-}
-
-// Covariance function operator -- vector
-template<class Type>
-template<typename T>
-vector<T> covariance<Type>::operator() (vector<T> d) {
+vector<T> covariance<Type>::operator() (const vector<T>& d) {
   vector<T> ans(d.size());
   for(int i=0; i<d.size(); i++) {
-    ans(i) = covFun(d(i));
+    ans(i) = operator()(d(i));
   }
   return ans;
 }
 
-// Covariance function operator -- matrix
 template<class Type>
 template<typename T>
-matrix<T> covariance<Type>::operator() (matrix<T> D) {
-  matrix<T> ans(D.rows(), D.cols());
-  for(int i=0; i<D.rows(); i++) {
-    for(int j=0; j<D.cols(); j++) {
-      ans(i,j) = covFun(D(i,j));
+matrix<T> covariance<Type>::operator() (const matrix<T>& d) {
+  matrix<T> ans(d.rows(),d.cols());
+  for(int i=0; i<d.rows(); i++) {
+    for(int j=0; j<d.cols(); j++) {
+      ans(i,j) = operator()(d(i,j));
     }
   }
   return ans;
+}
+
+template<class Type>
+void covariance<Type>::update_marginal_sd(const Type& new_sd) {
+  switch(covar_code) {
+    case 0 : pars(1) = pow(new_sd/pars(0),2); // Exponential
+    case 1 : pars(1) = new_sd; // Gaussian
+    case 2 : pars(1) = pow(new_sd/pars(0),1.0/pars(2)); // Matern
+    case 3 : pars(1) = pow(new_sd/pars(0),1.0/(3.0/2.0)); // Matern32
+    default : pars(1) = pow(new_sd/pars(0),2); // Exponential
+  }
 }

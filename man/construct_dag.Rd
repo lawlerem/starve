@@ -2,10 +2,19 @@
 % Please edit documentation in R/dag.R
 \name{construct_dag}
 \alias{construct_dag}
+\alias{construct_transient_dag}
 \alias{construct_obs_dag}
 \title{Construct directed acyclic graphs}
 \usage{
 construct_dag(x, settings = new("staRVe_settings"), silent = TRUE)
+
+construct_transient_dag(
+  x,
+  y,
+  time = 0,
+  settings = new("staRVe_settings"),
+  silent = TRUE
+)
 
 construct_obs_dag(
   x,
@@ -13,6 +22,7 @@ construct_obs_dag(
   time = 0,
   settings = new("staRVe_settings"),
   check_intersection = TRUE,
+  remove_intersection = FALSE,
   silent = TRUE
 )
 }
@@ -44,6 +54,10 @@ A directed acyclic graph is stored as an ordered list. The ith element of the
 for the first k rows, where k is the n_neighbours settings. The ith element
 contains the parents for the (i+k-1)th row of x. Also returns a sorted copy
 of the locations x.
+
+\item \code{construct_transient_dag}: Construct a directed acyclic graph from one \code{sf}
+object to another. Output is a list whose t'th element is the transient graph
+for time t. y should be the persistent graph locations, x should be data locations.
 
 \item \code{construct_obs_dag}: Construct a directed acyclic graph from one \code{sf}
 object to another. The i'th element of the list is a vector containing

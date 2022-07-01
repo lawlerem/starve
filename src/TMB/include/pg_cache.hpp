@@ -5,7 +5,7 @@ class pg_cache {
   public:
     pg_cache(
       persistent_graph<Type>& pg,
-      vector<covariance2<Type> >& cv
+      vector<covariance<Type> >& cv
     );
 
     vector<conditional_normal<Type> > operator() (int idx) { return conditional_normals(idx); }
@@ -16,7 +16,7 @@ class pg_cache {
 template<class Type>
 pg_cache<Type>::pg_cache(
     persistent_graph<Type>& pg,
-    vector<covariance2<Type> >& cv
+    vector<covariance<Type> >& cv
   ) {
     conditional_normals.resize(pg.dim_g());
     for(int i=0; i<conditional_normals.size(); i++) {

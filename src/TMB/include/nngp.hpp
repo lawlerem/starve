@@ -1,290 +1,138 @@
 template<class Type>
-struct mvnorm {
-  matrix<Type> cov;
-  vector<Type> w;
-  vector<Type> mu;
-};
-
-// A class to represent a nearest-neighbour Gaussian process
-//
-// Used to compute likelihood for a spatial field, predict at new locations, and
-//   simulate a new spatial field.
-template<class Type>
 class nngp {
   private:
-    covariance<Type> cov; // Covariance Function
-    vector<Type> w; // Spatial random effects
-    vector<Type> mean; // Mean of spatial
-    vector<vector<vector<int> > > ws_graph; // Edge list for persistent graph
-    vector<matrix<Type> > ws_dists; // Distances for persistent graph
+    persistent_graph<Type> pg;
+    transient_graph<Type> tg;
+    vector<covariance<Type> > cv; // Vector elements hold covariance for different variables
 
-    vector<MVNORM_t<Type> > ws_joints; // Store MVNORM_t object for nodes w/o parents
-    vector<kriging<Type> > ws_krigs; // Store kriging objects for nodes w/ parents
+    pg_cache<Type> pg_c;
+    tg_cache<Type> tg_c;
 
-    Type avg_forecast_sd; // Average kriging standard deviation for random effects
-    vector<kriging<Type> > pred_krigs; // Store kriging objects for predictions
+    Type pg_loglikelihood(time_series<Type>& ts);
+    Type tg_loglikelihood(time_series<Type>& ts);
 
-    // Get covariance matrix, random effects, and mean vector
-    mvnorm<Type> joint(vector<int> nodes,
-                       matrix<Type> dists);
-
-    // Compute kriging predictor given list of to/from edges, distances, and magrinal
-    // mean for new location
-    kriging<Type> fieldPred(vector<vector<int> > graph,
-                            matrix<Type> dists,
-                            bool interpolate_mean);
+    nngp<Type> pg_simulate(time_series<Type>& ts);
+    nngp<Type> tg_simulate(time_series<Type>& ts);
   public:
-    // Constructor
-    nngp(covariance<Type> cov,
-         vector<Type> w,
-         vector<Type> mean,
-         vector<vector<vector<int> > > ws_graph,
-         vector<matrix<Type> > ws_dists);
-    nngp() = default;
+    nngp(
+      persistent_graph<Type>& pg,
+      transient_graph<Type>& tg,
+      vector<covariance<Type> >& cv
+    ) : pg{pg}, tg{tg}, cv{cv}, pg_c{pg,cv}, tg_c{tg,pg,cv} {};
 
-    // Write over the random effects and mean
-    void update_w(vector<Type> new_w,
-                  vector<Type> new_mean);
+    int dim_g(int t) { return pg.dim_g() + tg.dim_g(t); } // number of nodes in pg + number in tg(t)
+    int dim_s(int t) { return pg.dim_s() + tg.dim_s(t); } // number of locs in pg + number in tg(t)
+    int dim_t() { return pg.dim_t(); } // number of times
+    int dim_v() { return pg.dim_v(); } // number of vars
 
-    vector<Type> get_w() { return w; }
+    array<Type> get_pg_re() { return pg.re; }
+    array<Type> get_pg_mean() { return pg.mean; }
+    dag<Type> get_pg_graph() { return pg.graph; }
 
-    // Compute loglikelihood for random effects
-    Type loglikelihood();
+    array<Type> get_tg_re() { return tg.get_re(); }
+    array<Type> get_tg_mean() { return tg.get_mean(); }
+    dag<Type> get_tg_graph() { return tg.get_graph(); }
 
-    // Simulate random effects
-    vector<Type> simulate();
+    // Returns just the random effect for [location, time, var]
+    Type operator() (int s,int t, int v) {return (s<pg.dim_s() ? pg.re(s,t,v) : tg.re(t)(s-pg.dim_s(),v));}
 
-    // Compute kriging predictor for new locations, and add their
-    // likelihood contribution to a likelihood function (passed by reference,
-    //   so nll is updated automatically).
-    vector<Type> predict_w(vector<vector<vector<int> > > pred_graph,
-                           vector<matrix<Type> > dists,
-                           vector<Type> pred_w,
-                           Type &nll,
-                           bool use_cache=false,
-                           bool overwrite_cache=false);
-
-    // Simulate random effects for random effects not part of persistent graph
-    vector<Type> simulate_resp_w(vector<vector<vector<int> > > resp_w_graph,
-                                 vector<matrix<Type> > resp_w_dists);
+    Type loglikelihood(time_series<Type>& ts) { return pg_loglikelihood(ts)+tg_loglikelihood(ts); }
+    nngp<Type> simulate(time_series<Type>& ts) { pg_simulate(ts); tg_simulate(ts); return *this; }
 };
 
 
 
-template<class Type>
-nngp<Type>::nngp(covariance<Type> cov,
-                 vector<Type> w,
-                 vector<Type> mean,
-                 vector<vector<vector<int> > > ws_graph,
-                 vector<matrix<Type> > ws_dists) :
-  cov(cov),
-  w(w),
-  mean(mean),
-  ws_graph(ws_graph),
-  ws_dists(ws_dists) {
-  // Fill in kriging predictors for nodes with parents
-  ws_krigs.resizeLike(ws_graph);
-  avg_forecast_sd = 0.0;
-  Type n = 0;
-  for( int i=0; i<ws_graph.size(); i++ ) {
-    if( ws_graph(i)(1).size() > 0 ) {
-      ws_krigs(i) = fieldPred(ws_graph(i),
-                                      ws_dists(i),
-                                      false);
-      for(int j=0; j<ws_graph(i)(0).size(); j++) {
-        avg_forecast_sd += sqrt(ws_krigs(i).cov()(j,j));
-        n += 1.0;
-      }
-    } else {}
-  }
-  avg_forecast_sd *= 1.0/n;
-
-  // Fill in joint distributions for nodes without parents
-  ws_joints.resizeLike(ws_graph);
-  Type old_sd = sqrt(cov(Type(0.0)));
-  cov.update_marg_sd(avg_forecast_sd);
-  for(int i=0; i<ws_graph.size(); i++) {
-    if( ws_graph(i)(1).size() == 0 ) { // If there are no parents
-      MVNORM_t<Type> mvn(cov(ws_dists(i)));
-      ws_joints(i) = mvn;
-    } else {}
-  }
-  cov.update_marg_sd(old_sd);
-}
-
-
-// graph = list with to and from vertices
-// dists = distance from prediction point to predictor locations
-// marginal_mean = marginal mean of prediction point
-// interpolate_mean =  should the marginal_mean be replaced with a local estimate?
-template<class Type>
-kriging<Type> nngp<Type>::fieldPred(vector<vector<int> > graph,
-                                    matrix<Type> dists,
-                                    bool interpolate_mean) {
-  vector<int> all_nodes(graph(0).size()+graph(1).size());
-  for(int i=0; i<all_nodes.size(); i++) {
-    if( i<graph(0).size() ) {
-      all_nodes(i)=graph(0)(i); // "To" nodes
-    } else {
-      all_nodes(i)=graph(1)(i-graph(0).size()); // "From" nodes
-    }
-  }
-  mvnorm<Type> mvn = joint(all_nodes, dists);
-
-  vector<Type> predictor_vals(graph(1).size());
-  for(int i=0; i<graph(1).size(); i++) {
-    predictor_vals(i) = w(graph(1)(i));
-  }
-
-  // Compute kriging predictor
-  kriging<Type> krig(mvn.cov, mvn.mu, predictor_vals, interpolate_mean);
-  return krig;
-}
 
 
 template<class Type>
-void nngp<Type>::update_w(vector<Type> new_w,
-                          vector<Type> new_mean) {
-  w = new_w; // Don't need to resizeLike(new_w) since same number every time
-  mean = new_mean;
-  for( int i=0; i<ws_graph.size(); i++ ) {
-    if( ws_graph(i)(1).size() > 1 ) {
-      vector<int> all_nodes(ws_graph(i)(0).size()+ws_graph(i)(1).size());
-      for(int j=0; j<all_nodes.size(); j++) {
-        if( j<ws_graph(i)(0).size() ) {
-          all_nodes(j)=ws_graph(i)(0)(j); // "To" nodes
-        } else {
-          all_nodes(j)=ws_graph(i)(1)(j-ws_graph(i)(0).size()); // "From" nodes
-        }
-      }
-      ws_krigs(i).update_mean(new_w(ws_graph(i)(1)),
-                              new_mean(all_nodes));
-    } else {}
-  }
-}
+Type nngp<Type>::pg_loglikelihood(time_series<Type>& ts) {
+  // Create marginal means for pg
+  pg.mean = ts.propagate_structure(pg.re);
 
-
-// Get covariance matrix, random effects, and mean
-template<class Type>
-mvnorm<Type> nngp<Type>::joint(vector<int> nodes,
-                               matrix<Type> dists) {
-  matrix<Type> covMat = cov(dists);
-  vector<Type> meanVec(nodes.size());
-  vector<Type> wVec(nodes.size());
-  for(int i=0; i<meanVec.size(); i++) {
-    meanVec(i) = mean(nodes(i));
-    wVec(i) = w(nodes(i));
-  }
-  mvnorm<Type> ans = {covMat, wVec, meanVec};
-  return ans;
-}
-
-
-
-// Compute log-likelihood for random effects
-template<class Type>
-Type nngp<Type>::loglikelihood() {
-  Type ans = 0.0;
-  for(int i=0; i<ws_graph.size(); i++) {
-    if( ws_graph(i)(1).size() == 0 ) { // If no parents
-      mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
-      ans += -1*ws_joints(i)(mvn.w-mvn.mu);
-    } else {
-      vector<Type> this_w(ws_graph(i)(0).size());
-      for(int j=0; j<ws_graph(i)(0).size(); j++) {
-        this_w(j) = w(ws_graph(i)(0)(j));
-      }
-      ans += -1*MVNORM(ws_krigs(i).cov())(this_w-ws_krigs(i).mean());
-    }
-  }
-
-  return ans;
-}
-
-template<class Type>
-vector<Type> nngp<Type>::simulate() {
-  Type ans = 0.0;
-  for(int i=0; i<ws_graph.size(); i++) {
-    if( ws_graph(i)(1).size() == 0 ) { // If no parents
-      mvnorm<Type> mvn = joint(ws_graph(i)(0), ws_dists(i));
-      vector<Type> simW = ws_joints(i).simulate()+mvn.mu;
-      for(int j=0; j<simW.size(); j++) {
-        w(ws_graph(i)(0)(j)) = simW(j);
-      }
-    } else {
-      vector<int> all_nodes(ws_graph(i)(0).size()+ws_graph(i)(1).size());
-      for(int j=0; j<all_nodes.size(); j++) {
-        if( j<ws_graph(i)(0).size() ) {
-          all_nodes(j)=ws_graph(i)(0)(j); // "To" nodes
-        } else {
-          all_nodes(j)=ws_graph(i)(1)(j-ws_graph(i)(0).size()); // "From" nodes
-        }
-      }
-      ws_krigs(i).update_mean(w(ws_graph(i)(1)),
-                              mean(all_nodes));
-      vector<Type> simW = MVNORM(ws_krigs(i).cov()).simulate()+ws_krigs(i).mean();
-      for(int j=0; j<simW.size(); j++) {
-        w(ws_graph(i)(0)(j)) = simW(j);
+  // Use pg_cache to compute loglikelihood
+  Type pg_ll = 0.0;
+  for(int v=0; v<pg.dim_v(); v++) {
+    for(int t=0; t<pg.dim_t(); t++) {
+      for(int node=0; node<pg.dim_g(); node++) {
+        pg_ll += pg_c(node,v).loglikelihood(pg(node,t,v).re,pg(node,t,v).mean);
       }
     }
   }
 
-  return w;
+  return pg_ll;
 }
 
 
 template<class Type>
-vector<Type> nngp<Type>::predict_w(vector<vector<vector<int> > > pred_graph,
-                                   vector<matrix<Type> > dists,
-                                   vector<Type> pred_w,
-                                   Type &nll,
-                                   bool use_cache,
-                                   bool overwrite_cache) {
-  for(int i=0; i<pred_graph.size(); i++) {
-    vector<Type> this_w = pred_w(pred_graph(i)(0));
-    pred_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
-    kriging<Type> krig;
-    if( use_cache ) {
-      vector<int> all_nodes(pred_graph(i)(0).size()+pred_graph(i)(1).size());
-      for(int j=0; j<all_nodes.size(); j++) {
-        if( j<pred_graph(i)(0).size() ) {
-          all_nodes(j)=pred_graph(i)(0)(j); // "To" nodes
-        } else {
-          all_nodes(j)=pred_graph(i)(1)(j-pred_graph(i)(0).size()); // "From" nodes
-        }
+nngp<Type> nngp<Type>::pg_simulate(time_series<Type>& ts) {
+  /*
+  for v in variables
+    for t in years
+      for node in pg.nodes
+        1.) Use ts.propagate_structure to update mean for year t in persistent graph
+        2.) Simulate random effects for node and year t
+        3.) Update random effects for year t in persistent graph
+  */
+  for(int v=0; v<pg.dim_v(); v++) {
+    for(int t=0; t<pg.dim_t(); t++) {
+      for(int node=0; node<pg.dim_g(); node++) {
+        re_dag_node<Type> pg_node = pg(node);
+        vector<Type> to_mean = ts.propagate_structure(pg_node.re,t,v);
+        pg.set_mean_by_to_g(to_mean.segment(0,pg_node.node.to.size()),node,t,v);
+
+        pg_node = pg(node,t,v);
+        // "to" nodes for pg_node.re won't be used
+        vector<Type> sim = pg_c(node,v).simulate(pg_node.re,pg_node.mean);
+
+        pg.set_re_by_to_g(sim,node,t,v);
       }
-      krig = pred_krigs(i);
-      krig.update_mean(w(pred_graph(i)(1)),
-                       mean(all_nodes));
-    } else {
-      krig = fieldPred(pred_graph(i),
-                       dists(i),
-                       true); // Interpolate the mean
     }
-    if( overwrite_cache ) {
-      pred_krigs.resizeLike(pred_graph);
-      pred_krigs(i) = krig;
-    } else {}
-    nll += MVNORM(krig.cov())(this_w-krig.mean());
   }
-  return pred_w;
+
+  return *this;
 }
 
+
 template<class Type>
-vector<Type> nngp<Type>::simulate_resp_w(vector<vector<vector<int> > > resp_w_graph,
-                                         vector<matrix<Type> > resp_w_dists) {
-  vector<Type> sim_w(resp_w_graph.size());
-  for(int i=0; i<resp_w_graph.size(); i++) {
-    vector<int> this_w = resp_w_graph(i)(0);
-    resp_w_graph(i)(0).setZero(); // Avoid index errors in fieldPred, actual indices don't matter
-    kriging<Type> krig = fieldPred(resp_w_graph(i),
-                                   resp_w_dists(i),
-                                   true); // Interpolate the mean
-    vector<Type> small_sim_w = MVNORM(krig.cov()).simulate()+krig.mean();
-    for(int j=0; j<small_sim_w.size(); j++) {
-      sim_w(this_w(j)) = small_sim_w(j);
+Type nngp<Type>::tg_loglikelihood(time_series<Type>& ts) {
+  Type tg_ll = 0.0;
+  for(int v=0; v<tg.dim_v(); v++) {
+    for(int t=0; t<tg.dim_t(); t++) {
+      for(int node=0; node<tg.dim_g(t); node++) {
+        tg_ll += tg_c(node,t,v).loglikelihood(tg(node,t,v,pg).re,tg(node,t,v,pg).mean,true); // true -> interpolate mu
+      }
     }
   }
 
-  return sim_w;
+  return tg_ll;
+}
+
+
+template<class Type>
+nngp<Type> nngp<Type>::tg_simulate(time_series<Type>& ts) {
+  /*
+  for v in variables
+    for t in years
+      for node in tg.nodes
+        1.) interpolate and store mean for tg
+          ---- DO NOT need to propagate mean
+        2.) simulate from conditional normal
+        3.) update random effects and mean in transient graph
+  */
+  for(int v=0; v<tg.dim_v(); v++) {
+    for(int t=0; t<tg.dim_t(); t++) {
+      for(int node=0; node<tg.dim_g(t); node++) {
+        re_dag_node<Type> tg_node = tg(node,t,v,pg);
+        vector<Type> inter_mu = tg_c(node,t,v).interpolate_mean(tg_node.mean);
+        tg.set_mean_by_to_g(inter_mu,node,t,v,pg);
+
+        tg_node = tg(node,t,v,pg);
+        vector<Type> sim = tg_c(node,t,v).simulate(tg_node.re,tg_node.mean);
+
+        tg.set_re_by_to_g(sim,node,t,v,pg);
+      }
+    }
+  }
+
+  return *this;
 }

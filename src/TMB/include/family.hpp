@@ -1,29 +1,26 @@
-// Link function
-//
-// evaluate x(...) to transform from the link scale to the response scale
 struct inv_link_function {
-    int link_code;
+  int code;
 
-    template<class T>
-    T operator() (T linear) {
-        switch(link_code) {
-          case 0 : return linear; // identity
-          case 1 : return exp(linear); // log
-          case 2 : return invlogit(linear); // logit
-          default : return linear; // identity
-        }
+  template<class Type>
+  Type operator() (Type x) {
+    switch(code) {
+      case 0 : return x; // identity
+      case 1 : return exp(x); // log
+      case 2 : return invlogit(x); // logit
+      default : return x; // identity
     }
+  }
 };
 
-// Response distribution
-//
-// Evaluate x(...) to get the density function evaluated at a point (like dnorm)
-struct response_density {
-  int distribution_code;
+template<class Type>
+struct distribution {
+  int code;
+  vector<Type> pars;
 
+  // Compute log-density
   template<class T>
-  T operator() (T data,T mean,T size,vector<T> pars) {
-    switch(distribution_code) {
+  T operator() (T data,T mean,T size) {
+    switch(code) {
       case 0 : return dnorm(data,mean,pars(0),true); // Normal
       case 1 : return dpois(data,mean,true); // Poisson
       case 2 : return dnbinom2(data,mean,pars(0)*mean,true); // Neg. Binomial
@@ -48,10 +45,10 @@ struct response_density {
     }
   }
 
-  // Simulate a single draw from the distribution
+  // simulate a single draw
   template<class T>
-  T simulate(T mean,T size,vector<T> pars) {
-    switch(distribution_code) {
+  T simulate(T mean,T size) {
+    switch(code) {
       case 0 : return rnorm(mean,pars(0)); // Normal
       case 1 : return rpois(mean); // Poisson
       case 2 : return rnbinom2(mean,pars(0)*mean); // Neg. Binomial
@@ -67,4 +64,22 @@ struct response_density {
       default : return rnorm(mean,pars(0)); // Normal
     }
   }
+};
+
+
+
+template<class Type>
+class family {
+  private:
+    inv_link_function ilink;
+    distribution<Type> dist;
+  public:
+    family(
+      const inv_link_function& ilink,
+      const distribution<Type>& dist
+    ) : ilink{ilink}, dist{dist} {};
+    family() = default;
+
+    Type operator() (Type x, Type lmean, Type sample_size) {return dist(x,ilink(lmean),sample_size);}
+    Type simulate(Type lmean, Type sample_size) {return dist.simulate(ilink(lmean),sample_size);}
 };

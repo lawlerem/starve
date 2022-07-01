@@ -6,7 +6,7 @@ class tg_cache {
     tg_cache(
       transient_graph<Type>& tg,
       persistent_graph<Type>& pg,
-      vector<covariance2<Type> >& cv
+      vector<covariance<Type> >& cv
     );
     tg_cache() = default;
 
@@ -18,7 +18,7 @@ template<class Type>
 tg_cache<Type>::tg_cache(
     transient_graph<Type>& tg,
     persistent_graph<Type>& pg,
-    vector<covariance2<Type> >& cv
+    vector<covariance<Type> >& cv
   ) {
   conditional_normals.resize(tg.dim_t());
   for(int t=0; t<tg.dim_t(); t++) {

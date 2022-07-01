@@ -79,6 +79,7 @@ setMethod(f = "staRVe_fit",
             staRVe_model = x,
             tracing = tracing,
             TMB_out = TMB_out)
+
   as(fit,"staRVe_model")<- update_staRVe_model(
     x = as(fit,"staRVe_model"),
     y = TMB_out(fit)
@@ -130,35 +131,27 @@ setMethod(f = "staRVe_simulate",
 
   # Simulated random effects
   sims<- obj$simulate()
-  time_effects(model)$w<- sims$time_effects
+  time_effects(model)$w<- sims$ts_re
   time_effects(model)$se<- NA
-  random_effects(model)$w<- sims$proc_w
-  random_effects(model)$se<- NA
+  pg_re(model)$w<- sims$pg_re
+  pg_re(model)$se<- NA
+  if( nrow(locations(tg_re(model))) > 0 ) {
+    values(tg_re(model))$w<- sims$tg_re
+  } else {}
+  values(tg_re(model))$se<- NA
 
   # Update random effects used for observations
-  resp_w_idx<- 1
+  s<- dat(model)$graph_idx
+  t<- .time_from_formula(formula(model),dat(model))[[1]]-min(.time_from_formula(formula(model),dat(model)))+1
+  std_tg_t<- .time_from_formula(formula(model),locations(tg_re(model))) - min(.time_from_formula(formula(model),dat(model)))+1
   for( i in seq(nrow(dat(model))) ) {
-    if( length(edges(graph(model)$transient_graph)[[i]][["from"]]) == 1 ) {
-      # If length == 1, take random effects from persistent graph
-      this_year<- dat(model)[i,.time_name(model),drop=TRUE]
-      for( v in seq(.n_response(formula(model))) ) {
-        predictions(data_predictions(model))$w[i,v]<- as.numeric(
-          random_effects(model)["w",
-                                edges(graph(model)$transient_graph)[[i]][["from"]],
-                                which(stars::st_get_dimension_values(random_effects(model),.time_name(model))==this_year),
-                                v,
-                                drop=TRUE]
-        )
-      }
+    if( s[[i]] <= dim(pg_re(model))[[1]] ) {
+      values(data_predictions(model))$w[i,]<- pg_re(model)$w[s[[i]],t[[i]],]
     } else {
-      # If length > 1, use random effects from resp_w
-      for( v in seq(.n_response(formula(model))) ) {
-        predictions(data_predictions(model))$w[i,v]<- sims$resp_w[resp_w_idx,v]
-      }
-      resp_w_idx<- resp_w_idx+1
+      values(data_predictions(model))$w[i,]<- values(tg_re(model))$w[std_tg_t == t,][s[[i]]-dim(pg_re(model))[[1]],]
     }
   }
-  predictions(data_predictions(model))$w_se[]<- NA
+  values(data_predictions(model))$w_se[]<- NA
 
   # Simulated values don't have standard errors, update linear and response predictions
   # to correspond to the simulated random effects
@@ -167,7 +160,7 @@ setMethod(f = "staRVe_simulate",
 
   # Update response observations to be the simulated value
   dat(model)[,attr(.response_from_formula(formula(settings(model)),
-                                          dat(model)),"name")]<- sims$obs_y
+                                          dat(model)),"name")]<- sims$obs
 
   # Turn into staRVe_fit so you have access to TMB obj
   model<- new("staRVe_model_fit",staRVe_model = model)
@@ -193,7 +186,7 @@ setMethod(f = "staRVe_predict",
   if( !all(covar_names %in% colnames(locations)) ) {
     stop("Missing covariates, please add them to the prediction locations.")
   } else {}
-  predictions<- new("staRVe_predictions",locations,var_names=.response_names(formula(x)))
+  predictions<- new("long_stars",locations,var_names=.response_names(formula(x)))
 
   # Get predictions and standard errors
   predictions<- .predict_w(x,predictions)
@@ -291,7 +284,7 @@ setMethod(f = "staRVe_predict",
 #' Predict random effects from likelihood function
 #'
 #' @param x A starve_model_fit object
-#' @param predictions A staRVe_predictions object
+#' @param predictions A long_stars object
 #' @param dist_tol A small number so that prediction variances are not
 #'   computationally singular
 #'
@@ -310,7 +303,7 @@ setMethod(f = "staRVe_predict",
   # Each location is used each prediction time
   locs<- unique(locations(predictions)[,attr(locations(predictions),"sf_column")])
   pred_times<- unique(locations(predictions)[,.time_name(x),drop=TRUE])
-  full_predictions<- new("staRVe_predictions",
+  full_predictions<- new("long_stars",
                          sf::st_sf(data.frame(time = rep(pred_times,each=nrow(locs)),
                                               geom = rep(sf::st_geometry(locs),length(pred_times)))),
                          var_names = .response_names(formula(x))
@@ -419,11 +412,11 @@ setMethod(f = "staRVe_predict",
 #' Update random effect predictions to include covariates (link scale)
 #'
 #' @param x A staRVe_model object. If se = TRUE, should be a staRVe_model_fit object.
-#' @param predictions A staRVe_predictions object, typically the output of .predict_w.
+#' @param predictions A long_stars object, typically the output of .predict_w.
 #'   Should contain covariate data in slot 'locations'
 #' @param se Should standard errors be calculated?
 #'
-#' @return A staRVe_predictions object with predictions and standard errors for the linear term.
+#' @return A long_stars object with predictions and standard errors for the linear term.
 #'
 #' @noRd
 .predict_linear<- function(x,
@@ -432,9 +425,9 @@ setMethod(f = "staRVe_predict",
   ### No intercept since it's already taken care of in predict_w
   if( length(.names_from_formula(formula(x))) == 0 ) {
     # If there are no covariates, there's nothing to do
-    predictions(predictions)$linear<- predictions(predictions)$w
-    if( se ) { predictions(predictions)$linear_se<- predictions(predictions)$w_se }
-      else { predictions(predictions)$linear_se[]<- NA }
+    values(predictions)$linear<- values(predictions)$w
+    if( se ) { values(predictions)$linear_se<- values(predictions)$w_se }
+      else { values(predictions)$linear_se[]<- NA }
   } else {
     # Create design matrix from covariates
     design<- as.matrix(.mean_design_from_formula(formula(x),
@@ -444,7 +437,7 @@ setMethod(f = "staRVe_predict",
     for( v in seq(.n_response(formula(x))) ) {
       beta<- fixed_effects(x)[[v]][,"par"]
       names(beta)<- rownames(fixed_effects(x)[[v]])
-      predictions(predictions)$linear[,v]<- design %*% beta + cbind(predictions(predictions)$w[,v])
+      values(predictions)$linear[,v]<- design %*% beta + cbind(values(predictions)$w[,v])
     }
 
     if( se ) {
@@ -514,8 +507,8 @@ setMethod(f = "staRVe_predict",
         mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
         return(as.numeric(mean))
       },SIMPLIFY = "array")
-      predictions(predictions)$response[,v]<- second_order_mean(predictions(predictions)$linear[,v],
-                                                                predictions(predictions)$linear_se[,v])
+      values(predictions)$response[,v]<- second_order_mean(values(predictions)$linear[,v],
+                                                           values(predictions)$linear_se[,v])
 
       # Standard error =  f'(linear)^2*linear_se^2 + 0.5 * f''(linear)^2*linear_se^4
       second_order_se<- Vectorize(function(linear,linear_se) {
@@ -523,12 +516,12 @@ setMethod(f = "staRVe_predict",
           + 0.5*link_function$he(linear)^2*linear_se^4)
         return(as.numeric(se))
       },SIMPLIFY = "array")
-      predictions(predictions)$response_se[,v]<- second_order_se(predictions(predictions)$linear[,v],
-                                                                 predictions(predictions)$linear_se[,v])
+      values(predictions)$response_se[,v]<- second_order_se(values(predictions)$linear[,v],
+                                                            values(predictions)$linear_se[,v])
     } else {
       # No standard error for second order delta method, just apply link function
-      predictions(predictions)$response[,v]<- Vectorize(link_function$fn,SIMPLIFY = "array")(predictions(predictions)$linear[,v])
-      predictions(predictions)$response_se[]<- NA
+      values(predictions)$response[,v]<- Vectorize(link_function$fn,SIMPLIFY = "array")(values(predictions)$linear[,v])
+      values(predictions)$response_se[]<- NA
     }
   }
 

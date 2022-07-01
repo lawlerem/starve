@@ -73,10 +73,11 @@ transient_graph<Type>::transient_graph(
   for(int i=0; i<=tmax; i++) {
     vector<int> t_segment = get_time_segment(t,i);
     re(i) = array<Type>(t_segment(1),all_re.cols());
-    re(i) = matrix_row_segment(all_re.matrix(),t_segment(0),t_segment(1)).array();
-
     mean(i) = array<Type>(t_segment(1),all_mean.cols());
-    mean(i) = matrix_row_segment(all_mean.matrix(),t_segment(0),t_segment(1)).array();
+    if( t_segment(1) > 0 ) {
+      re(i) = matrix_row_segment(all_re.matrix(),t_segment(0),t_segment(1)).array();
+      mean(i) = matrix_row_segment(all_mean.matrix(),t_segment(0),t_segment(1)).array();
+    }
 
     graph(i) = dag<Type>(all_graph.segment(t_segment(0), t_segment(1)));
   }

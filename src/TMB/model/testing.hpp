@@ -15,7 +15,7 @@ Type testing(objective_function<Type>* obj) {
       DATA_INTEGER(covar_code);
       DATA_MATRIX(d);
 
-      covariance2<Type> cv {pars, covar_code};
+      covariance<Type> cv {pars, covar_code};
 
       matrix<Type> sigma = cv(d);
       REPORT(sigma);
@@ -260,12 +260,12 @@ Type testing(objective_function<Type>* obj) {
       DATA_ARRAY(cv_pars);
       DATA_IVECTOR(cv_code);
 
-      vector<covariance2<Type> > cv(pg.dim_v());
+      vector<covariance<Type> > cv(pg.dim_v());
       for(int v=0; v<pg.dim_v(); v++) {
-        cv(v) = covariance2<Type>(vector<Type>(cv_pars.col(v)),cv_code(v));
+        cv(v) = covariance<Type>(vector<Type>(cv_pars.col(v)),cv_code(v));
       }
 
-      nngp2<Type> process {pg,tg,cv};
+      nngp<Type> process {pg,tg,cv};
 
       array<Type> bnngp_pg_re = process.get_pg_re();
       REPORT(bnngp_pg_re);
@@ -309,7 +309,7 @@ Type testing(objective_function<Type>* obj) {
       array<Type> ans(x.size(),3);
       for(int code=0; code<3; code++) { // code < # of cases in inv_link_function
         for(int i=0; i<x.size(); i++) {
-          ans(i,code) = inv_link_function2{code}(x(i));
+          ans(i,code) = inv_link_function{code}(x(i));
         }
       }
       REPORT(ans);
@@ -360,7 +360,7 @@ Type testing(objective_function<Type>* obj) {
           case 9 : link_code=1; break; // Tweedie - log
         };
         for(int i=0; i<x.rows(); i++) {
-          ans(i,code) = family2<Type>{
+          ans(i,code) = family<Type>{
             {link_code},
             {code,pars.col(code)}
           }(x(i,code),mean(code),size(i,code));
@@ -400,12 +400,12 @@ Type testing(objective_function<Type>* obj) {
       DATA_ARRAY(cv_pars);
       DATA_IVECTOR(cv_code);
 
-      vector<covariance2<Type> > cv(pg.dim_v());
+      vector<covariance<Type> > cv(pg.dim_v());
       for(int v=0; v<pg.dim_v(); v++) {
-        cv(v) = covariance2<Type>(vector<Type>(cv_pars.col(v)),cv_code(v));
+        cv(v) = covariance<Type>(vector<Type>(cv_pars.col(v)),cv_code(v));
       }
 
-      nngp2<Type> process {pg,tg,cv};
+      nngp<Type> process {pg,tg,cv};
 
 
       DATA_ARRAY(obs);
@@ -416,15 +416,15 @@ Type testing(objective_function<Type>* obj) {
       DATA_IARRAY(family_codes);
       DATA_ARRAY(family_pars);
 
-      vector<family2<Type> > families(family_codes.cols());
+      vector<family<Type> > families(family_codes.cols());
       for(int v=0; v<family_codes.cols(); v++) {
-        families(v) = family2<Type> {
+        families(v) = family<Type> {
           {family_codes(0,v)},
           {family_codes(1,v), family_pars.col(v)}
         };
       }
 
-      observations2<Type> glmm {obs,idx,sample_size,mean_design,beta,families};
+      observations<Type> glmm {obs,idx,sample_size,mean_design,beta,families};
 
       array<Type> mm = glmm.get_link_mean(process);
       REPORT(mm);

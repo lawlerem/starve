@@ -36,6 +36,8 @@
 \alias{parameter_hessian}
 \alias{parameters}
 \alias{parameters<-}
+\alias{pg_re}
+\alias{pg_re<-}
 \alias{predictions}
 \alias{predictions<-}
 \alias{random_effects}
@@ -49,6 +51,8 @@
 \alias{settings}
 \alias{spatial_parameters}
 \alias{spatial_parameters<-}
+\alias{tg_re}
+\alias{tg_re<-}
 \alias{time_effects}
 \alias{time_effects<-}
 \alias{time_parameters}
@@ -56,6 +60,8 @@
 \alias{timing}
 \alias{TMB_out}
 \alias{tracing}
+\alias{values}
+\alias{values<-}
 \title{Access methods for the staRVe package}
 \usage{
 convergence(x)
@@ -126,6 +132,10 @@ parameters(x)
 
 parameters(x) <- value
 
+pg_re(x)
+
+pg_re(x) <- value
+
 predictions(x)
 
 predictions(x) <- value
@@ -152,6 +162,10 @@ spatial_parameters(x)
 
 spatial_parameters(x) <- value
 
+tg_re(x)
+
+tg_re(x) <- value
+
 time_effects(x)
 
 time_effects(x) <- value
@@ -165,6 +179,10 @@ timing(x)
 TMB_out(x)
 
 tracing(x)
+
+values(x)
+
+values(x) <- value
 }
 \arguments{
 \item{x}{An object}
@@ -246,6 +264,10 @@ Access methods for the staRVe package
 
 \item \code{parameters<-}: Set parameters
 
+\item \code{pg_re}: Get persistent graph random effects
+
+\item \code{pg_re<-}: Set persistent graph random effects
+
 \item \code{predictions}: Get predictions
 
 \item \code{predictions<-}: Set predictions
@@ -272,6 +294,10 @@ Access methods for the staRVe package
 
 \item \code{spatial_parameters<-}: Set spatial parameters
 
+\item \code{tg_re}: Get transient graph random effects
+
+\item \code{tg_re<-}: Set transient graph random effects
+
 \item \code{time_effects}: Get time effects
 
 \item \code{time_effects<-}: Set time effects
@@ -285,5 +311,9 @@ Access methods for the staRVe package
 \item \code{TMB_out}: Get TMB_out
 
 \item \code{tracing}: Get tracing
+
+\item \code{values}: Get values
+
+\item \code{values<-}: Set values
 }}
 

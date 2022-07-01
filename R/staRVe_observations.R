@@ -1,4 +1,4 @@
-#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R staRVe_predictions.R
+#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R long_stars.R
 NULL
 
 #################
@@ -7,7 +7,7 @@ NULL
 ###           ###
 #################
 
-#' @param data_predictions A staRVe_predictions object
+#' @param data_predictions A long_stars object
 #' @param transient_graph A dag object
 #' @param parameters A staRVe_observation_parameters object
 #'
@@ -16,11 +16,9 @@ setMethod(
   f = "initialize",
   signature = "staRVe_observations",
   definition = function(.Object,
-                        data_predictions = new("staRVe_predictions"),
-                        transient_graph = new("dag"),
+                        data_predictions = new("long_stars"),
                         parameters = new("staRVe_observation_parameters")) {
     data_predictions(.Object)<- data_predictions
-    transient_graph(.Object)<- transient_graph
     parameters(.Object)<- parameters
 
     return(.Object)
@@ -79,20 +77,6 @@ setReplaceMethod(f = "data_predictions",
 
 
 
-#' Get/set transient graph
-#'
-#' @noRd
-setMethod(f = "transient_graph",
-          signature = "staRVe_observations",
-          definition = function(x) return(x@transient_graph)
-)
-setReplaceMethod(f = "transient_graph",
-                 signature = "staRVe_observations",
-                 definition = function(x,value) {
-  x@transient_graph<- value
-  return(x)
-})
-
 
 #' @param x An object
 #'
@@ -126,7 +110,6 @@ setReplaceMethod(f = "parameters",
 #'
 #' @param data An sf object containing the observations and covariates.
 #' @param process A staRVe_process object.
-#' @param transient_graph An optionally supplied pre-computed transient graph
 #' @param settings A staRVe_settings object.
 #' @param distribution The response distribution to use. must be one given by
 #'   get_staRVe_distributions("distribution").
@@ -138,7 +121,6 @@ setReplaceMethod(f = "parameters",
 #' @noRd
 prepare_staRVe_observations<- function(data,
                                        process,
-                                       transient_graph = NA,
                                        settings = new("staRVe_settings"),
                                        distribution = "gaussian",
                                        link = "default") {
@@ -151,30 +133,16 @@ prepare_staRVe_observations<- function(data,
   # Return a time column with name and type (ar1/rw/etc) attributes
   time_column<- .time_from_formula(formula(settings),data) #in order
 
-  data_predictions(observations)<- new("staRVe_predictions",sf::st_sf(data.frame(
+  data_predictions(observations)<- new("long_stars",sf::st_sf(data.frame(
     .mean_design_from_formula(formula(settings),data,return = "all.vars"),
     .sample_size_from_formula(formula(settings),data,unique_vars = TRUE),
     .response_from_formula(formula(settings),data),
     time_column,
+    graph_idx = .create_graph_idx(data,process,settings),
     data[,attr(data,"sf_column")]
   )),
   var_names = .response_names(formula(settings)))
 
-  # transient_graph = "dag"
-  # Random effect locations are the same each year, so only need first year
-  if( identical(transient_graph,NA) || class(transient_graph) != "dag" ) {
-    # Construct transient graph if not supplied
-    transient_graph(observations)<- construct_obs_dag(
-      x = data,
-      y = .locations_from_stars(random_effects(process)),
-      time = c(dat(observations)[,.time_name(settings),drop=TRUE]),
-      settings = settings,
-    )
-  } else {
-    # Use pre-supplied transient graph
-    distance_units(transient_graph)<- distance_units(settings)
-    transient_graph(observations)<- transient_graph
-  }
 
 
   # parameters = "staRVe_observation_parameters"

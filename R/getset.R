@@ -359,6 +359,17 @@ setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
 )
 
+#' @describeIn staRVe-access Get persistent graph random effects
+#' @export
+setGeneric(name = "pg_re",
+           def = function(x) standardGeneric("pg_re")
+)
+#' @describeIn staRVe-access Set persistent graph random effects
+#' @export
+setGeneric(name = "pg_re<-",
+           def = function(x,value) standardGeneric("pg_re<-")
+)
+
 #' @describeIn staRVe-access Get predictions
 #' @export
 setGeneric(name = "predictions",
@@ -472,6 +483,17 @@ setGeneric(name = "spatial_parameters<-",
 
 # T
 
+#' @describeIn staRVe-access Get transient graph random effects
+#' @export
+setGeneric(name = "tg_re",
+           def = function(x) standardGeneric("tg_re")
+)
+#' @describeIn staRVe-access Set transient graph random effects
+#' @export
+setGeneric(name = "tg_re<-",
+           def = function(x,value) standardGeneric("tg_re<-")
+)
+
 #' @describeIn staRVe-access Get time effects
 #' @export
 setGeneric(name = "time_effects",
@@ -537,6 +559,18 @@ setGeneric(name = "transient_graph<-",
 
 
 # V
+
+#' @describeIn staRVe-access Get values
+#' @export
+setGeneric(name = "values",
+           def = function(x) standardGeneric("values")
+)
+#' @describeIn staRVe-access Set values
+#' @export
+setGeneric(name = "values<-",
+           def = function(x,value) standardGeneric("values<-")
+)
+
 
 
 
