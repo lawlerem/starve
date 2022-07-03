@@ -172,7 +172,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   )
 
   tg_re<- array(seq(6*2),dim=c(6,2))
-  tg_graph<- construct_obs_dag(
+  tg_graph<- construct_transient_dag(
     points[7:12,],
     pg_graph$locations,
     time = c(0,0,0,2,3,3),
@@ -248,7 +248,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   tg_re<- array(seq(nt*2),dim=c(nt,2))
   tg_time<- seq(nt)-1
   tg_time[2:3]<- 0
-  tg_graph<- construct_obs_dag(
+  tg_graph<- construct_transient_dag(
     points[rep(8,nt),],
     pg_graph$locations,
     time = tg_time,
@@ -556,7 +556,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   tg_re<- array(seq(nt*2),dim=c(nt,2))
   tg_time<- seq(nt)-1
   tg_time[2:3]<- 0
-  tg_graph<- construct_obs_dag(
+  tg_graph<- construct_transient_dag(
     points[rep(8,nt),],
     pg_graph$locations,
     time = tg_time,

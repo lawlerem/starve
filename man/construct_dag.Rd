@@ -3,7 +3,6 @@
 \name{construct_dag}
 \alias{construct_dag}
 \alias{construct_transient_dag}
-\alias{construct_obs_dag}
 \title{Construct directed acyclic graphs}
 \usage{
 construct_dag(x, settings = new("staRVe_settings"), silent = TRUE)
@@ -13,16 +12,6 @@ construct_transient_dag(
   y,
   time = 0,
   settings = new("staRVe_settings"),
-  silent = TRUE
-)
-
-construct_obs_dag(
-  x,
-  y,
-  time = 0,
-  settings = new("staRVe_settings"),
-  check_intersection = TRUE,
-  remove_intersection = FALSE,
   silent = TRUE
 )
 }
@@ -58,9 +47,5 @@ of the locations x.
 \item \code{construct_transient_dag}: Construct a directed acyclic graph from one \code{sf}
 object to another. Output is a list whose t'th element is the transient graph
 for time t. y should be the persistent graph locations, x should be data locations.
-
-\item \code{construct_obs_dag}: Construct a directed acyclic graph from one \code{sf}
-object to another. The i'th element of the list is a vector containing
-indices j such that there is a directed edge from node j (in y) to node i (in x).
 }}
 

@@ -254,7 +254,7 @@ prepare_staRVe_process<- function(data,
   transient_graph(process)<- construct_transient_dag(
     x = data,
     y = pg_locs,
-    time = .time_from_formula(formula(settings),data),
+    time = .time_from_formula(formula(settings),data)[[1]],
     settings = settings
   )
   tg_re(process)<- new("long_stars",

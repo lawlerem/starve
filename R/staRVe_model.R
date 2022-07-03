@@ -683,7 +683,10 @@ setMethod(f = "TMB_in",
       .time_from_formula(formula(x),dat(x))[[1]]-min_t
     ),
     sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
-    mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix"))
+    mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
+    pred_edges = vector(mode="list",length=0),
+    pred_dists = vector(mode="list",length=0),
+    pred_t = integer(0)
   )
   para<- list(
     ts_re = time_effects(x)[["w"]],
@@ -798,9 +801,10 @@ setMethod(f = "TMB_in",
       lapply(seq(.n_response(formula(x))),function(v) {
         fixed_effects(x)[[v]][colnames(data$mean_design),"par"]
       })
-    )
+    ),
+    pred_re = array(0,dim=c(0,.n_response(formula(x))))
   )
-  rand<- c("ts_re","pg_re","tg_re")
+  rand<- c("ts_re","pg_re","tg_re","pred_re")
   map<- list(
     working_ts_pars = do.call(.cbind_no_recycle,
       lapply(seq(.n_response(formula(x))),function(v) {
@@ -895,15 +899,15 @@ setMethod(f = "update_staRVe_model",
 
   # Update the random effects for the observations
   s<- dat(x)$graph_idx
-  t<- .time_from_formula(formula(x),dat(x))[[1]]-min(.time_from_formula(formula(x),dat(x)))+1
-  std_tg_t<- .time_from_formula(formula(x),locations(tg_re(x))) - min(.time_from_formula(formula(x),dat(x)))+1
+  t<- .time_from_formula(formula(x),dat(x))[[1]]-min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
+  std_tg_t<- .time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
   for( i in seq(nrow(dat(x))) ) {
     if( s[[i]] <= dim(pg_re(x))[[1]] ) {
       values(data_predictions(x))$w[i,]<- pg_re(x)$w[s[[i]],t[[i]],]
       values(data_predictions(x))$w_se[i,]<- pg_re(x)$se[s[[i]],t[[i]],]
     } else {
-      values(data_predictions(x))$w[i,]<- values(tg_re(x))$w[std_tg_t == t,][s[[i]]-dim(pg_re(x))[[1]],]
-      values(data_predictions(x))$w_se[i,]<- values(tg_re(x))$se[std_tg_t == t,][s[[i]]-dim(pg_re(x))[[1]],]
+      values(data_predictions(x))$w[i,]<- values(tg_re(x))$w[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
+      values(data_predictions(x))$w_se[i,]<- values(tg_re(x))$se[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
     }
   }
 

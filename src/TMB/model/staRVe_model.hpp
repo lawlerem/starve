@@ -61,10 +61,12 @@ Type staRVe_model(objective_function<Type>* obj) {
         case 0 :
           cv_pars(0,v) = exp(working_cv_pars(0,v));
           cv_pars(1,v) = exp(working_cv_pars(1,v));
+          cv_pars(2,v) = exp(working_cv_pars(2,v));
           break; // Exponential [sd,range] --> [(0,Inf), (0,Inf)]
         case 1 :
           cv_pars(0,v) = exp(working_cv_pars(0,v));
           cv_pars(1,v) = exp(working_cv_pars(1,v));
+          cv_pars(2,v) = exp(working_cv_pars(2,v));
           break; // Gaussian [marg. sd, range] --> [(0,Inf), (0,Inf)]
         case 2 :
           cv_pars(0,v) = exp(working_cv_pars(0,v));
@@ -74,10 +76,12 @@ Type staRVe_model(objective_function<Type>* obj) {
         case 3 :
           cv_pars(0,v) = exp(working_cv_pars(0,v));
           cv_pars(1,v) = exp(working_cv_pars(1,v));
+          cv_pars(2,v) = exp(working_cv_pars(2,v));
           break; // Matern32 [sd, range] --> [(0,Inf), (0,Inf)]
         default :
           cv_pars(0,v) = exp(working_cv_pars(0,v));
           cv_pars(1,v) = exp(working_cv_pars(1,v));
+          cv_pars(2,v) = exp(working_cv_pars(2,v));
           break; // Exponential [sd,range] --> [(0,Inf), (0,Inf)]
       }
     }
@@ -172,6 +176,21 @@ Type staRVe_model(objective_function<Type>* obj) {
     }
   /*
     End of observation component
+  */
+
+
+  /*
+    Start of prediction component
+  */
+    DATA_STRUCT(pred_edges,directed_graph);
+    DATA_STRUCT(pred_dists,dag_dists);
+    dag<Type> pred_g {pred_edges.dag, pred_dists.dag_dist};
+    DATA_IVECTOR(pred_t);
+    PARAMETER_ARRAY(pred_re);
+
+    nll -= process.prediction_loglikelihood(pred_g,pred_t,pred_re,ts);
+  /*
+    End of prediction component
   */
 
   return nll;

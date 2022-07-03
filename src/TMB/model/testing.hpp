@@ -279,14 +279,19 @@ Type testing(objective_function<Type>* obj) {
       Type one_tg_re = process(pg.dim_s()+2,0,1);
       REPORT(one_tg_re);
 
+      array<Type> tg_mean = process.get_tg_mean();
+      REPORT(tg_mean);
 
-      Type nngp2_ll = process.loglikelihood(ts);
-      REPORT(nngp2_ll);
+
+      Type nngp_ll = process.loglikelihood(ts);
+      REPORT(nngp_ll);
 
       array<Type> nngp_pg_re = process.get_pg_re();
       REPORT(nngp_pg_re);
       array<Type> nngp_pg_mean = process.get_pg_mean();
       REPORT(nngp_pg_mean);
+      array<Type> inter_tg_mean = process.get_tg_mean();
+      REPORT(inter_tg_mean);
 
       array<Type> ts_sim = ts.simulate().get_re();
       REPORT(ts_sim);
@@ -295,8 +300,8 @@ Type testing(objective_function<Type>* obj) {
       array<Type> sim_nngp_tg_re = process.get_tg_re();
       REPORT(sim_nngp_tg_re);
 
-      Type nngp2_sim_ll = process.loglikelihood(ts);
-      REPORT(nngp2_sim_ll);
+      Type nngp_sim_ll = process.loglikelihood(ts);
+      REPORT(nngp_sim_ll);
 
 
 

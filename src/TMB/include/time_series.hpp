@@ -13,6 +13,7 @@ class time_series {
     array<Type> get_re() { return re; } // return random effect array
     time_series<Type> slice_t(int start, int length); // Get a segment of time t:t+k
     time_series<Type> slice_v(int start, int length); // Get a segment of variable v:v+k
+    Type get_ar1(int v) {return pars(1,v); }
 
     // Compute log-likelihood
     Type loglikelihood();

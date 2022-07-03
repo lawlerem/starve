@@ -148,7 +148,7 @@ setMethod(f = "staRVe_simulate",
     if( s[[i]] <= dim(pg_re(model))[[1]] ) {
       values(data_predictions(model))$w[i,]<- pg_re(model)$w[s[[i]],t[[i]],]
     } else {
-      values(data_predictions(model))$w[i,]<- values(tg_re(model))$w[std_tg_t == t,][s[[i]]-dim(pg_re(model))[[1]],]
+      values(data_predictions(model))$w[i,]<- values(tg_re(model))$w[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(model))[[1]],]
     }
   }
   values(data_predictions(model))$w_se[]<- NA
@@ -256,7 +256,7 @@ setMethod(f = "staRVe_predict",
   # Convert predictions to stars object
   # should have dimension 4 : x coordinate, y coordinate, time, variable
   var_stars<- lapply(seq_along(.n_response(formula(x))),function(i) {
-    pred_sf_list<- cbind(do.call(cbind,predictions(pred)[,,i]),locations(pred))
+    pred_sf_list<- cbind(do.call(cbind,values(pred)[,,i]),locations(pred))
     pred_sf_list<- lapply(split(pred_sf_list,pred_sf_list[,.time_name(x),drop=TRUE]),
                           stars::st_rasterize,
                           template = stars::st_as_stars(locations))
@@ -274,7 +274,7 @@ setMethod(f = "staRVe_predict",
   attr(pred_stars,"dimensions")[[.time_name(x)]]$delta<- 1
   attr(pred_stars,"dimensions")[[.time_name(x)]]$offset<- min(time)
   attr(pred_stars,"dimensions")[["variable"]]$values<- .response_names(formula(x))
-  names(pred_stars)[1:6]<- names(predictions(pred))[1:6]
+  names(pred_stars)[1:6]<- names(values(pred))[1:6]
 
   return(pred_stars)
 })
@@ -296,60 +296,27 @@ setMethod(f = "staRVe_predict",
                       predictions,
                       dist_tol = 0.00001,
                       ...) {
-  # Get random effects, needed to compute prediction dag,
-  random_effects<- random_effects(x)
-
-  # Set up prediction data.frame
-  # Each location is used each prediction time
-  locs<- unique(locations(predictions)[,attr(locations(predictions),"sf_column")])
-  pred_times<- unique(locations(predictions)[,.time_name(x),drop=TRUE])
-  full_predictions<- new("long_stars",
-                         sf::st_sf(data.frame(time = rep(pred_times,each=nrow(locs)),
-                                              geom = rep(sf::st_geometry(locs),length(pred_times)))),
-                         var_names = .response_names(formula(x))
-                        )
-  colnames(locations(full_predictions))[[1]]<- .time_name(x)
-
-  # Compute dag used for predictions
-  dag<- construct_obs_dag(
-    x = locs,
-    y = .locations_from_stars(random_effects(x)),
-    time = 0, # Use the same graph every year
-    check_intersection = TRUE,
-    settings = settings(x)
-  )
-  # intersection_idx is the same every year
-  intersection_idx<- do.call(c,lapply(edges(dag),function(e) {
-    return( length(e$from) )
-  })) == 1
-  # going to remove intersection locations, and adjust the remaining indices
-  # adjust[i] is the number of intersection locations appearing before or at node i
-  adjust<- numeric(nrow(locs))
-  lapply(edges(dag)[intersection_idx],function(e) {
-    idx<- seq_along(adjust) >= e$to
-    adjust[idx]<<- adjust[idx]+1
-  })
-  edges(dag)[!intersection_idx]<- lapply(edges(dag)[!intersection_idx],function(e) {
-    e$to<- e$to-adjust[e$to]
-    return(e)
-  })
-
-
-  intersection_all_idx<- rep(intersection_idx,length(pred_times))
-
   # Add random effects for times not present in the original model,
   # only added to pass to TMB
+  pred_times<- unique(locations(predictions)[,.time_name(x),drop=TRUE])
   x<- .add_random_effects_by_time(x,pred_times)
 
-  # Prepare input for TMB, TMB_in(x) doesn't take care of pred_* things
-  # except pred_w is already declared as a random effect
-  TMB_input<- TMB_in(x)
-  TMB_input$data$pred_w_time<- c(locations(full_predictions)[,.time_name(x),drop=TRUE]
-    - min(stars::st_get_dimension_values(random_effects(x),.time_name(x))))[!intersection_all_idx]
-  TMB_input$data$pred_ws_edges<- edges(idxR_to_C(dag))[!intersection_idx]
-  TMB_input$data$pred_ws_dists<- distances(dag)[!intersection_idx]
+  dag<- construct_pred_dag(
+    pred = predictions,
+    model = x
+  )
 
-  TMB_input$para$pred_w<- predictions(full_predictions)$w[!intersection_all_idx,,drop=FALSE]
+  # Prepare input for TMB, TMB_in(x) doesn't take care of pred_* things
+  TMB_input<- TMB_in(x)
+  TMB_input$data$pred_edges<- edges(idxR_to_C(dag))
+  TMB_input$data$pred_dists<- distances(dag)
+  TMB_input$data$pred_t<- c(locations(predictions)[,.time_name(x),drop=TRUE]- min(stars::st_get_dimension_values(pg_re(x),.time_name(x))))
+
+  TMB_input$para$pred_re<- values(predictions)$w
+  intersects<- do.call(c,lapply(edges(dag),function(e) return(length(e$from) == 1)))
+  TMB_input$map$pred_re<- array(FALSE,dim=dim(TMB_input$para$pred_re))
+  TMB_input$map$pred_re[intersects,]<- TRUE
+  TMB_input$map$pred_re<- .logical_to_map(TMB_input$map$pred_re)
 
   # Create the TMB object and evaluate it at the ML estimates
   obj<- TMB::MakeADFun(
@@ -363,48 +330,35 @@ setMethod(f = "staRVe_predict",
   )
   obj$fn(opt(TMB_out(x))$par)
 
+
   # Get standard errors at ML estimates
   sdr<- TMB::sdreport(obj,
                       par.fixed = opt(TMB_out(x))$par,
                       hessian.fixed = parameter_hessian(tracing(x)),
                       getReportCovariance = FALSE)
 
-  # intersection_w_idx is the same every year
-  intersection_w_idx<- do.call(c,lapply(edges(dag)[intersection_idx],function(e) {
-    return(e$from)
-  }))
+  est<- as.list(sdr,"Estimate")
+  se<- as.list(sdr,"Std. Error")
+  values(predictions)$w<- est$pred_re
+  values(predictions)$w_se<- se$pred_re
 
-  if( any(intersection_idx) ) {
-    intersection_w<- as.list(sdr,"Estimate")$proc_w
-    intersection_w<- apply(intersection_w,MARGIN=2,`[`,intersection_w_idx) # MARGIN=2 is time
-    intersection_w<- intersection_w[,stars::st_get_dimension_values(random_effects(x),.time_name(x)) %in% pred_times]
-    intersection_w<- c(intersection_w)
-
-    intersection_se<- as.list(sdr,"Std. Error")$proc_w
-    intersection_se<- apply(intersection_se,MARGIN=2,`[`,intersection_w_idx) # MARGIN=2 is time
-    intersection_se<- intersection_se[,stars::st_get_dimension_values(random_effects(x),.time_name(x)) %in% pred_times]
-    intersection_se<- c(intersection_se)
-
-    predictions(full_predictions)$w[intersection_all_idx]<- intersection_w
-    predictions(full_predictions)$w_se[intersection_all_idx]<- intersection_se
-  } else {}
-  predictions(full_predictions)$w[!intersection_idx,]<- as.list(sdr,"Estimate")$pred_w
-  predictions(full_predictions)$w_se[!intersection_idx,]<- as.list(sdr,"Std. Error")$pred_w
-
-
-  # Pick out year / location combos that were in original
-  idx<- lapply(Map(
-    st_intersects,
-    split(locations(predictions),locations(predictions)[,.time_name(x),drop=TRUE]),
-    split(locations(full_predictions),locations(full_predictions)[,.time_name(x),drop=TRUE]),
-    sparse = TRUE
-  ),as.data.frame)
-  idx<- do.call(c,lapply(seq_along(idx),function(t) {
-    id<- idx[[t]]$col.id + (t-1)*nrow(locs) # locs is unique(locations)
-    return(id)
-  }))
-  predictions(predictions)$w<- predictions(full_predictions)$w[idx,]
-  predictions(predictions)$w_se<- predictions(full_predictions)$w_se[idx,]
+  s<- do.call(c,lapply(edges(dag),function(e) return(e$from[[1]])))
+  t<- .time_from_formula(formula(x),locations(predictions))[[1]]-min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
+  std_tg_t<- .time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
+  for( i in seq(nrow(locations(predictions))) ) {
+    if( !intersects[[i]] ) {
+      next;
+    } else {}
+    if( s[[i]] <= dim(pg_re(x))[[1]] ) {
+      # Take re from persistent graph -- be sure to use from est so we get the extra years before/after data
+      values(predictions)$w[i,]<- est$pg_re[s[[i]],t[[i]],]
+      values(predictions)$w_se[i,]<- se$pg_re[s[[i]],t[[i]],]
+    } else {
+      # Take re from transient graph
+      values(predictions)$w[i,]<- values(tg_re(x))$w[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
+      values(predictions)$w_se[i,]<- values(tg_re(x))$se[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
+    }
+  }
 
   return(predictions)
 }
@@ -501,15 +455,9 @@ setMethod(f = "staRVe_predict",
       silent = TRUE
     )
 
-    if( se ) {
-      # Mean prediction = f(linear) + 0.5 * f''(linear) * linear_se^2
-      second_order_mean<- Vectorize(function(linear,linear_se) {
-        mean<- link_function$fn(linear) + 0.5*link_function$he(linear)*linear_se^2
-        return(as.numeric(mean))
-      },SIMPLIFY = "array")
-      values(predictions)$response[,v]<- second_order_mean(values(predictions)$linear[,v],
-                                                           values(predictions)$linear_se[,v])
+    values(predictions)$response[,v]<- Vectorize(link_function$fn,SIMPLIFY = "array")(values(predictions)$linear[,v])
 
+    if( se ) {
       # Standard error =  f'(linear)^2*linear_se^2 + 0.5 * f''(linear)^2*linear_se^4
       second_order_se<- Vectorize(function(linear,linear_se) {
         se<- sqrt(link_function$gr(linear)^2*linear_se^2
@@ -519,8 +467,6 @@ setMethod(f = "staRVe_predict",
       values(predictions)$response_se[,v]<- second_order_se(values(predictions)$linear[,v],
                                                             values(predictions)$linear_se[,v])
     } else {
-      # No standard error for second order delta method, just apply link function
-      values(predictions)$response[,v]<- Vectorize(link_function$fn,SIMPLIFY = "array")(values(predictions)$linear[,v])
       values(predictions)$response_se[]<- NA
     }
   }

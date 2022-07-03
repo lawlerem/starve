@@ -14,28 +14,26 @@ class conditional_normal {
     conditional_normal() = default;
 
     // Interpolate marginal mean of conditional variables as weighted average of conditioning variables means
-    // MAYBE SEE IF YOU WANT TO MAKE THIS A NON-CONST REFERENCE???
     vector<Type> interpolate_mean(const vector<Type>& mu);
 
     // Compute conditional mean
     vector<Type> conditional_mean(
       const vector<Type>& x,
-      vector<Type> mu, // don't pass by ref because I would need to create a new copy anyway
-      bool interpolate_mu=false
+      const vector<Type>& mu
     );
 
     // Compute conditional negative log-likelihood
     Type loglikelihood(
       const vector<Type>& x,
       const vector<Type>& mu,
-      bool interpolate_mu=false
+      Type sd_scale = 1.0 // Need to scale variance at initial time
     );
 
     // simulate new
     vector<Type> simulate(
       const vector<Type>& x,
       const vector<Type>& mu,
-      bool interpolate_mu=false
+      Type sd_scale = 1.0 // Need to scale variance at initial time
     );
 
     // Compute condiitonal covariance matrix
@@ -92,13 +90,8 @@ vector<Type> conditional_normal<Type>::interpolate_mean(const vector<Type>& mu) 
 template<class Type>
 vector<Type> conditional_normal<Type>::conditional_mean(
     const vector<Type>& x,
-    vector<Type> mu,
-    bool interpolate_mu
+    const vector<Type>& mu
   ) {
-  if( interpolate_mu ) {
-    mu = interpolate_mean(mu);
-  } else {}
-
   vector<Type> x_p = x.segment(0,np);
   vector<Type> mu_p = mu.segment(0,np);
   vector<Type> x_c = x.segment(np,nc);
@@ -116,11 +109,11 @@ template<class Type>
 Type conditional_normal<Type>::loglikelihood(
     const vector<Type>& x,
     const vector<Type>& mu,
-    bool interpolate_mu
+    Type sd_scale
   ) {
   vector<Type> x_p = x.segment(0,np);
-  vector<Type> mu_p = conditional_mean(x,mu,interpolate_mu);
-  return -1.0*mvn(x_p-mu_p);
+  vector<Type> mu_p = conditional_mean(x,mu);
+  return -1.0*mvn((x_p-mu_p)/sd_scale);
 }
 
 
@@ -128,10 +121,10 @@ template<class Type>
 vector<Type> conditional_normal<Type>::simulate(
     const vector<Type>& x,
     const vector<Type>& mu,
-    bool interpolate_mu
+    Type sd_scale
   ) {
-  vector<Type> mu_p = conditional_mean(x,mu,interpolate_mu);
-  vector<Type> x_p = mvn.simulate() + mu_p;
+  vector<Type> mu_p = conditional_mean(x,mu);
+  vector<Type> x_p = sd_scale*mvn.simulate() + mu_p;
 
   return x_p;
 }
