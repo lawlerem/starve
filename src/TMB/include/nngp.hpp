@@ -58,7 +58,7 @@ Type nngp<Type>::pg_loglikelihood(time_series<Type>& ts) {
   for(int v=0; v<pg.dim_v(); v++) {
     for(int t=0; t<pg.dim_t(); t++) {
       for(int node=0; node<pg.dim_g(); node++) {
-        Type sd_scale = (t==0) ? sqrt(1.0-pow(ts.get_ar1(v),2)) : 1.0;
+        Type sd_scale = (t==0) ? ts.initial_sd_scale(v) : 1.0;
         pg_ll += pg_c(node,v).loglikelihood(pg(node,t,v).re,pg(node,t,v).mean,sd_scale);
       }
     }
@@ -81,7 +81,7 @@ nngp<Type> nngp<Type>::pg_simulate(time_series<Type>& ts) {
   for(int v=0; v<pg.dim_v(); v++) {
     for(int t=0; t<pg.dim_t(); t++) {
       for(int node=0; node<pg.dim_g(); node++) {
-        Type sd_scale = (t==0) ? sqrt(1.0-pow(ts.get_ar1(v),2)) : 1.0;
+        Type sd_scale = (t==0) ? ts.initial_sd_scale(v) : 1.0;
         re_dag_node<Type> pg_node = pg(node);
         vector<Type> to_mean = ts.propagate_structure(pg_node.re,t,v);
         pg.set_mean_by_to_g(to_mean.segment(0,pg_node.node.to.size()),node,t,v);
@@ -118,7 +118,7 @@ Type nngp<Type>::tg_loglikelihood(time_series<Type>& ts) {
   for(int v=0; v<tg.dim_v(); v++) {
     for(int t=0; t<tg.dim_t(); t++) {
       for(int node=0; node<tg.dim_g(t); node++) {
-        Type sd_scale = (t==0) ? sqrt(1.0-pow(ts.get_ar1(v),2)) : 1.0;
+        Type sd_scale = (t==0) ? ts.initial_sd_scale(v) : 1.0;
         tg_ll += tg_c(node,t,v).loglikelihood(tg(node,t,v,pg).re,tg(node,t,v,pg).mean,sd_scale);
       }
     }
@@ -143,7 +143,7 @@ nngp<Type> nngp<Type>::tg_simulate(time_series<Type>& ts) {
   for(int v=0; v<tg.dim_v(); v++) {
     for(int t=0; t<tg.dim_t(); t++) {
       for(int node=0; node<tg.dim_g(t); node++) {
-        Type sd_scale = (t==0) ? sqrt(1.0-pow(ts.get_ar1(v),2)) : 1.0;
+        Type sd_scale = (t==0) ? ts.initial_sd_scale(v) : 1.0;
         re_dag_node<Type> tg_node = tg(node,t,v,pg);
         vector<Type> sim = tg_c(node,t,v).simulate(tg_node.re,tg_node.mean,sd_scale);
 
@@ -184,7 +184,7 @@ Type nngp<Type>::prediction_loglikelihood(dag<Type>& pred_g,vector<int>& pred_t,
     }
     // Create a conditional normal, interpolate mean, and compute loglikelihood
     for(int v=0; v<dim_v(); v++) {
-      Type sd_scale = (pred_t(i)==0) ? sqrt(1.0-pow(ts.get_ar1(v),2)) : 1.0;
+      Type sd_scale = (pred_t(i)==0) ? ts.initial_sd_scale(v) : 1.0;
       conditional_normal<Type> cn {cv(v)(node.node.d),static_cast<int>(node.node.from.size())};
       node.mean = cn.interpolate_mean(node.mean);
       pred_ll += cn.loglikelihood(node.re,node.mean,sd_scale);

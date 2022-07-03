@@ -13,7 +13,7 @@ class time_series {
     array<Type> get_re() { return re; } // return random effect array
     time_series<Type> slice_t(int start, int length); // Get a segment of time t:t+k
     time_series<Type> slice_v(int start, int length); // Get a segment of variable v:v+k
-    Type get_ar1(int v) {return pars(1,v); }
+    Type initial_sd_scale(int v) {return sqrt(1.0-pow(pars(1,v),2)); }
 
     // Compute log-likelihood
     Type loglikelihood();
@@ -74,7 +74,7 @@ Type time_series<Type>::loglikelihood() {
     for(int t=1; t<re.rows(); t++) {
       ans += dnorm(re(t,v),
                    pars(1,v)*re(t-1,v) + (1.0-pars(1,v))*pars(0,v),
-                   pars(2,v)*sqrt(1.0-pow(pars(1,v),2)),
+                   pars(2,v)*initial_sd_scale(v),
                    true);
     }
   }
@@ -91,7 +91,7 @@ time_series<Type> time_series<Type>::simulate() {
                     (re.rows() > 1) ? pars(2,v) : small_number);
     for(int t=1; t<re.rows(); t++) {
       re(t,v) = rnorm(pars(1,v)*re(t-1,v) + (1.0-pars(1,v))*pars(0,v),
-                      pars(2,v)*sqrt(1.0-pow(pars(1,v),2)));
+                      pars(2,v)*initial_sd_scale(v));
     }
   }
 
