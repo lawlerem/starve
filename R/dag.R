@@ -257,7 +257,7 @@ construct_pred_dag<- function(pred,
         tg_s[.time_from_formula(formula(model),locations(tg_re(model)))[[1]]==t]
       ))
     } else {
-      g_s<- sf::st_sf(pg_s)
+      g_s<- sf::st_sf(geom=pg_s)
     }
 
     # Find prediction locations that coincide with graph locations

@@ -414,10 +414,10 @@ setMethod(f = "staRVe_predict",
 
         # The commented and uncommented methods are the same
         # linear_se<- sqrt(diag(design %*% par_cov %*% t(design)) + w_predictions$w_se^2)
-        predictions(predictions)$linear_se[,v]<- sqrt(rowSums((design %*% par_cov) * design) + predictions(predictions)$w_se[,v]^2)
+        values(predictions)$linear_se[,v]<- sqrt(rowSums((design %*% par_cov) * design) + values(predictions)$w_se[,v]^2)
       }
     } else {
-      predictions(predictions)$linear_se[]<- NA
+      values(predictions)$linear_se[]<- NA
     }
   }
   return(predictions)
