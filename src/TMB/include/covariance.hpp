@@ -59,10 +59,10 @@ matrix<T> covariance<Type>::operator() (const matrix<T>& d) {
 template<class Type>
 void covariance<Type>::update_marginal_sd(const Type& new_sd) {
   switch(covar_code) {
-    case 0 : pars(1) = pow(new_sd/pars(0),2); // Exponential
+    case 0 : pars(1) = pow(new_sd/pars(0),1.0/(0.5)); // Exponential
     case 1 : pars(1) = new_sd; // Gaussian
     case 2 : pars(1) = pow(new_sd/pars(0),1.0/pars(2)); // Matern
     case 3 : pars(1) = pow(new_sd/pars(0),1.0/(3.0/2.0)); // Matern32
-    default : pars(1) = pow(new_sd/pars(0),2); // Exponential
+    default : pars(1) = pow(new_sd/pars(0),1.0/(0.5)); // Exponential
   }
 }

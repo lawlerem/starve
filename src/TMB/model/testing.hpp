@@ -20,6 +20,18 @@ Type testing(objective_function<Type>* obj) {
       matrix<Type> sigma = cv(d);
       REPORT(sigma);
 
+      cv.update_marginal_sd(Type(1.0));
+      Type sd_1 = cv(Type(0.0));
+      REPORT(sd_1);
+
+      matrix<Type> sigma1 = cv(d);
+      REPORT(sigma1);
+
+      cv.update_marginal_sd(Type(2.0));
+      Type sd_2 = sqrt(cv(Type(0.0)));
+      REPORT(sd_2);
+
+
     } else if(test == "conditional_normal") {
       DATA_VECTOR(x);
       DATA_VECTOR(mu);
@@ -297,6 +309,8 @@ Type testing(objective_function<Type>* obj) {
       REPORT(ts_sim);
       array<Type> sim_nngp_pg_re = process.simulate(ts).get_pg_re();
       REPORT(sim_nngp_pg_re);
+      array<Type> sim_nngp_pg_mean = process.get_pg_mean();
+      REPORT(sim_nngp_pg_mean);
       array<Type> sim_nngp_tg_re = process.get_tg_re();
       REPORT(sim_nngp_tg_re);
 

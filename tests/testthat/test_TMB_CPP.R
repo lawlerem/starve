@@ -37,8 +37,22 @@ points<- sf::st_as_sf(as.data.frame(rbind(
     ),
     DLL = "staRVe_model"
   )
-  obj$fn()
-  # Just want to check that obj can be created
+  report<- obj$report()
+
+  cond_sigma<- function(S,nc=0) {
+    if(nc == 0 ) {
+      return(s)
+    } else {}
+    n1<- nrow(S)-nc
+    n2<- nrow(S)
+    S11<- S[seq(n1),seq(n1)]
+    S12<- S[seq(n1),seq(n1+1,n2)]
+    S22<- S[seq(n1+1,n2),seq(n1+1,n2)]
+    return(S11 - S12 %*% solve(S22) %*% t(S12))
+  }
+
+  expect_equal(report$sd_1,1.0)
+  expect_equal(report$sd_2,2.0)
 #}
 
 
@@ -292,6 +306,19 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 
   expect_equal(report$nngp_pg_re, pg_re)
   expect_false(isTRUE(all.equal(report$nngp_pg_mean, pg_re)))
+
+
+  tre<- report$ts_sim
+  pg_re<- report$sim_nngp_pg_re
+
+  R_mean<- array(0,dim=dim(pg_re))
+  for( v in 1:2 ) {
+    R_mean[,1,v]<- tre[1,v]
+    for( t in 2:nt ) {
+      R_mean[,t,v]<- tre[t,v] + ts_pars[2,v]*(pg_re[,t-1,v]-tre[t-1,v])
+    }
+  }
+  expect_equal(report$sim_nngp_pg_mean,R_mean)
 
   # par(mfrow=c(4,1))
   #   plot.ts(data.frame(report$ts_sim),plot.type="single",lty=c(1,2))

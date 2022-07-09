@@ -210,9 +210,6 @@ construct_transient_dag<- function(x,
       dists<- sf::st_distance(rbind(t_x[e$to,attr(x,"sf_column")],
                                     y[e$from,attr(y,"sf_column")]))
       dists<- units::set_units(dists,
-                               "m", # Set to m to line up with nngeo default
-                               mode="standard")
-      dists<- units::set_units(dists,
                                distance_units(settings),
                                mode="standard")
       return(units::drop_units(dists))
@@ -291,9 +288,6 @@ construct_pred_dag<- function(pred,
       } else {
         dists<- sf::st_distance(rbind(pr_s[e$to,attr(pr_s,"sf_column")],
                                       g_s[e$from,,attr(g_s,"sf_column")]))
-        dists<- units::set_units(dists,
-                                 "m", # Set to m to line up with nngeo default
-                                 mode="standard")
         dists<- units::set_units(dists,
                                  distance_units(settings),
                                  mode="standard")

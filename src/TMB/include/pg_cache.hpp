@@ -24,6 +24,7 @@ pg_cache<Type>::pg_cache(
     }
 
     for(int v=0; v<cv.size(); v++) {
+      Type init_marginal_sd = sqrt(cv(v)(Type(0.0)));
       // Fill in cache for nodes with parents
       Type avg_sd = 0.0;
       int avg_n = 0;
@@ -50,6 +51,7 @@ pg_cache<Type>::pg_cache(
         avg_sd = avg_sd / avg_n;
         cv(v).update_marginal_sd(avg_sd);
       } else {}
+
       for(int i=0; i<conditional_normals.size(); i++) {
         dag_node<Type> node = pg(i).node;
         if( node.from.size() == 0 ) {
@@ -62,5 +64,8 @@ pg_cache<Type>::pg_cache(
           continue;
         }
       }
+      if( avg_n > 0 ) {
+        cv(v).update_marginal_sd(init_marginal_sd);
+      } else {}
     }
 }
