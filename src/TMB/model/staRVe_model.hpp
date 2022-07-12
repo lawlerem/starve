@@ -146,7 +146,7 @@ Type staRVe_model(objective_function<Type>* obj) {
           response_pars(0,v) = exp(working_response_pars(0,v)); // scale --> (0,Inf)
           response_pars(1,v) = 1.0/(1.0+exp(-working_response_pars(1,v)))+1.0; break; // power --> (1,2)
         default : // Normal
-          response_pars(0,v) = exp(-1*working_response_pars(0,v)); // sd --> (0,Inf)
+          response_pars(0,v) = exp(working_response_pars(0,v)); // sd --> (0,Inf)
           break;
       }
     }

@@ -775,9 +775,8 @@ setMethod(f = "TMB_in",
           compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
                 response_parameters(x)[[v]]["dispersion","par"] > 0 ||
                 response_parameters(x)[[v]]["dispersion","fixed"] == TRUE,
-              -log(response_parameters(x)[[v]]["dispersion","par"]),
-              # negative sign since we want >0 to be over-dispersion
-              -log(1)
+              log(response_parameters(x)[[v]]["dispersion","par"]),
+              log(1)
             ),
           tweedie = c( # tweedie
             ifelse( # dispersion>0
