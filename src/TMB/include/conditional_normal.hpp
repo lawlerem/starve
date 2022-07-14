@@ -25,15 +25,13 @@ class conditional_normal {
     // Compute conditional negative log-likelihood
     Type loglikelihood(
       const vector<Type>& x,
-      const vector<Type>& mu,
-      Type sd_scale = 1.0 // Need to scale variance at initial time
+      const vector<Type>& mu
     );
 
     // simulate new
     vector<Type> simulate(
       const vector<Type>& x,
-      const vector<Type>& mu,
-      Type sd_scale = 1.0 // Need to scale variance at initial time
+      const vector<Type>& mu
     );
 
     // Compute condiitonal covariance matrix
@@ -108,23 +106,21 @@ vector<Type> conditional_normal<Type>::conditional_mean(
 template<class Type>
 Type conditional_normal<Type>::loglikelihood(
     const vector<Type>& x,
-    const vector<Type>& mu,
-    Type sd_scale
+    const vector<Type>& mu
   ) {
   vector<Type> x_p = x.segment(0,np);
   vector<Type> mu_p = conditional_mean(x,mu);
-  return -1.0*mvn((x_p-mu_p)/sd_scale);
+  return -1.0*mvn(x_p-mu_p);
 }
 
 
 template<class Type>
 vector<Type> conditional_normal<Type>::simulate(
     const vector<Type>& x,
-    const vector<Type>& mu,
-    Type sd_scale
+    const vector<Type>& mu
   ) {
   vector<Type> mu_p = conditional_mean(x,mu);
-  vector<Type> x_p = sd_scale*mvn.simulate() + mu_p;
+  vector<Type> x_p = mvn.simulate() + mu_p;
 
   return x_p;
 }

@@ -13,7 +13,7 @@ class time_series {
     array<Type> get_re() { return re; } // return random effect array
     time_series<Type> slice_t(int start, int length); // Get a segment of time t:t+k
     time_series<Type> slice_v(int start, int length); // Get a segment of variable v:v+k
-    Type initial_sd_scale(int v) {return sqrt(1.0-pow(pars(1,v),2)); }
+    Type initial_sd_scale(int v) {return 1.0/sqrt(1.0-pow(pars(1,v),2)); }
 
     // Compute log-likelihood
     Type loglikelihood();
@@ -69,12 +69,12 @@ Type time_series<Type>::loglikelihood() {
   for(int v=0; v<re.cols(); v++) {
     ans += dnorm(re(0,v),
                  pars(0,v),
-                 (re.rows() > 1) ? pars(2,v) : small_number,
+                 (re.rows() > 1) ? initial_sd_scale(v)*pars(2,v) : small_number,
                  true);
     for(int t=1; t<re.rows(); t++) {
       ans += dnorm(re(t,v),
                    pars(1,v)*re(t-1,v) + (1.0-pars(1,v))*pars(0,v),
-                   pars(2,v)*initial_sd_scale(v),
+                   pars(2,v),
                    true);
     }
   }
@@ -88,10 +88,10 @@ time_series<Type> time_series<Type>::simulate() {
   Type small_number = pow(10.0,-5);
   for(int v=0; v<re.cols(); v++) {
     re(0,v) = rnorm(pars(0,v),
-                    (re.rows() > 1) ? pars(2,v) : small_number);
+                    (re.rows() > 1) ? initial_sd_scale(v)*pars(2,v) : small_number);
     for(int t=1; t<re.rows(); t++) {
       re(t,v) = rnorm(pars(1,v)*re(t-1,v) + (1.0-pars(1,v))*pars(0,v),
-                      pars(2,v)*initial_sd_scale(v));
+                      pars(2,v));
     }
   }
 
