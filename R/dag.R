@@ -251,7 +251,7 @@ construct_pred_dag<- function(pred,
     if( length(tg_s) > 0 ) {
       g_s<- sf::st_sf(geom=c(
         pg_s,
-        tg_s[.time_from_formula(formula(model),locations(tg_re(model)))[[1]]==t]
+        sf::st_sfc(unique(tg_s[.time_from_formula(formula(model),locations(tg_re(model)))[[1]]==t]))
       ))
     } else {
       g_s<- sf::st_sf(geom=pg_s)

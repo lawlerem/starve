@@ -252,7 +252,6 @@ setMethod(f = "staRVe_predict",
     pred<- staRVe_predict(x,prediction_points)
   }
 
-
   # Convert predictions to stars object
   # should have dimension 4 : x coordinate, y coordinate, time, variable
   var_stars<- lapply(seq_along(.n_response(formula(x))),function(i) {
