@@ -28,7 +28,7 @@ test_that("Add random effects by time",{
       variable = "y"
     )
   )
-  expect_equal(random_effects(.add_random_effects_by_time(init,1:10)),re)
+  expect_equal(pg_re(.add_random_effects_by_time(init,1:10)),re)
   expect_equal(time_effects(.add_random_effects_by_time(init,1:10)),te)
 
 
@@ -49,7 +49,7 @@ test_that("Add random effects by time",{
       variable = "y"
     )
   )
-  expect_equal(random_effects(.add_random_effects_by_time(init,seq(-3,0))),re)
+  expect_equal(pg_re(.add_random_effects_by_time(init,seq(-3,0))),re)
   expect_equal(time_effects(.add_random_effects_by_time(init,seq(-3,0))),te)
 
 
@@ -70,7 +70,7 @@ test_that("Add random effects by time",{
       variable = "y"
     )
   )
-  expect_equal(random_effects(.add_random_effects_by_time(init,11:14)),re)
+  expect_equal(pg_re(.add_random_effects_by_time(init,11:14)),re)
   expect_equal(time_effects(.add_random_effects_by_time(init,11:14)),te)
 
 
@@ -91,7 +91,7 @@ test_that("Add random effects by time",{
       variable = "y"
     )
   )
-  expect_equal(random_effects(.add_random_effects_by_time(init,c(-3,14))),re)
+  expect_equal(pg_re(.add_random_effects_by_time(init,c(-3,14))),re)
   expect_equal(time_effects(.add_random_effects_by_time(init,c(-3,14))),te)
 })
 

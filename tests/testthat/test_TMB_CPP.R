@@ -20,7 +20,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 
 
 
-# test_that("C++ covariance",{
+test_that("C++ covariance",{
   pars<- c(1,2)
   covar_code<- 0
   d<- as.matrix(dist(1:4,diag=TRUE,upper=TRUE))
@@ -53,10 +53,10 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 
   expect_equal(report$sd_1,1.0)
   expect_equal(report$sd_2,2.0)
-#}
+})
 
 
-# test_that("C++ conditional normal",{
+test_that("C++ conditional normal",{
   x<- 1:4
   mu<- 10:13
   sigma<- 0.6^abs(outer(1:4,1:4,`-`))
@@ -82,12 +82,12 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 
   expect_equal(report$marginal_mean,mu)
   expect_equal(report$marginal_sigma,sigma)
-# })
+})
 
 
 
 
-# test_that("C++ time series",{
+test_that("C++ time series",{
   ts_re<- array(seq(20*3),dim=c(20,3))
   ts_pars<- cbind(c(0,0.6,2),
                   c(4,-0.2,0.5),
@@ -113,18 +113,18 @@ points<- sf::st_as_sf(as.data.frame(rbind(
       mvtnorm::dmvnorm(
         ts_re[,v],
         rep(ts_pars[1,v],nrow(ts_re)),
-        ts_pars[3,v]^2*ts_pars[2,v]^abs(outer(seq(nrow(ts_re)),seq(nrow(ts_re)),`-`)),
+        (1.0/(1-ts_pars[2,v]^2))*ts_pars[3,v]^2*ts_pars[2,v]^abs(outer(seq(nrow(ts_re)),seq(nrow(ts_re)),`-`)),
         log = TRUE
       )
     }))
   )
   expect_equal(dim(report$sim),dim(ts_re))
-#})
+})
 
 
 
 
-# test_that("C++ persistent_graph",{
+test_that("C++ persistent_graph",{
   pg_re<- array(seq(6*3*2),dim=c(6,3,2))
   pg_graph<- construct_dag(
     points[1:6,],
@@ -172,13 +172,13 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(report$overwrite_mean, pg_mean)
   expect_equal(report$after_overwrite_mean, pg_mean)
   expect_equal(report$overwrite_mean1, pg_mean[edges(pg_graph$dag)[[1]]$to,1,1])
-# })
+})
 
 
 
 
 
-# test_that("C++ transient_graph",{
+test_that("C++ transient_graph",{
   pg_re<- array(seq(6*3*2),dim=c(6,3,2))
   pg_graph<- construct_dag(
     points[1:6,],
@@ -218,13 +218,13 @@ points<- sf::st_as_sf(as.data.frame(rbind(
                                         pg_re[,1,,drop=TRUE][edges(tg_graph)[[3]]$from,,drop=FALSE]))
   expect_equal(report$small_tg_mean,rbind(tg_re[edges(tg_graph)[[3]]$to,,drop=FALSE],
                                           pg_re[,1,,drop=TRUE][edges(tg_graph)[[3]]$from,,drop=FALSE]))
-  expect_equal(report$small_tg_di,distances(tg_graph)[[3]])
+  expect_equal(report$small_tg_di,unname(distances(tg_graph)[[3]]))
 
   expect_equal(report$ssmall_tg_re,rbind(tg_re[edges(tg_graph)[[3]]$to,1,drop=FALSE],
                                          pg_re[,1,,drop=TRUE][edges(tg_graph)[[3]]$from,1,drop=FALSE]))
   expect_equal(report$ssmall_tg_mean,rbind(tg_re[edges(tg_graph)[[3]]$to,1,drop=FALSE],
                                            pg_re[,1,,drop=TRUE][edges(tg_graph)[[3]]$from,1,drop=FALSE]))
-  expect_equal(report$ssmall_tg_di,distances(tg_graph)[[3]])
+  expect_equal(report$ssmall_tg_di,unname(distances(tg_graph)[[3]]))
 
   expect_equal(report$small_t_re,tg_re[1:3,,drop=FALSE])
   expect_equal(report$small_t_mean,tg_re[1:3,,drop=FALSE])
@@ -241,13 +241,13 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(report$after_overwrite_mean, tg_re)
   expect_equal(report$overwrite_mean1, c(tg_re[edges(tg_graph)[[1]]$to,1],
                                          pg_re[edges(tg_graph)[[1]]$from,1,1]))
-# })
+})
 
 
 
 
 
-# test_that("C++ nngp",{
+test_that("C++ nngp",{
   nt<- 10
   ts_re<- array(seq(nt*2),dim=c(nt,2))
   ts_pars<- cbind(c(0,0.6,2),
@@ -327,13 +327,13 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   #   plot.ts(data.frame(report$sim_nngp_tg_re),plot.type="single",lty=c(1,2))
 
   # loglikilihood for simulations computed here; doesn't make sense to check it
-# })
+})
 
 
 
 
 
-# test_that("C++ inv_link_function",{
+test_that("C++ inv_link_function",{
   x<- seq(-5,5,0.5)
   obj<- TMB::MakeADFun(
     data = list(
@@ -349,14 +349,14 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(report$ans[,1],x)
   expect_equal(report$ans[,2],exp(x))
   expect_equal(report$ans[,3],plogis(x))
-# })
+})
 
 
 
 
 
 
-# test_that("C++ distribution",{
+test_that("C++ distribution",{
   xsize<- 20
   x<- cbind(
     seq(-5,5,length.out=xsize), # Normal
@@ -455,7 +455,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
     # No readily available R implementation
 
 
-# })
+})
 
 
 
@@ -463,7 +463,7 @@ points<- sf::st_as_sf(as.data.frame(rbind(
 
 
 
-# test_that("C++ family",{
+test_that("C++ family",{
   xsize<- 20
   x<- cbind(
     seq(-5,5,length.out=xsize), # Normal
@@ -562,13 +562,13 @@ points<- sf::st_as_sf(as.data.frame(rbind(
     # No readily available R implementation
 
 
-# })
+})
 
 
 
 
 
-# test_that("C++ observations",{
+test_that("C++ observations",{
   nt<- 10
   ts_re<- array(seq(nt*2),dim=c(nt,2))
   ts_pars<- cbind(c(4,0.6,2),
@@ -684,4 +684,4 @@ points<- sf::st_as_sf(as.data.frame(rbind(
   expect_equal(report$new_mm, new_mm)
   expect_equal(report$new_ll, new_ll)
 
-# })
+})
