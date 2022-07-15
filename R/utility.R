@@ -20,11 +20,11 @@ NULL
 #'
 #' @noRd
 .add_random_effects_by_time<- function(x,times) {
-  model_times<- stars::st_get_dimension_values(random_effects(x),.time_name(x))
+  model_times<- stars::st_get_dimension_values(pg_re(x),.time_name(x))
 
   ### Add extra spatio-temporal random effects
-  new_dims<- stars::st_dimensions(random_effects(x))
-  relist<- lapply(random_effects(x),function(va) return(va))
+  new_dims<- stars::st_dimensions(pg_re(x))
+  relist<- lapply(pg_re(x),function(va) return(va))
   if( min(times) < min(model_times) ) {
     relist<- lapply(relist,function(va) {
       return(abind::abind(array(0,dim = c(dim(va)[[1]],min(model_times)-min(times),dim(va)[[3]])),
@@ -50,7 +50,7 @@ NULL
     dimnames(va)<- NULL
     return(va)
   })
-  random_effects(x)<- stars::st_as_stars(relist,dimensions=new_dims)
+  pg_re(x)<- stars::st_as_stars(relist,dimensions=new_dims)
 
   ### Add extra time effects
   new_dims<- stars::st_dimensions(time_effects(x))

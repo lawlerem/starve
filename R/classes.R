@@ -8,9 +8,9 @@
 #' @section Classes:
 #' \itemize{
 #'   \item dag
+#'   \item long_stars
 #'   \item staRVe_process_parameters
 #'   \item staRVe_process
-#'   \item staRVe_predictions
 #'   \item staRVe_observation_parameters
 #'   \item staRVe_observations
 #'   \item staRVe_settings
@@ -55,6 +55,19 @@ setClass(
   )
 )
 
+#' An S4 class to hold predictions from a staRVe model.
+#'
+#' @slot predictions A stars object
+#' @slot locations An sf object with covariates, a time column, and point geometries.
+setClass(
+  Class = "long_stars",
+  slots = c(
+    values = "stars",
+    locations = "sf"
+  )
+)
+
+
 #' An S4 class to hold process parameters for a staRVe model.
 #'
 #' @slot covariance_function The covariance function, must be one given by
@@ -80,21 +93,11 @@ setClass(
   Class = "staRVe_process",
   slots = c(
     time_effects = "stars",
-    random_effects = "stars",
+    pg_re = "stars",
+    tg_re = "long_stars",
     persistent_graph = "dag",
+    transient_graph = "dag",
     parameters = "staRVe_process_parameters"
-  ),
-)
-
-#' An S4 class to hold predictions from a staRVe model.
-#'
-#' @slot predictions A stars object
-#' @slot locations An sf object with covariates, a time column, and point geometries.
-setClass(
-  Class = "staRVe_predictions",
-  slots = c(
-    predictions = "stars",
-    locations = "sf"
   )
 )
 
@@ -119,15 +122,14 @@ setClass(
 
 #' An S4 class to hold the observation information for a staRVe model.
 #'
-#' @slot data_predictions A staRVe_predictions object for the data.
+#' @slot data_predictions A long_stars object for the data.
 #' @slot transient_graph A dag object describing the dependence of the data on
 #'   the process.
 #' @slot parameters An object of class staRVe_observation_parameters.
 setClass(
   Class = "staRVe_observations",
   slots = c(
-    data_predictions = "staRVe_predictions",
-    transient_graph = "dag",
+    data_predictions = "long_stars",
     parameters = "staRVe_observation_parameters"
   )
 )

@@ -119,23 +119,47 @@ setReplaceMethod(f = "time_effects",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get spatio-temporal random effects
-setMethod(f = "random_effects",
+#' @describeIn staRVe_model Get persistent graph random effects
+setMethod(f = "pg_re",
           signature = "staRVe_model",
           definition = function(x) {
-  return(random_effects(process(x)))
+  return(pg_re(process(x)))
 })
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
 #' @describeIn staRVe_model Set spatio-temporal random effects
-setReplaceMethod(f = "random_effects",
+setReplaceMethod(f = "pg_re",
                  signature = "staRVe_model",
                  definition = function(x,value) {
-  random_effects(process(x))<- value
+  pg_re(process(x))<- value
   return(x)
 })
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_model Get transient graph random effects
+setMethod(f = "tg_re",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(tg_re(process(x)))
+})
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_model Set transient graph random effects
+setReplaceMethod(f = "tg_re",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  tg_re(process(x))<- value
+  return(x)
+})
+
+
+
 
 #' Get/set persistent graph
 #'
@@ -152,6 +176,37 @@ setReplaceMethod(f = "persistent_graph",
                  definition = function(x,value) {
   persistent_graph(process(x))<- value
   return(x)
+})
+
+
+#' Get/set persistent graph
+#'
+#' @param x An object
+#'
+#' @noRd
+setMethod(f = "transient_graph",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(transient_graph(process(x)))
+})
+setReplaceMethod(f = "transient_graph",
+                 signature = "staRVe_model",
+                 definition = function(x,value) {
+  transient_graph(process(x))<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn staRVe_model Get a list containing the persistent and transient graphs
+setMethod(f = "graph",
+          signature = "staRVe_model",
+          definition = function(x) {
+  graph<- list(persistent_graph = persistent_graph(x),
+               transient_graph = transient_graph(x))
+  return(graph)
 })
 
 
@@ -271,22 +326,6 @@ setReplaceMethod(f = "data_predictions",
 })
 
 
-#' Get/set transient graph
-#'
-#' @param x An object
-#'
-#' @noRd
-setMethod(f = "transient_graph",
-          signature = "staRVe_model",
-          definition = function(x) {
-  return(transient_graph(observations(x)))
-})
-setReplaceMethod(f = "transient_graph",
-                 signature = "staRVe_model",
-                 definition = function(x,value) {
-  transient_graph(observations(x))<- value
-  return(x)
-})
 
 
 ### From staRVe_observation_parameters
@@ -488,18 +527,6 @@ setReplaceMethod(f = "parameters",
 })
 
 
-#' @param x An object
-#'
-#' @export
-#' @describeIn staRVe_model Get a list containing the persistent and transient graphs
-setMethod(f = "graph",
-          signature = "staRVe_model",
-          definition = function(x) {
-  graph<- list(persistent_graph = persistent_graph(x),
-               transient_graph = transient_graph(observations(x)))
-  return(graph)
-})
-
 
 
 ###############
@@ -605,26 +632,10 @@ prepare_staRVe_model<- function(formula,
   )
 
   # Set up the staRVe_process
-  if( "inla.mesh" %in% class(nodes) ) {
-    warning("Supplying an inla.mesh is still an experimental feature and has not been thoroughly tested.")
-    mesh<- .inla.mesh_to_dag(nodes,crs=sf::st_crs(data),n_neighbours=n_neighbours)
-    nodes<- mesh$nodes
-    persistent_graph<- mesh$persistent_graph
-    distance_units(persistent_graph)<- distance_units
-    obs_dag_method(settings(model))<- "mesh"
-
-    mesh$distance_matrix<- units::set_units(mesh$distance_matrix,
-                                            distance_units,
-                                            mode="standard")
-    extras(settings(model))<- c(extras(settings(model)),
-                                list(adjacency_matrix = mesh$adjacency_matrix,
-                                     distance_matrix = mesh$distance_matrix))
-  } else {}
-
   process(model)<- prepare_staRVe_process(
+    data = data,
     nodes = nodes,
     persistent_graph = persistent_graph,
-    time = as.data.frame(data)[,.time_name(model),drop=FALSE],
     settings = settings(model)
   )
 
@@ -632,7 +643,6 @@ prepare_staRVe_model<- function(formula,
   observations(model)<- prepare_staRVe_observations(
     data = data,
     process = process(model),
-    transient_graph = transient_graph,
     settings = settings(model),
     distribution = distribution,
     link = link
@@ -655,57 +665,82 @@ prepare_staRVe_model<- function(formula,
 setMethod(f = "TMB_in",
           signature = "staRVe_model",
           definition = function(x) {
-  ###
-  ### Things input as data
-  ###
+  min_t<- min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))
   data<- list(
     model = "staRVe_model",
-    # Convert distribution and link (char) to (int)
+    conditional_sim = FALSE,
+    pg_edges = edges(idxR_to_C(persistent_graph(x))),
+    pg_dists = distances(persistent_graph(x)),
+    tg_t = .time_from_formula(formula(settings(x)),locations(tg_re(x)))[[1]]-min_t,
+    tg_edges = edges(idxR_to_C(transient_graph(x))),
+    tg_dists = distances(transient_graph(x)),
+    cv_code = .covariance_to_code(covariance_function(x)),
     distribution_code = .distribution_to_code(response_distribution(x)),
     link_code = .link_to_code(link_function(x)),
-    # Get time index, observations, and graph for observations
-    y_time = c(dat(x)[,.time_name(x),drop=TRUE]),
-    obs_y = as.matrix(.response_from_formula(formula(x),dat(x))),
-    ys_edges = edges(idxR_to_C(graph(x)$transient_graph)),
-    ys_dists = distances(graph(x)$transient_graph),
-    # Get time index of random effects in transient graph
-    # If length>0, need an additional random effect
-    resp_w_time = c(dat(x)[
-        sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1, # Which edges have more than 1 in-node?
-        .time_name(x),drop=TRUE]),
-    # Get covariates, and sample.size for binomial
-    mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
+    obs = as.matrix(.response_from_formula(formula(x),dat(x))),
+    idx = cbind(
+      dat(x)$graph_idx-1,
+      .time_from_formula(formula(x),dat(x))[[1]]-min_t
+    ),
     sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
-    # Convert covariance function (char) to (int)
-    covar_code = .covariance_to_code(covariance_function(x)),
-    # Get time index and graph for spatio-temporal random effects
-    ws_edges = edges(idxR_to_C(graph(x)$persistent_graph)),
-    ws_dists = distances(graph(x)$persistent_graph),
-    # Pred_* only used for predictions
-    pred_w_time = numeric(0),
-    pred_ws_edges = vector(mode="list",length=0), #list(numeric(0)),
-    pred_ws_dists = vector(mode="list",length=0),
-    # conditional_sim only used in simulations
-    conditional_sim = FALSE
+    mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
+    pred_edges = vector(mode="list",length=0),
+    pred_dists = vector(mode="list",length=0),
+    pred_t = integer(0)
   )
-
-  # Subtract off minimum year so all time indices start at 0
-  time_names<- c(
-    "y_time",
-    "resp_w_time",
-    "pred_w_time"
-  )
-  data[time_names]<- lapply(data[time_names],function(t) {
-    return(t - stars::st_get_dimension_values(random_effects(x),.time_name(x))[[1]])
-  })
-
-  ###
-  ### Things input as parameters
-  ###
-  ### Ensure parameters are in valid parameter space,
-  ### but if they're fixed leave them as is.
-  ### Need to convert the natural scale parameters to working scale as well
   para<- list(
+    ts_re = time_effects(x)[["w"]],
+    working_ts_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        c(time_parameters(x)[[v]]["mu","par"],
+          ifelse( # -1 <= ar1 <= +1
+              (time_parameters(x)[[v]]["ar1","par"] >= -1
+                && time_parameters(x)[[v]]["ar1","par"] <= 1) ||
+              time_parameters(x)[[v]]["ar1","fixed"] == TRUE,
+            qlogis(0.5*(1+time_parameters(x)[[v]]["ar1","par"])),
+            qlogis(0.5*(1+0))
+          ),
+          ifelse( # sd > 0
+              time_parameters(x)[[v]]["sd","par"] > 0 ||
+              time_parameters(x)[[v]]["sd","fixed"] == TRUE,
+            log(time_parameters(x)[[v]]["sd","par"]),
+            log(1)
+          )
+        )
+      })
+    ),
+    pg_re = pg_re(x)[["w"]],
+    tg_re = (if(nrow(locations(tg_re(x))) == 0) {
+        array(0,dim=c(0,staRVe:::.n_response(formula(x))))
+      } else {
+        values(tg_re(x))[["w"]]
+      }),
+    working_cv_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        switch(covariance_function(x)[[v]],
+          c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
+            ifelse( # std. dev. > 0
+                spatial_parameters(x)[[v]]["sd","par"] > 0 ||
+                spatial_parameters(x)[[v]]["sd","fixed"] == TRUE,
+              log(spatial_parameters(x)[[v]]["sd","par"]),
+              log(1)
+            ),
+            ifelse( # rho > 0
+              spatial_parameters(x)[[v]]["range","par"] > 0 ||
+              spatial_parameters(x)[[v]]["range","fixed"] == TRUE,
+              log(spatial_parameters(x)[[v]]["range","par"]),
+              log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
+            ),
+            ifelse( # nu > 0
+                spatial_parameters(x)[[v]]["nu","par"] > 0 ||
+                spatial_parameters(x)[[v]]["nu","fixed"] == TRUE,
+              log(spatial_parameters(x)[[v]]["nu","par"]),
+              log(0.5)
+            )
+          )
+        )}
+      )
+    ),
     working_response_pars = do.call(.cbind_no_recycle,
       lapply(seq(.n_response(formula(x))),function(v) {
         switch(response_distribution(x)[[v]],
@@ -740,9 +775,8 @@ setMethod(f = "TMB_in",
           compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
                 response_parameters(x)[[v]]["dispersion","par"] > 0 ||
                 response_parameters(x)[[v]]["dispersion","fixed"] == TRUE,
-              -log(response_parameters(x)[[v]]["dispersion","par"]),
-              # negative sign since we want >0 to be over-dispersion
-              -log(1)
+              log(response_parameters(x)[[v]]["dispersion","par"]),
+              log(1)
             ),
           tweedie = c( # tweedie
             ifelse( # dispersion>0
@@ -762,74 +796,25 @@ setMethod(f = "TMB_in",
         )}
       )
     ),
-    mean_pars = do.call(.cbind_no_recycle,
+    beta = do.call(.cbind_no_recycle,
       lapply(seq(.n_response(formula(x))),function(v) {
         fixed_effects(x)[[v]][colnames(data$mean_design),"par"]
       })
     ),
-    resp_w = matrix(0,
-      nrow = sum(sapply(lapply(edges(graph(x)$transient_graph),`[[`,2),length) > 1), # How many extra random effects?
-      ncol = .n_response(formula(x))
-    ),
-    working_space_pars = do.call(.cbind_no_recycle,
+    pred_re = array(0,dim=c(0,.n_response(formula(x))))
+  )
+  rand<- c("ts_re","pg_re","tg_re","pred_re")
+  map<- list(
+    working_ts_pars = do.call(.cbind_no_recycle,
       lapply(seq(.n_response(formula(x))),function(v) {
-        switch(covariance_function(x)[[v]],
-          c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
-            ifelse( # std. dev. > 0
-                spatial_parameters(x)[[v]]["sd","par"] > 0 ||
-                spatial_parameters(x)[[v]]["sd","fixed"] == TRUE,
-              log(spatial_parameters(x)[[v]]["sd","par"]),
-              log(1)
-            ),
-            ifelse( # rho > 0
-              spatial_parameters(x)[[v]]["range","par"] > 0 ||
-              spatial_parameters(x)[[v]]["range","fixed"] == TRUE,
-              log(spatial_parameters(x)[[v]]["range","par"]),
-              log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
-            ),
-            ifelse( # nu > 0
-                spatial_parameters(x)[[v]]["nu","par"] > 0 ||
-                spatial_parameters(x)[[v]]["nu","fixed"] == TRUE,
-              log(spatial_parameters(x)[[v]]["nu","par"]),
-              log(0.5)
-            )
-          )
-        )}
-      )
-    ),
-    time_effects = time_effects(x)[["w"]],
-    working_time_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
-        c(time_parameters(x)[[v]]["mu","par"],
-          ifelse( # -1 <= ar1 <= +1
-              (time_parameters(x)[[v]]["ar1","par"] >= -1
-                && time_parameters(x)[[v]]["ar1","par"] <= 1) ||
-              time_parameters(x)[[v]]["ar1","fixed"] == TRUE,
-            qlogis(0.5*(1+time_parameters(x)[[v]]["ar1","par"])),
-            qlogis(0.5*(1+0))
-          ),
-          ifelse( # sd > 0
-              time_parameters(x)[[v]]["sd","par"] > 0 ||
-              time_parameters(x)[[v]]["sd","fixed"] == TRUE,
-            log(time_parameters(x)[[v]]["sd","par"]),
-            log(1)
-          )
-        )
+        time_parameters(x)[[v]][,"fixed"]
       })
     ),
-    proc_w = random_effects(x)[["w"]],
-    pred_w = matrix(0,nrow=0,ncol=.n_response(formula(x)))
-  )
-
-  ###
-  ### Which parameters are random effects?
-  ###
-  rand<- c("resp_w","time_effects","proc_w","pred_w")
-
-  ###
-  ### Which parameters should be fixed at their value and not estimated?
-  ###
-  map<- list(
+    working_cv_pars = do.call(.cbind_no_recycle,
+      lapply(seq(.n_response(formula(x))),function(v) {
+        spatial_parameters(x)[[v]][,"fixed"]
+      })
+    ),
     working_response_pars = do.call(.cbind_no_recycle,
       lapply(seq(.n_response(formula(x))),function(v) {
         switch((nrow(response_parameters(x)[[v]]) > 0)+1,
@@ -838,19 +823,9 @@ setMethod(f = "TMB_in",
         )
       })
     ),
-    mean_pars = do.call(.cbind_no_recycle,
+    beta = do.call(.cbind_no_recycle,
       lapply(seq(.n_response(formula(x))),function(v) {
         fixed_effects(x)[[v]][colnames(data$mean_design),"fixed"]
-      })
-    ),
-    working_space_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
-        spatial_parameters(x)[[v]][,"fixed"]
-      })
-    ),
-    working_time_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
-        time_parameters(x)[[v]][,"fixed"]
       })
     )
   )
@@ -882,28 +857,34 @@ setMethod(f = "update_staRVe_model",
 
   # Spatial parameters
   for( i in seq(.n_response(formula(x))) ) {
-    spatial_parameters(x)[[i]]$par<- sdr_est$space_pars[,i]
-    spatial_parameters(x)[[i]]$se<- sdr_se$space_pars[,i]
+    spatial_parameters(x)[[i]]$par<- sdr_est$cv_pars[,i]
+    spatial_parameters(x)[[i]]$se<- sdr_se$cv_pars[,i]
   }
 
   # Time parameters
   for( i in seq(.n_response(formula(x))) ) {
-    time_parameters(x)[[i]]$par<- sdr_est$time_pars[,i]
-    time_parameters(x)[[i]]$se<- sdr_se$time_pars[,i]
+    time_parameters(x)[[i]]$par<- sdr_est$ts_pars[,i]
+    time_parameters(x)[[i]]$se<- sdr_se$ts_pars[,i]
   }
 
   # Temporal random effects
-  time_effects(x)$w<- sdr_est$time_effects
-  time_effects(x)$se<- sdr_se$time_effects
+  time_effects(x)$w<- sdr_est$ts_re
+  time_effects(x)$se<- sdr_se$ts_re
 
-  # Spatio-temporal random effects
-  random_effects(x)$w<- sdr_est$proc_w
-  random_effects(x)$se<- sdr_se$proc_w
+  # Persistent graph random effects
+  pg_re(x)$w<- sdr_est$pg_re
+  pg_re(x)$se<- sdr_se$pg_re
+
+  # Transient graph random effects
+  if( nrow(locations(tg_re(x))) > 0 ) {
+    values(tg_re(x))$w<- sdr_est$tg_re
+    values(tg_re(x))$se<- sdr_se$tg_re
+  } else {}
 
   # Fixed effects
   for( i in seq(.n_response(formula(x))) ) {
-    fixed_effects(x)[[i]]$par<- sdr_est$mean_pars[,i]
-    fixed_effects(x)[[i]]$se<- sdr_se$mean_pars[,i]
+    fixed_effects(x)[[i]]$par<- sdr_est$beta[,i]
+    fixed_effects(x)[[i]]$se<- sdr_se$beta[,i]
   }
 
   # Response distribution parameters
@@ -915,28 +896,17 @@ setMethod(f = "update_staRVe_model",
     } else {}
   }
 
-  # Update the random effects corresponding to the observations
-  resp_w_idx<- 1
+  # Update the random effects for the observations
+  s<- dat(x)$graph_idx
+  t<- .time_from_formula(formula(x),dat(x))[[1]]-min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
+  std_tg_t<- .time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
   for( i in seq(nrow(dat(x))) ) {
-    if( length(edges(graph(x)$transient_graph)[[i]][["from"]]) == 1 ) {
-      # If length == 1, take random effect from persistent graph
-      this_year<- dat(x)[i,.time_name(x),drop=TRUE]
-      for( v in seq(.n_response(formula(x))) ) {
-        w_se<- as.numeric(random_effects(x)[c("w","se"),
-                                            edges(graph(x)$transient_graph)[[i]][["from"]],
-                                            which(stars::st_get_dimension_values(random_effects(x),.time_name(x))==this_year),
-                                            v,
-                                            drop=TRUE])
-        predictions(data_predictions(x))[["w"]][i,v]<- w_se[[v]]
-        predictions(data_predictions(x))[["w_se"]][i,v]<- w_se[[v]]
-      }
+    if( s[[i]] <= dim(pg_re(x))[[1]] ) {
+      values(data_predictions(x))$w[i,]<- pg_re(x)$w[s[[i]],t[[i]],]
+      values(data_predictions(x))$w_se[i,]<- pg_re(x)$se[s[[i]],t[[i]],]
     } else {
-      # if length > 1, take random effect from resp_w
-      for( v in seq(.n_response(formula(x))) ) {
-        predictions(data_predictions(x))[["w"]][i,v]<- sdr_est$resp_w[resp_w_idx,v]
-        predictions(data_predictions(x))[["w_se"]][i,v]<- sdr_se$resp_w[resp_w_idx,v]
-      }
-      resp_w_idx<- resp_w_idx+1
+      values(data_predictions(x))$w[i,]<- values(tg_re(x))$w[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
+      values(data_predictions(x))$w_se[i,]<- values(tg_re(x))$se[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
     }
   }
 

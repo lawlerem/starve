@@ -10,8 +10,11 @@
 \alias{settings,staRVe_model-method}
 \alias{time_effects,staRVe_model-method}
 \alias{time_effects<-,staRVe_model-method}
-\alias{random_effects,staRVe_model-method}
-\alias{random_effects<-,staRVe_model-method}
+\alias{pg_re,staRVe_model-method}
+\alias{pg_re<-,staRVe_model-method}
+\alias{tg_re,staRVe_model-method}
+\alias{tg_re<-,staRVe_model-method}
+\alias{graph,staRVe_model-method}
 \alias{covariance_function,staRVe_model-method}
 \alias{covariance_function<-,staRVe_model-method}
 \alias{spatial_parameters,staRVe_model-method}
@@ -36,7 +39,6 @@
 \alias{formula<-,staRVe_model-method}
 \alias{parameters,staRVe_model-method}
 \alias{parameters<-,staRVe_model,staRVe_parameters-method}
-\alias{graph,staRVe_model-method}
 \title{An S4 class describing a staRVe model.}
 \usage{
 \S4method{staRVe_fit}{staRVe_model}(x, silent = FALSE, ...)
@@ -51,9 +53,15 @@
 
 \S4method{time_effects}{staRVe_model}(x) <- value
 
-\S4method{random_effects}{staRVe_model}(x)
+\S4method{pg_re}{staRVe_model}(x)
 
-\S4method{random_effects}{staRVe_model}(x) <- value
+\S4method{pg_re}{staRVe_model}(x) <- value
+
+\S4method{tg_re}{staRVe_model}(x)
+
+\S4method{tg_re}{staRVe_model}(x) <- value
+
+\S4method{graph}{staRVe_model}(x)
 
 \S4method{covariance_function}{staRVe_model}(x)
 
@@ -102,8 +110,6 @@
 \S4method{parameters}{staRVe_model}(x)
 
 \S4method{parameters}{staRVe_model,staRVe_parameters}(x) <- value
-
-\S4method{graph}{staRVe_model}(x)
 }
 \arguments{
 \item{x}{An object}
@@ -140,9 +146,15 @@ and random effects
 
 \item \code{time_effects<-}: Set temporal random effects
 
-\item \code{random_effects}: Get spatio-temporal random effects
+\item \code{pg_re}: Get persistent graph random effects
 
-\item \code{random_effects<-}: Set spatio-temporal random effects
+\item \code{pg_re<-}: Set spatio-temporal random effects
+
+\item \code{tg_re}: Get transient graph random effects
+
+\item \code{tg_re<-}: Set transient graph random effects
+
+\item \code{graph}: Get a list containing the persistent and transient graphs
 
 \item \code{covariance_function}: Get covariance function
 
@@ -197,8 +209,6 @@ get_staRVe_distributions("link") for valid covariance functions.
 \item \code{parameters}: Get parameters
 
 \item \code{parameters<-}: Set parameters
-
-\item \code{graph}: Get a list containing the persistent and transient graphs
 }}
 
 \section{Slots}{

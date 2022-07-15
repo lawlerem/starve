@@ -60,21 +60,23 @@ test_that("TMB in (R to C++)",{
   TMB_in<- TMB_in(sm)
 
   expect_equal(TMB_in$data$model,"staRVe_model")
+  expect_equal(dim(TMB_in$para$ts_re),c(1,1))
+  expect_equal(dim(TMB_in$para$working_ts_pars),c(3,1))
+
+  expect_equal(dim(TMB_in$para$pg_re),c(9,1,1))
+  expect_equal(dim(TMB_in$para$tg_re),c(0,1))
+  expect_equal(TMB_in$data$cv_code,.covariance_to_code("exponential"))
+  expect_equal(dim(TMB_in$para$working_cv_pars),c(3,1))
+
   expect_equal(TMB_in$data$distribution_code,.distribution_to_code("gaussian"))
   expect_equal(TMB_in$data$link_code,.link_to_code("identity"))
-  expect_equal(TMB_in$data$resp_w_time,integer(0))
-  expect_equal(TMB_in$data$mean_design,matrix(TRUE,nrow=9,ncol=0,dimnames=list(NULL,NULL)))
-  expect_equal(TMB_in$data$sample_size,matrix(1,nrow=9,ncol=1,dimnames=list(NULL,list("V1"))))
-  expect_equal(TMB_in$data$covar_code,.covariance_to_code("exponential"))
-  expect_equal(TMB_in$data$pred_w_time,integer(0))
-
   expect_equal(dim(TMB_in$para$working_response_pars),c(1,1))
-  expect_equal(dim(TMB_in$para$mean_pars),c(0,1))
-  expect_equal(length(TMB_in$para$resp_w),0)
-  expect_equal(dim(TMB_in$para$working_space_pars),c(3,1))
-  expect_equal(dim(TMB_in$para$time_effects),c(1,1))
-  expect_equal(dim(TMB_in$para$working_time_pars),c(3,1))
-  expect_equal(dim(TMB_in$para$proc_w),c(9,1,1))
+  expect_equal(unname(TMB_in$data$obs),array(dat(sm)$y,dim=c(9,1)))
+  expect_equal(TMB_in$data$idx,array(cbind(dat(sm)$graph_idx-1,0),dim=c(9,2)))
+  expect_equal(TMB_in$data$sample_size,matrix(1,nrow=9,ncol=1,dimnames=list(NULL,list("V1"))))
+  expect_equal(TMB_in$data$mean_design,matrix(TRUE,nrow=9,ncol=0,dimnames=list(NULL,NULL)))
+  expect_equal(dim(TMB_in$para$beta),c(0,1))
+
 
 
   ### Multiple years with some non-node observations
@@ -95,21 +97,23 @@ test_that("TMB in (R to C++)",{
   )
   TMB_in<- TMB_in(sm)
 
+  expect_equal(TMB_in$data$model,"staRVe_model")
+  expect_equal(dim(TMB_in$para$ts_re),c(3,1))
+  expect_equal(dim(TMB_in$para$working_ts_pars),c(3,1))
+
+  expect_equal(dim(TMB_in$para$pg_re),c(9,3,1))
+  expect_equal(dim(TMB_in$para$tg_re),c(3,1))
+  expect_equal(TMB_in$data$cv_code,.covariance_to_code("gaussian"))
+  expect_equal(dim(TMB_in$para$working_cv_pars),c(3,1))
+
   expect_equal(TMB_in$data$distribution_code,.distribution_to_code("compois"))
   expect_equal(TMB_in$data$link_code,.link_to_code("log"))
-  expect_equal(TMB_in$data$resp_w_time,c(1,2,2))
-  expect_equal(TMB_in$data$mean_design,matrix(with(dat(sm),c(x1,x2,x1*x2)),nrow=30,ncol=3,dimnames=list(NULL,c("x1","x2","I(x1 * x2)"))))
-  expect_equal(TMB_in$data$sample_size,matrix(dat(sm)$ss,nrow=30,ncol=1,dimnames=list(NULL,list("ss"))))
-  expect_equal(TMB_in$data$covar_code,.covariance_to_code("gaussian"))
-  expect_equal(TMB_in$data$pred_w_time,integer(0))
-
   expect_equal(dim(TMB_in$para$working_response_pars),c(1,1))
-  expect_equal(dim(TMB_in$para$mean_pars),c(3,1))
-  expect_equal(length(TMB_in$para$resp_w),3)
-  expect_equal(dim(TMB_in$para$working_space_pars),c(3,1))
-  expect_equal(dim(TMB_in$para$time_effects),c(3,1))
-  expect_equal(dim(TMB_in$para$working_time_pars),c(3,1))
-  expect_equal(dim(TMB_in$para$proc_w),c(9,3,1))
+  expect_equal(unname(TMB_in$data$obs),array(dat(sm)$y,dim=c(nrow(df),1)))
+  expect_equal(TMB_in$data$idx,array(cbind(dat(sm)$graph_idx-1,dat(sm)$t-2000),dim=c(nrow(df),2)))
+  expect_equal(TMB_in$data$sample_size,matrix(dat(sm)$ss,nrow=30,ncol=1,dimnames=list(NULL,list("ss"))))
+  expect_equal(TMB_in$data$mean_design,matrix(with(dat(sm),c(x1,x2,x1*x2)),nrow=30,ncol=3,dimnames=list(NULL,c("x1","x2","I(x1 * x2)"))))
+  expect_equal(dim(TMB_in$para$beta),c(3,1))
 })
 
 # -- update_staRVe_model (from staRVe_model.R)

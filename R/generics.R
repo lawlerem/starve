@@ -23,6 +23,10 @@ NULL
 
 # C
 
+#' @noRd
+setGeneric(name = ".create_graph_idx",
+           def = function(x,y,...) standardGeneric(".create_graph_idx")
+)
 
 
 
