@@ -42,6 +42,10 @@ setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn dag Set edge list (for internal use only)
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -59,6 +63,10 @@ setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn dag Set list of edge distances (for internal use only)
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -79,7 +87,7 @@ setMethod(f = "distance_units",
 #' @param x An object
 #' @param value A replacement value
 #' @export
-#' @describeIn dag Set distance units. Distances are automatically converted
+#' @describeIn dag Set distance units. Graph distances are automatically converted
 #'   to the new units.
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
@@ -110,29 +118,35 @@ setReplaceMethod(f = "distance_units",
 
 #' Construct directed acyclic graphs
 #'
-#' @description
-#' A directed acyclic graph is stored as an ordered list. The ith element of the
-#'   list is a vector containing indices j such that there is a directed edge
-#'   from node j to node i, or possibly node (i+k-1) as detailed below.
-#'
-#' @param x An \code{sf} object of point geometries
-#' @param y An \code{sf} object of point geometries containing possible parents
+#' @param x,y \code{sf} objects of point geometries
 #' @param settings An object of class \code{staRVe_settings}
-#' @param check_intersection Logical. If true, duplicated locations will be checked
 #' @param silent Should intermediate calculations be shown?
-#' @param time The time index for each location in x
-
 #'
-#' @return An object of class \code{dag}
+#' @return An object of class \code{dag}; construct_dag instead returns a list
+#'   with elements "locations" giving the sorted copy of locations and "dag"
+#'   giving the constructed graph of class \code{dag}.
+#'
+#' @seealso dag For class definition of directed acyclic graphs
 #'
 #' @name construct_dag
 NULL
 
-#' @describeIn construct_dag Construct a directed acyclic graph from a single
-#'   \code{sf} object. The first element of the ordered list contains the indices
-#'   for the first k rows, where k is the n_neighbours settings. The ith element
-#'   contains the parents for the (i+k-1)th row of x. Also returns a sorted copy
-#'   of the locations x.
+#' @describeIn construct_dag Construct a directed acyclic graph for a single
+#'   \code{sf} object. This function uses a greedy algorithm to sort the locations
+#'   of x. The first location of x is the first location of the sorted copy.
+#'   Subsequent locations of the sorted copy are found iteratively by taking
+#'   the as-of-yet unsorted location closest to any of the already sorted locations.
+#'
+#'   After sorting the locations, the directed acyclic graph is constructed by first
+#'   creating an initial graph element with no "from" vertices and "to" vertices
+#'   consisting of the first n sorted locations (where n equals the \code{n_neighbours}
+#'   element of the settings argument). Any locations not present in the "to" vertices
+#'   of the initial graph elements are given their own graph element with a single
+#'   "to" vertex for that location and "from" vertices the n closest
+#'   (by distance) locations before it in the sorted copy.
+#'
+#'   A vertex with index i in either the "to" or "from" vertices represents the location
+#'   in row i of the sorted copy of x.
 #'
 #' @export
 construct_dag<- function(x,
@@ -152,9 +166,24 @@ construct_dag<- function(x,
               dag = dag))
 }
 
-#' @describeIn construct_dag Construct a directed acyclic graph from one \code{sf}
-#'   object to another. Output is a list whose t'th element is the transient graph
-#'   for time t. y should be the persistent graph locations, x should be data locations.
+#' @param time A numeric vector containing the time index of each row in x.
+#'
+#' @describeIn construct_dag Construct a directed acyclic graph with "to" vertices
+#'   representing locations in x and "from" vertices representing locations in y.
+#'   Unlike construct_dag, neither x nor y are sorted, but the time argument
+#'   must already be sorted when given as an argument (make sure that the locations
+#'   in x are likewise sorted according to their respective times).
+#'
+#'   The locations in x are first split into groups according to the values of the
+#'   time argument. Then within each group each location is given a graph element
+#'   with a single "to" vertex for that location (in x) and whose "from" vertices
+#'   are the n closest locations (in y) (where n equals the \code{n_neighbours} element
+#'   of the settings argument).
+#'
+#'   A vertex with index i in the "to" vertices represents the location in row i in the
+#'   subset of x in the same time index group. Note that the same value of i may be used
+#'   if there is more than one unique value in the time argument. A vertex with i in the
+#'   "from" vertices represents the location in row i of y.
 #'
 #' @export
 construct_transient_dag<- function(x,
@@ -180,7 +209,9 @@ construct_transient_dag<- function(x,
     time<- rep(0,nrow(x))
   } else if( length(time) != nrow(x) ) {
     stop("Time needs to be the same length as x.")
-  }
+  } else if( !all.equal(time,sort(time)) ) {
+    stop("Time must be sorted.")
+  } else {}
 
   splitx<- split(x,factor(time-min(time)+1,levels=seq(max(time)-min(time)+1)),drop=FALSE)
   tg<- lapply(splitx,function(t_x) {
@@ -227,9 +258,28 @@ construct_transient_dag<- function(x,
 }
 
 #' @param pred A long_stars object
-#' @param model A staRVe_model_fit object
+#' @param model A staRVe_model object
 #'
-#' @noRd
+#' @describeIn construct_dag Works essentially the same as \code{construct_transient_dag},
+#'   with a few minor differences. Instead of directly supplying the locations for the
+#'   "from" vertices, the "from" vertices are taken from the locations used in the
+#'   persistent graph (construct_dag) and transient graph (construct_transient_dag)
+#'   from the model argument.
+#'
+#'   The locations in pred are grouped according to their time index in pred.
+#'   Each location is given a graph element with a single "to" vertex representing
+#'   that location in pred. If that location is the same as any model location
+#'   then the graph element has a single "from" vertex representing that model
+#'   location, otherwise "from" vertices are the n closest model locations (where
+#'   n equals the \code{n_neighbours} element of the settings argument).
+#'
+#'   A vertex with index i in the "to" vertices represents the location in row i
+#'   of pred (regardless of time index group). A vertex with index j in the "from"
+#'   vertices represents the j'th location of the persistent graph if j <= k where
+#'   k is the number of persistent graph locations, or represents the  (j-k)'th location
+#'   of the transient graph with the same time index as the "to" vertex.
+#'
+#' @export
 construct_pred_dag<- function(pred,
                               model,
                               silent = TRUE) {
@@ -245,6 +295,11 @@ construct_pred_dag<- function(pred,
 
   pg_s<- sf::st_geometry(.locations_from_stars(pg_re(model)))
   tg_s<- sf::st_geometry(locations(tg_re(model)))
+
+  t<- .time_from_formula(formula(model),locations(pred))[[1]]
+  if( !all.equal(t,sort(t)) ) {
+    stop("The rows of pred must be sorted by their time index.")
+  } else {}
 
   g_by_t<- lapply(stars::st_get_dimension_values(pg_re(model),.time_name(model)),function(t) {
     pr_s<- locations(pred)[.time_from_formula(formula(model),locations(pred))[[1]]==t,]
@@ -320,9 +375,7 @@ construct_pred_dag<- function(pred,
 
 
 
-#' Add one to each integer in edges
-#'
-#' @noRd
+#' @describeIn idx_exchange Add 1 to all vertices in the graph edge list
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
@@ -333,9 +386,7 @@ setMethod(f = "idxC_to_R",
   })
   return(x)
 })
-#' Subtract one from each integer in edges
-#'
-#' @noRd
+#' @describeIn idx_exchange Subtract 1 from all vertices in the graph edge list
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {

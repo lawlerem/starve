@@ -9,17 +9,19 @@
 #' \itemize{
 #'   \item dag
 #'   \item long_stars
+#'   \item staRVe_settings
 #'   \item staRVe_process_parameters
 #'   \item staRVe_process
 #'   \item staRVe_observation_parameters
 #'   \item staRVe_observations
-#'   \item staRVe_settings
 #'   \item staRVe_model
 #'   \item staRVe_tracing
 #'   \item TMB_out
 #'   \item staRVe_model_fit
 #'   \item staRVe_parameters
 #' }
+#'
+#' @family staRVe_classes
 #'
 #' @name staRVe_classes
 NULL
@@ -29,6 +31,8 @@ NULL
 #' Constructors for the staRVe package
 #'
 #' @param .Object The object to create
+#'
+#' @keywords internal
 #'
 #' @name  staRVe-construct
 NULL
@@ -41,11 +45,22 @@ setOldClass("stars")
 
 #' An S4 class to hold a directed acyclic graph with distances.
 #'
-#' @slot edges A list of integer vector, indexing the parents of each node.
-#' @slot distances A list of matrices containing the distances between
-#'   nodes and parents.
+#' @slot edges A list whose elements consist of a "to" vector and a
+#'   "from" vector. There is a directed edge in the graph from each vertex in
+#'   "from" to each vertex in "to". If there are multiple vertices in "to" then
+#'   there is an undirected edge between all vertices in "to" (forming a Kn graph).
+#' @slot distances A list whose elements consist of a distance matrix for the edges
+#'   in the correponding entry of edges. The rows/columns of the distance matrix
+#'   are in the same order as the vertices in that edge list, starting with the
+#'   vertices in "to" and then the vertices in "from".
 #' @slot distance_units The units used for distance calculation.  Must be compatible
 #'   with units::set_units.
+#'
+#' @aliases dag
+#'
+#' @seealso construct_dag Functions used to construct direct acyclic graphs
+#'
+#' @family staRVe_classes
 setClass(
   Class = "dag",
   slots = c(
@@ -57,8 +72,16 @@ setClass(
 
 #' An S4 class to hold predictions from a staRVe model.
 #'
-#' @slot predictions A stars object
-#' @slot locations An sf object with covariates, a time column, and point geometries.
+#' @details The \code{predictions} slot will have at least 1 dimension, the first
+#'   of which must be named \code{idx} and is identical to the row dimension of
+#'   \code{locations}.
+#'
+#' @slot predictions A stars object.
+#' @slot locations An sf object with at least a time column and point geometries.
+#'
+#' @aliases dag
+#'
+#' @family staRVe_classes
 setClass(
   Class = "long_stars",
   slots = c(
@@ -68,12 +91,38 @@ setClass(
 )
 
 
+#' An S4 class to hold extra settings for a staRVe model
+#'
+#' @slot formula A formula
+#' @slot n_neighbours The number of parents for each node in the graph.
+#' @slot distance_units The units used for distance calculation.  Must be compatible
+#'   with units::set_units.
+#' @slot max_distance The maximum allowable distance for edges in the transient graph.
+#'
+#' @aliases staRVe_settings
+#'
+#' @family staRVe_classes
+setClass(
+  Class = "staRVe_settings",
+  slots = c(
+    formula = "formula",
+    n_neighbours = "numeric",
+    distance_units = "character",
+    max_distance = "numeric"
+  )
+)
+
+
 #' An S4 class to hold process parameters for a staRVe model.
 #'
-#' @slot covariance_function The covariance function, must be one given by
+#' @slot covariance_function The covariance function(s), must be one from
 #'   get_staRVe_distributions("covariance").
-#' @slot spatial_parameters A list containing spatial parameters for each variable.
-#' @slot time_parameters A list containing time parameters for each variable.
+#' @slot spatial_parameters A list containing spatial parameters for each response variable.
+#' @slot time_parameters A list containing time parameters for each response variable.
+#'
+#' @family staRVe_classes
+#'
+#' @keywords internal
 setClass(
   Class = "staRVe_process_parameters",
   slots = c(
@@ -89,6 +138,12 @@ setClass(
 #' @slot random_effects A stars object containing spatio-temporal random effects.
 #' @slot persistent_graph A dag object describing the dependence graph of the process.
 #' @slot parameters An object of class staRVe_process_parameters.
+#'
+#' @seealso prepare_staRVe_process
+#'
+#' @family staRVe_classes
+#'
+#' @keywords internal
 setClass(
   Class = "staRVe_process",
   slots = c(
@@ -103,13 +158,18 @@ setClass(
 
 #' An S4 class to hold observation parameters for a staRVe model.
 #'
-#' @slot response_distribution The response distribution, must be one given by
+#' @slot response_distribution The response distribution(s), must be one from
 #'   get_staRVe_distributions("distribution").
-#' @slot response_parameters A data.frame containing parameters for the response
-#'   distribution.
-#' @slot link_function The link function, must be one given by
+#' @slot response_parameters A list containing a data.frame of response distribution
+#'   parameters for each response variable.
+#' @slot link_function The link function(s), must be one from
 #'   get_staRVe_distributions("link").
-#' @slot fixed_effects A data.frame containing the fixed effect parameters.
+#' @slot fixed_effects A list containing a data.frame of fixed effect parameters
+#'   for each response variable.
+#'
+#' @family staRVe_classes
+#'
+#' @keywords internal
 setClass(
   Class = "staRVe_observation_parameters",
   slots = c(
@@ -126,6 +186,12 @@ setClass(
 #' @slot transient_graph A dag object describing the dependence of the data on
 #'   the process.
 #' @slot parameters An object of class staRVe_observation_parameters.
+#'
+#' @seealso prepare_staRVe_observations
+#'
+#' @family staRVe_classes
+#'
+#' @keywords internal
 setClass(
   Class = "staRVe_observations",
   slots = c(
@@ -134,32 +200,6 @@ setClass(
   )
 )
 
-#' An S4 class to hold extra settings for a staRVe model
-#'
-#' @slot formula A formula
-#' @slot n_neighbours The number of parents for each node in the graph.
-#' @slot p_far_neighbours The proportion of parents randomly chosen for each node.
-#' @slot distance_units The units used for distance calculation.  Must be compatible
-#'   with units::set_units.
-#' @slot max_distance The maximum distance to look for parents. Does not affect
-#'   parents coming from p_far_neighbours.
-#' @slot obs_dag_method Which method should be used for constructing the transient graph?
-#' @slot extras Any additional settings that aren't essential for the model. E.g.
-#'   could hold an inla.mesh object.
-#'
-#' @aliases staRVe_settings
-setClass(
-  Class = "staRVe_settings",
-  slots = c(
-    formula = "formula",
-    n_neighbours = "numeric",
-    p_far_neighbours = "numeric",
-    distance_units = "character",
-    max_distance = "numeric",
-    obs_dag_method = "character",
-    extras = "list"
-  )
-)
 
 #' An S4 class describing a staRVe model.
 #'
@@ -168,6 +208,10 @@ setClass(
 #' @slot settings A staRVe_settings object.
 #'
 #' @aliases staRVe_model
+#'
+#' @seealso prepare_staRVe_model
+#'
+#' @family staRVe_classes
 setClass(
   Class = "staRVe_model",
   slots = c(
@@ -179,13 +223,15 @@ setClass(
 
 #' An S4 class to hold optimization tracing for a staRVe model
 #'
-#' @slot opt_time A proc_time object. Time used to compute the ML estimates.
-#' @slot hess_time A proc_time object. Time used to compute the hessian matrix.
-#' @slot sdr_time A proc_time object. Time used to compute standard errors.
+#' @slot opt_time A proc_time object. Time elapsed while computing the ML estimates.
+#' @slot hess_time A proc_time object. Time elapsed while computing the hessian matrix.
+#' @slot sdr_time A proc_time object. Time elapsed while computing standard errors.
 #' @slot parameter_hessian The hessian matrix for parameter estimates.
 #' @slot parameter_covariance The covariance matrix for parameter estimates.
 #'
 #' @aliases staRVe_tracing
+#'
+#' @family staRVe_classes
 setClass(
   Class = "staRVe_tracing",
   slots = c(
@@ -203,8 +249,9 @@ setClass(
 #' @slot opt The output of nlminb.
 #' @slot sdr The output of TMB::sdreport.
 #'
-#' @param x An object
-#' @param object An object
+#' @family staRVe_classes
+#'
+#' @keywords internal
 setClass(
   Class = "TMB_out",
   slots = c(
@@ -214,12 +261,16 @@ setClass(
   )
 )
 
-#' An S4 class to hold an optimized staRVe model, extends the staRVe_model class
+#' An extension of the staRVe_model class to hold optimization information
 #'
-#' @slot tracing A staRVe_tracing object.
-#' @slot TMB_out A TMB_out object.
+#' @slot tracing A staRVe_tracing object
+#' @slot TMB_out A TMB_out object
 #'
 #' @aliases staRVe_model_fit
+#'
+#' @seealso staRVe_model, staRVe_tracing, TMB_out
+#'
+#' @family staRVe_classes
 setClass(
   Class = "staRVe_model_fit",
   slots = c(
@@ -238,6 +289,10 @@ setClass(
 ######################
 
 #' An S4 class to collect process and observations parameters.
+#'
+#' @seealso staRVe_process_parameters, staRVe_observation_paraeters, staRVe_model
+#'
+#' @family staRVe_classes
 setClass(
   Class = "staRVe_parameters",
   contains = c("staRVe_process_parameters",

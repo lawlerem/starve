@@ -7,3 +7,21 @@
 \description{
 An S4 class to collect process and observations parameters.
 }
+\seealso{
+staRVe_process_parameters, staRVe_observation_paraeters, staRVe_model
+
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}

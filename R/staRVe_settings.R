@@ -9,11 +9,7 @@ NULL
 
 #' @param formula A formula
 #' @param n_neighbours An integer
-#' @param p_far_neighbours A number between 0 and 1
 #' @param distance_units Which distance units to use
-#' @param max_distance A positive number
-#' @param obs_dag_method The method used to create the transient graph
-#' @param extras A list of extra settings
 #'
 #' @rdname staRVe-construct
 setMethod(
@@ -22,18 +18,12 @@ setMethod(
   definition = function(.Object,
                         formula = new("formula"),
                         n_neighbours = 10,
-                        p_far_neighbours = 0,
                         distance_units = "km",
-                        max_distance = Inf,
-                        obs_dag_method = "standard",
-                        extras = vector(mode="list",length=0)) {
+                        max_distance = Inf) {
     formula(.Object)<- formula
     n_neighbours(.Object)<- n_neighbours
-    p_far_neighbours(.Object)<- p_far_neighbours
     .Object@distance_units<- distance_units
     max_distance(.Object)<- max_distance
-    obs_dag_method(.Object)<- obs_dag_method
-    extras<- extras
 
     return(.Object)
   }
@@ -47,6 +37,7 @@ setMethod(
 ###        ###
 ##############
 
+
 #' @param x An object
 #'
 #' @export
@@ -59,7 +50,7 @@ setMethod(f = "formula",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_settings Set formula
+#' @describeIn staRVe_settings Set model formula
 setReplaceMethod(f = "formula",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -67,11 +58,10 @@ setReplaceMethod(f = "formula",
   return(x)
 })
 
-
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_settings Get maximum number of neighbours
+#' @describeIn staRVe_settings Get maximum number of neighbours used in graphs
 setMethod(f = "n_neighbours",
           signature = "staRVe_settings",
           definition = function(x) return(x@n_neighbours)
@@ -87,30 +77,14 @@ setReplaceMethod(f = "n_neighbours",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_settings Get percentage of far neighbours
-setMethod(f = "p_far_neighbours",
-          signature = "staRVe_settings",
-          definition = function(x) return(x@p_far_neighbours)
-)
-setReplaceMethod(f = "p_far_neighbours",
-                 signature = "staRVe_settings",
-                 definition = function(x,value) {
-  x@p_far_neighbours<- value
-  return(x)
-})
-
-
-#' @param x An object
-#'
-#' @export
-#' @describeIn staRVe_settings Get distance units
+#' @describeIn staRVe_settings Get distance units used for the model.
 setMethod(f = "distance_units",
           signature = "staRVe_settings",
           definition = function(x) return(x@distance_units)
 )
 #' @param x An object
 #' @param value A replacement value
-#"
+#'
 #' @export
 #' @describeIn staRVe_settings Set distance units
 setReplaceMethod(f = "distance_units",
@@ -128,11 +102,16 @@ setReplaceMethod(f = "distance_units",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_settings Get maximum distance for neighbours
+#' @describeIn staRVe_settings Get maximum distance for edges in the graph
 setMethod(f = "max_distance",
           signature = "staRVe_settings",
           definition = function(x) return(x@max_distance)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @export
+#' @describeIn staRVe_settings Set maximum distance for edges in the graph
 setReplaceMethod(f = "max_distance",
                  signature = "staRVe_settings",
                  definition = function(x,value) {
@@ -143,42 +122,8 @@ setReplaceMethod(f = "max_distance",
 
 #' @param x An object
 #'
-#' @export
-#' @describeIn staRVe_settings Get obs_dag_method
-setMethod(f = "obs_dag_method",
-          signature = "staRVe_settings",
-          definition = function(x) return(x@obs_dag_method)
-)
-setReplaceMethod(f = "obs_dag_method",
-                 signature = "staRVe_settings",
-                 definition = function(x,value) {
-  x@obs_dag_method<- value
-  return(x)
-})
-
-
-#' @param x An object
-#'
-#' @export
-#' @describeIn staRVe_settings Get extra settings
-setMethod(f = "extras",
-          signature = "staRVe_settings",
-          definition = function(x) return(x@extras)
-)
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @export
-#' @describeIn staRVe_settings Set miscellaneous settings
-setReplaceMethod(f = "extras",
-                 signature = "staRVe_settings",
-                 definition = function(x,value) {
-  x@extras<- value
-  return(x)
-})
-
-
-
+#' @describeIn staRVe_settings Get the name of the time variable used in formula
+#'   (for internal use only)
 setMethod(f = ".time_name",
           signature = "staRVe_settings",
           definition = function(x) {

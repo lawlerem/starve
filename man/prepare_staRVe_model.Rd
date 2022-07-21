@@ -9,7 +9,6 @@ prepare_staRVe_model(
   data,
   nodes = data,
   n_neighbours = 15,
-  p_far_neighbours = 0,
   persistent_graph = NA,
   transient_graph = NA,
   distribution = "gaussian",
@@ -22,23 +21,15 @@ prepare_staRVe_model(
 )
 }
 \arguments{
-\item{formula}{A formula object used to describe the model including covariate
-effects, temporal effects, and the spatial covariance function. Details are
-given later in the `Details' section.}
+\item{formula}{A formula object. See the 'Details' section below.}
 
-\item{data}{An object of class `sf` containing point geometries. Data
-used for the `formula' object will be found here.}
+\item{data}{An `sf` object containing point geometries, and any other
+variables needed to fit the model.}
 
-\item{nodes}{Either an object of class `sf` containing point geometries, or
-an inla.mesh object (e.g.~from the output of INLA::inla.mesh.2d).
-The default value uses the same locations as the observations. The locations
-will be used as the nodes for the random effects. All locations will be used
-for each year. If an inla.mesh is supplied, the edges of the mesh are used
-to create the persistent graph.}
+\item{nodes}{An `sf` object containing point geometries, defaulting to \code{data}.
+These locations will be used as the locations for the persistent graph.}
 
 \item{n_neighbours}{An integer giving the (maximum) number of parents for each node.}
-
-\item{p_far_neighbours}{What percent of neighbours should be randomly selected?}
 
 \item{persistent_graph}{If an object of class \code{dag} is supplied, that
 graph is used for the persistent graph.}
@@ -46,27 +37,31 @@ graph is used for the persistent graph.}
 \item{transient_graph}{If an object of class \code{dag} is supplied, that
 graph is used for the transient graph.}
 
-\item{distribution}{Which response distribution to use. See
-\code{get_staRVe_distributions}.}
+\item{distribution}{A character vector giving the response distribution(s).
+See \code{get_staRVe_distributions("distribution")} for valid options.
+Defaults to "gassian".}
 
-\item{link}{A character vector giving the response link function. See
-\code{get_staRVe_distributions}. If not supplied a default option is used
-based on the response distribution.}
+\item{link}{A character vector giving the response link function(s). See
+\code{get_staRVe_distributions("link")} for valid options.
+The default link function changes depending on the response distribution.}
 
-\item{silent}{Should intermediate calculations be printed?}
+\item{silent}{Logical. Should intermediate calculations be printed?}
 
-\item{max_dist}{The maximum distance used to search for parents.
+\item{max_dist}{Numeric. The maximum allowable distance for edges in the transient
+graph, or for graphs computed when using the \code{staRVe_predict} function.
 Unless this has a units attribute, units are assumed to be the same as
 the supplied \code{distance_units}.}
 
-\item{distance_units}{Which units should be used for distances?}
+\item{distance_units}{Any value that can be used as a \code{units} object
+from the \code{units} package. Which distance units should the model use?
+Defaults to "km".}
 
-\item{fit}{Should the model be fit in this call? If true, returns a fitted model.}
+\item{fit}{Logical. Should the model be fit in this call?}
 
 \item{...}{Extra options to pass to staRVe_fit if fit=TRUE}
 }
 \value{
-A staRVe_model object. If fit=TRUE, a staRVe_fit object.
+A staRVe_model object. If fit=TRUE, a staRVe_model_fit object.
 }
 \description{
 'prepare_staRVe_model' is used to take an existing `simple features` data.frame
@@ -76,31 +71,37 @@ A staRVe_model object. If fit=TRUE, a staRVe_fit object.
 }
 \details{
 The formula object should always be of the form
-  \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
+  \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)},
+  though possibly with some terms missing.
 
 The variable y should be replaced with the desired response variable.
 
 The sample.size(...) term is only used if the response distribution is
-\code{binomial}, \code{atLeastOneBinomial}, or \code{tweedie}.
-If it is missing the sample sizes are assumed to all be 1.
+  \code{binomial}, \code{atLeastOneBinomial}, or \code{tweedie}.
+  If it is missing the sample sizes are assumed to all be 1.
 
-The variables in the \code{mean(...)} term are linear predictors for the mean
-of the response variable. Any formula valid for the \code{lm} command can be used
-inside the \code{mean(...)}, however any missing values will likely cause errors.
-If the \code{mean(...)} term is missing, no covariates will be used.
+The variables in the \code{mean(...)} term are used as covariates for the mean
+  of the response variable. Any formula valid for the \code{lm} command can be used
+  inside the \code{mean(...)}, such as \code{I(x^2)}. Any missing covariate values
+  will likely cause errors. If the \code{mean(...)} term is missing, no covariates will be used.
 
 The \code{time(...)} term indicates which column, if any, holds the time index.
-The variable t should be replaced with the desired time index. There are currently
-three valid options for the `type' argument in \code{time(t,type="ar1")} --
-"ar1" for an AR(1) structure, "rw" for a random walk, and "independent" for
-independent spatial fields each year. If the \code{time(...)} term is missing,
-all observations are assumed to be at the same time and a purely spatial model
-is used.
+  The variable t should be replaced with the desired time index. There are currently
+  three valid options for the `type' argument in \code{time(t,type="ar1")} --
+  "ar1" for an AR(1) structure, "rw" for a random walk, and "independent" for
+  independent spatial fields each year. If the \code{time(...)} term is missing,
+  all observations are assumed to be at the same time and a purely spatial model
+  is used.
 
 The \code{space(...)} term specifies the spatial covariance function. See
-\code{get_staRVe_distributions("covariance")} for valid names to supply.
-If using the "matern" option you can supply a value for the smoothness
-parameter nu, which will be held constant in model fitting. If nu is not given,
-then it will be freely estimated in the model. If the \code{space(...)} term
-as a whole is missing, an exponential covariance function is assumed.
+  \code{get_staRVe_distributions("covariance")} for valid names to supply.
+  If using the "matern" option you can supply a value for the smoothness
+  parameter nu, which will be held constant in model fitting. If nu is not given,
+  then it will be freely estimated in the model. If the \code{space(...)} term
+  as a whole is missing, an exponential covariance function is assumed.
+}
+\seealso{
+staRVe_model
+
+prepare_staRVe_process, prepare_staRVe_observations
 }

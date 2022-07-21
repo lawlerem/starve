@@ -3,8 +3,11 @@
 \docType{class}
 \name{dag-class}
 \alias{dag-class}
+\alias{dag}
 \alias{edges,dag-method}
+\alias{edges<-,dag-method}
 \alias{distances,dag-method}
+\alias{distances<-,dag-method}
 \alias{distance_units,dag-method}
 \alias{distance_units<-,dag-method}
 \alias{show,dag-method}
@@ -12,7 +15,11 @@
 \usage{
 \S4method{edges}{dag}(x)
 
+\S4method{edges}{dag}(x) <- value
+
 \S4method{distances}{dag}(x)
+
+\S4method{distances}{dag}(x) <- value
 
 \S4method{distance_units}{dag}(x)
 
@@ -34,11 +41,15 @@ An S4 class to hold a directed acyclic graph with distances.
 \itemize{
 \item \code{edges}: Get edge list
 
+\item \code{edges<-}: Set edge list (for internal use only)
+
 \item \code{distances}: Get list of edge distances
+
+\item \code{distances<-}: Set list of edge distances (for internal use only)
 
 \item \code{distance_units}: Get distance units
 
-\item \code{distance_units<-}: Set distance units. Distances are automatically converted
+\item \code{distance_units<-}: Set distance units. Graph distances are automatically converted
 to the new units.
 
 \item \code{show}: Print method
@@ -47,12 +58,35 @@ to the new units.
 \section{Slots}{
 
 \describe{
-\item{\code{edges}}{A list of integer vector, indexing the parents of each node.}
+\item{\code{edges}}{A list whose elements consist of a "to" vector and a
+"from" vector. There is a directed edge in the graph from each vertex in
+"from" to each vertex in "to". If there are multiple vertices in "to" then
+there is an undirected edge between all vertices in "to" (forming a Kn graph).}
 
-\item{\code{distances}}{A list of matrices containing the distances between
-nodes and parents.}
+\item{\code{distances}}{A list whose elements consist of a distance matrix for the edges
+in the correponding entry of edges. The rows/columns of the distance matrix
+are in the same order as the vertices in that edge list, starting with the
+vertices in "to" and then the vertices in "from".}
 
 \item{\code{distance_units}}{The units used for distance calculation.  Must be compatible
 with units::set_units.}
 }}
 
+\seealso{
+construct_dag Functions used to construct direct acyclic graphs
+
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}

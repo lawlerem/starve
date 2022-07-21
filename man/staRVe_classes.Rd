@@ -13,11 +13,11 @@ To see documentation for a particular class, load the package and run e.g.
 \itemize{
   \item dag
   \item long_stars
+  \item staRVe_settings
   \item staRVe_process_parameters
   \item staRVe_process
   \item staRVe_observation_parameters
   \item staRVe_observations
-  \item staRVe_settings
   \item staRVe_model
   \item staRVe_tracing
   \item TMB_out
@@ -26,3 +26,19 @@ To see documentation for a particular class, load the package and run e.g.
 }
 }
 
+\seealso{
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}

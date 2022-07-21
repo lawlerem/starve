@@ -49,6 +49,10 @@ setMethod(f = "opt_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@opt_time)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_tracing Set optimization time (for internal use only)
 setReplaceMethod(f = "opt_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -66,6 +70,10 @@ setMethod(f = "hess_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@hess_time)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_tracing Set hessian computation time (for internal use only)
 setReplaceMethod(f = "hess_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -82,6 +90,10 @@ setMethod(f = "sdr_time",
           signature = "staRVe_tracing",
           definition = function(x) return(x@sdr_time)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_tracing Set standard error computation time (for internal use only)
 setReplaceMethod(f = "sdr_time",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -98,6 +110,10 @@ setMethod(f = "parameter_hessian",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_hessian)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_tracing Set parameter hessian matrix (for internal use only)
 setReplaceMethod(f = "parameter_hessian",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -114,6 +130,10 @@ setMethod(f = "parameter_covariance",
           signature = "staRVe_tracing",
           definition = function(x) return(x@parameter_covariance)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_tracing Set parameter covariance matrix (for internal use only)
 setReplaceMethod(f = "parameter_covariance",
                  signature = "staRVe_tracing",
                  definition = function(x,value) {
@@ -130,7 +150,8 @@ setReplaceMethod(f = "parameter_covariance",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Get all timing information
+#' @describeIn staRVe_tracing Get all timing information as a list with elements
+#'   fit, hessian, and sdr.
 setMethod(f = "timing",
           signature = "staRVe_tracing",
           definition = function(x) {

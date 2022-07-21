@@ -37,12 +37,15 @@ setMethod(
 
 #' @param x An object
 #'
-#' @export
 #' @describeIn TMB_out Get TMB::MakeADFun object
 setMethod(f = "obj",
           signature = "TMB_out",
           definition = function(x) return(x@obj)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn TMB_out Set TMB::MakeADFun object
 setReplaceMethod(f = "obj",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -52,12 +55,15 @@ setReplaceMethod(f = "obj",
 
 #' @param x An object
 #'
-#' @export
 #' @describeIn TMB_out Get output of optimizer
 setMethod(f = "opt",
           signature = "TMB_out",
           definition = function(x) return(x@opt)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn TMB_out Set output of optimizer
 setReplaceMethod(f = "opt",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -67,12 +73,15 @@ setReplaceMethod(f = "opt",
 
 #' @param x An object
 #'
-#' @export
 #' @describeIn TMB_out Get output of TMB::sdreport
 setMethod(f = "sdr",
           signature = "TMB_out",
           definition = function(x) return(x@sdr)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn TMB_out Set output of TMB::sdreport
 setReplaceMethod(f = "sdr",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -88,8 +97,7 @@ setReplaceMethod(f = "sdr",
 
 #' @param x An object
 #'
-#' @export
-#' @describeIn TMB_out Get convergence message
+#' @describeIn TMB_out Get convergence message from optimizer
 setMethod(f = "convergence",
           signature = "TMB_out",
           definition = function(x) {

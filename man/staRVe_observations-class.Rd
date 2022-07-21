@@ -33,17 +33,24 @@ An S4 class to hold the observation information for a staRVe model.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{dat}: Get data
+\item \code{dat}: Get data, including response variables,
+time indices, locations, covariates, etc.
 
-\item \code{dat<-}: Set data
+\item \code{dat<-}: Set data. Warning: if you add new rows to
+the data.frame you also need to manually update the transient graph,
+transient graph random effects, and the graph_idx column for the new rows.
 
-\item \code{data_predictions}: Get data predictions
+\item \code{data_predictions}: Get data_predictions, a long_stars object
+with the data (see \code{dat}) and associated random effect predictions.
 
 \item \code{data_predictions<-}: Set data predictions
 
-\item \code{parameters}: Get parameters
+\item \code{parameters}: Get parameters as a
+staRVe_observation_parameters object.
 
-\item \code{parameters<-}: Set parameters
+\item \code{parameters<-}: Set parameters using a new
+staRVe_observation_parameters object. Not the recommended
+way to modify specific parmaeter values, isntead see the package vignette
 }}
 
 \section{Slots}{
@@ -57,3 +64,22 @@ the process.}
 \item{\code{parameters}}{An object of class staRVe_observation_parameters.}
 }}
 
+\seealso{
+prepare_staRVe_observations
+
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}
+\keyword{internal}

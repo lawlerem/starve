@@ -35,15 +35,17 @@ setMethod(
 ###        ###
 ##############
 
-#' Get/set process (staRVe_process)
-#'
 #' @param x An object
 #'
-#' @noRd
+#' @describeIn staRVe_model Get the process part of the model (for internal use only)
 setMethod(f = "process",
           signature = "staRVe_model",
           definition = function(x) return(x@process)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_model Set the process part of the model (for internal use only)
 setReplaceMethod(f = "process",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -53,15 +55,17 @@ setReplaceMethod(f = "process",
 
 
 
-#' Get/set observations (staRVe_observations)
-#'
 #' @param x An object
 #'
-#' @noRd
+#' @describeIn staRVe_model Get the observation part of the model (for internal use only)
 setMethod(f = "observations",
           signature = "staRVe_model",
           definition = function(x) return(x@observations)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_model Set the observation part of the model (for internal use only)
 setReplaceMethod(f = "observations",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -79,6 +83,9 @@ setMethod(f = "settings",
           signature = "staRVe_model",
           definition = function(x) return(x@settings)
 )
+#' @param x An object
+#'
+#' @describeIn staRVe_model Set model settings (for internal use only)
 setReplaceMethod(f = "settings",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -226,7 +233,7 @@ setMethod(f = "covariance_function",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set covariance function. Run
+#' @describeIn staRVe_model Set covariance function(s). Run
 #'   get_staRVe_distributions("covariance") for valid covariance functions.
 #'   Setting the covariance function also overwrites the spatial parameters.
 setReplaceMethod(f = "covariance_function",
@@ -249,7 +256,7 @@ setMethod(f = "spatial_parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Get spatial parameters
+#' @describeIn staRVe_model Set spatial parameters
 setReplaceMethod(f = "spatial_parameters",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -285,7 +292,8 @@ setReplaceMethod(f = "time_parameters",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get data
+#' @describeIn staRVe_model Get data including response variables, time indices,
+#'   locations, covariates, etc.
 setMethod(f = "dat",
           signature = "staRVe_model",
           definition = function(x) {
@@ -295,7 +303,10 @@ setMethod(f = "dat",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set data
+#' @describeIn staRVe_model Set data. Warning: if you add new rows to the
+#'   data.frame you also need to manually update the transient graph,
+#'   transient graph random effects, and the graph_idx column for the
+#'   new rows.
 setReplaceMethod(f = "dat",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -307,7 +318,9 @@ setReplaceMethod(f = "dat",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get data predictions
+#' @describeIn staRVe_model Get data predictions, a long_stars object
+#'   with the data (see \code{dat}) and associated random effect
+#'   predictions.
 setMethod(f = "data_predictions",
           signature = "staRVe_model",
           definition = function(x) {
@@ -333,7 +346,7 @@ setReplaceMethod(f = "data_predictions",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get the response distribution.
+#' @describeIn staRVe_model Get the response distribution(s)
 setMethod(f = "response_distribution",
           signature = "staRVe_model",
           definition = function(x) {
@@ -343,10 +356,10 @@ setMethod(f = "response_distribution",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set the response distribution. Run
+#' @describeIn staRVe_model Set the response distribution(s). Run
 #'   get_staRVe_distributions("distribution") for valid options.
 #'   Setting the response distribution also overwrites the response
-#'   parameters and link function.
+#'   parameters and link function(s).
 setReplaceMethod(f = "response_distribution",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -357,7 +370,7 @@ setReplaceMethod(f = "response_distribution",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get response parameters
+#' @describeIn staRVe_model Get response distribution parameters
 setMethod(f = "response_parameters",
           signature = "staRVe_model",
           definition = function(x) {
@@ -367,7 +380,7 @@ setMethod(f = "response_parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set response parameters
+#' @describeIn staRVe_model Set response distribution parameters
 setReplaceMethod(f = "response_parameters",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -378,7 +391,7 @@ setReplaceMethod(f = "response_parameters",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get the link function
+#' @describeIn staRVe_model Get link function(s)
 setMethod(f = "link_function",
           signature = "staRVe_model",
           definition = function(x) {
@@ -388,8 +401,8 @@ setMethod(f = "link_function",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set the link function. Run
-#'   get_staRVe_distributions("link") for valid covariance functions.
+#' @describeIn staRVe_model Set link function(s). Run
+#'   get_staRVe_distributions("link") for valid link functions.
 setReplaceMethod(f = "link_function",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -400,7 +413,7 @@ setReplaceMethod(f = "link_function",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get fixed effects
+#' @describeIn staRVe_model Get fixed effect parameters
 setMethod(f = "fixed_effects",
           signature = "staRVe_model",
           definition = function(x) {
@@ -410,7 +423,7 @@ setMethod(f = "fixed_effects",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set fixed effects
+#' @describeIn staRVe_model Set fixed effect parameters
 setReplaceMethod(f = "fixed_effects",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -492,6 +505,10 @@ setReplaceMethod(f = "formula",
 })
 
 
+#' @param x An object
+#'
+#' @describeIn staRVe_model Get the name of the time variable used in
+#'   the model formula (for internal use only)
 setMethod(f = ".time_name",
           signature = "staRVe_model",
           definition = function(x) {
@@ -504,7 +521,7 @@ setMethod(f = ".time_name",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get parameters
+#' @describeIn staRVe_model Get all model parameters as a staRVe_parameters object
 setMethod(f = "parameters",
           signature = "staRVe_model",
           definition = function(x) {
@@ -517,7 +534,8 @@ setMethod(f = "parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set parameters
+#' @describeIn staRVe_model Set all model parameters with a new
+#'   staRVe_parameters object
 setReplaceMethod(f = "parameters",
                  signature = c("staRVe_model","staRVe_parameters"),
                  definition = function(x,value) {
@@ -543,72 +561,72 @@ setReplaceMethod(f = "parameters",
 #'    \code{staRVe_fit} function.
 #'
 #' The formula object should always be of the form
-#'   \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)}.
+#'   \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)},
+#'   though possibly with some terms missing.
 #'
 #' The variable y should be replaced with the desired response variable.
 #'
 #' The sample.size(...) term is only used if the response distribution is
-#' \code{binomial}, \code{atLeastOneBinomial}, or \code{tweedie}.
-#' If it is missing the sample sizes are assumed to all be 1.
+#'   \code{binomial}, \code{atLeastOneBinomial}, or \code{tweedie}.
+#'   If it is missing the sample sizes are assumed to all be 1.
 #'
-#' The variables in the \code{mean(...)} term are linear predictors for the mean
-#' of the response variable. Any formula valid for the \code{lm} command can be used
-#' inside the \code{mean(...)}, however any missing values will likely cause errors.
-#' If the \code{mean(...)} term is missing, no covariates will be used.
+#' The variables in the \code{mean(...)} term are used as covariates for the mean
+#'   of the response variable. Any formula valid for the \code{lm} command can be used
+#'   inside the \code{mean(...)}, such as \code{I(x^2)}. Any missing covariate values
+#'   will likely cause errors. If the \code{mean(...)} term is missing, no covariates will be used.
 #'
 #' The \code{time(...)} term indicates which column, if any, holds the time index.
-#' The variable t should be replaced with the desired time index. There are currently
-#' three valid options for the `type' argument in \code{time(t,type="ar1")} --
-#' "ar1" for an AR(1) structure, "rw" for a random walk, and "independent" for
-#' independent spatial fields each year. If the \code{time(...)} term is missing,
-#' all observations are assumed to be at the same time and a purely spatial model
-#' is used.
+#'   The variable t should be replaced with the desired time index. There are currently
+#'   three valid options for the `type' argument in \code{time(t,type="ar1")} --
+#'   "ar1" for an AR(1) structure, "rw" for a random walk, and "independent" for
+#'   independent spatial fields each year. If the \code{time(...)} term is missing,
+#'   all observations are assumed to be at the same time and a purely spatial model
+#'   is used.
 #'
 #' The \code{space(...)} term specifies the spatial covariance function. See
-#' \code{get_staRVe_distributions("covariance")} for valid names to supply.
-#' If using the "matern" option you can supply a value for the smoothness
-#' parameter nu, which will be held constant in model fitting. If nu is not given,
-#' then it will be freely estimated in the model. If the \code{space(...)} term
-#' as a whole is missing, an exponential covariance function is assumed.
+#'   \code{get_staRVe_distributions("covariance")} for valid names to supply.
+#'   If using the "matern" option you can supply a value for the smoothness
+#'   parameter nu, which will be held constant in model fitting. If nu is not given,
+#'   then it will be freely estimated in the model. If the \code{space(...)} term
+#'   as a whole is missing, an exponential covariance function is assumed.
 #'
-#' @param formula A formula object used to describe the model including covariate
-#'   effects, temporal effects, and the spatial covariance function. Details are
-#'   given later in the `Details' section.
-#' @param data An object of class `sf` containing point geometries. Data
-#'  used for the `formula' object will be found here.
-#' @param nodes Either an object of class `sf` containing point geometries, or
-#'  an inla.mesh object (e.g.~from the output of INLA::inla.mesh.2d).
-#'  The default value uses the same locations as the observations. The locations
-#'  will be used as the nodes for the random effects. All locations will be used
-#'  for each year. If an inla.mesh is supplied, the edges of the mesh are used
-#'  to create the persistent graph.
+#' @param formula A formula object. See the 'Details' section below.
+#' @param data An `sf` object containing point geometries, and any other
+#'   variables needed to fit the model.
+#' @param nodes An `sf` object containing point geometries, defaulting to \code{data}.
+#'  These locations will be used as the locations for the persistent graph.
 #' @param n_neighbours An integer giving the (maximum) number of parents for each node.
-#' @param p_far_neighbours What percent of neighbours should be randomly selected?
 #' @param persistent_graph If an object of class \code{dag} is supplied, that
 #'   graph is used for the persistent graph.
 #' @param transient_graph If an object of class \code{dag} is supplied, that
 #'   graph is used for the transient graph.
-#' @param distribution Which response distribution to use. See
-#'   \code{get_staRVe_distributions}.
-#' @param link A character vector giving the response link function. See
-#'   \code{get_staRVe_distributions}. If not supplied a default option is used
-#'   based on the response distribution.
-#' @param silent Should intermediate calculations be printed?
-#' @param max_dist The maximum distance used to search for parents.
-#'  Unless this has a units attribute, units are assumed to be the same as
-#'  the supplied \code{distance_units}.
-#' @param distance_units Which units should be used for distances?
-#' @param fit Should the model be fit in this call? If true, returns a fitted model.
+#' @param distribution A character vector giving the response distribution(s).
+#'   See \code{get_staRVe_distributions("distribution")} for valid options.
+#'   Defaults to "gassian".
+#' @param link A character vector giving the response link function(s). See
+#'   \code{get_staRVe_distributions("link")} for valid options.
+#'   The default link function changes depending on the response distribution.
+#' @param silent Logical. Should intermediate calculations be printed?
+#' @param max_dist Numeric. The maximum allowable distance for edges in the transient
+#'   graph, or for graphs computed when using the \code{staRVe_predict} function.
+#'   Unless this has a units attribute, units are assumed to be the same as
+#'   the supplied \code{distance_units}.
+#' @param distance_units Any value that can be used as a \code{units} object
+#'   from the \code{units} package. Which distance units should the model use?
+#'   Defaults to "km".
+#' @param fit Logical. Should the model be fit in this call?
 #' @param ... Extra options to pass to staRVe_fit if fit=TRUE
 #'
-#' @return A staRVe_model object. If fit=TRUE, a staRVe_fit object.
+#' @return A staRVe_model object. If fit=TRUE, a staRVe_model_fit object.
+#'
+#' @seealso staRVe_model
+#' @seealso prepare_staRVe_process, prepare_staRVe_observations
 #'
 #' @export
 prepare_staRVe_model<- function(formula,
                                 data,
                                 nodes = data,
                                 n_neighbours = 15,
-                                p_far_neighbours = 0,
                                 persistent_graph = NA,
                                 transient_graph = NA,
                                 distribution = "gaussian",
@@ -626,7 +644,6 @@ prepare_staRVe_model<- function(formula,
   settings(model)<- new("staRVe_settings",
     formula = formula,
     n_neighbours = n_neighbours,
-    p_far_neighbours = p_far_neighbours,
     distance_units = distance_units,
     max_distance = max_dist
   )
@@ -657,11 +674,7 @@ prepare_staRVe_model<- function(formula,
 
 
 
-#' Convert a staRVe_model object to a form suitable for TMB input.
-#'
-#' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
-#'
-#' @noRd
+#' @describeIn TMB_in Convert a staRVe_model to a list for \code{TMB::MakeADFun}
 setMethod(f = "TMB_in",
           signature = "staRVe_model",
           definition = function(x) {
@@ -840,11 +853,8 @@ setMethod(f = "TMB_in",
 })
 
 
-#' Update staRVe_model parameters / random effects from a fitted TMB::MakeADFun object
-#'
-#' @return A staRVe_model object with ML estimates
-#'
-#' @noRd
+#' @describeIn update_staRVe_model Update model parameters and random effects
+#'   from a fitted TMB::MakeADFun object
 setMethod(f = "update_staRVe_model",
           signature = c(x = "staRVe_model",
                         y = "TMB_out"),

@@ -37,7 +37,8 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observations Get data
+#' @describeIn staRVe_observations Get data, including response variables,
+#'   time indices, locations, covariates, etc.
 setMethod(f = "dat",
           signature = "staRVe_observations",
           definition = function(x) return(locations(x@data_predictions))
@@ -46,7 +47,9 @@ setMethod(f = "dat",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observations Set data
+#' @describeIn staRVe_observations Set data. Warning: if you add new rows to
+#'   the data.frame you also need to manually update the transient graph,
+#'   transient graph random effects, and the graph_idx column for the new rows.
 setReplaceMethod(f = "dat",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -58,7 +61,8 @@ setReplaceMethod(f = "dat",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observations Get data predictions
+#' @describeIn staRVe_observations Get data_predictions, a long_stars object
+#'   with the data (see \code{dat}) and associated random effect predictions.
 setMethod(f = "data_predictions",
           signature = "staRVe_observations",
           definition = function(x) return(x@data_predictions)
@@ -81,7 +85,8 @@ setReplaceMethod(f = "data_predictions",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observations Get parameters
+#' @describeIn staRVe_observations Get parameters as a
+#'   staRVe_observation_parameters object.
 setMethod(f = "parameters",
           signature = "staRVe_observations",
           definition = function(x) return(x@parameters)
@@ -90,7 +95,9 @@ setMethod(f = "parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observations Set parameters
+#' @describeIn staRVe_observations Set parameters using a new
+#'   staRVe_observation_parameters object. Not the recommended
+#'   way to modify specific parmaeter values, isntead see the package vignette
 setReplaceMethod(f = "parameters",
                  signature = "staRVe_observations",
                  definition = function(x,value) {
@@ -108,6 +115,12 @@ setReplaceMethod(f = "parameters",
 
 #' Prepare the observation part of a staRVe_model object.
 #'
+#' Creates a new staRVe_observation object with the correct dimensions
+#'   for the random effect predictions. Initializes the response distribution
+#'   and fixed effect parameters for the model according to the options specified
+#'   in the formula element of the settings argument. Also adds a column "graph_idx"
+#'   to the supplied data.
+#'
 #' @param data An sf object containing the observations and covariates.
 #' @param process A staRVe_process object.
 #' @param settings A staRVe_settings object.
@@ -118,7 +131,10 @@ setReplaceMethod(f = "parameters",
 #'
 #' @return A staRVe_observations object.
 #'
-#' @noRd
+#' @seealso staRVe_observations
+#' @seealso prepare_staRVe_process, prepare_staRVe_model
+#'
+#' @keywords internal
 prepare_staRVe_observations<- function(data,
                                        process,
                                        settings = new("staRVe_settings"),

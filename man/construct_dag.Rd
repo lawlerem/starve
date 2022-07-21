@@ -3,6 +3,7 @@
 \name{construct_dag}
 \alias{construct_dag}
 \alias{construct_transient_dag}
+\alias{construct_pred_dag}
 \title{Construct directed acyclic graphs}
 \usage{
 construct_dag(x, settings = new("staRVe_settings"), silent = TRUE)
@@ -14,38 +15,86 @@ construct_transient_dag(
   settings = new("staRVe_settings"),
   silent = TRUE
 )
+
+construct_pred_dag(pred, model, silent = TRUE)
 }
 \arguments{
-\item{x}{An \code{sf} object of point geometries}
+\item{x, y}{\code{sf} objects of point geometries}
 
 \item{settings}{An object of class \code{staRVe_settings}}
 
 \item{silent}{Should intermediate calculations be shown?}
 
-\item{y}{An \code{sf} object of point geometries containing possible parents}
+\item{time}{A numeric vector containing the time index of each row in x.}
 
-\item{time}{The time index for each location in x}
+\item{pred}{A long_stars object}
 
-\item{check_intersection}{Logical. If true, duplicated locations will be checked}
+\item{model}{A staRVe_model object}
 }
 \value{
-An object of class \code{dag}
+An object of class \code{dag}; construct_dag instead returns a list
+  with elements "locations" giving the sorted copy of locations and "dag"
+  giving the constructed graph of class \code{dag}.
 }
 \description{
-A directed acyclic graph is stored as an ordered list. The ith element of the
-  list is a vector containing indices j such that there is a directed edge
-  from node j to node i, or possibly node (i+k-1) as detailed below.
+Construct directed acyclic graphs
 }
 \section{Functions}{
 \itemize{
-\item \code{construct_dag}: Construct a directed acyclic graph from a single
-\code{sf} object. The first element of the ordered list contains the indices
-for the first k rows, where k is the n_neighbours settings. The ith element
-contains the parents for the (i+k-1)th row of x. Also returns a sorted copy
-of the locations x.
+\item \code{construct_dag}: Construct a directed acyclic graph for a single
+  \code{sf} object. This function uses a greedy algorithm to sort the locations
+  of x. The first location of x is the first location of the sorted copy.
+  Subsequent locations of the sorted copy are found iteratively by taking
+  the as-of-yet unsorted location closest to any of the already sorted locations.
 
-\item \code{construct_transient_dag}: Construct a directed acyclic graph from one \code{sf}
-object to another. Output is a list whose t'th element is the transient graph
-for time t. y should be the persistent graph locations, x should be data locations.
+  After sorting the locations, the directed acyclic graph is constructed by first
+  creating an initial graph element with no "from" vertices and "to" vertices
+  consisting of the first n sorted locations (where n equals the \code{n_neighbours}
+  element of the settings argument). Any locations not present in the "to" vertices
+  of the initial graph elements are given their own graph element with a single
+  "to" vertex for that location and "from" vertices the n closest
+  (by distance) locations before it in the sorted copy.
+
+  A vertex with index i in either the "to" or "from" vertices represents the location
+  in row i of the sorted copy of x.
+
+\item \code{construct_transient_dag}: Construct a directed acyclic graph with "to" vertices
+  representing locations in x and "from" vertices representing locations in y.
+  Unlike construct_dag, neither x nor y are sorted, but the time argument
+  must already be sorted when given as an argument (make sure that the locations
+  in x are likewise sorted according to their respective times).
+
+  The locations in x are first split into groups according to the values of the
+  time argument. Then within each group each location is given a graph element
+  with a single "to" vertex for that location (in x) and whose "from" vertices
+  are the n closest locations (in y) (where n equals the \code{n_neighbours} element
+  of the settings argument).
+
+  A vertex with index i in the "to" vertices represents the location in row i in the
+  subset of x in the same time index group. Note that the same value of i may be used
+  if there is more than one unique value in the time argument. A vertex with i in the
+  "from" vertices represents the location in row i of y.
+
+\item \code{construct_pred_dag}: Works essentially the same as \code{construct_transient_dag},
+  with a few minor differences. Instead of directly supplying the locations for the
+  "from" vertices, the "from" vertices are taken from the locations used in the
+  persistent graph (construct_dag) and transient graph (construct_transient_dag)
+  from the model argument.
+
+  The locations in pred are grouped according to their time index in pred.
+  Each location is given a graph element with a single "to" vertex representing
+  that location in pred. If that location is the same as any model location
+  then the graph element has a single "from" vertex representing that model
+  location, otherwise "from" vertices are the n closest model locations (where
+  n equals the \code{n_neighbours} element of the settings argument).
+
+  A vertex with index i in the "to" vertices represents the location in row i
+  of pred (regardless of time index group). A vertex with index j in the "from"
+  vertices represents the j'th location of the persistent graph if j <= k where
+  k is the number of persistent graph locations, or represents the  (j-k)'th location
+  of the transient graph with the same time index as the "to" vertex.
 }}
 
+\seealso{
+dag For class definition of directed acyclic graphs
+}

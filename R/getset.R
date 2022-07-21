@@ -2,7 +2,7 @@
 NULL
 
 
-#' Access methods for the staRVe package
+#' A list of accessor functions for the staRVe package
 #'
 #' @param x An object
 #' @param value A replacement value
@@ -104,7 +104,7 @@ setGeneric(name = "distances<-",
 
 # E
 
-#' @describeIn staRVe-access Get edges
+#' @describeIn staRVe-access Get edges2
 #' @export
 setGeneric(name = "edges",
            def = function(x) standardGeneric("edges")
@@ -113,18 +113,6 @@ setGeneric(name = "edges",
 setGeneric(name = "edges<-",
            def = function(x,value) standardGeneric("edges<-")
 )
-
-#' @describeIn staRVe-access Get extra settings
-#' @export
-setGeneric(name = "extras",
-           def = function(x) standardGeneric("extras")
-)
-#' @describeIn staRVe-access Set extra settings
-#' @export
-setGeneric(name = "extras<-",
-           def = function(x,value) standardGeneric("extras<-")
-)
-
 
 
 
@@ -143,8 +131,6 @@ setGeneric(name = "fixed_effects<-",
            def = function(x,value) standardGeneric("fixed_effects<-")
 )
 
-#' @param ... Not used
-#"
 #' @describeIn staRVe-access Get formula
 #' @export
 setGeneric(name = "formula",
@@ -265,15 +251,6 @@ setGeneric(name = "obj<-",
   def = function(x,value) standardGeneric("obj<-")
 )
 
-#' @describeIn staRVe-access Get obs_dag_method
-#' @export
-setGeneric(name = "obs_dag_method",
-           def = function(x) standardGeneric("obs_dag_method")
-)
-setGeneric(name = "obs_dag_method<-",
-           def = function(x,value) standardGeneric("obs_dag_method<-")
-)
-
 
 #' @noRd
 setGeneric(name = "observations",
@@ -308,16 +285,6 @@ setGeneric(name = "opt_time<-",
 
 
 # P
-
-#' @describeIn staRVe-access Get p far neighbours
-#' @export
-setGeneric(name = "p_far_neighbours",
-           def = function(x) standardGeneric("p_far_neighbours")
-)
-#' @noRd
-setGeneric(name = "p_far_neighbours<-",
-           def = function(x,value) standardGeneric("p_far_neighbours<-")
-)
 
 #' @describeIn staRVe-access Get parameter covariance
 #' @export
@@ -370,17 +337,6 @@ setGeneric(name = "pg_re<-",
            def = function(x,value) standardGeneric("pg_re<-")
 )
 
-#' @describeIn staRVe-access Get predictions
-#' @export
-setGeneric(name = "predictions",
-           def = function(x) standardGeneric("predictions")
-)
-#' @describeIn staRVe-access Set predictions
-#' @export
-setGeneric(name = "predictions<-",
-           def = function(x,value) standardGeneric("predictions<-")
-)
-
 #' @noRd
 setGeneric(name = "process",
            def = function(x) standardGeneric("process")
@@ -403,11 +359,6 @@ setGeneric(name = "process<-",
 #' @export
 setGeneric(name = "random_effects",
            def = function(x) standardGeneric("random_effects")
-)
-#' @describeIn staRVe-access Set random effects
-#' @export
-setGeneric(name = "random_effects<-",
-           def = function(x,value) standardGeneric("random_effects<-")
 )
 
 #' @describeIn staRVe-access Get response distribution
@@ -504,6 +455,13 @@ setGeneric(name = "time_effects",
 setGeneric(name = "time_effects<-",
            def = function(x,value) standardGeneric("time_effects<-")
 )
+
+#' @describeIn staRVe-access Get time name used
+#' @keywords internal
+setGeneric(name = ".time_name",
+           def = function(x) standardGeneric(".time_name")
+)
+
 
 #' @describeIn staRVe-access Get time parameters
 #' @export

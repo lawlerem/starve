@@ -3,6 +3,7 @@
 \docType{class}
 \name{long_stars-class}
 \alias{long_stars-class}
+\alias{dag}
 \alias{values,long_stars-method}
 \alias{values<-,long_stars-method}
 \alias{locations,long_stars-method}
@@ -25,6 +26,11 @@
 \description{
 An S4 class to hold predictions from a staRVe model.
 }
+\details{
+The \code{predictions} slot will have at least 1 dimension, the first
+  of which must be named \code{idx} and is identical to the row dimension of
+  \code{locations}.
+}
 \section{Methods (by generic)}{
 \itemize{
 \item \code{values}: Get predictions
@@ -39,8 +45,24 @@ An S4 class to hold predictions from a staRVe model.
 \section{Slots}{
 
 \describe{
-\item{\code{predictions}}{A stars object}
+\item{\code{predictions}}{A stars object.}
 
-\item{\code{locations}}{An sf object with covariates, a time column, and point geometries.}
+\item{\code{locations}}{An sf object with at least a time column and point geometries.}
 }}
 
+\seealso{
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}

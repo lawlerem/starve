@@ -36,18 +36,14 @@ setMethod(
 ##############
 
 #' @param x An object
-#'
-#' @export
-#' @describeIn staRVe_process_parameters Get covariance function
+#' @describeIn staRVe_process_parameters Get covariance function(s)
 setMethod(f = "covariance_function",
           signature = "staRVe_process_parameters",
           definition = function(x) return(x@covariance_function)
 )
 #' @param x An object
 #' @param value A replacement value
-#'
-#' @export
-#' @describeIn staRVe_process_parameters Set covariance function. Run
+#' @describeIn staRVe_process_parameters Set covariance function(s). Run
 #'   get_staRVe_distributions("covariance") for valid covariance functions.
 #'   Setting the covariance function also overwrites the spatial parameters.
 setReplaceMethod(f = "covariance_function",
@@ -83,8 +79,6 @@ setReplaceMethod(f = "covariance_function",
 
 
 #' @param x An object
-#'
-#' @export
 #' @describeIn staRVe_process_parameters Get spatial parameters
 setMethod(f = "spatial_parameters",
           signature = "staRVe_process_parameters",
@@ -92,8 +86,6 @@ setMethod(f = "spatial_parameters",
 )
 #' @param x An object
 #' @param value A replacement value
-#'
-#' @export
 #' @describeIn staRVe_process_parameters Set spatial parameters
 setReplaceMethod(f = "spatial_parameters",
                  signature = "staRVe_process_parameters",
@@ -104,8 +96,6 @@ setReplaceMethod(f = "spatial_parameters",
 
 
 #' @param x An object
-#'
-#' @export
 #' @describeIn staRVe_process_parameters Get time parameters
 setMethod(f = "time_parameters",
           signature = "staRVe_process_parameters",
@@ -113,8 +103,6 @@ setMethod(f = "time_parameters",
 )
 #' @param x An object
 #' @param value A replacement value
-#'
-#' @export
 #' @describeIn staRVe_process_parameters Set time parameters
 setReplaceMethod(f = "time_parameters",
                  signature = "staRVe_process_parameters",

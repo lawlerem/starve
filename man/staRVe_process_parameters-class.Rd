@@ -33,9 +33,9 @@ An S4 class to hold process parameters for a staRVe model.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{covariance_function}: Get covariance function
+\item \code{covariance_function}: Get covariance function(s)
 
-\item \code{covariance_function<-}: Set covariance function. Run
+\item \code{covariance_function<-}: Set covariance function(s). Run
 get_staRVe_distributions("covariance") for valid covariance functions.
 Setting the covariance function also overwrites the spatial parameters.
 
@@ -51,11 +51,28 @@ Setting the covariance function also overwrites the spatial parameters.
 \section{Slots}{
 
 \describe{
-\item{\code{covariance_function}}{The covariance function, must be one given by
+\item{\code{covariance_function}}{The covariance function(s), must be one from
 get_staRVe_distributions("covariance").}
 
-\item{\code{spatial_parameters}}{A list containing spatial parameters for each variable.}
+\item{\code{spatial_parameters}}{A list containing spatial parameters for each response variable.}
 
-\item{\code{time_parameters}}{A list containing time parameters for each variable.}
+\item{\code{time_parameters}}{A list containing time parameters for each response variable.}
 }}
 
+\seealso{
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}
+\keyword{internal}

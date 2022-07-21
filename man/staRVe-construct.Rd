@@ -40,11 +40,8 @@
   .Object,
   formula = new("formula"),
   n_neighbours = 10,
-  p_far_neighbours = 0,
   distance_units = "km",
-  max_distance = Inf,
-  obs_dag_method = "standard",
-  extras = vector(mode = "list", length = 0)
+  max_distance = Inf
 )
 
 \S4method{initialize}{staRVe_observation_parameters}(
@@ -131,14 +128,6 @@
 
 \item{n_neighbours}{An integer}
 
-\item{p_far_neighbours}{A number between 0 and 1}
-
-\item{max_distance}{A positive number}
-
-\item{obs_dag_method}{The method used to create the transient graph}
-
-\item{extras}{A list of extra settings}
-
 \item{response_distribution}{Which response distribution to use}
 
 \item{fixed_effects}{A data.frame}
@@ -190,3 +179,4 @@
 \description{
 Constructors for the staRVe package
 }
+\keyword{internal}

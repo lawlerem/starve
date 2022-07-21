@@ -23,7 +23,15 @@ NULL
 
 # C
 
-#' @noRd
+#' Create an index connecting locations to a graph
+#'
+#' @param x An object with locations
+#' @param y An object with graph locations
+#'
+#' @return An integer vector with size equal to the number of rows of x. The location of row i of x will be the same
+#'   location as locations answer[i] of the graph of y.
+#'
+#' @keywords internal
 setGeneric(name = ".create_graph_idx",
            def = function(x,y,...) standardGeneric(".create_graph_idx")
 )
@@ -62,11 +70,23 @@ setGeneric(name = ".create_graph_idx",
 
 # I
 
-#' @noRd
+#' Exchange indices between C++ and R
+#'
+#' Converts indices to be used in C++ (where indices start at 0) and R
+#'   (where indices start at 1).
+#'
+#' @param x An object with numeric entries
+#'
+#' @keywords internal
+#'
+#' @name idx_exchange
+NULL
+
+#' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
 setGeneric(name = "idxC_to_R",
            def = function(x) standardGeneric("idxC_to_R")
 )
-#' @noRd
+#' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
 setGeneric(name = "idxR_to_C",
            def = function(x) standardGeneric("idxR_to_C")
 )
@@ -129,16 +149,14 @@ setGeneric(name = "idxR_to_C",
 
 # S
 
-#' Fit a \code{staRVe_model} object.
+#' Fit a model object.
 #'
-#' After creating a \code{staRVe_model} object using \code{prepare_staRVe_model},
-#'   this function is used to find maximum likelihood estimates of the parameters
-#'   and random effects.
+#' Takes an unfitted model object and performs inference.
 #'
-#' @param x A staRVe_model object.
-#' @param ... Extra options
+#' @param x A model object to be fitted.
+#' @param ... Options to be passed
 #'
-#' @return A staRVe_fit object.
+#' @return A fitted model object.
 #'
 #' @export
 setGeneric(name = "staRVe_fit",
@@ -147,58 +165,30 @@ setGeneric(name = "staRVe_fit",
 
 
 
-#' Predict from a \code{staRVe_fit} object.
+#' Use a fitted model to predict.
 #'
-#' @param x An object of class \code{staRVe_fit}.
-#' @param locations Either an object of class \code{sf} containing point geometries,
-#'  or an object of class \code{RasterLayer}. If an \code{sf} object, covariate
-#'  values and a time index should be included as part of the object.
-#'  If a \code{RasterLayer} object, predictions will be made for all raster cells
-#'  whose value are not NA. If the raster has no values, then predictions will
-#'  be made at every cell. Raster predictions are made at the midpoint of each cell.
-#' @param covariates A list of \code{Raster*} objects for raster predictions.
-#'  If the model has no covariates, then nothing needs to be supplied.
-#'
-#'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
-#'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
-#'  contain data for one covariate, should have one layer for each time unit,
-#'  and should have the same raster geometry as the \code{locations} object. The
-#'  layer names of each raster layer should be of the form \code{T####}, where
-#'  \code{####} gives the specific time index. The geometry of all the
-#'  \code{Raster*} objects should be identical.
-#'
-#'  #'  If \code{locations} is of class \code{sf} with point geometries, then
-#'  covariate values should be included in that \code{sf} object.
-#' @param time What time indices should predictions be made for raster prediction?
-#'  If set to "model", predictions are made for every time present in the model.
+#' @param x A fitted model
+#' @param new_data The new set of data for which to predict
 #' @param ... Extra options
 #'
-#' @return Either a \code{sf} object or a list of \code{Raster*} objects,
-#'  containing predictions (with standard errors) for the spatial field, and the linear
-#'  predictor on the link and response scales.
-#'  The return type is the same as the type of input for \code{locations}.
+#' @return Predictions for the new data
 #'
 #' @export
 setGeneric(name = "staRVe_predict",
-           def = function(x,locations,covariates,time="model",...) standardGeneric("staRVe_predict")
+           def = function(x,new_data,...) standardGeneric("staRVe_predict")
 )
 
-#' Simulate from a staRVe_model.
+#' Simulate from a model object.
 #'
-#' Simulate a new dataset from the model, with the option to simulate a new
-#' set of random effects as well. The parameter values used in the simulations
-#' are those set in \code{parameters(model)}. Unless new random effects are simulated,
-#' the random effect values are those in \code{time_effects(model)} and
-#' \code{random_effects(model)}.
-#'
-#' @param model A staRVe_model object.
+#' @param object A model object to simulate from.
 #' @param ... Extra options
 #'
-#' @return A staRve_model object with simulated random effects and observations.
+#' @return A single copy of \code{object} with a simulated dataset replacing
+#'   the original data
 #'
 #' @export
 setGeneric(name = "staRVe_simulate",
-           def = function(model,...) standardGeneric("staRVe_simulate")
+           def = function(object,...) standardGeneric("staRVe_simulate")
 )
 
 
@@ -206,15 +196,12 @@ setGeneric(name = "staRVe_simulate",
 
 # T
 
-setGeneric(name = ".time_name",
-           def = function(x) standardGeneric(".time_name")
-)
 
-#' Convert a staRVe_model object to a form suitable for TMB input.
+#' Convert an into a form suitable for TMB input.
 #'
 #' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
 #'
-#' @noRd
+#' @keywords internal
 setGeneric(name = "TMB_in",
            def = function(x) standardGeneric("TMB_in")
 )
@@ -224,11 +211,14 @@ setGeneric(name = "TMB_in",
 
 # U
 
-#' Update staRVe_model parameters / random effects from a fitted TMB::MakeADFUn object
+#' Update a model from a fitted object
 #'
-#' @return A staRVe_model object with ML estimates
+#' @param x The model to be updated
+#' @param y The object to update the model with.
 #'
-#' @noRd
+#' @return An updated copy of x
+#'
+#' @keywords internal
 setGeneric(name = "update_staRVe_model",
            def = function(x,y) standardGeneric("update_staRVe_model")
 )

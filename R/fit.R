@@ -1,10 +1,11 @@
-#' @param x An object
 #' @param silent Should intermediate calculations be printed?
-#' @param ... Extra options to supply to TMB::MakeADFun or TMB::sdreport
+#'
+#' @describeIn staRVe_fit Takes an unfitted staRVe_model object and performs
+#'   maximum likelihood inference via the \code{TMB} package to obtain parameter
+#'   and random effect estimates with their associated standard errors. Options
+#'   in the \dots argument are passed to TMB::MakeADFun and TMB::sdreport.
 #'
 #' @export
-#' @describeIn staRVe_model Find maximum likelihood estimate of parameters
-#'   and random effects
 setMethod(f = "staRVe_fit",
           signature = "staRVe_model",
           definition = function(x,silent = FALSE,...) {
@@ -94,18 +95,23 @@ setMethod(f = "staRVe_fit",
 
 
 
-#' @param model A staRVe_model
-#' @param conditional logical. If true, new observations are simulated conditional
-#'   on the random effect values in \code{random_effects(model)}.
-#'   If false, new random effects and new observations are simulated.
+#' @param conditional Logical. If false (default), new random effects and new
+#'   observations are simulated. If true, new observations are simulated
+#'   conditional on the random effect values in the supplied model.
+#
 #' @export
-#' @describeIn staRVe_model Simulate from the model
+#' @describeIn staRVe_simulate Simulate a new dataset from the model, with the
+#' option to simulate a new set of random effects as well. The parameter values
+#' used in the simulations are those set in \code{parameters(model)}. Returns
+#' a \code{staRVe_model} object with simulated random effects (if \code{conditional=FALSE})
+#' and simulated data.
 setMethod(f = "staRVe_simulate",
           signature = "staRVe_model",
-          def = function(model,
+          def = function(object,
                          conditional = FALSE,
                          ...) {
-  TMB_input<- TMB_in(model)
+
+  TMB_input<- TMB_in(object)
   if( conditional ) {
     # If conditional, the random effects are not re-simulated
     TMB_input$data$conditional_sim<- conditional
@@ -122,71 +128,73 @@ setMethod(f = "staRVe_simulate",
   )
 
   # Parameters are simulated from, not estimated, so get rid of standard errors
-  for( i in seq_along(.response_names(formula(model))) ) {
-    spatial_parameters(model)[[i]]$se<- NA
-    time_parameters(model)[[i]]$se<- NA
-    response_parameters(model)[[i]]$se<- rep(NA,nrow(response_parameters(model)[[i]]))
-    fixed_effects(model)[[i]]$se<- rep(NA,nrow(fixed_effects(model)[[i]]))
+  for( i in seq_along(.response_names(formula(object))) ) {
+    spatial_parameters(object)[[i]]$se<- NA
+    time_parameters(object)[[i]]$se<- NA
+    response_parameters(object)[[i]]$se<- rep(NA,nrow(response_parameters(object)[[i]]))
+    fixed_effects(object)[[i]]$se<- rep(NA,nrow(fixed_effects(object)[[i]]))
   }
 
   # Simulated random effects
   sims<- obj$simulate()
-  time_effects(model)$w<- sims$ts_re
-  time_effects(model)$se<- NA
-  pg_re(model)$w<- sims$pg_re
-  pg_re(model)$se<- NA
-  if( nrow(locations(tg_re(model))) > 0 ) {
-    values(tg_re(model))$w<- sims$tg_re
+  time_effects(object)$w<- sims$ts_re
+  time_effects(object)$se<- NA
+  pg_re(object)$w<- sims$pg_re
+  pg_re(object)$se<- NA
+  if( nrow(locations(tg_re(object))) > 0 ) {
+    values(tg_re(object))$w<- sims$tg_re
   } else {}
-  values(tg_re(model))$se<- NA
+  values(tg_re(object))$se<- NA
 
   # Update random effects used for observations
-  s<- dat(model)$graph_idx
-  t<- .time_from_formula(formula(model),dat(model))[[1]]-min(.time_from_formula(formula(model),dat(model)))+1
-  std_tg_t<- .time_from_formula(formula(model),locations(tg_re(model))) - min(.time_from_formula(formula(model),dat(model)))+1
-  for( i in seq(nrow(dat(model))) ) {
-    if( s[[i]] <= dim(pg_re(model))[[1]] ) {
-      values(data_predictions(model))$w[i,]<- pg_re(model)$w[s[[i]],t[[i]],]
+  s<- dat(object)$graph_idx
+  t<- .time_from_formula(formula(object),dat(object))[[1]]-min(.time_from_formula(formula(object),dat(object)))+1
+  std_tg_t<- .time_from_formula(formula(object),locations(tg_re(object))) - min(.time_from_formula(formula(object),dat(object)))+1
+  for( i in seq(nrow(dat(object))) ) {
+    if( s[[i]] <= dim(pg_re(object))[[1]] ) {
+      values(data_predictions(object))$w[i,]<- pg_re(object)$w[s[[i]],t[[i]],]
     } else {
-      values(data_predictions(model))$w[i,]<- values(tg_re(model))$w[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(model))[[1]],]
+      values(data_predictions(object))$w[i,]<- values(tg_re(object))$w[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(object))[[1]],]
     }
   }
-  values(data_predictions(model))$w_se[]<- NA
+  values(data_predictions(object))$w_se[]<- NA
 
   # Simulated values don't have standard errors, update linear and response predictions
   # to correspond to the simulated random effects
-  data_predictions(model)<- .predict_linear(model,data_predictions(model),se = FALSE)
-  data_predictions(model)<- .predict_response(model,data_predictions(model),se=FALSE)
+  data_predictions(object)<- .predict_linear(object,data_predictions(object),se = FALSE)
+  data_predictions(object)<- .predict_response(object,data_predictions(object),se=FALSE)
 
   # Update response observations to be the simulated value
-  dat(model)[,attr(.response_from_formula(formula(settings(model)),
-                                          dat(model)),"name")]<- sims$obs
+  dat(object)[,attr(.response_from_formula(formula(settings(object)),
+                                          dat(object)),"name")]<- sims$obs
 
   # Turn into staRVe_fit so you have access to TMB obj
-  model<- new("staRVe_model_fit",staRVe_model = model)
-  opt(TMB_out(model))$message<- "Simulated realization from model"
-  obj(TMB_out(model))<- obj
+  object<- new("staRVe_model_fit",staRVe_model = object)
+  opt(TMB_out(object))$message<- "Simulated realization from model"
+  obj(TMB_out(object))<- obj
 
-  return(model)
+  return(object)
 })
 
 
-
-#' @param locations An sf object for prediction locations and times, with covariates
-#'
 #' @export
-#' @describeIn staRVe_model_fit Predict/forecast at specific locations
+#' @describeIn staRVe_predict Predict/forecast at the specific locations and
+#'   times given in \code{new_data}. Any covariates used to fit the model
+#'   should be included in the rows of \code{new_data}. Returns a \code{long_stars}
+#'   object containing a copy of \code{new_data} and the associated predictions
+#'   and standard errors for the random effects and response mean on both the
+#'   link and natural scale.
 setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","sf"),
           definition = function(x,
-                                locations) {
+                                new_data) {
   ### Check that we have all covariates, if there are covariates in the model
   covar_names<- .names_from_formula(formula(x))
 
-  if( !all(covar_names %in% colnames(locations)) ) {
+  if( !all(covar_names %in% colnames(new_data)) ) {
     stop("Missing covariates, please add them to the prediction locations.")
   } else {}
-  predictions<- new("long_stars",locations,var_names=.response_names(formula(x)))
+  predictions<- new("long_stars",new_data,var_names=.response_names(formula(x)))
 
   # Get predictions and standard errors
   predictions<- .predict_w(x,predictions)
@@ -195,29 +203,36 @@ setMethod(f = "staRVe_predict",
 
   return(predictions)
 })
+
+
 #' @param covariates A list of \code{Raster*} objects for raster predictions.
 #'  If the model has no covariates, then nothing needs to be supplied.
 #'
-#'  If \code{locations} is of class \code{RasterLayer}, then \code{covariates}
+#'  If \code{new_data} is of class \code{RasterLayer}, then \code{covariates}
 #'  should be a list of \code{Raster*} objects. Each \code{Raster*} object should
 #'  contain data for one covariate, should have one layer for each time unit,
-#'  and should have the same raster geometry as the \code{locations} object. The
+#'  and should have the same raster geometry as the \code{new_data} object. The
 #'  layer names of each raster layer should be of the form \code{T####}, where
 #'  \code{####} gives the specific time index. The geometry of all the
 #'  \code{Raster*} objects should be identical.
-#'
-#'  #'  If \code{locations} is of class \code{sf} with point geometries, then
-#'  covariate values should be included in that \code{sf} object.
-#' @param time What time indices should predictions be made for raster prediction?
-#'  If set to "model", predictions are made for every time present in the model.
+#' @param time Integer vector. At what time indices should predictions be made?
+#'  For the default value "model", predictions are made for every time present
+#' in the model data.
 #'
 #' @export
-#' @describeIn staRVe_model_fit Predict/forecast over an entire raster
+#' @describeIn staRVe_predict Predictions will be made for all raster cells
+#'   whose value are not NA. If the raster has no values, then predictions will
+#'   be made at every raster cell. Raster predictions are not treated as areal
+#'   data, instead point predictions are made at the midpoint of each raster cell.
+#'   The value of the midpoint prediction is taken as the prediction for that cell.
+#'   Returns a \code{stars} object whose first two dimensions are the raster
+#'   geometry of \code{new_data}, the third dimension is the time index given
+#'   in \code{time}, and the fourth dimension is the response variable.
 setMethod(f = "staRVe_predict",
           signature = c("staRVe_model_fit","RasterLayer"),
-          definition = function(x,locations,covariates,time="model") {
+          definition = function(x,new_data,covariates,time="model") {
   # Convert raster to sf
-  uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(locations,spatial=TRUE))
+  uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(new_data,spatial=TRUE))
   uniq_prediction_points<- uniq_prediction_points[,attr(uniq_prediction_points,"sf_column")]
   if( identical(time,"model") ) {
     time<- seq(min(dat(x)[,.time_name(x),drop=TRUE]),max(dat(x)[,.time_name(x),drop=TRUE]))
@@ -258,7 +273,7 @@ setMethod(f = "staRVe_predict",
     pred_sf_list<- cbind(do.call(cbind,values(pred)[,,i]),locations(pred))
     pred_sf_list<- lapply(split(pred_sf_list,pred_sf_list[,.time_name(x),drop=TRUE]),
                           stars::st_rasterize,
-                          template = stars::st_as_stars(locations))
+                          template = stars::st_as_stars(new_data))
     pred_stars<- do.call(c,c(pred_sf_list,list(along = .time_name(x))))
     return(pred_stars)
   })

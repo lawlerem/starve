@@ -4,17 +4,26 @@
 \name{TMB_out-class}
 \alias{TMB_out-class}
 \alias{obj,TMB_out-method}
+\alias{obj<-,TMB_out-method}
 \alias{opt,TMB_out-method}
+\alias{opt<-,TMB_out-method}
 \alias{sdr,TMB_out-method}
+\alias{sdr<-,TMB_out-method}
 \alias{convergence,TMB_out-method}
 \alias{show,TMB_out-method}
 \title{An S4 class to hold TMB-related objects}
 \usage{
 \S4method{obj}{TMB_out}(x)
 
+\S4method{obj}{TMB_out}(x) <- value
+
 \S4method{opt}{TMB_out}(x)
 
+\S4method{opt}{TMB_out}(x) <- value
+
 \S4method{sdr}{TMB_out}(x)
+
+\S4method{sdr}{TMB_out}(x) <- value
 
 \S4method{convergence}{TMB_out}(x)
 
@@ -22,6 +31,8 @@
 }
 \arguments{
 \item{x}{An object}
+
+\item{value}{A replacement value}
 
 \item{object}{An object}
 }
@@ -32,11 +43,17 @@ An S4 class to hold TMB-related objects
 \itemize{
 \item \code{obj}: Get TMB::MakeADFun object
 
+\item \code{obj<-}: Set TMB::MakeADFun object
+
 \item \code{opt}: Get output of optimizer
+
+\item \code{opt<-}: Set output of optimizer
 
 \item \code{sdr}: Get output of TMB::sdreport
 
-\item \code{convergence}: Get convergence message
+\item \code{sdr<-}: Set output of TMB::sdreport
+
+\item \code{convergence}: Get convergence message from optimizer
 
 \item \code{show}: Print method
 }}
@@ -51,3 +68,20 @@ An S4 class to hold TMB-related objects
 \item{\code{sdr}}{The output of TMB::sdreport.}
 }}
 
+\seealso{
+Other staRVe_classes: 
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}
+\keyword{internal}

@@ -6,10 +6,15 @@
 \alias{staRVe_tracing}
 \alias{show,staRVe_tracing-method}
 \alias{opt_time,staRVe_tracing-method}
+\alias{opt_time<-,staRVe_tracing-method}
 \alias{hess_time,staRVe_tracing-method}
+\alias{hess_time<-,staRVe_tracing-method}
 \alias{sdr_time,staRVe_tracing-method}
+\alias{sdr_time<-,staRVe_tracing-method}
 \alias{parameter_hessian,staRVe_tracing-method}
+\alias{parameter_hessian<-,staRVe_tracing-method}
 \alias{parameter_covariance,staRVe_tracing-method}
+\alias{parameter_covariance<-,staRVe_tracing-method}
 \alias{timing,staRVe_tracing-method}
 \title{An S4 class to hold optimization tracing for a staRVe model}
 \usage{
@@ -17,13 +22,23 @@
 
 \S4method{opt_time}{staRVe_tracing}(x)
 
+\S4method{opt_time}{staRVe_tracing}(x) <- value
+
 \S4method{hess_time}{staRVe_tracing}(x)
+
+\S4method{hess_time}{staRVe_tracing}(x) <- value
 
 \S4method{sdr_time}{staRVe_tracing}(x)
 
+\S4method{sdr_time}{staRVe_tracing}(x) <- value
+
 \S4method{parameter_hessian}{staRVe_tracing}(x)
 
+\S4method{parameter_hessian}{staRVe_tracing}(x) <- value
+
 \S4method{parameter_covariance}{staRVe_tracing}(x)
+
+\S4method{parameter_covariance}{staRVe_tracing}(x) <- value
 
 \S4method{timing}{staRVe_tracing}(x)
 }
@@ -31,6 +46,8 @@
 \item{object}{An object}
 
 \item{x}{An object}
+
+\item{value}{A replacement value}
 }
 \description{
 An S4 class to hold optimization tracing for a staRVe model
@@ -41,28 +58,55 @@ An S4 class to hold optimization tracing for a staRVe model
 
 \item \code{opt_time}: Get optimization time
 
+\item \code{opt_time<-}: Set optimization time (for internal use only)
+
 \item \code{hess_time}: Get hessian computation time
+
+\item \code{hess_time<-}: Set hessian computation time (for internal use only)
 
 \item \code{sdr_time}: Get standard error computation time
 
+\item \code{sdr_time<-}: Set standard error computation time (for internal use only)
+
 \item \code{parameter_hessian}: Get parameter hessian matrix
+
+\item \code{parameter_hessian<-}: Set parameter hessian matrix (for internal use only)
 
 \item \code{parameter_covariance}: Get parameter covariance matrix
 
-\item \code{timing}: Get all timing information
+\item \code{parameter_covariance<-}: Set parameter covariance matrix (for internal use only)
+
+\item \code{timing}: Get all timing information as a list with elements
+fit, hessian, and sdr.
 }}
 
 \section{Slots}{
 
 \describe{
-\item{\code{opt_time}}{A proc_time object. Time used to compute the ML estimates.}
+\item{\code{opt_time}}{A proc_time object. Time elapsed while computing the ML estimates.}
 
-\item{\code{hess_time}}{A proc_time object. Time used to compute the hessian matrix.}
+\item{\code{hess_time}}{A proc_time object. Time elapsed while computing the hessian matrix.}
 
-\item{\code{sdr_time}}{A proc_time object. Time used to compute standard errors.}
+\item{\code{sdr_time}}{A proc_time object. Time elapsed while computing standard errors.}
 
 \item{\code{parameter_hessian}}{The hessian matrix for parameter estimates.}
 
 \item{\code{parameter_covariance}}{The covariance matrix for parameter estimates.}
 }}
 
+\seealso{
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}}
+}
+\concept{staRVe_classes}

@@ -13,8 +13,6 @@
 \alias{distance_units<-}
 \alias{distances}
 \alias{edges}
-\alias{extras}
-\alias{extras<-}
 \alias{fixed_effects}
 \alias{fixed_effects<-}
 \alias{formula}
@@ -28,20 +26,15 @@
 \alias{max_distance}
 \alias{n_neighbours}
 \alias{obj}
-\alias{obs_dag_method}
 \alias{opt}
 \alias{opt_time}
-\alias{p_far_neighbours}
 \alias{parameter_covariance}
 \alias{parameter_hessian}
 \alias{parameters}
 \alias{parameters<-}
 \alias{pg_re}
 \alias{pg_re<-}
-\alias{predictions}
-\alias{predictions<-}
 \alias{random_effects}
-\alias{random_effects<-}
 \alias{response_distribution}
 \alias{response_distribution<-}
 \alias{response_parameters}
@@ -55,6 +48,7 @@
 \alias{tg_re<-}
 \alias{time_effects}
 \alias{time_effects<-}
+\alias{.time_name}
 \alias{time_parameters}
 \alias{time_parameters<-}
 \alias{timing}
@@ -62,7 +56,7 @@
 \alias{tracing}
 \alias{values}
 \alias{values<-}
-\title{Access methods for the staRVe package}
+\title{A list of accessor functions for the staRVe package}
 \usage{
 convergence(x)
 
@@ -85,10 +79,6 @@ distance_units(x) <- value
 distances(x)
 
 edges(x)
-
-extras(x)
-
-extras(x) <- value
 
 fixed_effects(x)
 
@@ -116,13 +106,9 @@ n_neighbours(x)
 
 obj(x)
 
-obs_dag_method(x)
-
 opt(x)
 
 opt_time(x)
-
-p_far_neighbours(x)
 
 parameter_covariance(x)
 
@@ -136,13 +122,7 @@ pg_re(x)
 
 pg_re(x) <- value
 
-predictions(x)
-
-predictions(x) <- value
-
 random_effects(x)
-
-random_effects(x) <- value
 
 response_distribution(x)
 
@@ -170,6 +150,8 @@ time_effects(x)
 
 time_effects(x) <- value
 
+.time_name(x)
+
 time_parameters(x)
 
 time_parameters(x) <- value
@@ -188,11 +170,9 @@ values(x) <- value
 \item{x}{An object}
 
 \item{value}{A replacement value}
-
-\item{...}{Not used}
 }
 \description{
-Access methods for the staRVe package
+A list of accessor functions for the staRVe package
 }
 \section{Functions}{
 \itemize{
@@ -216,11 +196,7 @@ Access methods for the staRVe package
 
 \item \code{distances}: Get distances
 
-\item \code{edges}: Get edges
-
-\item \code{extras}: Get extra settings
-
-\item \code{extras<-}: Set extra settings
+\item \code{edges}: Get edges2
 
 \item \code{fixed_effects}: Get fixed effects
 
@@ -248,13 +224,9 @@ Access methods for the staRVe package
 
 \item \code{obj}: Get obj
 
-\item \code{obs_dag_method}: Get obs_dag_method
-
 \item \code{opt}: Get opt
 
 \item \code{opt_time}: Get opt time
-
-\item \code{p_far_neighbours}: Get p far neighbours
 
 \item \code{parameter_covariance}: Get parameter covariance
 
@@ -268,13 +240,7 @@ Access methods for the staRVe package
 
 \item \code{pg_re<-}: Set persistent graph random effects
 
-\item \code{predictions}: Get predictions
-
-\item \code{predictions<-}: Set predictions
-
 \item \code{random_effects}: Get random effects
-
-\item \code{random_effects<-}: Set random effects
 
 \item \code{response_distribution}: Get response distribution
 
@@ -302,6 +268,8 @@ Access methods for the staRVe package
 
 \item \code{time_effects<-}: Set time effects
 
+\item \code{.time_name}: Get time name used
+
 \item \code{time_parameters}: Get time parameters
 
 \item \code{time_parameters<-}: Set time parameters
@@ -317,3 +285,4 @@ Access methods for the staRVe package
 \item \code{values<-}: Set values
 }}
 
+\keyword{internal}

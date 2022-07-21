@@ -9,6 +9,10 @@
 \alias{pg_re<-,staRVe_process-method}
 \alias{tg_re,staRVe_process-method}
 \alias{tg_re<-,staRVe_process-method}
+\alias{persistent_graph,staRVe_process-method}
+\alias{persistent_graph<-,staRVe_process-method}
+\alias{transient_graph,staRVe_process-method}
+\alias{transient_graph<-,staRVe_process-method}
 \alias{parameters,staRVe_process-method}
 \alias{parameters<-,staRVe_process,ANY-method}
 \alias{random_effects,staRVe_process-method}
@@ -25,6 +29,14 @@
 \S4method{tg_re}{staRVe_process}(x)
 
 \S4method{tg_re}{staRVe_process}(x) <- value
+
+\S4method{persistent_graph}{staRVe_process}(x)
+
+\S4method{persistent_graph}{staRVe_process}(x) <- value
+
+\S4method{transient_graph}{staRVe_process}(x)
+
+\S4method{transient_graph}{staRVe_process}(x) <- value
 
 \S4method{parameters}{staRVe_process}(x)
 
@@ -54,11 +66,22 @@ An S4 class to hold the process information for a staRVe model.
 
 \item \code{tg_re<-}: Set spatio-temporal random effects for transient graph
 
-\item \code{parameters}: Set parameters
+\item \code{persistent_graph}: Get persistent graph
 
-\item \code{parameters<-}: Set parameters
+\item \code{persistent_graph<-}: Set persistent graph (for internal use only)
 
-\item \code{random_effects}: Get list of random effects
+\item \code{transient_graph}: Get transient graph
+
+\item \code{transient_graph<-}: Set transient graph (for internal use  only)
+
+\item \code{parameters}: Get parameters as a staRVe_process_parameters object
+
+\item \code{parameters<-}: Set parameters using a new staRVe_process_parameters
+object. Not the recommended way to modify specific parameter values, instead see the
+package vignette.
+
+\item \code{random_effects}: Get list containing the persistent graph random
+effects and the transient graph random effects.
 }}
 
 \section{Slots}{
@@ -73,3 +96,22 @@ An S4 class to hold the process information for a staRVe model.
 \item{\code{parameters}}{An object of class staRVe_process_parameters.}
 }}
 
+\seealso{
+prepare_staRVe_process
+
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observation_parameters-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}
+\keyword{internal}

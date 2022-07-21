@@ -39,39 +39,57 @@ An S4 class to hold observation parameters for a staRVe model.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{response_distribution}: Get response distribution
+\item \code{response_distribution}: Get response distribution(s)
 
-\item \code{response_distribution<-}: Get/set response distribution. Run
+\item \code{response_distribution<-}: Get/set response distribution(s). Run
 get_staRVe_distributions("distribution") for valid options. Setting the
 the response distribution also overwrites the response parameters and
-link function.
+link function(s).
 
 \item \code{response_parameters}: Get response distribution parameters
 
 \item \code{response_parameters<-}: Set response distribution parameters
 
-\item \code{link_function}: Get link function.
+\item \code{link_function}: Get link function(s)
 
-\item \code{link_function<-}: set link function.  Run
+\item \code{link_function<-}: set link function(s).  Run
 get_staRVe_distributions("link") for valid options.
 
-\item \code{fixed_effects}: Get fixed effects
+\item \code{fixed_effects}: Get fixed effect parameters
 
-\item \code{fixed_effects<-}: Set fixed effects
+\item \code{fixed_effects<-}: Set fixed effect parameters
 }}
 
 \section{Slots}{
 
 \describe{
-\item{\code{response_distribution}}{The response distribution, must be one given by
+\item{\code{response_distribution}}{The response distribution(s), must be one from
 get_staRVe_distributions("distribution").}
 
-\item{\code{response_parameters}}{A data.frame containing parameters for the response
-distribution.}
+\item{\code{response_parameters}}{A list containing a data.frame of response distribution
+parameters for each response variable.}
 
-\item{\code{link_function}}{The link function, must be one given by
+\item{\code{link_function}}{The link function(s), must be one from
 get_staRVe_distributions("link").}
 
-\item{\code{fixed_effects}}{A data.frame containing the fixed effect parameters.}
+\item{\code{fixed_effects}}{A list containing a data.frame of fixed effect parameters
+for each response variable.}
 }}
 
+\seealso{
+Other staRVe_classes: 
+\code{\link{TMB_out-class}},
+\code{\link{dag-class}},
+\code{\link{long_stars-class}},
+\code{\link{staRVe_classes}},
+\code{\link{staRVe_model-class}},
+\code{\link{staRVe_model_fit-class}},
+\code{\link{staRVe_observations-class}},
+\code{\link{staRVe_parameters-class}},
+\code{\link{staRVe_process-class}},
+\code{\link{staRVe_process_parameters-class}},
+\code{\link{staRVe_settings-class}},
+\code{\link{staRVe_tracing-class}}
+}
+\concept{staRVe_classes}
+\keyword{internal}
