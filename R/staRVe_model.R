@@ -695,7 +695,7 @@ setMethod(f = "TMB_in",
           definition = function(x) {
   min_t<- min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))
   data<- list(
-    model = "staRVe_model",
+    model = "model",
     conditional_sim = FALSE,
     pg_edges = edges(idxR_to_C(persistent_graph(x))),
     pg_dists = distances(persistent_graph(x)),

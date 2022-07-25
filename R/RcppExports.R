@@ -2,14 +2,14 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 .rcpp_order_d_matrix <- function(d) {
-    .Call(`_staRVe_order_d_matrix`, d)
+    .Call(`_starve_order_d_matrix`, d)
 }
 
 .rcpp_lowest_k <- function(d, k) {
-    .Call(`_staRVe_lowest_k`, d, k)
+    .Call(`_starve_lowest_k`, d, k)
 }
 
 .rcpp_dist_to_dag <- function(d, n_neighbours) {
-    .Call(`_staRVe_dist_to_dag`, d, n_neighbours)
+    .Call(`_starve_dist_to_dag`, d, n_neighbours)
 }
 

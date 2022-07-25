@@ -2,7 +2,7 @@
 #define TMB_OBJECTIVE_PTR obj
 
 template<class Type>
-Type staRVe_model(objective_function<Type>* obj) {
+Type starve_model(objective_function<Type>* obj) {
   DATA_INTEGER(conditional_sim); // If true, use old values of time series and process random effects
   Type nll = 0.0;
 

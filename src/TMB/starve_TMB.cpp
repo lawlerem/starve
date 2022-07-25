@@ -1,4 +1,4 @@
-#define TMB_LIB_INIT R_init_staRVe
+#define TMB_LIB_INIT R_init_starve
 #include <TMB.hpp>
 using namespace density;
 
@@ -15,15 +15,15 @@ using namespace density;
 #include "include/family.hpp"
 #include "include/observations.hpp"
 
-#include "model/staRVe_model.hpp"
+#include "model/model.hpp"
 #include "model/family.hpp"
 #include "model/testing.hpp"
 
 template<class Type>
 Type objective_function<Type>::operator() () {
   DATA_STRING(model);
-  if(model == "staRVe_model") {
-    return staRVe_model(this);
+  if(model == "model") {
+    return starve_model(this);
   } else if(model == "family") {
     return family_f(this);
   } else if(model == "testing") {

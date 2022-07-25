@@ -19,7 +19,7 @@ setMethod(f = "staRVe_fit",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe_model",
+    DLL = "starve_TMB",
     silent = silent,
     ...
   )
@@ -122,7 +122,7 @@ setMethod(f = "staRVe_simulate",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe_model",
+    DLL = "starve_TMB",
     silent = TRUE,
     ...
   )
@@ -338,7 +338,7 @@ setMethod(f = "staRVe_predict",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe_model",
+    DLL = "starve_TMB",
     silent = TRUE,
     ...
   )
@@ -465,7 +465,7 @@ setMethod(f = "staRVe_predict",
     link_function<- TMB::MakeADFun(
       data = data,
       para = para,
-      DLL = "staRVe_model",
+      DLL = "starve_TMB",
       silent = TRUE
     )
 

@@ -1,4 +1,4 @@
-Package: staRVe
+Package: starve
 Title: Spatio-Temporal Analysis of Research Vessel data
 Version: 0.17.0
 Authors@R:
@@ -14,8 +14,8 @@ Description: Fits hierarchical spatio-temporal generalized linear mixed models t
     unobserved locations and/or at unobserved times.
 License: GPL-3
 Encoding: UTF-8
-URL: https://github.com/lawlerem/staRVe
-BugReports: https://github.com/lawlerem/staRVe/issues
+URL: https://github.com/lawlerem/starve
+BugReports: https://github.com/lawlerem/starve/issues
 LazyData: true
 ByteCompile: true
 Imports:
