@@ -3,7 +3,7 @@
 \docType{class}
 \name{long_stars-class}
 \alias{long_stars-class}
-\alias{dag}
+\alias{long_stars}
 \alias{values,long_stars-method}
 \alias{values<-,long_stars-method}
 \alias{locations,long_stars-method}

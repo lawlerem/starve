@@ -24,6 +24,7 @@
 \alias{locations}
 \alias{locations<-}
 \alias{max_distance}
+\alias{max_distance<-}
 \alias{n_neighbours}
 \alias{obj}
 \alias{opt}
@@ -32,6 +33,8 @@
 \alias{parameter_hessian}
 \alias{parameters}
 \alias{parameters<-}
+\alias{persistent_graph}
+\alias{persistent_graph<-}
 \alias{pg_re}
 \alias{pg_re<-}
 \alias{random_effects}
@@ -54,6 +57,8 @@
 \alias{timing}
 \alias{TMB_out}
 \alias{tracing}
+\alias{transient_graph}
+\alias{transient_graph<-}
 \alias{values}
 \alias{values<-}
 \title{A list of accessor functions for the staRVe package}
@@ -102,6 +107,8 @@ locations(x) <- value
 
 max_distance(x)
 
+max_distance(x) <- value
+
 n_neighbours(x)
 
 obj(x)
@@ -117,6 +124,10 @@ parameter_hessian(x)
 parameters(x)
 
 parameters(x) <- value
+
+persistent_graph(x)
+
+persistent_graph(x) <- value
 
 pg_re(x)
 
@@ -162,6 +173,10 @@ TMB_out(x)
 
 tracing(x)
 
+transient_graph(x)
+
+transient_graph(x) <- value
+
 values(x)
 
 values(x) <- value
@@ -172,7 +187,15 @@ values(x) <- value
 \item{value}{A replacement value}
 }
 \description{
-A list of accessor functions for the staRVe package
+These accessor functions are used to extract different components from the
+  objects used in the staRVe package. This help page is meant only to catalogue
+  all the accessor functions available, but not every one is available for
+  every class implemented in the package. To see which functions are available
+  for a class, and a description of the different components of that class
+  that these functions return, please see the documentation for that class.
+  The main classes implemented in the staRVe package are \link{dag},
+  \link{long_stars}, \link{staRVe_model}, \link{staRVe_tracing}, and
+  \link{staRVe_model_fit}.
 }
 \section{Functions}{
 \itemize{
@@ -220,6 +243,8 @@ A list of accessor functions for the staRVe package
 
 \item \code{max_distance}: Get max distance
 
+\item \code{max_distance<-}: Set max distance
+
 \item \code{n_neighbours}: Get n neighbours
 
 \item \code{obj}: Get obj
@@ -235,6 +260,10 @@ A list of accessor functions for the staRVe package
 \item \code{parameters}: Get parameters
 
 \item \code{parameters<-}: Set parameters
+
+\item \code{persistent_graph}: Get persistent graph
+
+\item \code{persistent_graph<-}: Set persistent graph
 
 \item \code{pg_re}: Get persistent graph random effects
 
@@ -280,9 +309,17 @@ A list of accessor functions for the staRVe package
 
 \item \code{tracing}: Get tracing
 
+\item \code{transient_graph}: Get transient graph
+
+\item \code{transient_graph<-}: Set transient graph
+
 \item \code{values}: Get values
 
 \item \code{values<-}: Set values
 }}
 
+\seealso{
+\link{dag}, \link{long_stars}, \link{staRVe_model}, \link{staRVe_tracing},
+  and \link{staRVe_model_fit}.
+}
 \keyword{internal}

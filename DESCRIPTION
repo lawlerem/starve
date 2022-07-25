@@ -38,6 +38,8 @@ Suggests:
     rmarkdown,
     igraph,
     testthat (>= 3.0.0),
+    condMVNorm,
+    mvtnorm
 VignetteBuilder: knitr
 Depends:
     sf,

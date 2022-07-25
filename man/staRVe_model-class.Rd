@@ -17,6 +17,11 @@
 \alias{pg_re<-,staRVe_model-method}
 \alias{tg_re,staRVe_model-method}
 \alias{tg_re<-,staRVe_model-method}
+\alias{random_effects,staRVe_model-method}
+\alias{persistent_graph,staRVe_model-method}
+\alias{persistent_graph<-,staRVe_model-method}
+\alias{transient_graph,staRVe_model-method}
+\alias{transient_graph<-,staRVe_model-method}
 \alias{graph,staRVe_model-method}
 \alias{covariance_function,staRVe_model-method}
 \alias{covariance_function<-,staRVe_model-method}
@@ -70,6 +75,16 @@
 \S4method{tg_re}{staRVe_model}(x)
 
 \S4method{tg_re}{staRVe_model}(x) <- value
+
+\S4method{random_effects}{staRVe_model}(x)
+
+\S4method{persistent_graph}{staRVe_model}(x)
+
+\S4method{persistent_graph}{staRVe_model}(x) <- value
+
+\S4method{transient_graph}{staRVe_model}(x)
+
+\S4method{transient_graph}{staRVe_model}(x) <- value
 
 \S4method{graph}{staRVe_model}(x)
 
@@ -160,6 +175,17 @@ An S4 class describing a staRVe model.
 \item \code{tg_re}: Get transient graph random effects
 
 \item \code{tg_re<-}: Set transient graph random effects
+
+\item \code{random_effects}: Get list containing the persistent graph random
+effects and the transient graph random effects.
+
+\item \code{persistent_graph}: Get persistent graph
+
+\item \code{persistent_graph<-}: Set persistent graph (for internal use only)
+
+\item \code{transient_graph}: Get transient graph
+
+\item \code{transient_graph<-}: Set transient graph (for internal use only)
 
 \item \code{graph}: Get a list containing the persistent and transient graphs
 

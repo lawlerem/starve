@@ -3,6 +3,7 @@
 \docType{class}
 \name{staRVe_process-class}
 \alias{staRVe_process-class}
+\alias{staRVe_process}
 \alias{time_effects,staRVe_process-method}
 \alias{time_effects<-,staRVe_process-method}
 \alias{pg_re,staRVe_process-method}

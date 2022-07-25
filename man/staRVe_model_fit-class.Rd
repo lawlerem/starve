@@ -59,7 +59,7 @@ An extension of the staRVe_model class to hold optimization information
 \describe{
 \item{\code{tracing}}{A staRVe_tracing object}
 
-\item{\code{TMB_out}}{A TMB_out object}
+\item{\code{TMB_out}}{A TMB_out object (for internal use)}
 }}
 
 \seealso{

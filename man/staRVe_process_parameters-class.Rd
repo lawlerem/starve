@@ -3,6 +3,7 @@
 \docType{class}
 \name{staRVe_process_parameters-class}
 \alias{staRVe_process_parameters-class}
+\alias{staRVe_process_parameters}
 \alias{covariance_function,staRVe_process_parameters-method}
 \alias{covariance_function<-,staRVe_process_parameters-method}
 \alias{spatial_parameters,staRVe_process_parameters-method}

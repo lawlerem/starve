@@ -3,6 +3,7 @@
 \docType{class}
 \name{staRVe_observation_parameters-class}
 \alias{staRVe_observation_parameters-class}
+\alias{staRVe_observation_parameters}
 \alias{response_distribution,staRVe_observation_parameters-method}
 \alias{response_distribution<-,staRVe_observation_parameters-method}
 \alias{response_parameters,staRVe_observation_parameters-method}

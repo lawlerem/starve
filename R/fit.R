@@ -417,7 +417,7 @@ setMethod(f = "staRVe_predict",
         # Fill in the covariance matrix with the standard errors for fixed effect
         # coefficients.
         parameter_covariance<- parameter_covariance(tracing(x))
-        par_idx<- rownames(parameter_covariance) %in% c("mean_pars")
+        par_idx<- rownames(parameter_covariance) %in% c("beta")
         par_sdreport<- parameter_covariance[par_idx,par_idx,drop=FALSE] # Drop = FALSE to keep matrix
         vlengths<- do.call(c,lapply(fixed_effects(x),nrow))
         vstarts<- c(1,1+cumsum(vlengths))

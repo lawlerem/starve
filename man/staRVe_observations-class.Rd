@@ -3,6 +3,7 @@
 \docType{class}
 \name{staRVe_observations-class}
 \alias{staRVe_observations-class}
+\alias{staRVe_observations}
 \alias{dat,staRVe_observations-method}
 \alias{dat<-,staRVe_observations-method}
 \alias{data_predictions,staRVe_observations-method}

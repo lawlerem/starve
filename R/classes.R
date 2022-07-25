@@ -24,6 +24,8 @@
 #' @family staRVe_classes
 #'
 #' @name staRVe_classes
+#'
+#' @keywords internal
 NULL
 
 # All stars slots should have dimensions in order: space, time, variable
@@ -79,7 +81,7 @@ setClass(
 #' @slot predictions A stars object.
 #' @slot locations An sf object with at least a time column and point geometries.
 #'
-#' @aliases dag
+#' @aliases long_stars
 #'
 #' @family staRVe_classes
 setClass(
@@ -102,6 +104,8 @@ setClass(
 #' @aliases staRVe_settings
 #'
 #' @family staRVe_classes
+#'
+#' @keywords internal
 setClass(
   Class = "staRVe_settings",
   slots = c(
@@ -121,6 +125,8 @@ setClass(
 #' @slot time_parameters A list containing time parameters for each response variable.
 #'
 #' @family staRVe_classes
+#'
+#' @aliases staRVe_process_parameters
 #'
 #' @keywords internal
 setClass(
@@ -142,6 +148,8 @@ setClass(
 #' @seealso prepare_staRVe_process
 #'
 #' @family staRVe_classes
+#'
+#' @aliases staRVe_process
 #'
 #' @keywords internal
 setClass(
@@ -169,6 +177,8 @@ setClass(
 #'
 #' @family staRVe_classes
 #'
+#' @aliases staRVe_observation_parameters
+#'
 #' @keywords internal
 setClass(
   Class = "staRVe_observation_parameters",
@@ -190,6 +200,8 @@ setClass(
 #' @seealso prepare_staRVe_observations
 #'
 #' @family staRVe_classes
+#'
+#' @aliases staRVe_observations
 #'
 #' @keywords internal
 setClass(
@@ -264,7 +276,7 @@ setClass(
 #' An extension of the staRVe_model class to hold optimization information
 #'
 #' @slot tracing A staRVe_tracing object
-#' @slot TMB_out A TMB_out object
+#' @slot TMB_out A TMB_out object (for internal use)
 #'
 #' @aliases staRVe_model_fit
 #'
@@ -293,6 +305,8 @@ setClass(
 #' @seealso staRVe_process_parameters, staRVe_observation_paraeters, staRVe_model
 #'
 #' @family staRVe_classes
+#'
+#' @keywords internal
 setClass(
   Class = "staRVe_parameters",
   contains = c("staRVe_process_parameters",

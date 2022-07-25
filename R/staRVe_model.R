@@ -165,19 +165,32 @@ setReplaceMethod(f = "tg_re",
   return(x)
 })
 
-
-
-
-#' Get/set persistent graph
-#'
 #' @param x An object
 #'
-#' @noRd
+#' @export
+#' @describeIn staRVe_model Get list containing the persistent graph random
+#'   effects and the transient graph random effects.
+setMethod(f = "random_effects",
+          signature = "staRVe_model",
+          definition = function(x) {
+  return(random_effects(process(x)))
+})
+
+
+
+
+#' @param x An object
+#'
+#' @describeIn staRVe_model Get persistent graph
 setMethod(f = "persistent_graph",
           signature = "staRVe_model",
           definition = function(x) {
   return(persistent_graph(process(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_model Set persistent graph (for internal use only)
 setReplaceMethod(f = "persistent_graph",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -186,16 +199,18 @@ setReplaceMethod(f = "persistent_graph",
 })
 
 
-#' Get/set persistent graph
-#'
 #' @param x An object
 #'
-#' @noRd
+#' @describeIn staRVe_model Get transient graph
 setMethod(f = "transient_graph",
           signature = "staRVe_model",
           definition = function(x) {
   return(transient_graph(process(x)))
 })
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn staRVe_model Set transient graph (for internal use only)
 setReplaceMethod(f = "transient_graph",
                  signature = "staRVe_model",
                  definition = function(x,value) {
@@ -724,7 +739,7 @@ setMethod(f = "TMB_in",
     ),
     pg_re = pg_re(x)[["w"]],
     tg_re = (if(nrow(locations(tg_re(x))) == 0) {
-        array(0,dim=c(0,staRVe:::.n_response(formula(x))))
+        array(0,dim=c(0,.n_response(formula(x))))
       } else {
         values(tg_re(x))[["w"]]
       }),

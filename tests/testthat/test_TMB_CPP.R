@@ -1,6 +1,3 @@
-library(staRVe)
-library(testthat)
-
 points<- sf::st_as_sf(as.data.frame(rbind(
   # persistent graph nodes
   c(0,0),

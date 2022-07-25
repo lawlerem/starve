@@ -4,8 +4,21 @@ NULL
 
 #' A list of accessor functions for the staRVe package
 #'
+#' These accessor functions are used to extract different components from the
+#'   objects used in the staRVe package. This help page is meant only to catalogue
+#'   all the accessor functions available, but not every one is available for
+#'   every class implemented in the package. To see which functions are available
+#'   for a class, and a description of the different components of that class
+#'   that these functions return, please see the documentation for that class.
+#'   The main classes implemented in the staRVe package are \link{dag},
+#'   \link{long_stars}, \link{staRVe_model}, \link{staRVe_tracing}, and
+#'   \link{staRVe_model_fit}.
+#'
 #' @param x An object
 #' @param value A replacement value
+#'
+#' @seealso \link{dag}, \link{long_stars}, \link{staRVe_model}, \link{staRVe_tracing},
+#'   and \link{staRVe_model_fit}.
 #'
 #' @name staRVe-access
 NULL
@@ -216,7 +229,7 @@ setGeneric(name = "locations<-",
 setGeneric(name = "max_distance",
            def = function(x) standardGeneric("max_distance")
 )
-#' @noRd
+#' @describeIn staRVe-access Set max distance
 setGeneric(name = "max_distance<-",
            def = function(x,value) standardGeneric("max_distance<-")
 )
@@ -317,11 +330,11 @@ setGeneric(name = "parameters<-",
            def = function(x,value) standardGeneric("parameters<-")
 )
 
-#' @noRd
+#' @describeIn staRVe-access Get persistent graph
 setGeneric(name = "persistent_graph",
            def = function(x) standardGeneric("persistent_graph")
 )
-#' @noRd
+#' @describeIn staRVe-access Set persistent graph
 setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
 )
@@ -500,11 +513,11 @@ setGeneric(name = "tracing<-",
            def = function(x,value) standardGeneric("tracing<-")
 )
 
-#' @noRd
+#' @describeIn staRVe-access Get transient graph
 setGeneric(name = "transient_graph",
            def = function(x) standardGeneric("transient_graph")
 )
-#' @noRd
+#' @describeIn staRVe-access Set transient graph
 setGeneric(name = "transient_graph<-",
            def = function(x,value) standardGeneric("transient_graph<-")
 )

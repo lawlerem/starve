@@ -368,7 +368,7 @@ setMethod(
     # Get transient graph locations
     splitx<- split(x[is.na(v),],.time_from_formula(formula(settings),x[is.na(v),]))
     splitv<- lapply(splitx,function(t_x) {
-      vv<- sf::st_equals(t_x,tg_s[tg_t==staRVe:::.time_from_formula(formula(settings),t_x)[[1]][[1]],])
+      vv<- sf::st_equals(t_x,tg_s[tg_t==.time_from_formula(formula(settings),t_x)[[1]][[1]],])
       vv<- do.call(c,lapply(vv,function(x) if(length(x)==0) {return(NA)} else {return(x[[1]])}))
       vv<- vv+nrow(pg_s)
       return(vv)

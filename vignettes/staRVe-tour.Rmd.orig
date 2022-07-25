@@ -1,7 +1,8 @@
 ---
 title: "staRVe-tour"
 output:
-  rmarkdown::html_vignette
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{staRVe-tour}
   %\VignetteEngine{knitr::rmarkdown}
@@ -32,8 +33,8 @@ The sf and raster packages are tightly integrated into the staRVe package, allow
 The spatio-temporal GLMM is structured as a hierarchical model with 3 levels:
 
 1. an observation equation describing the response distribution and covariate effects
-2. a first level of random effects describing the value of an unobserved spatio-temporal process, and
-3. a second level of random effects describing how the spatial surface changes as a whole from year to year.
+2. a first level of spatio-temporal random effects describing the value of an unobserved spatio-temporal process, and
+3. a second level of temporal random effects describing how the spatial surface changes as a whole from year to year.
 
 
 
@@ -44,8 +45,8 @@ The spatio-temporal GLMM is structured as a hierarchical model with 3 levels:
 
 The staRVe package expects data to be a sf data.frame with point geometries.
 See the sf package.
-The point geometries can have any valid geographic coordinate reference system, projected or unprojected, latitude/longitude or eastings/northings, or have no coordinate reference system if the locations are not geographically referenced.
-In addition to the geometry column the sf data.frame should also include a response variable, the year of the observation, and optionally any covariates desired.
+The point geometries can have any valid geographic coordinate reference system, projected or unprojected, latitude/longitude or eastings/northings, or have no coordinate reference system (if appropriate).
+In addition to the geometry column the sf data.frame should also include a response variable, the time index of the observation, and optionally any covariates desired.
 The bird_survey dataset included in the staRVe package is an example of the necessary data format.
 
 ```{r data}
@@ -53,10 +54,11 @@ data(bird_survey)
 bird_survey
 ```
 
-The 'bird_survey' data holds the results of a yearly survey of Carolina wren in the Missouri, USA.
-The number of individual birds (species: Carolina wren) encountered is stored in the 'cnt' column.
+The 'bird_survey' data holds the results of a yearly survey of Carolina wren in the state of Missouri, USA.
+The number of individual birds encountered is stored in the 'cnt' column.
 The year that each observation was taken in stored in the 'year' column.
 The location of each observation, taken as the centroid of transect, is given in the 'geom' column.
+We'll work with a smaller subset of the data in the vignette.
 
 ```{r}
 bird_survey<- subset(bird_survey,year >= 2005)
@@ -76,9 +78,9 @@ bird_model<- prepare_staRVe_model(
 ```
 
 The first argument supplied to 'prepare_staRVe_model' is a formula, similar those used in calls to 'lm' or 'glm'.
-Formulae used here need to have a special syntax, described more thoroughly in section ###.
+Formulae used in this package can include a number of terms with a special syntax, described more thoroughly in section [Formula syntax].
 The response distribution must also be specified, defaulting to a Gaussian distribution.
-The available response distributions are described in section ### and can also be viewed in your R session with the command 'get_staRVe_distributions("distribution")'.
+The available response distributions are described in section [Response distribution] and can also be viewed in your R session with the command 'get_staRVe_distributions("distribution")'.
 Optional arguments for prepare_staRVe_model are described in the help file for the function.
 
 The new staRVe_model object is shown below.
@@ -97,7 +99,7 @@ For now, note the columns labelled 'par' in the 'time_parameters', 'spatial_para
 These are the parameter values for the model.
 The 'staRVe_fit' function finds the maximum likelihood (ML) estimates of these parameters.
 The parameter values in the staRVe_model object will be the starting values used when finding the ML estimate.
-Details for changing these values is given in section ###.
+Details for changing these values is given in section [Modifying a staRVe model].
 
 ```{r fit-model}
 bird_model<- staRVe_fit(
@@ -112,7 +114,7 @@ The output of the 'staRVe_fit' function is a 'staRVe_model_fit' object.
 bird_model
 ```
 
-A 'staRVe_model_fit' object is a 'staRVe_model' object with some extra functionality providing tracing information (such as the parameter estimator covariance matrix, optimizer convergence, among other) and model-based predictions.
+A 'staRVe_model_fit' object is an extension of a 'staRVe_model' object with some extra functionality providing tracing information (such as the parameter estimator covariance matrix, optimizer convergence, etc.) and model-based predictions.
 
 ```{r cache-model,include=F}
 cache_model<- bird_model
@@ -143,24 +145,14 @@ Some messages that indicate the optimization routine failed to converge are
 
 - "Singular convergence"
 - "false convergence"
-- "function evluation limit reached"
+- "function evaluation limit reached"
 
 See '?nlminb' and the PORT routines documentation for more details.
-
-
-```{r parameters}
-parameters(bird_model)
-```
 
 The parameters hold the parameter values/estimates, the standard errors of the parameter estimates (for a fitted model), and whether the parameters are held fixed in the model.
 These quantities are held in the 'par', 'se', and 'fixed' columns, respectively.
 The spatial covariance function, response distribution, and link function used are also part of the parameter descriptions.
 The parameters are split into groups according to the different conceptual parts of the model.
-
-```{r spatial-parameters}
-covariance_function(bird_model)
-spatial_parameters(bird_model)
-```
 
 The spatial parameters describe the spatial covariance function for each response variable.
 The staRVe package uses a Matern covariance function with the following parameters:
@@ -169,8 +161,10 @@ The staRVe package uses a Matern covariance function with the following paramete
 - **range**: a range parameter. Typically interpreted as the distance by which two locations need to be separated to be approximately uncorrelated.
 - **nu**: a smoothness parameter. Higher values correspond to smoother spatial surfaces. The smoothness parameter is only estimated when the covariance function is 'matern'. Must be greater than 0.
 
-```{r time-parameters}
-time_parameters(bird_model)
+
+```{r spatial-parameters}
+covariance_function(bird_model)
+spatial_parameters(bird_model)
 ```
 
 The time parameters describe the temporal structure of the random effects.
@@ -180,100 +174,126 @@ An autoregressive order 1 AR(1) model is used:
 - **ar1**: A correlation parameter. Higher values correspond to adjacent years being more highly correlated. Must be between -1 and +1.
 - **sd**: A scale parameter. Higher values correspond to more year-to-year variation. Must be greater than 0.
 
+
+```{r time-parameters}
+time_parameters(bird_model)
+```
+
+The response parameters describe e.g. the observation error, overdispersion, etc.
+The specific parameters depend on the response distribution used and are described in section [Response distribution].
+
 ```{r response-distribution}
 response_distribution(bird_model)
 response_parameters(bird_model)
 ```
 
-The response parameters describe e.g. the observation error, overdispersion, etc.
-The specific parameters depend on the response distribution used and are described in section ###.
+The fixed effects describe the effects of covariates, as in a generalized linear model.
+A description of how to include covariates in a staRVe analysis is given in section [Including covariates].
 
 ```{r fixed-effects}
 fixed_effects(bird_model)
 ```
 
-The fixed effects describe the effects of covariates, as in a generalized linear model.
-A description of including covariates in a staRVe analysis is given in section ###.
+You can extract all of the parameter values using the 'parameters' function.
+
+```{r parameters}
+parameters(bird_model)
+```
+
 
 ## Random effect predictions
+
+The time effects are non-spatial random effects that describe the year-to-year change of the spatio-temporal random effects.
+Higher predicted values of the time effects correspond to years with a higher yearly mean, but the time effects themselves are not interpretable as yearly means.
+The main purpose of the time effects is to induce a correlation structure in the spatio-temporal random effects.
 
 ```{r time-effects}
 time_effects(bird_model)
 ```
 
-The time effects are non-spatial random effects that describe the year-to-year change of the spatio-temporal random effects.
-Higher predicted values of the time effects correspond to years with a higher yearly mean, but the time effects themselves are not interpretable as yearly means.
-The main purpose of the time effects is to induce a specific correlation structure in the spatio-temporal random effects.
+The spatio-temporal random effects describe a spatial surface that varies from year to year.
+The locations of the random effects act like the nodes in a mesh used in the R-INLA package, or basis functions used in a spline model.
+The spatial surface at new locations are predicted using the values of these random effects.
+The random effects are split into two groups.
+The persistent graph random effects are placed at nodes that re-occur at the same location every year, and thus help
+model the temporal structure of the model.
+These random effects form a data cube, and we hold the random effect in a 'stars' object from the stars package.
+
+```{r pg-re}
+pg_re(bird_model)
+```
+
+The transient graph random effects are placed at nodes at the location of each data point within a year (unless that
+  location is already a persistent graph node location), and only in the year that the data point is observed.
+These random effects are necessary to know the value of the spatio-temporal random effect value at each location.
+Since the transient graph node locations do not form a data cube, we hold them in a 'long_stars' object (from the staRVe package).
+The default options for the 'prepare_staRVe_model' function use all of the data locations as the persistent graph locations, so in our example there are no transient graph random effects.
+
+```{r tg-re}
+tg_re(bird_model)
+```
+
+A list containing both sets of random effects can be extracted using the 'random_effects' function.
 
 ```{r random-effects}
 random_effects(bird_model)
 ```
 
-These random effects describe a spatial surface that varies from year to year.
-The locations of the random effects act like the nodes in a mesh used in the R-INLA package, or basis functions used in a spline model.
-The spatial surface at new locations are predicted using the values of these random effects.
-Since the same random effect locations are repeated at every time point they form a data cube, and we hold the random effect in a stars object.
-
-
 ## Data
+
+The data used in the model holds the data supplied to 'prepare_staRVe_model', and is held in a 'long_stars' object.
+The 'predictions' slot contains a stars object for the random effect predictions (w), the response mean before applying the link function (linear), and the response mean after applying the link function (response).
+Standard errors are also given for these predictions.
+The 'locations' slot contains an sf object with columns for the response variable, any covariates, and the year column.
+Note that the 'prepare_staRVe_model' function may sort the rows of the supplied data.
 
 ```{r dat}
 data_predictions(bird_model)
 ```
 
-The data used in the model holds the data supplied to 'prepare_staRVe_model', and is held in a 'staRVe_predictions' object.
-The 'predictions' slot contains a stars object for the random effect predictions (w), the response mean before applying the link function (linear), and the response mean after applying the link function (response).
-Standard errors are also given for these predictions.
-The 'locations' slot contains an sf object with columns for the response variable, any covariates, and the year column.
+The data held in the model can be easily accessed through the 'dat' function.
 
 ```{r}
 dat(bird_model)
 ```
 
-The 'locations' slot can be easily accessed through the 'dat' function.
+The rows of 'predictions' are in the same order as the rows of 'locations'.
+We can add the random effect and response mean predictions to the data for plotting purposes.
 
 ```{r}
 tmp<- cbind(
-  do.call(cbind,predictions(data_predictions(bird_model))[,,1]),
+  do.call(cbind,values(data_predictions(bird_model))[,,1]),
   dat(bird_model)
 )
 colnames(tmp)[1:6]<- c("w","w_se","linear","linear_se","response","response_se")
 tmp
 ```
 
-The rows of 'predictions' are in the same order as the rows of 'locations'.
 
 
 ## Settings
-
-```{r settings}
-settings(bird_model)
-```
 
 The call to 'prepare_staRVe_model' can include various options that tweak the behaviour of the data pre-processing step.
 Some of these options are stored as slots in model settings:
 
 - **formula**: this is the formula supplied to 'prepare_staRVe_model'
 - **n_neighbours**: the maximum number of parents that each node in the directed acyclic graph
-- **p_far_neighbours**: the percentage of parents of each node that should be randomly selected, or the percentage of parents of each node that are not nearest neighbours
 - **distance_units**: units used for distance calculations. All distances in the model (for example max_distance, init_range, and graph distances) have these units.
 - **max_distance**: the maximum distance that a location is allowed to be from nearest-neighbour parents
-- **obs_dag_method**: either "standard" or "inla.mesh", depending on how the directed acyclic graph was constructed
-- **extras**: extra settings that are currently only used if the obs_dag_method is "inla.mesh"
 
+```{r settings}
+settings(bird_model)
+```
 
-
-<!--
-## (Advanced)
-
-(INLA mesh, TMB object, graph details, pre-computed graphs, optimizer settings, spatial range)
- -->
 
 
 
 
 
 # Modifying a staRVe model
+
+
+Changing the covariance function also resets the spatial parameters, and updates the value of nu to reflect the specific covariance function as a special case of the Matern covariance.
 
 ```{r change-covariance}
 spatial_parameters(bird_model)
@@ -283,7 +303,10 @@ covariance_function(bird_model)<- "matern32"
 spatial_parameters(bird_model)
 ```
 
-Changing the covariance function also resets the spatial parameters, and updates the value of nu to reflect the specific covariance function as a special case of the Matern covariance.
+You can change the parameter values by accessing the relevant set of parameters, and changing the 'par' column of that data.frame.
+Parameter values can be set to any numeric value, but values outside the valid range will be replaced with a default value when fitting, simulating from, or predicting using the model.
+For example a 'sd' (standard deviation) parameter must be positive; if it is set to a negative value then a default of +1 will be used instead.
+You can also change the 'se' and 'fixed' columns in the same way.
 
 ```{r change-pars}
 spatial_parameters(bird_model)
@@ -297,10 +320,8 @@ spatial_parameters(bird_model)
 time_parameters(bird_model)
 ```
 
-You can change the parameter values by accessing the relevant set of parameters, and changing the 'par' column of that data.frame.
-Parameter values can be set to any numeric value, but values outside the valid range will be replaced with a default value when fitting, simulating from, or predicting using the model.
-For example a 'sd' (standard deviation) parameter must be positive; if it is set to a negative value then a default of +1 will be used instead.
-You can also change the 'se' and 'fixed' columns in the same way.
+Changing the response distribution will automatically update the response parameters, and will change the link function based on the valid range of the response mean for that distribution.
+In the example above, the response distribution was changed from a Poisson distribution with no parameters and log link to a Gaussian distribution with a standard deviation parameter and identity link.
 
 ```{r change-distribution}
 response_distribution(bird_model)
@@ -314,8 +335,9 @@ response_parameters(bird_model)
 link_function(bird_model)
 ```
 
-Changing the response distribution will automatically update the response parameters, and will change the link function based on the valid range of the response mean for that distribution.
-In the example above, the response distribution was changed from a Poisson distribution with no parameters and log link to a Gaussian distribution with a standard deviation parameter and identity link.
+The link function can be changed to any implemented link function, even if it may give out of range predictions for the response distribution used in the model.
+For example an identity link is allowed to be used with a Poisson response distribution even though an identity link may result in predictions with a negative mean.
+Non-standard link functions should be used with caution, but are sometimes more desirable depending on the specific situation.
 
 ```{r change-link}
 link_function(bird_model)
@@ -325,9 +347,8 @@ link_function(bird_model)<- "logit"
 link_function(bird_model)
 ```
 
-The link function can be changed to any implemented link function, even if it may give out of range predictions for the response distribution used in the model.
-For example an identity link is allowed to be used with a Poisson response distribution even though an identity link may result in predictions with a negative mean.
-Non-standard link functions should be used with caution, but are sometimes more desirable depending on the specific situation.
+You can modify the data in a 'staRVe_model' object by adding columns for new variables or amending data.
+However because the data are pre-processed changing the number of rows will require the creation of a new model object using the 'prepare_staRVe_model' function.
 
 ```{r change-data}
 dat(bird_model)
@@ -337,8 +358,9 @@ dat(bird_model)$elev<- rnorm(nrow(dat(bird_model)))
 dat(bird_model)
 ```
 
-You can easily modify the data in a 'staRVe_model' object, adding columns for new variables or rows for additional observations, amending data entries, or removing observations when cross-validating.
-Since 'dat(bird_model)' is an 'sf' object you can use spatial operations such as spatial joins or intersections to assist in adding new data.
+The model formula for including covariates such as the newly created 'elev' variable will be explained later.
+Any variables used in the new formula must be present in the data held in the staRVe_model object, so add them before changing the formula.
+The fixed effects parameters will be automatically updated to reflect the new formula.
 
 ```{r change-formula}
 formula(bird_model)
@@ -350,9 +372,8 @@ formula(bird_model)
 fixed_effects(bird_model)
 ```
 
-The model formula for including covariates such as the newly created 'elev' variable will be explained later.
-Any variables used in the new formula must be present in the data held in the staRVe_model object, so add them before changing the formula.
-The fixed effects parameters will be automatically updated to reflect the new formula.
+The distance units used in calculations can be changed to any valid distance unit provided by the 'units' package.
+Distances are standardized within the model so changing the distance units should not affect inference or predictions.
 
 ```{r change-units}
 spatial_parameters(bird_model)
@@ -362,8 +383,6 @@ spatial_parameters(bird_model)
 graph(bird_model)
 ```
 
-The distance units used in calculations can be changed to any valid distance unit provided by the 'units' package.
-Distances are standardized within the model so changing the distance units should not affect inference or predictions.
 
 ```{r include = F}
 bird_model<- cache_model
@@ -381,6 +400,9 @@ Predictions can be made as individual locations or as a raster.
 
 ## Point predictions
 
+We first randomly sample a small number of points for predictions each year, and store those points as an sf data.frame.
+The prediction locations can be the same every year or they can be different, and the years of the predictions can be different from those in the original data.
+
 ```{r predict-points}
 pred_points<- st_sample(
   st_as_sfc(st_bbox(bird_survey)),
@@ -390,8 +412,11 @@ pred_points<- st_sf(geom = pred_points,year=rep(2012:2016,each=5))
 pred_points
 ```
 
-We first randomly sample a small number of points for predictions each year, and store those points as an sf data.frame.
-The prediction locations can be the same every year or they can be different, and the years of the predictions can be different from those in the original data.
+The output is a staRVe_predictions object with two slots, a 'locations' slot containing an sf data.frame with any covariates used, the year, and the geometry, and a 'predictions' slot containing a stars object with attributes for:
+
+- The spatio-temporal random effects **w**, and their standard errors **w_se**
+- The response mean before applying the link function **linear**, and their standard errors **linear_se**
+- the response mean after applying the link function **response**, and their standard errors **response_se**
 
 ```{r predict-sf}
 sf_pred<- staRVe_predict(
@@ -401,17 +426,11 @@ sf_pred<- staRVe_predict(
 sf_pred
 ```
 
-The output is a staRVe_predictions object with two slots, a 'locations' slot containing an sf data.frame with any covariates used, the year, and the geometry, and a 'predictions' slot containing a stars object with attributes for:
-
-- The spatio-temporal random effects **w**, and their standard errors **w_se**
-- The response mean before applying the link function **linear**, and their standard errors **linear_se**
-- the response mean after applying the link function **response**, and their standard errors **response_se**
-
 These predictions can be converted to a single sf data.frame fairly easily.
 
 ```{r}
 tmp<- cbind(
-  do.call(cbind,predictions(sf_pred)[,,1]),
+  do.call(cbind,values(sf_pred)[,,1]),
   locations(sf_pred)
 )
 colnames(tmp)[1:6]<- c("w","w_se","linear","linear_se","response","response_se")
@@ -420,6 +439,8 @@ tmp
 
 
 ## Raster predictions
+
+To predict a raster for a smooth prediction surface you can supply a raster object from the 'raster' package.
 
 ```{r}
 library(raster)
@@ -431,8 +452,8 @@ pred_raster<- raster(
 pred_raster
 ```
 
-To predict a raster for a smooth prediction surface you can supply a raster object from the 'raster' package.
 The 'staRVe_predict' function handles rasters by extracting the centroid of each raster cell and giving point predictions at those centroids.
+The output is a stars object with predictions at each raster location and every year.
 
 ```{r predict-raster}
 staRVe_predict(
@@ -441,7 +462,8 @@ staRVe_predict(
 )
 ```
 
-The output is a stars object with predictions at each raster location and every year.
+If the supplied raster has values, then predictions will only be made at cells that are not `r NA`.
+See '?raster::mask' for details on creating raster with NAs.
 
 ```{r predict_mask_raster}
 pred_raster[]<- 0
@@ -455,8 +477,7 @@ pred_out<- staRVe_predict(
 pred_out$response[,,1,1]
 ```
 
-If the supplied raster has values, then predictions will only be made at cells that are not `r NA`.
-See '?raster::mask' for details on creating raster with NAs.
+For raster predictions an additional 'time' option is available to specify which years to make predictions for, with the default behaviour being to predict every year between the earliest and latest year in the original dataset.
 
 ```{r forecast-raster}
 staRVe_predict(
@@ -466,8 +487,6 @@ staRVe_predict(
 )
 ```
 
-For raster predictions an additional 'time' option is available to specify which years to make predictions for, with the default behaviour being to predict every year between the earliest and latest year in the original dataset.
-
 
 
 
@@ -476,6 +495,12 @@ For raster predictions an additional 'time' option is available to specify which
 
 Any 'staRVe_model' object can simulate new realizations of both the random effects and observations.
 You can simulated from an already fitted model, or by first defining a new model from scratch.
+
+Passing a fitted staRVe model to 'staRVe_simulate' simulates new time effects, new random effects, and new observations, using the parameter estimates (or whichever parameter values are current).
+The output of 'staRVe_simulate' is itself a 'staRVe_model' object.
+The parameter values are the same as those of the supplied model, however all standard errors have been replace with NA.
+The time effects, random effects, and observations in the output are the simulated values.
+No record of the previous values are stored.
 
 ```{r sim-bird}
 sim_model<- prepare_staRVe_model(
@@ -488,11 +513,10 @@ sim_model<- staRVe_simulate(sim_model)
 sim_model
 ```
 
-Passing a fitted staRVe model to 'staRVe_simulate' simulates new time effects, new random effects, and new observations, using the parameter estimates (or whichever parameter values are current).
-The output of 'staRVe_simulate' is itself a 'staRVe_model' object.
-The parameter values are the same as those of the supplied model, however all standard errors have been replace with NA.
-The time effects, random effects, and observations in the output are the simulated values.
-No record of the previous values are stored.
+To simulate from a completely new model you first have to create a template sf data.frame.
+The template data.frame needs to contain a column for the response variable, a column for any covariates desired, a column for the time variable, and a geometry column.
+The values in the response variable column are irrelevant however the covariate values will be the ones used in the model, the time and geometry columns are also used to set up the spatio-temporal layout of the simulations.
+We will use a sf data.frame with a 4x4 grid of points replicated over 5 years.
 
 ```{r sim-new}
 sim_df<- st_as_sf(
@@ -514,10 +538,8 @@ sim_model<- prepare_staRVe_model(
 )
 ```
 
-To simulate from a completely new model you first have to create a template sf data.frame.
-The template data.frame needs to contain a column for the response variable, a column for any covariates desired, a column for the time variable, and a geometry column.
-The values in the response variable column are irrelevant however the covariate values will be the ones used in the model, the time and geometry columns are also used to set up the spatio-temporal layout of the simulations.
-The sf data.frame constructed above consists of a 4x4 grid (16 points) replicated over 5 years.
+Once a staRVe model is created from the template data, the parameter values and other model options (such as the covariance function, link function, response distribution, etc.) need to be set to their desired value.
+After doing so you can simulate new random effects and data from the model.
 
 ```{r sim-new2}
 time_parameters(sim_model)$y[c("mu","ar1","sd"),"par"]<- c(10,0.7,1)
@@ -527,43 +549,44 @@ sim_model<- staRVe_simulate(sim_model)
 sim_model
 ```
 
-Once a staRVe model is created from the template data, the parameter values and other model options (such as the covariance function, link function, response distribution, etc.) need to be set to their desired value.
 
 
 ## Simulating random effects and observations
 
+The default behaviour for simulations is to simulate new time effects, new random effects, and new data.
+We show only the first few of each to show their difference before and after simulations.
+
 ```{r simulate-all}
 time_effects(sim_model)
-random_effects(sim_model)
+pg_re(sim_model)
 head(dat(sim_model)$y)
 sim_model<- staRVe_simulate(
   sim_model
 )
 time_effects(sim_model)
-random_effects(sim_model)
+pg_re(sim_model)
 head(dat(sim_model)$y)
 ```
 
-The default behaviour for simulations is to simulate new time effects, new random effects, and new data.
-We show only the first few of each to show their difference before and after simulations.
 
 ## Simulating only observations
 
+Simulations of only new data, conditional on the existing time effects and random effects, can be made by giving the 'conditional=T' option.
+Note that the time effects and random effects are the same before and after simulation, but that the response variable is different.
+
 ```{r simulate-obs}
 time_effects(sim_model)
-random_effects(sim_model)
+pg_re(sim_model)
 head(dat(sim_model)$y)
 sim_model<- staRVe_simulate(
   sim_model,
   conditional=T
 )
 time_effects(sim_model)
-random_effects(sim_model)
+pg_re(sim_model)
 head(dat(sim_model)$y)
 ```
 
-Simulations of only new data, conditional on the existing time effects and random effects, can be made by giving the 'conditional=T' option.
-Note that the time effects and random effects are the same before and after simulation, but that the response variable is different.
 
 
 
@@ -574,6 +597,8 @@ Note that the time effects and random effects are the same before and after simu
 
 ## Creating a model
 
+First we add two dummy covariates 'elev' and 'temp' to our original data.
+
 ```{r data-covar}
 bird_survey$elev<- rnorm(
   nrow(bird_survey)
@@ -583,7 +608,10 @@ bird_survey$temp<- rnorm(
 )
 ```
 
-First we add two dummy covariates 'elev' and 'temp' to our original data.
+Then we'll fit a model, using the formula to include the new covariates.
+The estimates for the covariate effects are given in the fixed effects parameters.
+Offset terms can be included by setting 'fixed=TRUE' for that covariate in the fixed effects parameters.
+All covariates that are named in the model formula are also present in the data stored in the staRVe_model object.
 
 ```{r covar-fit-elev}
 bird_model<- prepare_staRVe_model(
@@ -592,17 +620,11 @@ bird_model<- prepare_staRVe_model(
   distribution = "poisson",
   fit = T
 )
-```
-
-
-```{r}
 fixed_effects(bird_model)
 dat(bird_model)
 ```
 
-The estimates for the covariate effects are given in the fixed effects parameters.
-Offset terms can be included by setting 'fixed=TRUE' for that covariate in the fixed effects parameters.
-All covariates that are named in the model formula are also present in the data stored in the staRVe_model object.
+More complex covariate effects such as interaction terms, transformations, and polynomial functions can be included in the model formula.
 
 ```{r covar-fit-elev-temp}
 bird_model<- prepare_staRVe_model(
@@ -611,17 +633,14 @@ bird_model<- prepare_staRVe_model(
   distribution = "poisson",
   fit = T
 )
-```
-
-More complex covariate effects such as interaction terms, transformations, and polynomial functions can be included in the model formula.
-
-```{r}
 fixed_effects(bird_model)
 dat(bird_model)
 ```
 
 
 ## Point predictions
+
+We'll use the simpler covariate model for predictions.
 
 ```{r pred-covar-model}
 bird_model<- prepare_staRVe_model(
@@ -632,14 +651,20 @@ bird_model<- prepare_staRVe_model(
 )
 ```
 
+We'll create an 'sf' object with our prediction points and years, along with the covariate values we want to use for predictions.
+
 ```{r covar-points}
+pred_points<- st_sample(
+  st_as_sfc(st_bbox(bird_survey)),
+  size = 25
+)
+pred_points<- st_sf(geom = pred_points,year=rep(2012:2016,each=5))
 pred_points$elev<- rnorm(nrow(pred_points))
 pred_points$temp<- rnorm(nrow(pred_points))
 pred_points
 ```
 
-The code above creates an sf data.frame with covariate values at all prediction locations, in every year for which we want predictions.
-More locations or years can be supplied, only the locations/years that are needed will be used.
+The output is the same as predictions without covariates, but the covariates used are also included in the resulting 'long_stars' object.
 
 ```{r pred-covar-sf}
 staRVe_predict(
@@ -648,12 +673,19 @@ staRVe_predict(
 )
 ```
 
-Covariates are given to the 'staRVe_predict' function as a third argument, separately from the sf data.frame holding the observation locations.
-The output is the same as predictions without covariates, but the covariates used are also included in the resulting sf data.frame.
 
 
 
 ## Raster predictions
+
+
+Covariates for raster predictions need to be supplied in a specific format: a list with a named element for each covariate.
+The elements need to have the same name as the covariate.
+Each covariate element needs to be a raster with the same geometry (dimensions, resolution, extent, coordinate reference system) as the raster template for the prediction locations.
+Each layer of the covariate raster must correspond to a single year and be named "T####" where #### is replaced with the year.
+The leading "T" in each layer name is necessary, and needs to specifically be a capitol "T".
+For example, the layer "T2005" gives the covariate values for the year 2005.
+Extra years of covariate values can be supplied, the 'staRVe_predict' function will only use the years for which predictions are made.
 
 ```{r covar-raster}
 pred_raster<- raster(
@@ -680,14 +712,8 @@ pred_covar<- list(
 pred_covar
 ```
 
-Covariates for raster predictions need to be supplied in a specific format: a list with a named element for each covariate.
-The elements need to have the same name as the covariate.
-Each covariate element needs to be a raster with the same geometry (dimensions, resolution, extent, coordinate reference system) as the raster template for the prediction locations.
-Each layer of the covariate raster must correspond to a single year and be named "T####" where #### is replaced with the year.
-The leading "T" in each layer name is necessary, and needs to specifically be a capitol "T".
-For example, the layer "T2005" gives the covariate values for the year 2005.
-Extra years of covariate values can be supplied, the 'staRVe_predict' function will only use the years for which predictions are made.
-
+For raster predictions, covariates are supplied to 'staRVe_predict' by giving the covariate raster list for the covariates is supplied as the third argument.
+The output is the same as raster predictions without covariates, but the resulting stars raster for each year has  additional layer containing the covariate values.
 
 ```{r pred-covar-raster}
 staRVe_predict(
@@ -698,9 +724,6 @@ staRVe_predict(
 )
 ```
 
-Covariates are supplied to 'staRVe_predict' the same way as they were for point predictions.
-The raster list for the covariates is supplied as a third argument.
-The output is the same as raster predictions without covariates, but the resulting raster for each year has an additional layer containing the covariate values.
 
 
 ```{r include=F}
@@ -723,7 +746,7 @@ Some options to the individual terms in the above model formula can be specified
 
 - **covariates**: Covariate effects can be specified as they would be in a typical call to 'lm' or 'glm'. Can be omitted from the formula if no covariates effects are desired.
 - **sample.size(...)**: Used only for specific response distributions, for example the binomial distribution. A single variable name should be supplied. Can be omitted from the formula, and sample sizes are assumed to be equal to 1 for all observations.
-- **time(...,type=)**: The name of the column holding the time information should be given. Valid options for the type option are:
+- **time(...,type=)**: The name of the column holding the time information should be given. For a purely spatial model, create a dummy 'time' column with entries all equal to the same value. Valid options for the type option are:
     - **independent**: Each year in the model is assumed to be independent. The 'ar1' time parameter is fixed at 0.
     - **ar1** (default): An autoregressive order 1 model is used. The 'ar1' time parameter is freely estimated.
     - **rw**: A random walk is used. The 'ar1' time parameter is fixed at 1.
@@ -731,6 +754,8 @@ Some options to the individual terms in the above model formula can be specified
 
 
 ## Response distribution
+
+The valid response distributions can be found with the 'get_staRVe_distributions' function:
 
 ```{r staRVe-distributions}
 get_staRVe_distributions("distribution")
@@ -788,6 +813,8 @@ get_staRVe_distributions("distribution")
 
 ## Link functions
 
+The valid link functions can be found with the 'get_staRVe_distributions' function:
+
 ```{r staRVe-links}
 get_staRVe_distributions("link")
 ```
@@ -820,6 +847,12 @@ get_staRVe_distributions("covariance")
 
 ## Holding parameters fixed
 
+You can hold parameters fixed during model fitting.
+Instead of being estimated the parameter value held in the staRVe model will be assumed "true".
+We will hold the ar1 parameter fixed at 0, setting up each year in the model to be independent of the other years.
+You can set as many parameters as you want to be held fixed, however the random effects cannot be fixed to particular values.
+A model with all parameters held constant can still be fitted with the 'staRVe_fit' function, in which case the time effects and random effects will be estimated along with their standard errors.
+
 ```{r fixed-parameters}
 parameters(bird_model)
 
@@ -829,43 +862,3 @@ bird_model<- staRVe_fit(bird_model,silent=T)
 
 parameters(bird_model)
 ```
-
-You can hold parameters fixed during model fitting.
-Instead of being estimated the parameter value held in the staRVe model will be assumed "true".
-In the example above the ar1 parameter is held fixed at 0, setting up each year in the model to be independent of the other years.
-You can set as many parameters as you want to be held fixed, however the random effects cannot be fixed to particular values.
-A model with all parameters held constant can still be fitted with the 'staRVe_fit' function, in which case the time effects and random effects will be estimated along with their standard errors.
-
-<!--
-# Common problems
-
-TO BE FINISHED
-
-# Flat time effects / estimated time sd close to 0
-
-```{r flat-time-effects, eval=F}
-data(bird_survey)
-bird_survey<- subset(bird_survey,year >= 2005)
-bird_model<- prepare_staRVe_model(
-  cnt ~ time(year),
-  data = bird_survey,
-  distribution = "poisson",
-  fit = T
-)
-time_effects(bird_model)
-```
-
-
-
-
-# Model design and considerations
-
-TO BE FINISHED
-
-## Covariance function / spatial range
-
-## Temporal structure
-
-## Standard errors and delta method
-
-## Directed acyclic graphs -->
