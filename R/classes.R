@@ -145,7 +145,7 @@ setClass(
 #' @slot persistent_graph A dag object describing the dependence graph of the process.
 #' @slot parameters An object of class process_parameters.
 #'
-#' @seealso strv_prepare_process
+#' @seealso strv_prepare
 #'
 #' @family starve_classes
 #'
@@ -197,7 +197,7 @@ setClass(
 #'   the process.
 #' @slot parameters An object of class observation_parameters.
 #'
-#' @seealso strv_prepare_observations
+#' @seealso strv_prepare
 #'
 #' @family starve_classes
 #'

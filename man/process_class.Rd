@@ -97,7 +97,7 @@ effects and the transient graph random effects.
 }}
 
 \seealso{
-strv_prepare_process
+strv_prepare
 
 Other starve_classes: 
 \code{\link{TMB_out-class}},

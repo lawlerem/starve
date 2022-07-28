@@ -65,7 +65,7 @@ the process.}
 }}
 
 \seealso{
-strv_prepare_observations
+strv_prepare
 
 Other starve_classes: 
 \code{\link{TMB_out-class}},

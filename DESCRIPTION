@@ -56,8 +56,6 @@ Collate:
     'fit.R'
     'imports.R'
     'long_stars.R'
-    'show.R'
-    'src.R'
     'staRVe_tracing.R'
     'staRVe_settings.R'
     'staRVe_observation_parameters.R'
@@ -66,4 +64,7 @@ Collate:
     'staRVe_process.R'
     'staRVe_observations.R'
     'staRVe_model.R'
+    'prepare.R'
+    'show.R'
+    'src.R'
 Config/testthat/edition: 3
