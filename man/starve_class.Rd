@@ -10,6 +10,10 @@
 \alias{observations<-,starve-method}
 \alias{settings,starve-method}
 \alias{settings<-,starve-method}
+\alias{tracing,starve-method}
+\alias{tracing<-,starve-method}
+\alias{TMB_out,starve-method}
+\alias{TMB_out<-,starve-method}
 \alias{time_effects,starve-method}
 \alias{time_effects<-,starve-method}
 \alias{pg_re,starve-method}
@@ -47,6 +51,8 @@
 \alias{time_name,starve-method}
 \alias{parameters,starve-method}
 \alias{parameters<-,starve,parameters-method}
+\alias{convergence,starve-method}
+\alias{timing,starve-method}
 \title{An S4 class describing a starve model.}
 \usage{
 \S4method{show}{starve}(object)
@@ -62,6 +68,14 @@
 \S4method{settings}{starve}(x)
 
 \S4method{settings}{starve}(x) <- value
+
+\S4method{tracing}{starve}(x)
+
+\S4method{tracing}{starve}(x) <- value
+
+\S4method{TMB_out}{starve}(x)
+
+\S4method{TMB_out}{starve}(x) <- value
 
 \S4method{time_effects}{starve}(x)
 
@@ -136,6 +150,10 @@
 \S4method{parameters}{starve}(x)
 
 \S4method{parameters}{starve,parameters}(x) <- value
+
+\S4method{convergence}{starve}(x)
+
+\S4method{timing}{starve}(x)
 }
 \arguments{
 \item{object}{An object}
@@ -162,6 +180,14 @@ An S4 class describing a starve model.
 \item \code{settings,starve-method}: Get model settings
 
 \item \code{settings<-,starve-method}: Set model settings (for internal use only)
+
+\item \code{tracing,starve-method}: Get tracing information, see \link{tracing_class}.
+
+\item \code{tracing<-,starve-method}: Set tracing information (for internal use only)
+
+\item \code{TMB_out,starve-method}: Get TMB objects (for internal use only)
+
+\item \code{TMB_out<-,starve-method}: Set TMB objects (for internal use only)
 
 \item \code{time_effects,starve-method}: Get temporal random effects
 
@@ -250,6 +276,10 @@ the model formula (for internal use only)
 
 \item \code{parameters<-,starve,parameters-method}: Set all model parameters with a new
 parameters object
+
+\item \code{convergence,starve-method}: Get convergence message from optimizer
+
+\item \code{timing,starve-method}: Get all timing information, see \link{tracing}
 }}
 
 \section{Slots}{
@@ -276,7 +306,6 @@ Other starve_classes:
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
 \code{\link{starve_classes}},
-\code{\link{starve_fit-class}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

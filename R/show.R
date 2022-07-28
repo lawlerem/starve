@@ -53,27 +53,6 @@ setMethod(f = "show",
 #' @param object An object
 #'
 #' @export
-#' @describeIn starve_class Print method
-setMethod(f = "show",
-          signature = "starve",
-          definition = function(object) {
-  cat("\n")
-  print(parameters(object))
-  cat("\n")
-  # cat("Random Effects")
-  # cat("\n")
-  # print(random_effects(object))
-  # cat("\n")
-  cat("Data")
-  cat("\n")
-  print(dat(object))
-
-  return(invisible())
-})
-
-#' @param object An object
-#'
-#' @export
 #' @describeIn tracing_class Print method
 setMethod(f = "show",
           signature = "tracing",
@@ -109,19 +88,31 @@ setMethod(f = "show",
   return(invisible())
 })
 
+
+
 #' @param object An object
 #'
 #' @export
-#' @describeIn starve_fit_class Print method
+#' @describeIn starve_class Print method
 setMethod(f = "show",
-          signature = "starve_fit",
+          signature = "starve",
           definition = function(object) {
   cat("\n")
   print(convergence(object))
-  print(as(object,"starve"))
+  cat("\n")
+  print(parameters(object))
+  cat("\n")
+  # cat("Random Effects")
+  # cat("\n")
+  # print(random_effects(object))
+  # cat("\n")
+  cat("Data")
+  cat("\n")
+  print(dat(object))
 
   return(invisible())
 })
+
 
 # setMethod(f = "show",
 #           signature = "parameters",

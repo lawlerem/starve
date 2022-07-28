@@ -1,4 +1,4 @@
-#' @include classes.R getset.R generics.R staRVe_process.R staRVe_observations.R staRVe_parameters.R staRVe_settings.R
+#' @include classes.R getset.R generics.R staRVe_process.R staRVe_observations.R staRVe_parameters.R staRVe_settings.R staRVe_tracing.R TMB_out.R
 NULL
 
 #################
@@ -9,6 +9,8 @@ NULL
 
 #' @param process A process object
 #' @param observations A observations object
+#' @param tracing A tracing object
+#' @param TMB_out A TMB_out object
 #' @param settings A settings object
 #'
 #' @rdname starve-construct
@@ -18,9 +20,13 @@ setMethod(
   definition = function(.Object,
                         process = new("process"),
                         observations = new("observations"),
+                        tracing = new("tracing"),
+                        TMB_out = new("TMB_out"),
                         settings = new("settings")) {
     process(.Object)<- process
     observations(.Object)<- observations
+    tracing(.Object)<- tracing
+    TMB_out(.Object)<- TMB_out
     settings(.Object)<- settings
 
     return(.Object)
@@ -90,6 +96,46 @@ setReplaceMethod(f = "settings",
                  signature = "starve",
                  definition = function(x,value) {
   x@settings<- value
+  return(x)
+})
+
+
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn starve_class Get tracing information, see \link{tracing_class}.
+setMethod(f = "tracing",
+          signature = "starve",
+          definition = function(x) return(x@tracing)
+)
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn starve_class Set tracing information (for internal use only)
+setReplaceMethod(f = "tracing",
+                 signature = "starve",
+                 definition = function(x,value) {
+  x@tracing<- value
+  return(x)
+})
+
+
+#' @param x An object
+#'
+#' @describeIn starve_class Get TMB objects (for internal use only)
+setMethod(f = "TMB_out",
+          signature = "starve",
+          definition = function(x) return(x@TMB_out)
+)
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn starve_class Set TMB objects (for internal use only)
+setReplaceMethod(f = "TMB_out",
+                 signature = "starve",
+                 definition = function(x,value) {
+  x@TMB_out<- value
   return(x)
 })
 
@@ -560,6 +606,28 @@ setReplaceMethod(f = "parameters",
 
 
 
+#' @param x An object
+#'
+#' @export
+#' @describeIn starve_class Get convergence message from optimizer
+setMethod(f = "convergence",
+          signature = "starve",
+          definition = function(x) {
+  return(convergence(TMB_out(x)))
+})
+
+#' @param x An object
+#'
+#' @export
+#' @describeIn starve_class Get all timing information, see \link{tracing}
+setMethod(f = "timing",
+          signature = "starve",
+          definition = function(x) {
+  return(timing(tracing(x)))
+})
+
+
+
 
 ###############
 ###         ###
@@ -628,10 +696,12 @@ setReplaceMethod(f = "parameters",
 #' @param distance_units Any value that can be used as a \code{units} object
 #'   from the \code{units} package. Which distance units should the model use?
 #'   Defaults to "km".
-#' @param fit Logical. Should the model be fit in this call?
-#' @param ... Extra options to pass to fit if fit=TRUE
+#' @param fit Logical. Should parameter estimates be found? If so, the starting
+#'   values for the optimizer will use the default values.
+#' @param ... Extra options to pass to \link{strv_fit} if fit=TRUE
 #'
-#' @return A starve object. If fit=TRUE, a starve_fit object.
+#' @return A starve object. If fit=TRUE, the returned model will be hold parameter
+#'   estimates obtained from the \link{strv_fit} function.
 #'
 #' @seealso starve_class
 #' @seealso strv_prepare_process, strv_prepare_observations
@@ -691,6 +761,7 @@ setMethod(f = "TMB_in",
           signature = "starve",
           definition = function(x) {
   min_t<- min(stars::st_get_dimension_values(pg_re(x),time_name(x)))
+
   data<- list(
     model = "model",
     conditional_sim = FALSE,
@@ -705,7 +776,7 @@ setMethod(f = "TMB_in",
     obs = as.matrix(response_from_formula(formula(x),dat(x))),
     idx = cbind(
       dat(x)$graph_idx-1,
-      time_from_formula(formula(x),dat(x))[[1]]-min_t
+      c(time_from_formula(formula(x),dat(x)))-min_t
     ),
     sample_size = as.matrix(sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
     mean_design = as.matrix(mean_design_from_formula(formula(x),dat(x),"model.matrix")),

@@ -2,15 +2,15 @@
 % Please edit documentation in R/generics.R, R/fit.R
 \name{strv_predict}
 \alias{strv_predict}
-\alias{strv_predict,starve_fit,sf-method}
-\alias{strv_predict,starve_fit,RasterLayer-method}
+\alias{strv_predict,starve,sf-method}
+\alias{strv_predict,starve,RasterLayer-method}
 \title{Use a fitted model to predict.}
 \usage{
 strv_predict(x, new_data, ...)
 
-\S4method{strv_predict}{starve_fit,sf}(x, new_data)
+\S4method{strv_predict}{starve,sf}(x, new_data)
 
-\S4method{strv_predict}{starve_fit,RasterLayer}(x, new_data, covariates, time = "model")
+\S4method{strv_predict}{starve,RasterLayer}(x, new_data, covariates, time = "model")
 }
 \arguments{
 \item{x}{A fitted model}
@@ -42,14 +42,14 @@ Use a fitted model to predict.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{x = starve_fit,new_data = sf}: Predict/forecast at the specific locations and
+\item \code{x = starve,new_data = sf}: Predict/forecast at the specific locations and
 times given in \code{new_data}. Any covariates used to fit the model
 should be included in the rows of \code{new_data}. Returns a \code{long_stars}
 object containing a copy of \code{new_data} and the associated predictions
 and standard errors for the random effects and response mean on both the
 link and natural scale.
 
-\item \code{x = starve_fit,new_data = RasterLayer}: Predictions will be made for all raster cells
+\item \code{x = starve,new_data = RasterLayer}: Predictions will be made for all raster cells
 whose value are not NA. If the raster has no values, then predictions will
 be made at every raster cell. Raster predictions are not treated as areal
 data, instead point predictions are made at the midpoint of each raster cell.

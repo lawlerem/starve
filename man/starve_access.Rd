@@ -249,8 +249,7 @@ These accessor functions are used to extract different components from the
   for a class, and a description of the different components of that class
   that these functions return, please see the documentation for that class.
   The main classes implemented in the starve package are \link{dag},
-  \link{long_stars}, \link{starve}, \link{tracing}, and
-  \link{starve_fit}.
+  \link{long_stars}, \link{tracing}, and \link{starve}.
 }
 \section{Functions}{
 \itemize{
@@ -410,7 +409,6 @@ These accessor functions are used to extract different components from the
 }}
 
 \seealso{
-\link{dag}, \link{long_stars}, \link{starve}, \link{tracing},
-  and \link{starve_fit}.
+\link{dag}, \link{long_stars}, \link{tracing},\link{starve}.
 }
 \keyword{internal}

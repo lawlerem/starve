@@ -56,12 +56,14 @@ the supplied \code{distance_units}.}
 from the \code{units} package. Which distance units should the model use?
 Defaults to "km".}
 
-\item{fit}{Logical. Should the model be fit in this call?}
+\item{fit}{Logical. Should parameter estimates be found? If so, the starting
+values for the optimizer will use the default values.}
 
-\item{...}{Extra options to pass to fit if fit=TRUE}
+\item{...}{Extra options to pass to \link{strv_fit} if fit=TRUE}
 }
 \value{
-A starve object. If fit=TRUE, a starve_fit object.
+A starve object. If fit=TRUE, the returned model will be hold parameter
+  estimates obtained from the \link{strv_fit} function.
 }
 \description{
 'strv_prepare' is used to take an existing `simple features` data.frame

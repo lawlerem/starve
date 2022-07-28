@@ -76,21 +76,15 @@ setMethod(f = "strv_fit",
   }) -> sdr_time(tracing)
 
   # Update starve object based on parameter estimates
-  fit<- new("starve_fit",
-            starve = object,
-            tracing = tracing,
-            TMB_out = TMB_out)
-
-  as(fit,"starve")<- strv_update(
-    x = as(fit,"starve"),
-    y = TMB_out(fit)
-  )
+  tracing(object)<- tracing
+  TMB_out(object)<- TMB_out
+  object<- strv_update(object,TMB_out)
 
   # Get random effects, predictions on link scale, and predictions on response scale
-  data_predictions(fit)<- predict_linear(fit,data_predictions(fit))
-  data_predictions(fit)<- predict_response(fit,data_predictions(fit))
+  data_predictions(object)<- predict_linear(object,data_predictions(object))
+  data_predictions(object)<- predict_response(object,data_predictions(object))
 
-  return(fit)
+  return(object)
 })
 
 
@@ -102,7 +96,7 @@ setMethod(f = "strv_fit",
 #' @describeIn strv_simulate Simulate a new dataset from the model, with the
 #' option to simulate a new set of random effects as well. The parameter values
 #' used in the simulations are those set in \code{parameters(model)}. Returns
-#' a \code{starve_fit} object with simulated random effects (if \code{conditional=FALSE})
+#' a \code{starve} object with simulated random effects (if \code{conditional=FALSE})
 #' and simulated data.
 setMethod(f = "strv_simulate",
           signature = "starve",
@@ -167,8 +161,8 @@ setMethod(f = "strv_simulate",
   dat(object)[,attr(response_from_formula(formula(settings(object)),
                                           dat(object)),"name")]<- sims$obs
 
-  # Turn into starve_fit so you have access to TMB obj
-  object<- new("starve_fit",starve = object)
+  # Update convergence/message and TMB::MakeADFun obj
+  opt(TMB_out(object))$convergence<- 0
   opt(TMB_out(object))$message<- "Simulated realization from model"
   obj(TMB_out(object))<- obj
 
@@ -184,7 +178,7 @@ setMethod(f = "strv_simulate",
 #'   and standard errors for the random effects and response mean on both the
 #'   link and natural scale.
 setMethod(f = "strv_predict",
-          signature = c("starve_fit","sf"),
+          signature = c("starve","sf"),
           definition = function(x,
                                 new_data) {
   ### Check that we have all covariates, if there are covariates in the model
@@ -228,7 +222,7 @@ setMethod(f = "strv_predict",
 #'   geometry of \code{new_data}, the third dimension is the time index given
 #'   in \code{time}, and the fourth dimension is the response variable.
 setMethod(f = "strv_predict",
-          signature = c("starve_fit","RasterLayer"),
+          signature = c("starve","RasterLayer"),
           definition = function(x,new_data,covariates,time="model") {
   # Convert raster to sf
   uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(new_data,spatial=TRUE))
@@ -296,7 +290,7 @@ setMethod(f = "strv_predict",
 
 #' Predict random effects from likelihood function
 #'
-#' @param x A starve_fit object
+#' @param x A starve object
 #' @param predictions A long_stars object
 #' @param dist_tol A small number so that prediction variances are not
 #'   computationally singular
@@ -378,7 +372,7 @@ predict_w<- function(x,
 
 #' Update random effect predictions to include covariates (link scale)
 #'
-#' @param x A starve_model object. If se = TRUE, should be a starve_fit object.
+#' @param x A starve object. If se = TRUE, should be a starve object.
 #' @param predictions A long_stars object, typically the output of predict_w.
 #'   Should contain covariate data in slot 'locations'
 #' @param se Should standard errors be calculated?
@@ -440,7 +434,7 @@ predict_linear<- function(x,
 #'
 #' A second-order Taylor approximation (delta method) is used
 #'
-#' @param x A starve object. If se = TRUE, should be a starve_fit object.
+#' @param x A starve object. If se = TRUE, should be a fitted starve object.
 #' @param predictions A data.frame, typically the output of predict_linear.
 #'   Must contain at least the columns linear and linear_se.
 #' @param se Should standard errors be calculated?

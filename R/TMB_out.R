@@ -17,7 +17,7 @@ setMethod(
   signature = "TMB_out",
   definition = function(.Object,
                         obj = list(),
-                        opt = list(),
+                        opt = list(convergence = 0,message="Model not yet fitted."),
                         sdr = structure(numeric(0),class="sdreport")) {
     obj(.Object)<- obj
     opt(.Object)<- opt

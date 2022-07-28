@@ -18,10 +18,9 @@ To see documentation for a particular class, load the package and run e.g.
   \item process
   \item observation_parameters
   \item observations
-  \item starve
   \item tracing
   \item TMB_out
-  \item starve_fit
+  \item starve
   \item parameters
 }
 }
@@ -38,7 +37,6 @@ Other starve_classes:
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
 \code{\link{starve-class}},
-\code{\link{starve_fit-class}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

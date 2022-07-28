@@ -13,10 +13,9 @@
 #'   \item process
 #'   \item observation_parameters
 #'   \item observations
-#'   \item starve
 #'   \item tracing
 #'   \item TMB_out
-#'   \item starve_fit
+#'   \item starve
 #'   \item parameters
 #' }
 #'
@@ -214,26 +213,6 @@ setClass(
 )
 
 
-#' An S4 class describing a starve model.
-#'
-#' @slot process A process object.
-#' @slot observations An observations object.
-#' @slot settings A settings object.
-#'
-#' @rdname starve_class
-#'
-#' @seealso strv_prepare
-#'
-#' @family starve_classes
-setClass(
-  Class = "starve",
-  slots = c(
-    process = "process",
-    observations = "observations",
-    settings = "settings"
-  )
-)
-
 #' An S4 class to hold optimization tracing for a starve model
 #'
 #' @slot opt_time A proc_time object. Time elapsed while computing the ML estimates.
@@ -276,23 +255,28 @@ setClass(
   )
 )
 
-#' An extension of the starve class to hold optimization information
+
+
+#' An S4 class describing a starve model.
 #'
-#' @slot tracing A tracing object
-#' @slot TMB_out A TMB_out object (for internal use)
+#' @slot process A process object.
+#' @slot observations An observations object.
+#' @slot settings A settings object.
 #'
-#' @rdname starve_fit_class
+#' @rdname starve_class
 #'
-#' @seealso starve_class, tracing_class, TMB_out
+#' @seealso strv_prepare
 #'
 #' @family starve_classes
 setClass(
-  Class = "starve_fit",
+  Class = "starve",
   slots = c(
+    process = "process",
+    observations = "observations",
     tracing = "tracing",
-    TMB_out = "TMB_out"
-  ),
-  contains = c("starve")
+    TMB_out = "TMB_out",
+    settings = "settings"
+  )
 )
 
 
@@ -305,7 +289,7 @@ setClass(
 
 #' An S4 class to collect process and observations parameters.
 #'
-#' @seealso process_parameters_class, observation_parameters_class, starve_class, starve_fit_class
+#' @seealso process_parameters_class, observation_parameters_class, starve_class
 #'
 #' @rdname parameters_class
 #'

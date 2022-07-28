@@ -8,7 +8,7 @@
 An S4 class to collect process and observations parameters.
 }
 \seealso{
-process_parameters_class, observation_parameters_class, starve_class, starve_fit_class
+process_parameters_class, observation_parameters_class, starve_class
 
 Other starve_classes: 
 \code{\link{TMB_out-class}},
@@ -21,7 +21,6 @@ Other starve_classes:
 \code{\link{settings-class}},
 \code{\link{starve-class}},
 \code{\link{starve_classes}},
-\code{\link{starve_fit-class}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

@@ -105,7 +105,6 @@ Other starve_classes:
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
 \code{\link{starve-class}},
-\code{\link{starve_classes}},
-\code{\link{starve_fit-class}}
+\code{\link{starve_classes}}
 }
 \concept{starve_classes}
