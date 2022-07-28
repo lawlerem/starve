@@ -39,23 +39,23 @@
 \description{
 An S4 class to hold TMB-related objects
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{obj}: Get TMB::MakeADFun object
+\item \code{obj,TMB_out-method}: Get TMB::MakeADFun object
 
-\item \code{obj<-}: Set TMB::MakeADFun object
+\item \code{obj<-,TMB_out-method}: Set TMB::MakeADFun object
 
-\item \code{opt}: Get output of optimizer
+\item \code{opt,TMB_out-method}: Get output of optimizer
 
-\item \code{opt<-}: Set output of optimizer
+\item \code{opt<-,TMB_out-method}: Set output of optimizer
 
-\item \code{sdr}: Get output of TMB::sdreport
+\item \code{sdr,TMB_out-method}: Get output of TMB::sdreport
 
-\item \code{sdr<-}: Set output of TMB::sdreport
+\item \code{sdr<-,TMB_out-method}: Set output of TMB::sdreport
 
-\item \code{convergence}: Get convergence message from optimizer
+\item \code{convergence,TMB_out-method}: Get convergence message from optimizer
 
-\item \code{show}: Print method
+\item \code{show,TMB_out-method}: Print method
 }}
 
 \section{Slots}{
@@ -69,19 +69,19 @@ An S4 class to hold TMB-related objects
 }}
 
 \seealso{
-Other staRVe_classes: 
+Other starve_classes: 
 \code{\link{dag-class}},
 \code{\link{long_stars-class}},
-\code{\link{staRVe_classes}},
-\code{\link{staRVe_model-class}},
-\code{\link{staRVe_model_fit-class}},
-\code{\link{staRVe_observation_parameters-class}},
-\code{\link{staRVe_observations-class}},
-\code{\link{staRVe_parameters-class}},
-\code{\link{staRVe_process-class}},
-\code{\link{staRVe_process_parameters-class}},
-\code{\link{staRVe_settings-class}},
-\code{\link{staRVe_tracing-class}}
+\code{\link{observation_parameters-class}},
+\code{\link{observations-class}},
+\code{\link{parameters-class}},
+\code{\link{process-class}},
+\code{\link{process_parameters-class}},
+\code{\link{settings-class}},
+\code{\link{starve-class}},
+\code{\link{starve_classes}},
+\code{\link{starve_fit-class}},
+\code{\link{tracing-class}}
 }
-\concept{staRVe_classes}
+\concept{starve_classes}
 \keyword{internal}

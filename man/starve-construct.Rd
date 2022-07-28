@@ -4,21 +4,21 @@
 %   R/staRVe_process_parameters.R, R/staRVe_parameters.R, R/staRVe_process.R,
 %   R/staRVe_observations.R, R/staRVe_model.R, R/staRVe_tracing.R,
 %   R/staRVe_model_fit.R
-\name{staRVe-construct}
-\alias{staRVe-construct}
+\name{starve-construct}
+\alias{starve-construct}
 \alias{initialize,TMB_out-method}
 \alias{initialize,dag-method}
 \alias{initialize,long_stars-method}
-\alias{initialize,staRVe_settings-method}
-\alias{initialize,staRVe_observation_parameters-method}
-\alias{initialize,staRVe_process_parameters-method}
-\alias{initialize,staRVe_parameters-method}
-\alias{initialize,staRVe_process-method}
-\alias{initialize,staRVe_observations-method}
-\alias{initialize,staRVe_model-method}
-\alias{initialize,staRVe_tracing-method}
-\alias{initialize,staRVe_model_fit-method}
-\title{Constructors for the staRVe package}
+\alias{initialize,settings-method}
+\alias{initialize,observation_parameters-method}
+\alias{initialize,process_parameters-method}
+\alias{initialize,parameters-method}
+\alias{initialize,process-method}
+\alias{initialize,observations-method}
+\alias{initialize,starve-method}
+\alias{initialize,tracing-method}
+\alias{initialize,starve_fit-method}
+\title{Constructors for the starve package}
 \usage{
 \S4method{initialize}{TMB_out}(
   .Object,
@@ -36,7 +36,7 @@
   var_names = "y"
 )
 
-\S4method{initialize}{staRVe_settings}(
+\S4method{initialize}{settings}(
   .Object,
   formula = new("formula"),
   n_neighbours = 10,
@@ -44,26 +44,26 @@
   max_distance = Inf
 )
 
-\S4method{initialize}{staRVe_observation_parameters}(
+\S4method{initialize}{observation_parameters}(
   .Object,
   response_distribution = "gaussian",
   fixed_effects = list(data.frame(par = numeric(0), fixed = numeric(0)))
 )
 
-\S4method{initialize}{staRVe_process_parameters}(
+\S4method{initialize}{process_parameters}(
   .Object,
   covariance_function = "exponential",
   time_parameters = list(data.frame(par = c(0, 0, 0), se = c(0, 0, 0), fixed = c(FALSE,
     FALSE, FALSE), row.names = c("mu", "ar1", "sd")))
 )
 
-\S4method{initialize}{staRVe_parameters}(
+\S4method{initialize}{parameters}(
   .Object,
-  process_parameters = new("staRVe_process_parameters"),
-  observation_parameters = new("staRVe_observation_parameters")
+  process_parameters = new("process_parameters"),
+  observation_parameters = new("observation_parameters")
 )
 
-\S4method{initialize}{staRVe_process}(
+\S4method{initialize}{process}(
   .Object,
   time_effects = stars::st_as_stars(list(w = array(0, dim = c(1, 1)), se = array(0, dim
     = c(1, 1))), dimensions = stars::st_dimensions(time = 0, variable = "y")),
@@ -73,23 +73,23 @@
   tg_re = new("long_stars"),
   persistent_graph = new("dag"),
   transient_graph = new("dag"),
-  parameters = new("staRVe_process_parameters")
+  parameters = new("process_parameters")
 )
 
-\S4method{initialize}{staRVe_observations}(
+\S4method{initialize}{observations}(
   .Object,
   data_predictions = new("long_stars"),
-  parameters = new("staRVe_observation_parameters")
+  parameters = new("observation_parameters")
 )
 
-\S4method{initialize}{staRVe_model}(
+\S4method{initialize}{starve}(
   .Object,
-  process = new("staRVe_process"),
-  observations = new("staRVe_observations"),
-  settings = new("staRVe_settings")
+  process = new("process"),
+  observations = new("observations"),
+  settings = new("settings")
 )
 
-\S4method{initialize}{staRVe_tracing}(
+\S4method{initialize}{tracing}(
   .Object,
   opt_time = proc.time() - proc.time(),
   hess_time = proc.time() - proc.time(),
@@ -98,10 +98,10 @@
   parameter_covariance = matrix(numeric(0), nrow = 0, ncol = 0)
 )
 
-\S4method{initialize}{staRVe_model_fit}(
+\S4method{initialize}{starve_fit}(
   .Object,
-  staRVe_model = new("staRVe_model"),
-  tracing = new("staRVe_tracing"),
+  starve = new("starve"),
+  tracing = new("tracing"),
   TMB_out = new("TMB_out")
 )
 }
@@ -136,9 +136,9 @@
 
 \item{time_parameters}{A data.frame}
 
-\item{process_parameters}{A staRVe_process_parameters object}
+\item{process_parameters}{A process_parameters object}
 
-\item{observation_parameters}{A staRVe_observation_parameters object}
+\item{observation_parameters}{A observation_parameters object}
 
 \item{time_effects}{A stars object}
 
@@ -150,15 +150,15 @@
 
 \item{transient_graph}{A dag object}
 
-\item{parameters}{A staRVe_observation_parameters object}
+\item{parameters}{An observation_parameters object}
 
 \item{data_predictions}{A long_stars object}
 
-\item{process}{A staRVe_process object}
+\item{process}{A process object}
 
-\item{observations}{A staRVe_observations object}
+\item{observations}{A observations object}
 
-\item{settings}{A staRVe_settings object}
+\item{settings}{A settings object}
 
 \item{opt_time}{A proc_time object}
 
@@ -170,13 +170,13 @@
 
 \item{parameter_covariance}{A matrix}
 
-\item{staRVe_model}{A staRVe_model object}
+\item{starve}{A starve object}
 
-\item{tracing}{A staRVe_tracing object}
+\item{tracing}{A tracing object}
 
 \item{TMB_out}{A TMB_out object}
 }
 \description{
-Constructors for the staRVe package
+Constructors for the starve package
 }
 \keyword{internal}

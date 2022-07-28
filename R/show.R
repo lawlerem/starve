@@ -4,7 +4,7 @@ NULL
 #' @param object An object
 #'
 #' @export
-#' @describeIn dag Print method
+#' @describeIn dag_class Print method
 setMethod(f = "show",
           signature = "dag",
           definition = function(object) {
@@ -21,31 +21,31 @@ setMethod(f = "show",
 })
 
 # setMethod(f = "show",
-#           signature = "staRVe_process_parameters",
+#           signature = "process_parameters",
 #           definition = function(object) {
 # Default is fine
 # })
 
 # setMethod(f = "show",
-#           signature = "staRVe_process",
+#           signature = "process",
 #           definition = function(object) {
 # Default is fine
 # })
 
 # setMethod(f = "show",
-#           signature = "staRVe_observation_parameters",
+#           signature = "observation_parameters",
 #           definition = function(object) {
 # Default is fine
 # })
 
 # setMethod(f = "show",
-#           signature = "staRVe_observations",
+#           signature = "observations",
 #           definition = function(object) {
 # Default is fine
 # })
 
 # setMethod(f = "show",
-#           signature = "staRVe_settings",
+#           signature = "settings",
 #           definition = function(object) {
 # Default is fine
 # })
@@ -53,9 +53,9 @@ setMethod(f = "show",
 #' @param object An object
 #'
 #' @export
-#' @describeIn staRVe_model Print method
+#' @describeIn starve_class Print method
 setMethod(f = "show",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(object) {
   cat("\n")
   print(parameters(object))
@@ -74,9 +74,9 @@ setMethod(f = "show",
 #' @param object An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Print method
+#' @describeIn tracing_class Print method
 setMethod(f = "show",
-          signature = "staRVe_tracing",
+          signature = "tracing",
           definition = function(object) {
   cat("\n")
   cat("Time elapsed while fitting the model:")
@@ -98,7 +98,7 @@ setMethod(f = "show",
 #' @param object An object
 #'
 #' @export
-#' @describeIn TMB_out Print method
+#' @describeIn TMB_out_class Print method
 setMethod(f = "show",
           signature = "TMB_out",
           definition = function(object) {
@@ -112,19 +112,19 @@ setMethod(f = "show",
 #' @param object An object
 #'
 #' @export
-#' @describeIn staRVe_model_fit Print method
+#' @describeIn starve_fit_class Print method
 setMethod(f = "show",
-          signature = "staRVe_model_fit",
+          signature = "starve_fit",
           definition = function(object) {
   cat("\n")
   print(convergence(object))
-  print(as(object,"staRVe_model"))
+  print(as(object,"starve"))
 
   return(invisible())
 })
 
 # setMethod(f = "show",
-#           signature = "staRVe_parameters",
+#           signature = "parameters",
 #           definition = function(object) {
 # Default is fine
 # })

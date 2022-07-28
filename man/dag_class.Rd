@@ -3,13 +3,14 @@
 \docType{class}
 \name{dag-class}
 \alias{dag-class}
-\alias{dag}
 \alias{edges,dag-method}
 \alias{edges<-,dag-method}
 \alias{distances,dag-method}
 \alias{distances<-,dag-method}
 \alias{distance_units,dag-method}
 \alias{distance_units<-,dag-method}
+\alias{idxC_to_R,dag-method}
+\alias{idxR_to_C,dag-method}
 \alias{show,dag-method}
 \title{An S4 class to hold a directed acyclic graph with distances.}
 \usage{
@@ -25,6 +26,10 @@
 
 \S4method{distance_units}{dag}(x) <- value
 
+\S4method{idxC_to_R}{dag}(x)
+
+\S4method{idxR_to_C}{dag}(x)
+
 \S4method{show}{dag}(object)
 }
 \arguments{
@@ -37,22 +42,26 @@
 \description{
 An S4 class to hold a directed acyclic graph with distances.
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{edges}: Get edge list
+\item \code{edges,dag-method}: Get edge list
 
-\item \code{edges<-}: Set edge list (for internal use only)
+\item \code{edges<-,dag-method}: Set edge list (for internal use only)
 
-\item \code{distances}: Get list of edge distances
+\item \code{distances,dag-method}: Get list of edge distances
 
-\item \code{distances<-}: Set list of edge distances (for internal use only)
+\item \code{distances<-,dag-method}: Set list of edge distances (for internal use only)
 
-\item \code{distance_units}: Get distance units
+\item \code{distance_units,dag-method}: Get distance units
 
-\item \code{distance_units<-}: Set distance units. Graph distances are automatically converted
+\item \code{distance_units<-,dag-method}: Set distance units. Edge distances are automatically converted
 to the new units.
 
-\item \code{show}: Print method
+\item \code{idxC_to_R,dag-method}: Add 1 to all vertices in the graph edge list (for internal use only)
+
+\item \code{idxR_to_C,dag-method}: Subtract 1 from all vertices in the graph edge list (for internal use only)
+
+\item \code{show,dag-method}: Print method
 }}
 
 \section{Slots}{
@@ -61,7 +70,7 @@ to the new units.
 \item{\code{edges}}{A list whose elements consist of a "to" vector and a
 "from" vector. There is a directed edge in the graph from each vertex in
 "from" to each vertex in "to". If there are multiple vertices in "to" then
-there is an undirected edge between all vertices in "to" (forming a Kn graph).}
+there are undirected edges between all vertices in "to" (forming a Kn graph).}
 
 \item{\code{distances}}{A list whose elements consist of a distance matrix for the edges
 in the correponding entry of edges. The rows/columns of the distance matrix
@@ -73,20 +82,20 @@ with units::set_units.}
 }}
 
 \seealso{
-construct_dag Functions used to construct direct acyclic graphs
+construct_graph Functions used to create graphs.
 
-Other staRVe_classes: 
+Other starve_classes: 
 \code{\link{TMB_out-class}},
 \code{\link{long_stars-class}},
-\code{\link{staRVe_classes}},
-\code{\link{staRVe_model-class}},
-\code{\link{staRVe_model_fit-class}},
-\code{\link{staRVe_observation_parameters-class}},
-\code{\link{staRVe_observations-class}},
-\code{\link{staRVe_parameters-class}},
-\code{\link{staRVe_process-class}},
-\code{\link{staRVe_process_parameters-class}},
-\code{\link{staRVe_settings-class}},
-\code{\link{staRVe_tracing-class}}
+\code{\link{observation_parameters-class}},
+\code{\link{observations-class}},
+\code{\link{parameters-class}},
+\code{\link{process-class}},
+\code{\link{process_parameters-class}},
+\code{\link{settings-class}},
+\code{\link{starve-class}},
+\code{\link{starve_classes}},
+\code{\link{starve_fit-class}},
+\code{\link{tracing-class}}
 }
-\concept{staRVe_classes}
+\concept{starve_classes}

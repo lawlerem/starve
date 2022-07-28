@@ -13,7 +13,7 @@ NULL
 
 #' Append random effects for hind- and fore-casting
 #'
-#' @param x A staRVe_model object
+#' @param x A starve object
 #' @param time What times are needed? Only need to supply min and max values
 #'
 #' @return A copy of x with extra temporal and spatio-temporal random effects
@@ -114,7 +114,7 @@ NULL
 #' Retrieve a spatial covariance function from a formula.
 #'
 #' @param x A formula object with a space(covariance,nu) term. The covariance
-#'   argument must be one those listed in get_staRVe_distributions("covariance").
+#'   argument must be one those listed in get_starve_distributions("covariance").
 #'   The `nu' argument is only necessary when using the Matern covariance, and
 #'   supplying it fixes the value of nu (the smoothness parameter).
 #'
@@ -127,8 +127,8 @@ NULL
     # Find the closest match for covariance function
     if( missing(covariance) ) {covariance<- "exponential"}
 
-    covar<- pmatch(covariance,get_staRVe_distributions("covariance"),duplicates.ok = TRUE)
-    covar<- unname(get_staRVe_distributions("covariance")[covar])
+    covar<- pmatch(covariance,get_starve_distributions("covariance"),duplicates.ok = TRUE)
+    covar<- unname(get_starve_distributions("covariance")[covar])
 
     # Grab value for nu, only used for "matern"
     # If nu is supplied (for matern) it's going to be held constant
@@ -160,13 +160,13 @@ NULL
 #' Convert covariance function (character) to (int)
 #'
 #' @param covariance Name of the covariance function to use. Check
-#'   get_staRVe_distributions("covariance")
+#'   get_starve_distributions("covariance")
 #'
 #' @return The integer code for the named covariance function (index from 0)
 #'
 #' @noRd
 .covariance_to_code<- function(covariance) {
-  covar_code<- pmatch(covariance,get_staRVe_distributions("covariance"),duplicates.ok=TRUE)
+  covar_code<- pmatch(covariance,get_starve_distributions("covariance"),duplicates.ok=TRUE)
   if( is.na(covar_code) || covar_code == 0 ) {
     stop("Supplied covariance function is not implemented, or matches multiple covariance functions.")
   } else {}
@@ -184,13 +184,13 @@ NULL
 #' Convert response distribution (character) to (int)
 #'
 #' @param distribution Name of the response_distribution to use. Check
-#'   get_staRVe_distributions("distribution")
+#'   get_starve_distributions("distribution")
 #'
 #' @return The integer code for the named response distribution (index from 0)
 #'
 #' @noRd
 .distribution_to_code<- function(distribution) {
-  distribution_code<- pmatch(distribution,get_staRVe_distributions("distribution"),duplicates.ok=TRUE)
+  distribution_code<- pmatch(distribution,get_starve_distributions("distribution"),duplicates.ok=TRUE)
   if( is.na(distribution_code) || distribution_code == 0  ) {
     stop("Supplied distribution is not implemented, or matches multiple distributions.")
   } else {}
@@ -217,7 +217,7 @@ NULL
 
 # G
 
-#' List of staRVe model options
+#' List of starve model options
 #'
 #' Print a list of implemented response distributions, link functions, and
 #'   covariance functions.
@@ -287,7 +287,7 @@ NULL
 #'  `which` parameter.
 #'
 #' @export
-get_staRVe_distributions<- function(which = c("distribution","link","covariance")) {
+get_starve_distributions<- function(which = c("distribution","link","covariance")) {
   # All of these indices have to align with the C++ code
   if( "distribution" %in% which ) {
     # Check C++ in src/include/family.hpp
@@ -357,13 +357,13 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' Convert link function (character) to (int)
 #'
 #' @param link Name of the link function to use. Check
-#'   get_staRVe_distributions("link")
+#'   get_starve_distributions("link")
 #'
 #' @return The integer code for the named link function (index from 0)
 #'
 #' @noRd
 .link_to_code<- function(link) {
-  link_code<- pmatch(link,get_staRVe_distributions("link"),duplicates.ok=TRUE)
+  link_code<- pmatch(link,get_starve_distributions("link"),duplicates.ok=TRUE)
   if( is.na(link_code) || link_code == 0 ) {
     stop("Supplied link function is not implemented, or matches multiple link functions.")
   } else {}
@@ -857,7 +857,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
       data[,time_var]<- floor(data[,time_var,drop=TRUE])
     } else {}
     # Find the closest match for type of temporal structure
-    # Why is this not in get_staRVe_distributions? They're not really different structures?
+    # Why is this not in get_starve_distributions? They're not really different structures?
     time_col<- as.data.frame(data)[,time_var,drop=FALSE]
     type<- pmatch(type,c("ar1","rw","independent"),duplicates.ok=TRUE)
     type<- c("ar1","rw","independent")[type]

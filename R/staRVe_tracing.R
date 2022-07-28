@@ -13,10 +13,10 @@ NULL
 #' @param parameter_hessian A matrix
 #' @param parameter_covariance A matrix
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
-  signature = "staRVe_tracing",
+  signature = "tracing",
   definition = function(.Object,
                         opt_time = proc.time()-proc.time(),
                         hess_time = proc.time()-proc.time(),
@@ -44,17 +44,17 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Get optimization time
+#' @describeIn tracing_class Get optimization time
 setMethod(f = "opt_time",
-          signature = "staRVe_tracing",
+          signature = "tracing",
           definition = function(x) return(x@opt_time)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_tracing Set optimization time (for internal use only)
+#' @describeIn tracing_class Set optimization time (for internal use only)
 setReplaceMethod(f = "opt_time",
-                 signature = "staRVe_tracing",
+                 signature = "tracing",
                  definition = function(x,value) {
   x@opt_time<- value
   return(x)
@@ -65,17 +65,17 @@ setReplaceMethod(f = "opt_time",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Get hessian computation time
+#' @describeIn tracing_class Get hessian computation time
 setMethod(f = "hess_time",
-          signature = "staRVe_tracing",
+          signature = "tracing",
           definition = function(x) return(x@hess_time)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_tracing Set hessian computation time (for internal use only)
+#' @describeIn tracing_class Set hessian computation time (for internal use only)
 setReplaceMethod(f = "hess_time",
-                 signature = "staRVe_tracing",
+                 signature = "tracing",
                  definition = function(x,value) {
   x@hess_time<- value
   return(x)
@@ -85,17 +85,17 @@ setReplaceMethod(f = "hess_time",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Get standard error computation time
+#' @describeIn tracing_class Get standard error computation time
 setMethod(f = "sdr_time",
-          signature = "staRVe_tracing",
+          signature = "tracing",
           definition = function(x) return(x@sdr_time)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_tracing Set standard error computation time (for internal use only)
+#' @describeIn tracing_class Set standard error computation time (for internal use only)
 setReplaceMethod(f = "sdr_time",
-                 signature = "staRVe_tracing",
+                 signature = "tracing",
                  definition = function(x,value) {
   x@sdr_time<- value
   return(x)
@@ -105,17 +105,17 @@ setReplaceMethod(f = "sdr_time",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Get parameter hessian matrix
+#' @describeIn tracing_class Get parameter estimator hessian matrix
 setMethod(f = "parameter_hessian",
-          signature = "staRVe_tracing",
+          signature = "tracing",
           definition = function(x) return(x@parameter_hessian)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_tracing Set parameter hessian matrix (for internal use only)
+#' @describeIn tracing_class Set parameter estimator hessian matrix (for internal use only)
 setReplaceMethod(f = "parameter_hessian",
-                 signature = "staRVe_tracing",
+                 signature = "tracing",
                  definition = function(x,value) {
   x@parameter_hessian<- value
   return(x)
@@ -125,17 +125,17 @@ setReplaceMethod(f = "parameter_hessian",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Get parameter covariance matrix
+#' @describeIn tracing_class Get parameter estimator covariance matrix
 setMethod(f = "parameter_covariance",
-          signature = "staRVe_tracing",
+          signature = "tracing",
           definition = function(x) return(x@parameter_covariance)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_tracing Set parameter covariance matrix (for internal use only)
+#' @describeIn tracing_class Set parameter estimator covariance matrix (for internal use only)
 setReplaceMethod(f = "parameter_covariance",
-                 signature = "staRVe_tracing",
+                 signature = "tracing",
                  definition = function(x,value) {
   x@parameter_covariance<- value
   return(x)
@@ -150,10 +150,10 @@ setReplaceMethod(f = "parameter_covariance",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_tracing Get all timing information as a list with elements
+#' @describeIn tracing_class Get all timing information as a list with elements
 #'   fit, hessian, and sdr.
 setMethod(f = "timing",
-          signature = "staRVe_tracing",
+          signature = "tracing",
           definition = function(x) {
   timings<- list(fit = opt_time(x),
                  hessian = hess_time(x),

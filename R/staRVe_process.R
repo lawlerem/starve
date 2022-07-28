@@ -12,12 +12,12 @@ NULL
 #' @param tg_re A stars object, random effects for the transient graph
 #' @param persistent_graph A dag object
 #' @param transient_graph A dag object
-#' @param parameters A staRVe_process_parameters object
+#' @param parameters A process_parameters object
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
-  signature = "staRVe_process",
+  signature = "process",
   definition = function(.Object,
                         time_effects = stars::st_as_stars(
                           list(w = array(0,dim=c(1,1)),
@@ -36,7 +36,7 @@ setMethod(
                         tg_re = new("long_stars"),
                         persistent_graph = new("dag"),
                         transient_graph = new("dag"),
-                        parameters = new("staRVe_process_parameters")) {
+                        parameters = new("process_parameters")) {
     time_effects(.Object)<- time_effects
     pg_re(.Object)<- pg_re
     tg_re(.Object)<- tg_re
@@ -59,18 +59,18 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_process Get temporal random effects
+#' @describeIn process_class Get temporal random effects
 setMethod(f = "time_effects",
-          signature = "staRVe_process",
+          signature = "process",
           definition = function(x) return(x@time_effects)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_process Set temporal random effects
+#' @describeIn process_class Set temporal random effects
 setReplaceMethod(f = "time_effects",
-                 signature = "staRVe_process",
+                 signature = "process",
                  definition = function(x,value) {
   x@time_effects<- value
   return(x)
@@ -79,18 +79,18 @@ setReplaceMethod(f = "time_effects",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_process Get spatio-temporal random effects for persistent graph
+#' @describeIn process_class Get spatio-temporal random effects for persistent graph
 setMethod(f = "pg_re",
-          signature = "staRVe_process",
+          signature = "process",
           definition = function(x) return(x@pg_re)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_process Set spatio-temporal random effects for persistent graph
+#' @describeIn process_class Set spatio-temporal random effects for persistent graph
 setReplaceMethod(f = "pg_re",
-                 signature = "staRVe_process",
+                 signature = "process",
                  definition = function(x,value) {
   x@pg_re<- value
   return(x)
@@ -99,18 +99,18 @@ setReplaceMethod(f = "pg_re",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_process Get spatio-temporal random effects for transient graph
+#' @describeIn process_class Get spatio-temporal random effects for transient graph
 setMethod(f = "tg_re",
-          signature = "staRVe_process",
+          signature = "process",
           definition = function(x) return(x@tg_re)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_process Set spatio-temporal random effects for transient graph
+#' @describeIn process_class Set spatio-temporal random effects for transient graph
 setReplaceMethod(f = "tg_re",
-                 signature = "staRVe_process",
+                 signature = "process",
                  definition = function(x,value) {
   x@tg_re<- value
   return(x)
@@ -121,17 +121,17 @@ setReplaceMethod(f = "tg_re",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_process Get persistent graph
+#' @describeIn process_class Get persistent graph
 setMethod(f = "persistent_graph",
-          signature = "staRVe_process",
+          signature = "process",
           definition = function(x) return(x@persistent_graph)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_process Set persistent graph (for internal use only)
+#' @describeIn process_class Set persistent graph (for internal use only)
 setReplaceMethod(f = "persistent_graph",
-                 signature = "staRVe_process",
+                 signature = "process",
                  definition = function(x,value) {
   x@persistent_graph<- value
   return(x)
@@ -140,17 +140,17 @@ setReplaceMethod(f = "persistent_graph",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_process Get transient graph
+#' @describeIn process_class Get transient graph
 setMethod(f = "transient_graph",
-          signature = "staRVe_process",
+          signature = "process",
           definition = function(x) return(x@transient_graph)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_process Set transient graph (for internal use  only)
+#' @describeIn process_class Set transient graph (for internal use  only)
 setReplaceMethod(f = "transient_graph",
-                 signature = "staRVe_process",
+                 signature = "process",
                  definition = function(x,value) {
   x@transient_graph<- value
   return(x)
@@ -159,20 +159,20 @@ setReplaceMethod(f = "transient_graph",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_process Get parameters as a staRVe_process_parameters object
+#' @describeIn process_class Get parameters as a process_parameters object
 setMethod(f = "parameters",
-          signature = "staRVe_process",
+          signature = "process",
           definition = function(x) return(x@parameters)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_process Set parameters using a new staRVe_process_parameters
+#' @describeIn process_class Set parameters using a new process_parameters
 #'   object. Not the recommended way to modify specific parameter values, instead see the
 #'   package vignette.
 setReplaceMethod(f = "parameters",
-                 signature = "staRVe_process",
+                 signature = "process",
                  definition = function(x,value) {
   x@parameters<- value
   return(x)
@@ -184,10 +184,10 @@ setReplaceMethod(f = "parameters",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_process Get list containing the persistent graph random
+#' @describeIn process_class Get list containing the persistent graph random
 #'   effects and the transient graph random effects.
 setMethod(f = "random_effects",
-          signature = "staRVe_process",
+          signature = "process",
           definition = function(x) {
   return(list(pg_re = pg_re(x),
               tg_re = tg_re(x)))
@@ -201,9 +201,9 @@ setMethod(f = "random_effects",
 ###         ###
 ###############
 
-#' Prepare the process part of a staRVe_model object.
+#' Prepare the process part of a starve object.
 #'
-#' Creates a new staRVe_process object with the correct dimensions for the
+#' Creates a new process object with the correct dimensions for the
 #'   temporal random effects, persistent graph random effects, and transient
 #'   graph random effects. Initializes the temporal and spatial parameters for
 #'   the model according to the options specified in the formula element of the
@@ -211,27 +211,26 @@ setMethod(f = "random_effects",
 #'
 #'   Before creating the persistent graph any duplicate locations in nodes
 #'   are removed. Before creating the transient graph any location in data that
-#'   is present in nodes is removed
-#'
+#'   is present in nodes is removed.
 #'
 #' @param data An sf object containing the observation locations and times.
 #' @param nodes An sf object containing the persistent graph locations (defaults to data)
 #' @param persistent_graph An optionally supplied pre-computed persistent graph.
-#'   If a persistent_graph is not supplied, the order of the rows of nodes may change.
-#'   If a persisten_graph is supplied, the order will not change. See \link{construct_dag}.
-#' @param settings A staRVe_settings object
+#'   If persistent_graph is not supplied, the order of the rows of nodes may change.
+#'   If persistent_graph is supplied, the order will not change. See [construct_graph].
+#' @param settings A settings object
 #'
-#' @return A staRVe_process object
+#' @return A process object
 #'
-#' @seealso staRVe_process
-#' @seealso prepare_staRVe_observations, prepare_staRVe_model
+#' @seealso process_class
+#' @seealso starve_prepare_observations, strv_prepare
 #'
 #' @keywords internal
-prepare_staRVe_process<- function(data,
-                                  nodes = data,
-                                  persistent_graph = NA,
-                                  settings = new("staRVe_settings") ) {
-  process<- new("staRVe_process")
+strv_prepare_process<- function(data,
+                                nodes = data,
+                                persistent_graph = NA,
+                                settings = new("settings") ) {
+  process<- new("process")
 
   # Return a time column with name and type (ar1/rw/etc) attributes
   time_col<- .time_from_formula(formula(settings),data)
@@ -254,7 +253,7 @@ prepare_staRVe_process<- function(data,
     distance_units(persistent_graph)<- distance_units(settings)
     persistent_graph(process)<- persistent_graph
   } else {
-    graph<- construct_dag(uniq_nodes,settings=settings,silent=TRUE)
+    graph<- construct_persistent_graph(uniq_nodes,settings=settings,silent=TRUE)
     uniq_nodes<- graph$locations
     persistent_graph(process)<- graph$dag
   }
@@ -278,7 +277,7 @@ prepare_staRVe_process<- function(data,
   st_geometry(pg_locs)<- attr(data,"sf_column")
   data<- data[lengths(st_equals(data,pg_locs)) == 0,]
 
-  transient_graph(process)<- construct_transient_dag(
+  transient_graph(process)<- construct_transient_graph(
     x = data,
     y = pg_locs,
     time = .time_from_formula(formula(settings),data)[[1]],
@@ -299,8 +298,8 @@ prepare_staRVe_process<- function(data,
 
 
 
-  # parameters = "staRVe_process_parameters"
-  parameters<- new("staRVe_process_parameters")
+  # parameters = "process_parameters"
+  parameters<- new("process_parameters")
   # Returns name of covariance function and value of nu
   covariance<- .covariance_from_formula(formula(settings))
 
@@ -349,13 +348,13 @@ prepare_staRVe_process<- function(data,
 
 
 #' @param x An sf object
-#' @param y A staRVe_process object
+#' @param y A process object
 #'
-#' @describeIn dot-create_graph_idx Locations in the sf object x will be given an
+#' @describeIn create_graph_idx Locations in the sf object x will be given an
 #'   index pointing to either a persistent graph or transient graph location of y.
 setMethod(
-  f = ".create_graph_idx",
-  signature = c("sf","staRVe_process"),
+  f = "create_graph_idx",
+  signature = c("sf","process"),
   definition = function(x,y,settings) {
     pg_s<- .locations_from_stars(pg_re(y))
     tg_s<- locations(tg_re(y)) # Should also have a time column
@@ -376,7 +375,7 @@ setMethod(
     v[is.na(v)]<- do.call(c,splitv)
 
     if( any(is.na(v)) ) {
-      stop("Some data locations do not coincide with any random effect locations. Try re-creating the staRVe_process object.")
+      stop("Some data locations do not coincide with any random effect locations. Try re-creating the process object.")
     } else {}
 
     return(v)

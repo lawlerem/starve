@@ -11,7 +11,7 @@ NULL
 #' @param distances A list of distances
 #' @param distance_units Which distance units to use
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
   signature = "dag",
@@ -37,7 +37,7 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn dag Get edge list
+#' @describeIn dag_class Get edge list
 setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
@@ -45,7 +45,7 @@ setMethod(f = "edges",
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn dag Set edge list (for internal use only)
+#' @describeIn dag_class Set edge list (for internal use only)
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -58,7 +58,7 @@ setReplaceMethod(f = "edges",
 #' @param x An object
 #'
 #' @export
-#' @describeIn dag Get list of edge distances
+#' @describeIn dag_class Get list of edge distances
 setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
@@ -66,7 +66,7 @@ setMethod(f = "distances",
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn dag Set list of edge distances (for internal use only)
+#' @describeIn dag_class Set list of edge distances (for internal use only)
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -79,7 +79,7 @@ setReplaceMethod(f = "distances",
 #' @param x An object
 #'
 #' @export
-#' @describeIn dag Get distance units
+#' @describeIn dag_class Get distance units
 setMethod(f = "distance_units",
           signature = "dag",
           definition = function(x) return(x@distance_units)
@@ -87,7 +87,7 @@ setMethod(f = "distance_units",
 #' @param x An object
 #' @param value A replacement value
 #' @export
-#' @describeIn dag Set distance units. Graph distances are automatically converted
+#' @describeIn dag_class Set distance units. Edge distances are automatically converted
 #'   to the new units.
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
@@ -119,19 +119,19 @@ setReplaceMethod(f = "distance_units",
 #' Construct directed acyclic graphs
 #'
 #' @param x,y \code{sf} objects of point geometries
-#' @param settings An object of class \code{staRVe_settings}
+#' @param settings An object of class \code{settings}
 #' @param silent Should intermediate calculations be shown?
 #'
 #' @return An object of class \code{dag}; construct_dag instead returns a list
 #'   with elements "locations" giving the sorted copy of locations and "dag"
 #'   giving the constructed graph of class \code{dag}.
 #'
-#' @seealso dag For class definition of directed acyclic graphs
+#' @seealso dag_class For class definition of directed acyclic graphs
 #'
-#' @name construct_dag
+#' @name construct_graph
 NULL
 
-#' @describeIn construct_dag Construct a directed acyclic graph for a single
+#' @describeIn construct_graph Construct a directed acyclic graph for a single
 #'   \code{sf} object. This function uses a greedy algorithm to sort the locations
 #'   of x. The first location of x is the first location of the sorted copy.
 #'   Subsequent locations of the sorted copy are found iteratively by taking
@@ -147,11 +147,9 @@ NULL
 #'
 #'   A vertex with index i in either the "to" or "from" vertices represents the location
 #'   in row i of the sorted copy of x.
-#'
-#' @export
-construct_dag<- function(x,
-                         settings = new("staRVe_settings"),
-                         silent = TRUE) {
+construct_persistent_graph<- function(x,
+                                           settings = new("settings"),
+                                           silent = TRUE) {
   dist_matrix<- as.matrix(units::set_units(sf::st_distance(x),
                                            distance_units(settings),
                                            mode="standard"))
@@ -168,11 +166,11 @@ construct_dag<- function(x,
 
 #' @param time A numeric vector containing the time index of each row in x.
 #'
-#' @describeIn construct_dag Construct a directed acyclic graph with "to" vertices
+#' @describeIn construct_graph Construct a directed acyclic graph with "to" vertices
 #'   representing locations in x and "from" vertices representing locations in y.
-#'   Unlike construct_dag, neither x nor y are sorted, but the time argument
-#'   must already be sorted when given as an argument (make sure that the locations
-#'   in x are likewise sorted according to their respective times).
+#'   Unlike strv_construct_persistent_graph, neither x nor y are sorted, but the
+#'   time argument must already be sorted when given as an argument (make sure
+#'   that the locations in x are likewise sorted according to their respective times).
 #'
 #'   The locations in x are first split into groups according to the values of the
 #'   time argument. Then within each group each location is given a graph element
@@ -184,13 +182,11 @@ construct_dag<- function(x,
 #'   subset of x in the same time index group. Note that the same value of i may be used
 #'   if there is more than one unique value in the time argument. A vertex with i in the
 #'   "from" vertices represents the location in row i of y.
-#'
-#' @export
-construct_transient_dag<- function(x,
-                                   y,
-                                   time = 0,
-                                   settings = new("staRVe_settings"),
-                                   silent = TRUE) {
+construct_transient_graph<- function(x,
+                                          y,
+                                          time = 0,
+                                          settings = new("settings"),
+                                          silent = TRUE) {
   if( nrow(x) == 0 ) {
     return(new("dag",distance_units=distance_units(settings)))
   } else {}
@@ -258,13 +254,12 @@ construct_transient_dag<- function(x,
 }
 
 #' @param pred A long_stars object
-#' @param model A staRVe_model object
+#' @param model A starve object
 #'
-#' @describeIn construct_dag Works essentially the same as \code{construct_transient_dag},
+#' @describeIn construct_graph Works essentially the same as \code{construct_transient_graph},
 #'   with a few minor differences. Instead of directly supplying the locations for the
 #'   "from" vertices, the "from" vertices are taken from the locations used in the
-#'   persistent graph (construct_dag) and transient graph (construct_transient_dag)
-#'   from the model argument.
+#'   persistent graph and transient graph from the model argument.
 #'
 #'   The locations in pred are grouped according to their time index in pred.
 #'   Each location is given a graph element with a single "to" vertex representing
@@ -278,11 +273,9 @@ construct_transient_dag<- function(x,
 #'   vertices represents the j'th location of the persistent graph if j <= k where
 #'   k is the number of persistent graph locations, or represents the  (j-k)'th location
 #'   of the transient graph with the same time index as the "to" vertex.
-#'
-#' @export
-construct_pred_dag<- function(pred,
-                              model,
-                              silent = TRUE) {
+construct_prediction_graph<- function(pred,
+                                      model,
+                                      silent = TRUE) {
   settings<- settings(model)
   colnames(locations(pred))[colnames(locations(pred)) == attr(locations(pred),"sf_column")]<- attr(.locations_from_stars(pg_re(model)),"sf_column")
   st_geometry(locations(pred))<- attr(.locations_from_stars(pg_re(model)),"sf_column")
@@ -375,7 +368,7 @@ construct_pred_dag<- function(pred,
 
 
 
-#' @describeIn idx_exchange Add 1 to all vertices in the graph edge list
+#' @describeIn dag_class Add 1 to all vertices in the graph edge list (for internal use only)
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
@@ -386,7 +379,7 @@ setMethod(f = "idxC_to_R",
   })
   return(x)
 })
-#' @describeIn idx_exchange Subtract 1 from all vertices in the graph edge list
+#' @describeIn dag_class Subtract 1 from all vertices in the graph edge list (for internal use only)
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {

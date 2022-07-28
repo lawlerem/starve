@@ -7,18 +7,18 @@ NULL
 ###           ###
 #################
 
-#' @param process A staRVe_process object
-#' @param observations A staRVe_observations object
-#' @param settings A staRVe_settings object
+#' @param process A process object
+#' @param observations A observations object
+#' @param settings A settings object
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
-  signature = "staRVe_model",
+  signature = "starve",
   definition = function(.Object,
-                        process = new("staRVe_process"),
-                        observations = new("staRVe_observations"),
-                        settings = new("staRVe_settings")) {
+                        process = new("process"),
+                        observations = new("observations"),
+                        settings = new("settings")) {
     process(.Object)<- process
     observations(.Object)<- observations
     settings(.Object)<- settings
@@ -37,17 +37,17 @@ setMethod(
 
 #' @param x An object
 #'
-#' @describeIn staRVe_model Get the process part of the model (for internal use only)
+#' @describeIn starve_class Get the process part of the model (for internal use only)
 setMethod(f = "process",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) return(x@process)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_model Set the process part of the model (for internal use only)
+#' @describeIn starve_class Set the process part of the model (for internal use only)
 setReplaceMethod(f = "process",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   x@process<- value
   return(x)
@@ -57,17 +57,17 @@ setReplaceMethod(f = "process",
 
 #' @param x An object
 #'
-#' @describeIn staRVe_model Get the observation part of the model (for internal use only)
+#' @describeIn starve_class Get the observation part of the model (for internal use only)
 setMethod(f = "observations",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) return(x@observations)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_model Set the observation part of the model (for internal use only)
+#' @describeIn starve_class Set the observation part of the model (for internal use only)
 setReplaceMethod(f = "observations",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   x@observations<- value
   return(x)
@@ -78,16 +78,16 @@ setReplaceMethod(f = "observations",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get model settings
+#' @describeIn starve_class Get model settings
 setMethod(f = "settings",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) return(x@settings)
 )
 #' @param x An object
 #'
-#' @describeIn staRVe_model Set model settings (for internal use only)
+#' @describeIn starve_class Set model settings (for internal use only)
 setReplaceMethod(f = "settings",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   x@settings<- value
   return(x)
@@ -100,14 +100,14 @@ setReplaceMethod(f = "settings",
 ###################
 
 
-### From staRVe_process
+### From process
 
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get temporal random effects
+#' @describeIn starve_class Get temporal random effects
 setMethod(f = "time_effects",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(time_effects(process(x)))
 })
@@ -115,9 +115,9 @@ setMethod(f = "time_effects",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set temporal random effects
+#' @describeIn starve_class Set temporal random effects
 setReplaceMethod(f = "time_effects",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   time_effects(process(x))<- value
   return(x)
@@ -126,9 +126,9 @@ setReplaceMethod(f = "time_effects",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get persistent graph random effects
+#' @describeIn starve_class Get persistent graph random effects
 setMethod(f = "pg_re",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(pg_re(process(x)))
 })
@@ -136,9 +136,9 @@ setMethod(f = "pg_re",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set spatio-temporal random effects
+#' @describeIn starve_class Set spatio-temporal random effects
 setReplaceMethod(f = "pg_re",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   pg_re(process(x))<- value
   return(x)
@@ -147,9 +147,9 @@ setReplaceMethod(f = "pg_re",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get transient graph random effects
+#' @describeIn starve_class Get transient graph random effects
 setMethod(f = "tg_re",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(tg_re(process(x)))
 })
@@ -157,9 +157,9 @@ setMethod(f = "tg_re",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set transient graph random effects
+#' @describeIn starve_class Set transient graph random effects
 setReplaceMethod(f = "tg_re",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   tg_re(process(x))<- value
   return(x)
@@ -168,10 +168,10 @@ setReplaceMethod(f = "tg_re",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get list containing the persistent graph random
+#' @describeIn starve_class Get list containing the persistent graph random
 #'   effects and the transient graph random effects.
 setMethod(f = "random_effects",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(random_effects(process(x)))
 })
@@ -181,18 +181,18 @@ setMethod(f = "random_effects",
 
 #' @param x An object
 #'
-#' @describeIn staRVe_model Get persistent graph
+#' @describeIn starve_class Get persistent graph
 setMethod(f = "persistent_graph",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(persistent_graph(process(x)))
 })
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_model Set persistent graph (for internal use only)
+#' @describeIn starve_class Set persistent graph (for internal use only)
 setReplaceMethod(f = "persistent_graph",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   persistent_graph(process(x))<- value
   return(x)
@@ -201,18 +201,18 @@ setReplaceMethod(f = "persistent_graph",
 
 #' @param x An object
 #'
-#' @describeIn staRVe_model Get transient graph
+#' @describeIn starve_class Get transient graph
 setMethod(f = "transient_graph",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(transient_graph(process(x)))
 })
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn staRVe_model Set transient graph (for internal use only)
+#' @describeIn starve_class Set transient graph (for internal use only)
 setReplaceMethod(f = "transient_graph",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   transient_graph(process(x))<- value
   return(x)
@@ -222,9 +222,9 @@ setReplaceMethod(f = "transient_graph",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get a list containing the persistent and transient graphs
+#' @describeIn starve_class Get a list containing the persistent and transient graphs
 setMethod(f = "graph",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   graph<- list(persistent_graph = persistent_graph(x),
                transient_graph = transient_graph(x))
@@ -233,14 +233,14 @@ setMethod(f = "graph",
 
 
 
-### From staRVe_process_parameters
+### From process_parameters
 
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get covariance function
+#' @describeIn starve_class Get covariance function
 setMethod(f = "covariance_function",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(covariance_function(parameters(x)))
 })
@@ -248,11 +248,11 @@ setMethod(f = "covariance_function",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set covariance function(s). Run
-#'   get_staRVe_distributions("covariance") for valid covariance functions.
+#' @describeIn starve_class Set covariance function(s). Run
+#'   get_starve_distributions("covariance") for valid covariance functions.
 #'   Setting the covariance function also overwrites the spatial parameters.
 setReplaceMethod(f = "covariance_function",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   covariance_function(parameters(x))<- value
   return(x)
@@ -261,9 +261,9 @@ setReplaceMethod(f = "covariance_function",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get spatial parameters
+#' @describeIn starve_class Get spatial parameters
 setMethod(f = "spatial_parameters",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(spatial_parameters(parameters(x)))
 })
@@ -271,9 +271,9 @@ setMethod(f = "spatial_parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set spatial parameters
+#' @describeIn starve_class Set spatial parameters
 setReplaceMethod(f = "spatial_parameters",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   spatial_parameters(parameters(x))<- value
   return(x)
@@ -282,9 +282,9 @@ setReplaceMethod(f = "spatial_parameters",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get time parameters
+#' @describeIn starve_class Get time parameters
 setMethod(f = "time_parameters",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(time_parameters(parameters(x)))
 })
@@ -292,9 +292,9 @@ setMethod(f = "time_parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set time parameters
+#' @describeIn starve_class Set time parameters
 setReplaceMethod(f = "time_parameters",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   time_parameters(parameters(x))<- value
   return(x)
@@ -302,15 +302,15 @@ setReplaceMethod(f = "time_parameters",
 
 
 
-### From staRVe_observations
+### From observations
 
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get data including response variables, time indices,
+#' @describeIn starve_class Get data including response variables, time indices,
 #'   locations, covariates, etc.
 setMethod(f = "dat",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(dat(observations(x)))
 })
@@ -318,12 +318,11 @@ setMethod(f = "dat",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set data. Warning: if you add new rows to the
-#'   data.frame you also need to manually update the transient graph,
-#'   transient graph random effects, and the graph_idx column for the
-#'   new rows.
+#' @describeIn starve_class Set data. Warning: if you want to add new
+#'   rows you must give each additional row a value in the graph_idx column,
+#'   or create a new object from scratch.
 setReplaceMethod(f = "dat",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   dat(observations(x))<- value
   return(x)
@@ -333,11 +332,11 @@ setReplaceMethod(f = "dat",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get data predictions, a long_stars object
+#' @describeIn starve_class Get data predictions, a long_stars object
 #'   with the data (see \code{dat}) and associated random effect
 #'   predictions.
 setMethod(f = "data_predictions",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(data_predictions(observations(x)))
 })
@@ -345,9 +344,9 @@ setMethod(f = "data_predictions",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set data predictions
+#' @describeIn starve_class Set data predictions
 setReplaceMethod(f = "data_predictions",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   data_predictions(observations(x))<- value
   return(x)
@@ -356,14 +355,14 @@ setReplaceMethod(f = "data_predictions",
 
 
 
-### From staRVe_observation_parameters
+### From observation_parameters
 
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get the response distribution(s)
+#' @describeIn starve_class Get the response distribution(s)
 setMethod(f = "response_distribution",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(response_distribution(parameters(x)))
 })
@@ -371,12 +370,12 @@ setMethod(f = "response_distribution",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set the response distribution(s). Run
-#'   get_staRVe_distributions("distribution") for valid options.
+#' @describeIn starve_class Set the response distribution(s). Run
+#'   get_starve_distributions("distribution") for valid options.
 #'   Setting the response distribution also overwrites the response
 #'   parameters and link function(s).
 setReplaceMethod(f = "response_distribution",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   response_distribution(parameters(x))<- value
   return(x)
@@ -385,9 +384,9 @@ setReplaceMethod(f = "response_distribution",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get response distribution parameters
+#' @describeIn starve_class Get response distribution parameters
 setMethod(f = "response_parameters",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(response_parameters(parameters(x)))
 })
@@ -395,9 +394,9 @@ setMethod(f = "response_parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set response distribution parameters
+#' @describeIn starve_class Set response distribution parameters
 setReplaceMethod(f = "response_parameters",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   response_parameters(parameters(x))<- value
   return(x)
@@ -406,9 +405,9 @@ setReplaceMethod(f = "response_parameters",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get link function(s)
+#' @describeIn starve_class Get link function(s)
 setMethod(f = "link_function",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(link_function(parameters(x)))
 })
@@ -416,10 +415,10 @@ setMethod(f = "link_function",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set link function(s). Run
-#'   get_staRVe_distributions("link") for valid link functions.
+#' @describeIn starve_class Set link function(s). Run
+#'   get_starve_distributions("link") for valid link functions.
 setReplaceMethod(f = "link_function",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   link_function(parameters(x))<- value
   return(x)
@@ -428,9 +427,9 @@ setReplaceMethod(f = "link_function",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get fixed effect parameters
+#' @describeIn starve_class Get fixed effect parameters
 setMethod(f = "fixed_effects",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(fixed_effects(parameters(x)))
 })
@@ -438,23 +437,23 @@ setMethod(f = "fixed_effects",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set fixed effect parameters
+#' @describeIn starve_class Set fixed effect parameters
 setReplaceMethod(f = "fixed_effects",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   fixed_effects(parameters(x))<- value
   return(x)
 })
 
 
-### From staRVe_settings
+### From settings
 
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get distance units used for the model
+#' @describeIn starve_class Get distance units used for the model
 setMethod(f = "distance_units",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(distance_units(settings(x)))
 })
@@ -462,9 +461,9 @@ setMethod(f = "distance_units",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set distance units used for the model
+#' @describeIn starve_class Set distance units used for the model
 setReplaceMethod(f = "distance_units",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   ranges<- lapply(spatial_parameters(x),function(sp) {
     units::set_units(sp["range","par"],
@@ -485,9 +484,9 @@ setReplaceMethod(f = "distance_units",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get formula used for model
+#' @describeIn starve_class Get formula used for model
 setMethod(f = "formula",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(formula(settings(x)))
 })
@@ -495,9 +494,9 @@ setMethod(f = "formula",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set formula used for the model
+#' @describeIn starve_class Set formula used for the model
 setReplaceMethod(f = "formula",
-                 signature = "staRVe_model",
+                 signature = "starve",
                  definition = function(x,value) {
   if( !all(all.vars(value) %in% colnames(dat(x))) ) {
     stop("Not changing formula. Some variables present in new formula which are not available in dat(x)")
@@ -522,10 +521,10 @@ setReplaceMethod(f = "formula",
 
 #' @param x An object
 #'
-#' @describeIn staRVe_model Get the name of the time variable used in
+#' @describeIn starve_class Get the name of the time variable used in
 #'   the model formula (for internal use only)
 setMethod(f = ".time_name",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   return(.time_name(settings(x)))
 })
@@ -536,11 +535,11 @@ setMethod(f = ".time_name",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_model Get all model parameters as a staRVe_parameters object
+#' @describeIn starve_class Get all model parameters as a parameters object
 setMethod(f = "parameters",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
-  parameters<- new("staRVe_parameters",
+  parameters<- new("parameters",
                    process_parameters = parameters(process(x)),
                    observation_parameters = parameters(observations(x)))
   return(parameters)
@@ -549,13 +548,13 @@ setMethod(f = "parameters",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_model Set all model parameters with a new
-#'   staRVe_parameters object
+#' @describeIn starve_class Set all model parameters with a new
+#'   parameters object
 setReplaceMethod(f = "parameters",
-                 signature = c("staRVe_model","staRVe_parameters"),
+                 signature = c("starve","parameters"),
                  definition = function(x,value) {
-  parameters(process(x))<- as(value,"staRVe_process_parameters")
-  parameters(observations(x))<- as(value,"staRVe_observation_parameters")
+  parameters(process(x))<- as(value,"process_parameters")
+  parameters(observations(x))<- as(value,"observation_parameters")
   return(x)
 })
 
@@ -568,12 +567,12 @@ setReplaceMethod(f = "parameters",
 ###         ###
 ###############
 
-#' Create an object of class \code{staRVe_model}.
+#' Create an object of class \code{starve}.
 #'
-#' 'prepare_staRVe_model' is used to take an existing `simple features` data.frame
+#' 'strv_prepare' is used to take an existing `simple features` data.frame
 #'    with point geometries, time information, covariates, and a response variable
 #'    and perform all of the pre-processing steps necessary to fit a model with the
-#'    \code{staRVe_fit} function.
+#'    \code{fit} function.
 #'
 #' The formula object should always be of the form
 #'   \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)},
@@ -599,7 +598,7 @@ setReplaceMethod(f = "parameters",
 #'   is used.
 #'
 #' The \code{space(...)} term specifies the spatial covariance function. See
-#'   \code{get_staRVe_distributions("covariance")} for valid names to supply.
+#'   \code{get_starve_distributions("covariance")} for valid names to supply.
 #'   If using the "matern" option you can supply a value for the smoothness
 #'   parameter nu, which will be held constant in model fitting. If nu is not given,
 #'   then it will be freely estimated in the model. If the \code{space(...)} term
@@ -610,69 +609,69 @@ setReplaceMethod(f = "parameters",
 #'   variables needed to fit the model.
 #' @param nodes An `sf` object containing point geometries, defaulting to \code{data}.
 #'  These locations will be used as the locations for the persistent graph.
-#' @param n_neighbours An integer giving the (maximum) number of parents for each node.
+#' @param n_neighbours An integer (default=15) giving the (maximum) number of parents for each node.
 #' @param persistent_graph If an object of class \code{dag} is supplied, that
 #'   graph is used for the persistent graph.
 #' @param transient_graph If an object of class \code{dag} is supplied, that
 #'   graph is used for the transient graph.
 #' @param distribution A character vector giving the response distribution(s).
-#'   See \code{get_staRVe_distributions("distribution")} for valid options.
-#'   Defaults to "gassian".
+#'   See \code{get_starve_distributions("distribution")} for valid options.
+#'   Defaults to "gaussian".
 #' @param link A character vector giving the response link function(s). See
-#'   \code{get_staRVe_distributions("link")} for valid options.
+#'   \code{get_starve_distributions("link")} for valid options.
 #'   The default link function changes depending on the response distribution.
 #' @param silent Logical. Should intermediate calculations be printed?
 #' @param max_dist Numeric. The maximum allowable distance for edges in the transient
-#'   graph, or for graphs computed when using the \code{staRVe_predict} function.
+#'   graph, or for graphs computed when using the \code{starve_predict} function.
 #'   Unless this has a units attribute, units are assumed to be the same as
 #'   the supplied \code{distance_units}.
 #' @param distance_units Any value that can be used as a \code{units} object
 #'   from the \code{units} package. Which distance units should the model use?
 #'   Defaults to "km".
 #' @param fit Logical. Should the model be fit in this call?
-#' @param ... Extra options to pass to staRVe_fit if fit=TRUE
+#' @param ... Extra options to pass to fit if fit=TRUE
 #'
-#' @return A staRVe_model object. If fit=TRUE, a staRVe_model_fit object.
+#' @return A starve object. If fit=TRUE, a starve_fit object.
 #'
-#' @seealso staRVe_model
-#' @seealso prepare_staRVe_process, prepare_staRVe_observations
+#' @seealso starve_class
+#' @seealso strv_prepare_process, strv_prepare_observations
 #'
 #' @export
-prepare_staRVe_model<- function(formula,
-                                data,
-                                nodes = data,
-                                n_neighbours = 15,
-                                persistent_graph = NA,
-                                transient_graph = NA,
-                                distribution = "gaussian",
-                                link = "default",
-                                silent = TRUE,
-                                max_dist = Inf,
-                                distance_units = "km",
-                                fit = FALSE,
-                                ...) {
+strv_prepare<- function(formula,
+                        data,
+                        nodes = data,
+                        n_neighbours = 15,
+                        persistent_graph = NA,
+                        transient_graph = NA,
+                        distribution = "gaussian",
+                        link = "default",
+                        silent = TRUE,
+                        max_dist = Inf,
+                        distance_units = "km",
+                        fit = FALSE,
+                        ...) {
   # Need to find name of time column
   time_form<- .time_from_formula(formula,data)
-  model<- new("staRVe_model")
+  model<- new("starve")
 
   # Set the settings in the model
-  settings(model)<- new("staRVe_settings",
+  settings(model)<- new("settings",
     formula = formula,
     n_neighbours = n_neighbours,
     distance_units = distance_units,
     max_distance = max_dist
   )
 
-  # Set up the staRVe_process
-  process(model)<- prepare_staRVe_process(
+  # Set up the process
+  process(model)<- strv_prepare_process(
     data = data,
     nodes = nodes,
     persistent_graph = persistent_graph,
     settings = settings(model)
   )
 
-  # Set up the staRVe_observations
-  observations(model)<- prepare_staRVe_observations(
+  # Set up the observations
+  observations(model)<- strv_prepare_observations(
     data = data,
     process = process(model),
     settings = settings(model),
@@ -681,7 +680,7 @@ prepare_staRVe_model<- function(formula,
   )
 
   if( fit ) {
-    model<- staRVe_fit(model,silent = silent,...)
+    model<- strv_fit(model,silent = silent,...)
   } else {}
 
   return(model)
@@ -689,9 +688,9 @@ prepare_staRVe_model<- function(formula,
 
 
 
-#' @describeIn TMB_in Convert a staRVe_model to a list for \code{TMB::MakeADFun}
+#' @describeIn TMB_in Convert a starve object to a list for \code{TMB::MakeADFun}
 setMethod(f = "TMB_in",
-          signature = "staRVe_model",
+          signature = "starve",
           definition = function(x) {
   min_t<- min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))
   data<- list(
@@ -868,10 +867,10 @@ setMethod(f = "TMB_in",
 })
 
 
-#' @describeIn update_staRVe_model Update model parameters and random effects
+#' @describeIn strv_update Update model parameters and random effects
 #'   from a fitted TMB::MakeADFun object
-setMethod(f = "update_staRVe_model",
-          signature = c(x = "staRVe_model",
+setMethod(f = "strv_update",
+          signature = c(x = "starve",
                         y = "TMB_out"),
           definition = function(x,y) {
   sdr_est<- c(as.list(sdr(y),"Estimate",report=TRUE),

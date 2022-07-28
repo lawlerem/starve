@@ -1,18 +1,18 @@
 #' @param silent Should intermediate calculations be printed?
 #'
-#' @describeIn staRVe_fit Takes an unfitted staRVe_model object and performs
+#' @describeIn strv_fit Takes an unfitted starve object and performs
 #'   maximum likelihood inference via the \code{TMB} package to obtain parameter
 #'   and random effect estimates with their associated standard errors. Options
 #'   in the \dots argument are passed to TMB::MakeADFun and TMB::sdreport.
 #'
 #' @export
-setMethod(f = "staRVe_fit",
-          signature = "staRVe_model",
-          definition = function(x,silent = FALSE,...) {
-  TMB_input<- TMB_in(x)
+setMethod(f = "strv_fit",
+          signature = "starve",
+          definition = function(object,silent = FALSE,...) {
+  TMB_input<- TMB_in(object)
 
   TMB_out<- new("TMB_out")
-  tracing<- new("staRVe_tracing")
+  tracing<- new("tracing")
 
   obj(TMB_out)<- TMB::MakeADFun(
     data = TMB_input$data,
@@ -75,14 +75,14 @@ setMethod(f = "staRVe_fit",
     )
   }) -> sdr_time(tracing)
 
-  # Update staRVe_model based on parameter estimates
-  fit<- new("staRVe_model_fit",
-            staRVe_model = x,
+  # Update starve object based on parameter estimates
+  fit<- new("starve_fit",
+            starve = object,
             tracing = tracing,
             TMB_out = TMB_out)
 
-  as(fit,"staRVe_model")<- update_staRVe_model(
-    x = as(fit,"staRVe_model"),
+  as(fit,"starve")<- strv_update(
+    x = as(fit,"starve"),
     y = TMB_out(fit)
   )
 
@@ -94,19 +94,18 @@ setMethod(f = "staRVe_fit",
 })
 
 
-
 #' @param conditional Logical. If false (default), new random effects and new
 #'   observations are simulated. If true, new observations are simulated
 #'   conditional on the random effect values in the supplied model.
 #
 #' @export
-#' @describeIn staRVe_simulate Simulate a new dataset from the model, with the
+#' @describeIn strv_simulate Simulate a new dataset from the model, with the
 #' option to simulate a new set of random effects as well. The parameter values
 #' used in the simulations are those set in \code{parameters(model)}. Returns
-#' a \code{staRVe_model} object with simulated random effects (if \code{conditional=FALSE})
+#' a \code{starve_fit} object with simulated random effects (if \code{conditional=FALSE})
 #' and simulated data.
-setMethod(f = "staRVe_simulate",
-          signature = "staRVe_model",
+setMethod(f = "strv_simulate",
+          signature = "starve",
           def = function(object,
                          conditional = FALSE,
                          ...) {
@@ -168,8 +167,8 @@ setMethod(f = "staRVe_simulate",
   dat(object)[,attr(.response_from_formula(formula(settings(object)),
                                           dat(object)),"name")]<- sims$obs
 
-  # Turn into staRVe_fit so you have access to TMB obj
-  object<- new("staRVe_model_fit",staRVe_model = object)
+  # Turn into starve_fit so you have access to TMB obj
+  object<- new("starve_fit",starve = object)
   opt(TMB_out(object))$message<- "Simulated realization from model"
   obj(TMB_out(object))<- obj
 
@@ -178,14 +177,14 @@ setMethod(f = "staRVe_simulate",
 
 
 #' @export
-#' @describeIn staRVe_predict Predict/forecast at the specific locations and
+#' @describeIn strv_predict Predict/forecast at the specific locations and
 #'   times given in \code{new_data}. Any covariates used to fit the model
 #'   should be included in the rows of \code{new_data}. Returns a \code{long_stars}
 #'   object containing a copy of \code{new_data} and the associated predictions
 #'   and standard errors for the random effects and response mean on both the
 #'   link and natural scale.
-setMethod(f = "staRVe_predict",
-          signature = c("staRVe_model_fit","sf"),
+setMethod(f = "strv_predict",
+          signature = c("starve_fit","sf"),
           definition = function(x,
                                 new_data) {
   ### Check that we have all covariates, if there are covariates in the model
@@ -220,7 +219,7 @@ setMethod(f = "staRVe_predict",
 #' in the model data.
 #'
 #' @export
-#' @describeIn staRVe_predict Predictions will be made for all raster cells
+#' @describeIn strv_predict Predictions will be made for all raster cells
 #'   whose value are not NA. If the raster has no values, then predictions will
 #'   be made at every raster cell. Raster predictions are not treated as areal
 #'   data, instead point predictions are made at the midpoint of each raster cell.
@@ -228,8 +227,8 @@ setMethod(f = "staRVe_predict",
 #'   Returns a \code{stars} object whose first two dimensions are the raster
 #'   geometry of \code{new_data}, the third dimension is the time index given
 #'   in \code{time}, and the fourth dimension is the response variable.
-setMethod(f = "staRVe_predict",
-          signature = c("staRVe_model_fit","RasterLayer"),
+setMethod(f = "strv_predict",
+          signature = c("starve_fit","RasterLayer"),
           definition = function(x,new_data,covariates,time="model") {
   # Convert raster to sf
   uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(new_data,spatial=TRUE))
@@ -247,7 +246,7 @@ setMethod(f = "staRVe_predict",
   # if they are supplied
   covar_names<- .names_from_formula(formula(settings(x)))
   if( missing(covariates) && (length(covar_names) == 0) ) {
-    pred<- staRVe_predict(x,prediction_points)
+    pred<- strv_predict(x,prediction_points)
   } else if( missing(covariates) && (length(covar_names) != 0) ) {
     stop("Missing covariates, please supply them.")
   } else if( !all(covar_names %in% names(covariates)) ) {
@@ -264,7 +263,7 @@ setMethod(f = "staRVe_predict",
     ))
 
     prediction_points[,paste0(.time_name(x),".a")]<- NULL
-    pred<- staRVe_predict(x,prediction_points)
+    pred<- strv_predict(x,prediction_points)
   }
 
   # Convert predictions to stars object
@@ -297,7 +296,7 @@ setMethod(f = "staRVe_predict",
 
 #' Predict random effects from likelihood function
 #'
-#' @param x A starve_model_fit object
+#' @param x A starve_fit object
 #' @param predictions A long_stars object
 #' @param dist_tol A small number so that prediction variances are not
 #'   computationally singular
@@ -315,7 +314,7 @@ setMethod(f = "staRVe_predict",
   pred_times<- unique(locations(predictions)[,.time_name(x),drop=TRUE])
   x<- .add_random_effects_by_time(x,pred_times)
 
-  dag<- construct_pred_dag(
+  dag<- construct_prediction_graph(
     pred = predictions,
     model = x
   )
@@ -379,7 +378,7 @@ setMethod(f = "staRVe_predict",
 
 #' Update random effect predictions to include covariates (link scale)
 #'
-#' @param x A staRVe_model object. If se = TRUE, should be a staRVe_model_fit object.
+#' @param x A starve_model object. If se = TRUE, should be a starve_fit object.
 #' @param predictions A long_stars object, typically the output of .predict_w.
 #'   Should contain covariate data in slot 'locations'
 #' @param se Should standard errors be calculated?
@@ -441,7 +440,7 @@ setMethod(f = "staRVe_predict",
 #'
 #' A second-order Taylor approximation (delta method) is used
 #'
-#' @param x A staRVe_model object. If se = TRUE, should be a staRVe_model_fit object.
+#' @param x A starve object. If se = TRUE, should be a starve_fit object.
 #' @param predictions A data.frame, typically the output of .predict_linear.
 #'   Must contain at least the columns linear and linear_se.
 #' @param se Should standard errors be calculated?

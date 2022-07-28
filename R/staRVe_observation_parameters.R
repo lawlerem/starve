@@ -10,10 +10,10 @@ NULL
 #' @param response_distribution Which response distribution to use
 #' @param fixed_effects A data.frame
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
-  signature = "staRVe_observation_parameters",
+  signature = "observation_parameters",
   definition = function(.Object,
                         response_distribution = "gaussian",
                         fixed_effects = list(data.frame(par = numeric(0),
@@ -36,23 +36,23 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters Get response distribution(s)
+#' @describeIn observation_parameters_class Get response distribution(s)
 setMethod(f = "response_distribution",
-          signature = "staRVe_observation_parameters",
+          signature = "observation_parameters",
           definition = function(x) return(x@response_distribution)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters Get/set response distribution(s). Run
-#'   get_staRVe_distributions("distribution") for valid options. Setting the
+#' @describeIn observation_parameters_class Get/set response distribution(s). Run
+#'   get_starve_distributions("distribution") for valid options. Setting the
 #'   the response distribution also overwrites the response parameters and
 #'   link function(s).
 setReplaceMethod(f = "response_distribution",
-                 signature = "staRVe_observation_parameters",
+                 signature = "observation_parameters",
                  definition = function(x,value) {
-  value<- unname(get_staRVe_distributions("distribution")[pmatch(value,get_staRVe_distributions("distribution"),duplicates.ok=TRUE)])
+  value<- unname(get_starve_distributions("distribution")[pmatch(value,get_starve_distributions("distribution"),duplicates.ok=TRUE)])
   x@response_distribution<- value
 
   response_pars<- lapply(value,function(rd) {
@@ -121,18 +121,18 @@ setReplaceMethod(f = "response_distribution",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters Get response distribution parameters
+#' @describeIn observation_parameters_class Get response distribution parameters
 setMethod(f = "response_parameters",
-          signature = "staRVe_observation_parameters",
+          signature = "observation_parameters",
           definition = function(x) return(x@response_parameters)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters Set response distribution parameters
+#' @describeIn observation_parameters_class Set response distribution parameters
 setReplaceMethod(f = "response_parameters",
-                 signature = "staRVe_observation_parameters",
+                 signature = "observation_parameters",
                  definition = function(x,value) {
   x@response_parameters<- value
   return(x)
@@ -143,23 +143,23 @@ setReplaceMethod(f = "response_parameters",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters Get link function(s)
+#' @describeIn observation_parameters_class Get link function(s)
 setMethod(f = "link_function",
-          signature = "staRVe_observation_parameters",
+          signature = "observation_parameters",
           definition = function(x) return(x@link_function)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters set link function(s).  Run
-#'   get_staRVe_distributions("link") for valid options.
+#' @describeIn observation_parameters_class set link function(s).  Run
+#'   get_starve_distributions("link") for valid options.
 setReplaceMethod(f = "link_function",
-                 signature = "staRVe_observation_parameters",
+                 signature = "observation_parameters",
                  definition = function(x,value) {
   x@link_function<- unname(
-    get_staRVe_distributions("link")[
-      pmatch(value,get_staRVe_distributions("link"),duplicates.ok=TRUE)
+    get_starve_distributions("link")[
+      pmatch(value,get_starve_distributions("link"),duplicates.ok=TRUE)
     ]
   )
   return(x)
@@ -169,18 +169,18 @@ setReplaceMethod(f = "link_function",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters Get fixed effect parameters
+#' @describeIn observation_parameters_class Get fixed effect parameters
 setMethod(f = "fixed_effects",
-          signature = "staRVe_observation_parameters",
+          signature = "observation_parameters",
           definition = function(x) return(x@fixed_effects)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observation_parameters Set fixed effect parameters
+#' @describeIn observation_parameters_class Set fixed effect parameters
 setReplaceMethod(f = "fixed_effects",
-                 signature = "staRVe_observation_parameters",
+                 signature = "observation_parameters",
                  definition = function(x,value) {
   x@fixed_effects<- value
   return(x)

@@ -11,7 +11,7 @@ NULL
 #' @param opt Output of nlminb
 #' @param sdr Output of TMB::sdreport
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
   signature = "TMB_out",
@@ -37,7 +37,7 @@ setMethod(
 
 #' @param x An object
 #'
-#' @describeIn TMB_out Get TMB::MakeADFun object
+#' @describeIn TMB_out_class Get TMB::MakeADFun object
 setMethod(f = "obj",
           signature = "TMB_out",
           definition = function(x) return(x@obj)
@@ -45,7 +45,7 @@ setMethod(f = "obj",
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn TMB_out Set TMB::MakeADFun object
+#' @describeIn TMB_out_class Set TMB::MakeADFun object
 setReplaceMethod(f = "obj",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -55,7 +55,7 @@ setReplaceMethod(f = "obj",
 
 #' @param x An object
 #'
-#' @describeIn TMB_out Get output of optimizer
+#' @describeIn TMB_out_class Get output of optimizer
 setMethod(f = "opt",
           signature = "TMB_out",
           definition = function(x) return(x@opt)
@@ -63,7 +63,7 @@ setMethod(f = "opt",
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn TMB_out Set output of optimizer
+#' @describeIn TMB_out_class Set output of optimizer
 setReplaceMethod(f = "opt",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -73,7 +73,7 @@ setReplaceMethod(f = "opt",
 
 #' @param x An object
 #'
-#' @describeIn TMB_out Get output of TMB::sdreport
+#' @describeIn TMB_out_class Get output of TMB::sdreport
 setMethod(f = "sdr",
           signature = "TMB_out",
           definition = function(x) return(x@sdr)
@@ -81,7 +81,7 @@ setMethod(f = "sdr",
 #' @param x An object
 #' @param value A replacement value
 #'
-#' @describeIn TMB_out Set output of TMB::sdreport
+#' @describeIn TMB_out_class Set output of TMB::sdreport
 setReplaceMethod(f = "sdr",
                  signature = "TMB_out",
                  definition = function(x,value) {
@@ -97,7 +97,7 @@ setReplaceMethod(f = "sdr",
 
 #' @param x An object
 #'
-#' @describeIn TMB_out Get convergence message from optimizer
+#' @describeIn TMB_out_class Get convergence message from optimizer
 setMethod(f = "convergence",
           signature = "TMB_out",
           definition = function(x) {

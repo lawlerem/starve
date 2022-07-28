@@ -11,10 +11,10 @@ NULL
 #' @param n_neighbours An integer
 #' @param distance_units Which distance units to use
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
-  signature = "staRVe_settings",
+  signature = "settings",
   definition = function(.Object,
                         formula = new("formula"),
                         n_neighbours = 10,
@@ -41,18 +41,18 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_settings Get model formula
+#' @describeIn settings_class Get model formula
 setMethod(f = "formula",
-          signature = "staRVe_settings",
+          signature = "settings",
           definition = function(x) return(x@formula)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_settings Set model formula
+#' @describeIn settings_class Set model formula
 setReplaceMethod(f = "formula",
-                 signature = "staRVe_settings",
+                 signature = "settings",
                  definition = function(x,value) {
   x@formula<- value
   return(x)
@@ -61,13 +61,17 @@ setReplaceMethod(f = "formula",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_settings Get maximum number of neighbours used in graphs
+#' @describeIn settings_class Get maximum number of neighbours used in graphs
 setMethod(f = "n_neighbours",
-          signature = "staRVe_settings",
+          signature = "settings",
           definition = function(x) return(x@n_neighbours)
 )
+#' @param x An object
+#' @param value A replacement value
+#'
+#' @describeIn settings_class Set maximum number of neighbours used in graphs.
 setReplaceMethod(f = "n_neighbours",
-                 signature = "staRVe_settings",
+                 signature = "settings",
                  definition = function(x,value) {
   x@n_neighbours<- value
   return(x)
@@ -77,18 +81,19 @@ setReplaceMethod(f = "n_neighbours",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_settings Get distance units used for the model.
+#' @describeIn settings_class Get distance units used for the model.
 setMethod(f = "distance_units",
-          signature = "staRVe_settings",
+          signature = "settings",
           definition = function(x) return(x@distance_units)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_settings Set distance units
+#' @describeIn settings_class Set distance units. Automatically converts max_distance
+#'   setting to new units.
 setReplaceMethod(f = "distance_units",
-                 signature = "staRVe_settings",
+                 signature = "settings",
                  definition = function(x,value) {
   max_distance<- units::set_units(max_distance(x),distance_units(x),mode="standard")
   x@distance_units<- value
@@ -102,18 +107,18 @@ setReplaceMethod(f = "distance_units",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_settings Get maximum distance for edges in the graph
+#' @describeIn settings_class Get maximum distance for edges in the graph
 setMethod(f = "max_distance",
-          signature = "staRVe_settings",
+          signature = "settings",
           definition = function(x) return(x@max_distance)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_settings Set maximum distance for edges in the graph
+#' @describeIn settings_class Set maximum distance for edges in the graph
 setReplaceMethod(f = "max_distance",
-                 signature = "staRVe_settings",
+                 signature = "settings",
                  definition = function(x,value) {
   x@max_distance<- value
   return(x)
@@ -122,10 +127,10 @@ setReplaceMethod(f = "max_distance",
 
 #' @param x An object
 #'
-#' @describeIn staRVe_settings Get the name of the time variable used in formula
+#' @describeIn settings_class Get the name of the time variable used in formula
 #'   (for internal use only)
 setMethod(f = ".time_name",
-          signature = "staRVe_settings",
+          signature = "settings",
           definition = function(x) {
   return(.time_name_from_formula(formula(x)))
 })

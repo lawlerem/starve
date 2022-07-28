@@ -3,12 +3,12 @@
 \docType{class}
 \name{long_stars-class}
 \alias{long_stars-class}
-\alias{long_stars}
 \alias{values,long_stars-method}
 \alias{values<-,long_stars-method}
 \alias{locations,long_stars-method}
 \alias{locations<-,long_stars-method}
-\title{An S4 class to hold predictions from a staRVe model.}
+\title{An S4 class to hold a multi-dimensional array and a data.frame with a
+  many-to-one relationship.}
 \usage{
 \S4method{values}{long_stars}(x)
 
@@ -24,22 +24,23 @@
 \item{value}{A replacement value}
 }
 \description{
-An S4 class to hold predictions from a staRVe model.
+An S4 class to hold a multi-dimensional array and a data.frame with a
+  many-to-one relationship.
 }
 \details{
 The \code{predictions} slot will have at least 1 dimension, the first
   of which must be named \code{idx} and is identical to the row dimension of
   \code{locations}.
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{values}: Get predictions
+\item \code{values,long_stars-method}: Get values in multi-dimensional array
 
-\item \code{values<-}: Set predictions
+\item \code{values<-,long_stars-method}: Set values in multi-dimensional array
 
-\item \code{locations}: Get locations
+\item \code{locations,long_stars-method}: Get locations
 
-\item \code{locations<-}: Set locations
+\item \code{locations<-,long_stars-method}: Set locations
 }}
 
 \section{Slots}{
@@ -51,18 +52,18 @@ The \code{predictions} slot will have at least 1 dimension, the first
 }}
 
 \seealso{
-Other staRVe_classes: 
+Other starve_classes: 
 \code{\link{TMB_out-class}},
 \code{\link{dag-class}},
-\code{\link{staRVe_classes}},
-\code{\link{staRVe_model-class}},
-\code{\link{staRVe_model_fit-class}},
-\code{\link{staRVe_observation_parameters-class}},
-\code{\link{staRVe_observations-class}},
-\code{\link{staRVe_parameters-class}},
-\code{\link{staRVe_process-class}},
-\code{\link{staRVe_process_parameters-class}},
-\code{\link{staRVe_settings-class}},
-\code{\link{staRVe_tracing-class}}
+\code{\link{observation_parameters-class}},
+\code{\link{observations-class}},
+\code{\link{parameters-class}},
+\code{\link{process-class}},
+\code{\link{process_parameters-class}},
+\code{\link{settings-class}},
+\code{\link{starve-class}},
+\code{\link{starve_classes}},
+\code{\link{starve_fit-class}},
+\code{\link{tracing-class}}
 }
-\concept{staRVe_classes}
+\concept{starve_classes}

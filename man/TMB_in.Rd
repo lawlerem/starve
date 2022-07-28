@@ -2,22 +2,22 @@
 % Please edit documentation in R/generics.R, R/staRVe_model.R
 \name{TMB_in}
 \alias{TMB_in}
-\alias{TMB_in,staRVe_model-method}
-\title{Convert an into a form suitable for TMB input.}
+\alias{TMB_in,starve-method}
+\title{Convert a model object into a form suitable for TMB input.}
 \usage{
 TMB_in(x)
 
-\S4method{TMB_in}{staRVe_model}(x)
+\S4method{TMB_in}{starve}(x)
 }
 \value{
 A list with elements data, para, map, and rand to supply to TMB::MakeADFun
 }
 \description{
-Convert an into a form suitable for TMB input.
+Convert a model object into a form suitable for TMB input.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{staRVe_model}: Convert a staRVe_model to a list for \code{TMB::MakeADFun}
+\item \code{starve}: Convert a starve object to a list for \code{TMB::MakeADFun}
 }}
 
 \keyword{internal}

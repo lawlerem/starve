@@ -10,7 +10,7 @@ NULL
 #' @param locations An sf object with a time column and point geometries
 #' @param var_names A character vector
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
   signature = "long_stars",
@@ -48,7 +48,7 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn long_stars Get predictions
+#' @describeIn long_stars_class Get values in multi-dimensional array
 setMethod(f = "values",
           signature = "long_stars",
           definition = function(x) return(x@values)
@@ -57,7 +57,7 @@ setMethod(f = "values",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn long_stars Set predictions
+#' @describeIn long_stars_class Set values in multi-dimensional array
 setReplaceMethod(f = "values",
                  signature = "long_stars",
                  definition = function(x,value) {
@@ -68,7 +68,7 @@ setReplaceMethod(f = "values",
 #' @param x An object
 #'
 #' @export
-#' @describeIn long_stars Get locations
+#' @describeIn long_stars_class Get locations
 setMethod(f = "locations",
           signature = "long_stars",
           definition = function(x) return(x@locations)
@@ -77,7 +77,7 @@ setMethod(f = "locations",
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn long_stars Set locations
+#' @describeIn long_stars_class Set locations
 setReplaceMethod(f = "locations",
                  signature = "long_stars",
                  definition = function(x,value) {

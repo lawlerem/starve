@@ -9,15 +9,15 @@ NULL
 
 #' @param data_predictions A long_stars object
 #' @param transient_graph A dag object
-#' @param parameters A staRVe_observation_parameters object
+#' @param parameters An observation_parameters object
 #'
-#' @rdname staRVe-construct
+#' @rdname starve-construct
 setMethod(
   f = "initialize",
-  signature = "staRVe_observations",
+  signature = "observations",
   definition = function(.Object,
                         data_predictions = new("long_stars"),
-                        parameters = new("staRVe_observation_parameters")) {
+                        parameters = new("observation_parameters")) {
     data_predictions(.Object)<- data_predictions
     parameters(.Object)<- parameters
 
@@ -37,21 +37,21 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observations Get data, including response variables,
+#' @describeIn observations_class Get data, including response variables,
 #'   time indices, locations, covariates, etc.
 setMethod(f = "dat",
-          signature = "staRVe_observations",
+          signature = "observations",
           definition = function(x) return(locations(x@data_predictions))
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observations Set data. Warning: if you add new rows to
-#'   the data.frame you also need to manually update the transient graph,
-#'   transient graph random effects, and the graph_idx column for the new rows.
+#' @describeIn observations_class Set data. Warning: if you want to add new
+#'   rows you must give each additional row a value in the graph_idx column,
+#'   or create a new object from scratch.
 setReplaceMethod(f = "dat",
-                 signature = "staRVe_observations",
+                 signature = "observations",
                  definition = function(x,value) {
   locations(x@data_predictions)<- value
   return(x)
@@ -61,19 +61,19 @@ setReplaceMethod(f = "dat",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observations Get data_predictions, a long_stars object
+#' @describeIn observations_class Get data_predictions, a long_stars object
 #'   with the data (see \code{dat}) and associated random effect predictions.
 setMethod(f = "data_predictions",
-          signature = "staRVe_observations",
+          signature = "observations",
           definition = function(x) return(x@data_predictions)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observations Set data predictions
+#' @describeIn observations_class Set data predictions
 setReplaceMethod(f = "data_predictions",
-                 signature = "staRVe_observations",
+                 signature = "observations",
                  definition = function(x,value) {
   x@data_predictions<- value
   return(x)
@@ -85,21 +85,21 @@ setReplaceMethod(f = "data_predictions",
 #' @param x An object
 #'
 #' @export
-#' @describeIn staRVe_observations Get parameters as a
-#'   staRVe_observation_parameters object.
+#' @describeIn observations_class Get parameters as an
+#'   observation_parameters object.
 setMethod(f = "parameters",
-          signature = "staRVe_observations",
+          signature = "observations",
           definition = function(x) return(x@parameters)
 )
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn staRVe_observations Set parameters using a new
-#'   staRVe_observation_parameters object. Not the recommended
-#'   way to modify specific parmaeter values, isntead see the package vignette
+#' @describeIn observations_class Set parameters using a new
+#'   observation_parameters object. Not the recommended way to
+#'   modify specific parmaeter values, instead see the package vignette
 setReplaceMethod(f = "parameters",
-                 signature = "staRVe_observations",
+                 signature = "observations",
                  definition = function(x,value) {
   x@parameters<- value
   return(x)
@@ -113,34 +113,34 @@ setReplaceMethod(f = "parameters",
 ###         ###
 ###############
 
-#' Prepare the observation part of a staRVe_model object.
+#' Prepare the observation part of a starve object.
 #'
-#' Creates a new staRVe_observation object with the correct dimensions
+#' Creates a new observation object with the correct dimensions
 #'   for the random effect predictions. Initializes the response distribution
 #'   and fixed effect parameters for the model according to the options specified
 #'   in the formula element of the settings argument. Also adds a column "graph_idx"
 #'   to the supplied data.
 #'
 #' @param data An sf object containing the observations and covariates.
-#' @param process A staRVe_process object.
-#' @param settings A staRVe_settings object.
-#' @param distribution The response distribution to use. must be one given by
-#'   get_staRVe_distributions("distribution").
+#' @param process A process object.
+#' @param settings A settings object.
+#' @param distribution The response distribution to use. Must be one given by
+#'   get_starve_distributions("distribution").
 #' @param link The link function to use. must be one given by
-#'   get_staRVe_distributions("link").
+#'   get_starve_distributions("link").
 #'
-#' @return A staRVe_observations object.
+#' @return An observations object.
 #'
-#' @seealso staRVe_observations
-#' @seealso prepare_staRVe_process, prepare_staRVe_model
+#' @seealso observations_class
+#' @seealso strv_prepare_process, strv_prepare
 #'
 #' @keywords internal
-prepare_staRVe_observations<- function(data,
-                                       process,
-                                       settings = new("staRVe_settings"),
-                                       distribution = "gaussian",
-                                       link = "default") {
-  observations<- new("staRVe_observations")
+strv_prepare_observations<- function(data,
+                                     process,
+                                     settings = new("settings"),
+                                     distribution = "gaussian",
+                                     link = "default") {
+  observations<- new("observations")
 
   # data = "sf"
   # Put in lexicographic ordering by time, then S->N / W->E
@@ -154,15 +154,15 @@ prepare_staRVe_observations<- function(data,
     .sample_size_from_formula(formula(settings),data,unique_vars = TRUE),
     .response_from_formula(formula(settings),data),
     time_column,
-    graph_idx = .create_graph_idx(data,process,settings),
+    graph_idx = create_graph_idx(data,process,settings),
     data[,attr(data,"sf_column")]
   )),
   var_names = .response_names(formula(settings)))
 
 
 
-  # parameters = "staRVe_observation_parameters"
-  parameters<- new("staRVe_observation_parameters")
+  # parameters = "observation_parameters"
+  parameters<- new("observation_parameters")
 
   # Match supplied response distribution to valid options
   # response_distribution<- also takes care of response parameters
