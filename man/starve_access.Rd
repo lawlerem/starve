@@ -67,7 +67,7 @@
 \alias{tg_re<-}
 \alias{time_effects}
 \alias{time_effects<-}
-\alias{.time_name}
+\alias{time_name}
 \alias{time_parameters}
 \alias{time_parameters<-}
 \alias{timing}
@@ -211,7 +211,7 @@ time_effects(x)
 
 time_effects(x) <- value
 
-.time_name(x)
+time_name(x)
 
 time_parameters(x)
 
@@ -384,7 +384,7 @@ These accessor functions are used to extract different components from the
 
 \item \code{time_effects<-}: Set time effects
 
-\item \code{.time_name}: Get time name used
+\item \code{time_name}: Get time name used
 
 \item \code{time_parameters}: Get time parameters
 

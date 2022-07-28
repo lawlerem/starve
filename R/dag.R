@@ -153,7 +153,7 @@ construct_persistent_graph<- function(x,
   dist_matrix<- as.matrix(units::set_units(sf::st_distance(x),
                                            distance_units(settings),
                                            mode="standard"))
-  dag<- .rcpp_dist_to_dag(d=dist_matrix,n_neighbours=min(nrow(x),n_neighbours(settings)))
+  dag<- dist_to_dag(d=dist_matrix,n_neighbours=min(nrow(x),n_neighbours(settings)))
   x<- x[dag$order+1,]
   dag<- new("dag",
             edges = dag$edge_list,
@@ -205,7 +205,7 @@ construct_transient_graph<- function(x,
     time<- rep(0,nrow(x))
   } else if( length(time) != nrow(x) ) {
     stop("Time needs to be the same length as x.")
-  } else if( !all.equal(time,sort(time)) ) {
+  } else if( !all.equal(c(time),sort(time)) ) {
     stop("Time must be sorted.")
   } else {}
 
@@ -277,8 +277,8 @@ construct_prediction_graph<- function(pred,
                                       model,
                                       silent = TRUE) {
   settings<- settings(model)
-  colnames(locations(pred))[colnames(locations(pred)) == attr(locations(pred),"sf_column")]<- attr(.locations_from_stars(pg_re(model)),"sf_column")
-  st_geometry(locations(pred))<- attr(.locations_from_stars(pg_re(model)),"sf_column")
+  colnames(locations(pred))[colnames(locations(pred)) == attr(locations(pred),"sf_column")]<- attr(locations_from_stars(pg_re(model)),"sf_column")
+  st_geometry(locations(pred))<- attr(locations_from_stars(pg_re(model)),"sf_column")
   # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(max_distance(settings),
                               distance_units(settings),
@@ -286,20 +286,20 @@ construct_prediction_graph<- function(pred,
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
-  pg_s<- sf::st_geometry(.locations_from_stars(pg_re(model)))
+  pg_s<- sf::st_geometry(locations_from_stars(pg_re(model)))
   tg_s<- sf::st_geometry(locations(tg_re(model)))
 
-  t<- .time_from_formula(formula(model),locations(pred))[[1]]
-  if( !all.equal(t,sort(t)) ) {
+  t<- time_from_formula(formula(model),locations(pred))
+  if( !all.equal(c(t),sort(t)) ) {
     stop("The rows of pred must be sorted by their time index.")
   } else {}
 
-  g_by_t<- lapply(stars::st_get_dimension_values(pg_re(model),.time_name(model)),function(t) {
-    pr_s<- locations(pred)[.time_from_formula(formula(model),locations(pred))[[1]]==t,]
+  g_by_t<- lapply(stars::st_get_dimension_values(pg_re(model),time_name(model)),function(t) {
+    pr_s<- locations(pred)[time_from_formula(formula(model),locations(pred))==t,]
     if( length(tg_s) > 0 ) {
       g_s<- sf::st_sf(geom=c(
         pg_s,
-        sf::st_sfc(unique(tg_s[.time_from_formula(formula(model),locations(tg_re(model)))[[1]]==t]))
+        sf::st_sfc(unique(tg_s[time_from_formula(formula(model),locations(tg_re(model)))==t]))
       ))
     } else {
       g_s<- sf::st_sf(geom=pg_s)

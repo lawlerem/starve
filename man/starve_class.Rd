@@ -44,7 +44,7 @@
 \alias{distance_units<-,starve-method}
 \alias{formula,starve-method}
 \alias{formula<-,starve-method}
-\alias{.time_name,starve-method}
+\alias{time_name,starve-method}
 \alias{parameters,starve-method}
 \alias{parameters<-,starve,parameters-method}
 \title{An S4 class describing a starve model.}
@@ -131,7 +131,7 @@
 
 \S4method{formula}{starve}(x) <- value
 
-\S4method{.time_name}{starve}(x)
+\S4method{time_name}{starve}(x)
 
 \S4method{parameters}{starve}(x)
 
@@ -243,7 +243,7 @@ get_starve_distributions("link") for valid link functions.
 
 \item \code{formula<-,starve-method}: Set formula used for the model
 
-\item \code{.time_name,starve-method}: Get the name of the time variable used in
+\item \code{time_name,starve-method}: Get the name of the time variable used in
 the model formula (for internal use only)
 
 \item \code{parameters,starve-method}: Get all model parameters as a parameters object

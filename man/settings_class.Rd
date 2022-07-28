@@ -11,7 +11,7 @@
 \alias{distance_units<-,settings-method}
 \alias{max_distance,settings-method}
 \alias{max_distance<-,settings-method}
-\alias{.time_name,settings-method}
+\alias{time_name,settings-method}
 \title{An S4 class to hold settings for a starve model}
 \usage{
 \S4method{formula}{settings}(x)
@@ -30,7 +30,7 @@
 
 \S4method{max_distance}{settings}(x) <- value
 
-\S4method{.time_name}{settings}(x)
+\S4method{time_name}{settings}(x)
 }
 \arguments{
 \item{x}{An object}
@@ -59,7 +59,7 @@ setting to new units.
 
 \item \code{max_distance<-,settings-method}: Set maximum distance for edges in the graph
 
-\item \code{.time_name,settings-method}: Get the name of the time variable used in formula
+\item \code{time_name,settings-method}: Get the name of the time variable used in formula
 (for internal use only)
 }}
 

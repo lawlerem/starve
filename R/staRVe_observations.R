@@ -144,20 +144,19 @@ strv_prepare_observations<- function(data,
 
   # data = "sf"
   # Put in lexicographic ordering by time, then S->N / W->E
-  data<- .order_by_location(data,time = data[[.time_name(settings)]])
+  data<- order_by_location(data,time = data[[time_name(settings)]])
 
-  # Return a time column with name and type (ar1/rw/etc) attributes
-  time_column<- .time_from_formula(formula(settings),data) #in order
-
-  data_predictions(observations)<- new("long_stars",sf::st_sf(data.frame(
-    .mean_design_from_formula(formula(settings),data,return = "all.vars"),
-    .sample_size_from_formula(formula(settings),data,unique_vars = TRUE),
-    .response_from_formula(formula(settings),data),
-    time_column,
-    graph_idx = create_graph_idx(data,process,settings),
-    data[,attr(data,"sf_column")]
-  )),
-  var_names = .response_names(formula(settings)))
+  data_predictions(observations)<- new("long_stars",
+    sf::st_sf(data.frame(
+      mean_design_from_formula(formula(settings),data,return = "all.vars"),
+      sample_size_from_formula(formula(settings),data,unique_vars = TRUE),
+      response_from_formula(formula(settings),data),
+      time_from_formula(formula(settings),data,"column"),
+      graph_idx = create_graph_idx(data,process,settings),
+      data[,attr(data,"sf_column")]
+    )),
+    var_names = response_names(formula(settings))
+  )
 
 
 
@@ -167,17 +166,17 @@ strv_prepare_observations<- function(data,
   # Match supplied response distribution to valid options
   # response_distribution<- also takes care of response parameters
   # and link function
-  response_distribution(parameters)<- rep(distribution,length.out=.n_response(formula(settings)))
-  names(response_parameters(parameters))<- .response_names(formula(settings))
+  response_distribution(parameters)<- rep(distribution,length.out=n_response(formula(settings)))
+  names(response_parameters(parameters))<- response_names(formula(settings))
 
   # Match supplied link function with valid options
   if( !identical(link,"default") ) {
-    link_function(parameters)<- rep(link,length.out=.n_response(formula(settings)))
+    link_function(parameters)<- rep(link,length.out=n_response(formula(settings)))
   } else {}
 
   # Set up fixed effects according to covariates formula
-  nff<- colnames(.mean_design_from_formula(formula(settings),data))
-  fixed_effects(parameters)<- lapply(.response_names(formula(settings)),function(rr) {
+  nff<- colnames(mean_design_from_formula(formula(settings),data))
+  fixed_effects(parameters)<- lapply(response_names(formula(settings)),function(rr) {
     return(data.frame(
       par = numeric(length(nff)),
       se = rep(NA,length(nff)),
@@ -185,7 +184,7 @@ strv_prepare_observations<- function(data,
       row.names = nff
     ))
   })
-  names(fixed_effects(parameters))<- .response_names(formula(settings))
+  names(fixed_effects(parameters))<- response_names(formula(settings))
   parameters(observations)<- parameters
 
   return(observations)

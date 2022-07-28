@@ -129,8 +129,8 @@ setReplaceMethod(f = "max_distance",
 #'
 #' @describeIn settings_class Get the name of the time variable used in formula
 #'   (for internal use only)
-setMethod(f = ".time_name",
+setMethod(f = "time_name",
           signature = "settings",
           definition = function(x) {
-  return(.time_name_from_formula(formula(x)))
+  return(time_name(formula(x)))
 })

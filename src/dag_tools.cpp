@@ -10,7 +10,7 @@ Eigen::VectorXi to_list(Rcpp::List edge_list) {
 }
 
 
-// [[Rcpp::export(".rcpp_order_d_matrix")]]
+// [[Rcpp::export("order_d_matrix")]]
 Eigen::VectorXi order_d_matrix(Eigen::MatrixXd &d) {
   Eigen::VectorXi order=Eigen::VectorXi::LinSpaced(d.rows(),0,d.rows()-1);
   int minParent, minChild;
@@ -38,7 +38,7 @@ struct refSorter {
 };
 
 
-// [[Rcpp::export(".rcpp_lowest_k")]]
+// [[Rcpp::export("lowest_k")]]
 Eigen::VectorXi lowest_k(const Eigen::VectorXd &d, const int k) {
   if( k == 0 ) {
     Eigen::VectorXi v(0);
@@ -51,7 +51,7 @@ Eigen::VectorXi lowest_k(const Eigen::VectorXd &d, const int k) {
   return ind.segment(0,k);
 }
 
-// [[Rcpp::export(".rcpp_dist_to_dag")]]
+// [[Rcpp::export("dist_to_dag")]]
 SEXP dist_to_dag(const Eigen::Map<Eigen::MatrixXd> &d, const int n_neighbours) {
   Eigen::MatrixXd sorted_d = d;
   Eigen::VectorXi order = order_d_matrix(sorted_d); // Returns order, and sorts ordered_d

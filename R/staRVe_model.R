@@ -503,7 +503,7 @@ setReplaceMethod(f = "formula",
   } else {}
   formula(settings(x))<- value
 
-  design<- .mean_design_from_formula(value,dat(x))
+  design<- mean_design_from_formula(value,dat(x))
   fe<- lapply(fixed_effects(x),function(v) {
     data.frame(
       par = numeric(ncol(design)),
@@ -523,10 +523,10 @@ setReplaceMethod(f = "formula",
 #'
 #' @describeIn starve_class Get the name of the time variable used in
 #'   the model formula (for internal use only)
-setMethod(f = ".time_name",
+setMethod(f = "time_name",
           signature = "starve",
           definition = function(x) {
-  return(.time_name(settings(x)))
+  return(time_name(settings(x)))
 })
 
 
@@ -650,8 +650,6 @@ strv_prepare<- function(formula,
                         distance_units = "km",
                         fit = FALSE,
                         ...) {
-  # Need to find name of time column
-  time_form<- .time_from_formula(formula,data)
   model<- new("starve")
 
   # Set the settings in the model
@@ -692,33 +690,33 @@ strv_prepare<- function(formula,
 setMethod(f = "TMB_in",
           signature = "starve",
           definition = function(x) {
-  min_t<- min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))
+  min_t<- min(stars::st_get_dimension_values(pg_re(x),time_name(x)))
   data<- list(
     model = "model",
     conditional_sim = FALSE,
     pg_edges = edges(idxR_to_C(persistent_graph(x))),
     pg_dists = distances(persistent_graph(x)),
-    tg_t = .time_from_formula(formula(settings(x)),locations(tg_re(x)))[[1]]-min_t,
+    tg_t = c(time_from_formula(formula(settings(x)),locations(tg_re(x))))-min_t,
     tg_edges = edges(idxR_to_C(transient_graph(x))),
     tg_dists = distances(transient_graph(x)),
-    cv_code = .covariance_to_code(covariance_function(x)),
-    distribution_code = .distribution_to_code(response_distribution(x)),
-    link_code = .link_to_code(link_function(x)),
-    obs = as.matrix(.response_from_formula(formula(x),dat(x))),
+    cv_code = covariance_to_code(covariance_function(x)),
+    distribution_code = distribution_to_code(response_distribution(x)),
+    link_code = link_to_code(link_function(x)),
+    obs = as.matrix(response_from_formula(formula(x),dat(x))),
     idx = cbind(
       dat(x)$graph_idx-1,
-      .time_from_formula(formula(x),dat(x))[[1]]-min_t
+      time_from_formula(formula(x),dat(x))[[1]]-min_t
     ),
-    sample_size = as.matrix(.sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
-    mean_design = as.matrix(.mean_design_from_formula(formula(x),dat(x),"model.matrix")),
+    sample_size = as.matrix(sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
+    mean_design = as.matrix(mean_design_from_formula(formula(x),dat(x),"model.matrix")),
     pred_edges = vector(mode="list",length=0),
     pred_dists = vector(mode="list",length=0),
     pred_t = integer(0)
   )
   para<- list(
     ts_re = time_effects(x)[["w"]],
-    working_ts_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    working_ts_pars = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         c(time_parameters(x)[[v]]["mu","par"],
           ifelse( # -1 <= ar1 <= +1
               (time_parameters(x)[[v]]["ar1","par"] >= -1
@@ -738,12 +736,12 @@ setMethod(f = "TMB_in",
     ),
     pg_re = pg_re(x)[["w"]],
     tg_re = (if(nrow(locations(tg_re(x))) == 0) {
-        array(0,dim=c(0,.n_response(formula(x))))
+        array(0,dim=c(0,n_response(formula(x))))
       } else {
         values(tg_re(x))[["w"]]
       }),
-    working_cv_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    working_cv_pars = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         switch(covariance_function(x)[[v]],
           c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
             ifelse( # std. dev. > 0
@@ -768,8 +766,8 @@ setMethod(f = "TMB_in",
         )}
       )
     ),
-    working_response_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    working_response_pars = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         switch(response_distribution(x)[[v]],
           gaussian = ifelse( # Normal; std. dev. > 0
                 response_parameters(x)[[v]]["sd","par"] > 0 ||
@@ -823,40 +821,40 @@ setMethod(f = "TMB_in",
         )}
       )
     ),
-    beta = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    beta = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         fixed_effects(x)[[v]][colnames(data$mean_design),"par"]
       })
     ),
-    pred_re = array(0,dim=c(0,.n_response(formula(x))))
+    pred_re = array(0,dim=c(0,n_response(formula(x))))
   )
   rand<- c("ts_re","pg_re","tg_re","pred_re")
   map<- list(
-    working_ts_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    working_ts_pars = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         time_parameters(x)[[v]][,"fixed"]
       })
     ),
-    working_cv_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    working_cv_pars = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         spatial_parameters(x)[[v]][,"fixed"]
       })
     ),
-    working_response_pars = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    working_response_pars = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         switch((nrow(response_parameters(x)[[v]]) > 0)+1,
           logical(0),
           response_parameters(x)[[v]][,"fixed"]
         )
       })
     ),
-    beta = do.call(.cbind_no_recycle,
-      lapply(seq(.n_response(formula(x))),function(v) {
+    beta = do.call(cbind_no_recycle,
+      lapply(seq(n_response(formula(x))),function(v) {
         fixed_effects(x)[[v]][colnames(data$mean_design),"fixed"]
       })
     )
   )
-  map<- lapply(map,.logical_to_map)
+  map<- lapply(map,logical_to_map)
 
   return(list(
     data = data,
@@ -880,13 +878,13 @@ setMethod(f = "strv_update",
   par_names<- character(0)
 
   # Spatial parameters
-  for( i in seq(.n_response(formula(x))) ) {
+  for( i in seq(n_response(formula(x))) ) {
     spatial_parameters(x)[[i]]$par<- sdr_est$cv_pars[,i]
     spatial_parameters(x)[[i]]$se<- sdr_se$cv_pars[,i]
   }
 
   # Time parameters
-  for( i in seq(.n_response(formula(x))) ) {
+  for( i in seq(n_response(formula(x))) ) {
     time_parameters(x)[[i]]$par<- sdr_est$ts_pars[,i]
     time_parameters(x)[[i]]$se<- sdr_se$ts_pars[,i]
   }
@@ -906,13 +904,13 @@ setMethod(f = "strv_update",
   } else {}
 
   # Fixed effects
-  for( i in seq(.n_response(formula(x))) ) {
+  for( i in seq(n_response(formula(x))) ) {
     fixed_effects(x)[[i]]$par<- sdr_est$beta[,i]
     fixed_effects(x)[[i]]$se<- sdr_se$beta[,i]
   }
 
   # Response distribution parameters
-  for( i in seq(.n_response(formula(x))) ) {
+  for( i in seq(n_response(formula(x))) ) {
     # Need seq(nrow(respone_parameters... to get rid of trailing NAs
     if( nrow(response_parameters(x)[[i]]) > 0 ) {
       response_parameters(x)[[i]]$par<- sdr_est$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
@@ -922,8 +920,8 @@ setMethod(f = "strv_update",
 
   # Update the random effects for the observations
   s<- dat(x)$graph_idx
-  t<- .time_from_formula(formula(x),dat(x))[[1]]-min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
-  std_tg_t<- .time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
+  t<- time_from_formula(formula(x),dat(x))-min(stars::st_get_dimension_values(pg_re(x),time_name(x)))+1
+  std_tg_t<- time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),time_name(x)))+1
   for( i in seq(nrow(dat(x))) ) {
     if( s[[i]] <= dim(pg_re(x))[[1]] ) {
       values(data_predictions(x))$w[i,]<- pg_re(x)$w[s[[i]],t[[i]],]

@@ -39,6 +39,7 @@ NULL
 NULL
 
 
+setOldClass("formula")
 setOldClass("proc_time")
 setOldClass("sdreport")
 setOldClass("sf")

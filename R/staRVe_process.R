@@ -233,17 +233,17 @@ strv_prepare_process<- function(data,
   process<- new("process")
 
   # Return a time column with name and type (ar1/rw/etc) attributes
-  time_col<- .time_from_formula(formula(settings),data)
-  time_seq<- seq(min(time_col[,1]),max(time_col[,1]))
+  time_col<- time_from_formula(formula(settings),data)
+  time_seq<- seq(min(time_col),max(time_col))
 
   # time_effects = "data.frame"
   time_effects(process)<- stars::st_as_stars(
-    list(w = array(0,dim=c(length(time_seq),.n_response(formula(settings)))),
-         se = array(0,dim=c(length(time_seq),.n_response(formula(settings))))
+    list(w = array(0,dim=c(length(time_seq),n_response(formula(settings)))),
+         se = array(0,dim=c(length(time_seq),n_response(formula(settings))))
     ),
-    dimensions = stars::st_dimensions(time = time_seq,variable = .response_names(formula(settings)))
+    dimensions = stars::st_dimensions(time = time_seq,variable = response_names(formula(settings)))
   )
-  names(stars::st_dimensions(time_effects(process)))[[1]]<- .time_name(settings)
+  names(stars::st_dimensions(time_effects(process)))[[1]]<- time_name(settings)
 
 
   # pg_re = "sf",
@@ -259,20 +259,20 @@ strv_prepare_process<- function(data,
   }
 
   pg_re(process)<- stars::st_as_stars(
-    list(w = array(0,dim=c(nrow(uniq_nodes),length(time_seq),.n_response(formula(settings)))),
-         se = array(0,dim=c(nrow(uniq_nodes),length(time_seq),.n_response(formula(settings))))
+    list(w = array(0,dim=c(nrow(uniq_nodes),length(time_seq),n_response(formula(settings)))),
+         se = array(0,dim=c(nrow(uniq_nodes),length(time_seq),n_response(formula(settings))))
     ),
     dimensions = stars::st_dimensions(geom = sf::st_geometry(uniq_nodes),
                                       time = time_seq,
-                                      variable = .response_names(formula(settings)))
+                                      variable = response_names(formula(settings)))
   )
-  names(stars::st_dimensions(pg_re(process)))[[2]]<- .time_name(settings)
+  names(stars::st_dimensions(pg_re(process)))[[2]]<- time_name(settings)
 
 
 
   # tg_re = "sf"
   # Construct transient graph if not supplied
-  pg_locs<- .locations_from_stars(pg_re(process))
+  pg_locs<- locations_from_stars(pg_re(process))
   colnames(pg_locs)[colnames(pg_locs) == attr(pg_locs,"sf_column")]<- attr(data,"sf_column")
   st_geometry(pg_locs)<- attr(data,"sf_column")
   data<- data[lengths(st_equals(data,pg_locs)) == 0,]
@@ -280,16 +280,16 @@ strv_prepare_process<- function(data,
   transient_graph(process)<- construct_transient_graph(
     x = data,
     y = pg_locs,
-    time = .time_from_formula(formula(settings),data)[[1]],
+    time = time_from_formula(formula(settings),data),
     settings = settings
   )
   tg_re(process)<- new("long_stars",
                        locations = sf::st_sf(data.frame(
-                          .time_from_formula(formula(settings),data)
+                          time_from_formula(formula(settings),data,return="column")
                          ),
                          geom = sf::st_geometry(data)
                        ),
-                       var_names = .response_names(formula(settings)))
+                       var_names = response_names(formula(settings)))
   names(values(tg_re(process)))[[2]]<- "se"
   values(tg_re(process))$linear<- NULL
   values(tg_re(process))$linear_se<- NULL
@@ -301,7 +301,7 @@ strv_prepare_process<- function(data,
   # parameters = "process_parameters"
   parameters<- new("process_parameters")
   # Returns name of covariance function and value of nu
-  covariance<- .covariance_from_formula(formula(settings))
+  covariance<- covariance_from_formula(formula(settings))
 
   covariance_function(parameters)<- covariance$covariance
   # covariance_function<- takes care of settings spatial parameters,
@@ -312,7 +312,7 @@ strv_prepare_process<- function(data,
       spatial_parameters(parameters)[[i]]["nu","fixed"]<- TRUE
     } else {}
   }
-  names(spatial_parameters(parameters))<- .response_names(formula(settings))
+  names(spatial_parameters(parameters))<- response_names(formula(settings))
 
   time_parameters(parameters)<- lapply(attr(time_col,"type"),function(tt) {
     df<- data.frame(
@@ -337,7 +337,7 @@ strv_prepare_process<- function(data,
     } else {}
     return(df)
   })
-  names(time_parameters(parameters))<- .response_names(formula(settings))
+  names(time_parameters(parameters))<- response_names(formula(settings))
 
   parameters(process)<- parameters
 
@@ -356,18 +356,18 @@ setMethod(
   f = "create_graph_idx",
   signature = c("sf","process"),
   definition = function(x,y,settings) {
-    pg_s<- .locations_from_stars(pg_re(y))
+    pg_s<- locations_from_stars(pg_re(y))
     tg_s<- locations(tg_re(y)) # Should also have a time column
-    tg_t<- .time_from_formula(formula(settings),tg_s)[[1]]
+    tg_t<- time_from_formula(formula(settings),tg_s)
 
     # Get persistent graph locations
     v<- sf::st_equals(x,pg_s)
     v<- do.call(c,lapply(v,function(x) if(length(x)==0) {return(NA)} else {return(x[[1]])}))
 
     # Get transient graph locations
-    splitx<- split(x[is.na(v),],.time_from_formula(formula(settings),x[is.na(v),]))
+    splitx<- split(x[is.na(v),],time_from_formula(formula(settings),x[is.na(v),]))
     splitv<- lapply(splitx,function(t_x) {
-      vv<- sf::st_equals(t_x,tg_s[tg_t==.time_from_formula(formula(settings),t_x)[[1]][[1]],])
+      vv<- sf::st_equals(t_x,tg_s[tg_t==time_from_formula(formula(settings),t_x)[[1]],])
       vv<- do.call(c,lapply(vv,function(x) if(length(x)==0) {return(NA)} else {return(x[[1]])}))
       vv<- vv+nrow(pg_s)
       return(vv)

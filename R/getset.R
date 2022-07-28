@@ -472,8 +472,8 @@ setGeneric(name = "time_effects<-",
 
 #' @describeIn starve_access Get time name used
 #' @keywords internal
-setGeneric(name = ".time_name",
-           def = function(x) standardGeneric(".time_name")
+setGeneric(name = "time_name",
+           def = function(x) standardGeneric("time_name")
 )
 
 
