@@ -4,6 +4,9 @@
 \alias{strv_predict}
 \alias{strv_predict,starve,sf-method}
 \alias{strv_predict,starve,RasterLayer-method}
+\alias{predict_w}
+\alias{predict_linear}
+\alias{predict_response}
 \title{Use a fitted model to predict.}
 \usage{
 strv_predict(x, new_data, ...)
@@ -58,4 +61,50 @@ Returns a \code{stars} object whose first two dimensions are the raster
 geometry of \code{new_data}, the third dimension is the time index given
 in \code{time}, and the fourth dimension is the response variable.
 }}
+
+\section{Random effect predictions}{
+
+Predictions of spatio-temporal random effects.
+
+If there are prediction times that are outside the range of times of the
+  model, then persistent graph random effects are added to the model to cover
+  these additional times. Then a prediction graph is created which describes
+  which random effect locations (including both persistent graph and transient
+  graph locations) are used as nearest neighbours when finding the predictive
+  distribution for the spatio-temporal random effect at each prediction location.
+
+We then add the predictive distributions for the prediction random effects
+  to the model likelihood function. The predicted values and standard errors
+  for the random effect are found by optimizing the augmented likelihood function
+  evaluated at the model parameter values. Note that the standard errors for
+  the predicted random effects take into account uncertainty in the model
+  parameter estimates.
+}
+
+\section{Linear predictions}{
+
+Predictions of response mean before applying the link function.
+
+The predicted value for the linear predictor is given by X*beta + w where
+  X is the covariate value for the prediction location, beta is the vector of
+  model regression coefficients, and w is the predicted random effect value
+  for the prediction location.
+
+The standard error for the prediction is given by sqrt(X*SE*X^T + w_se^2) where
+  SE is the parameter estimate covariance matrix for the regression coefficients
+  and w_se is the standard errors for the random effect prediction. Note that
+  these standard errors assume that the estimators for the regression coeffiecients
+  are independent from the random effects, which may not be true if the covariates
+  are spatially structured due to an effect called spatial confounding.
+}
+
+\section{Response predictions}{
+
+Predictions of response mean after applying the link function.
+
+The predicted value for the response mean is the linear predictor transformed
+  to the scale of data by applying the link function. The standard error for
+  the prediction is obtained via the delta method using a second-order Taylor
+  approximation.
+}
 
