@@ -1,4 +1,4 @@
-#' @include classes.R generics.R dag.R staRVe_observation_parameters.R staRVe_process.R long_stars.R
+#' @include classes.R generics.R dag.R observation_parameters.R process.R long_stars.R
 NULL
 
 #################

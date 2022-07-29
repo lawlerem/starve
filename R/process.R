@@ -1,4 +1,4 @@
-#' @include classes.R getset.R generics.R utility.R dag.R long_stars.R staRVe_process_parameters.R
+#' @include classes.R getset.R generics.R utility.R dag.R long_stars.R process_parameters.R
 NULL
 
 #################

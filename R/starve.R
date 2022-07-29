@@ -1,4 +1,4 @@
-#' @include classes.R getset.R generics.R staRVe_process.R staRVe_observations.R staRVe_parameters.R staRVe_settings.R staRVe_tracing.R TMB_out.R
+#' @include classes.R getset.R generics.R process.R observations.R parameters.R settings.R tracing.R TMB_out.R
 NULL
 
 #################

@@ -1,4 +1,4 @@
-#' @include classes.R generics.R staRVe_process_parameters.R staRVe_observation_parameters.R
+#' @include classes.R generics.R process_parameters.R observation_parameters.R
 NULL
 
 #################
