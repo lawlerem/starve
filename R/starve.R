@@ -104,7 +104,7 @@ setReplaceMethod(f = "settings",
 #' @param x An object
 #'
 #' @export
-#' @describeIn starve_class Get tracing information, see \link{tracing_class}.
+#' @describeIn starve_class Get tracing information, see \link{tracing}.
 setMethod(f = "tracing",
           signature = "starve",
           definition = function(x) return(x@tracing)

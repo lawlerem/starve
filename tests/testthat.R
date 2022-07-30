@@ -1,4 +1,4 @@
 library(testthat)
-library(staRVe)
+library(starve)
 
-test_check("staRVe")
+test_check("starve")

@@ -179,7 +179,7 @@ An S4 class describing a starve model.
 
 \item \code{settings<-,starve-method}: Set model settings (for internal use only)
 
-\item \code{tracing,starve-method}: Get tracing information, see \link{tracing_class}.
+\item \code{tracing,starve-method}: Get tracing information, see \link{tracing}.
 
 \item \code{tracing<-,starve-method}: Set tracing information (for internal use only)
 
