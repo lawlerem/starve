@@ -32,7 +32,7 @@ test_that("C++ covariance",{
     para = list(
       dummy = 0
     ),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -68,7 +68,7 @@ test_that("C++ conditional normal",{
     para = list(
       dummy = 0
     ),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -99,7 +99,7 @@ test_that("C++ time series",{
     para = list(
       dummy = 0
     ),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -123,22 +123,22 @@ test_that("C++ time series",{
 
 test_that("C++ persistent_graph",{
   pg_re<- array(seq(6*3*2),dim=c(6,3,2))
-  pg_graph<- construct_dag(
+  pg_graph<- construct_persistent_graph(
     points[1:6,],
-    new("staRVe_settings",n_neighbours=2)
+    new("settings",n_neighbours=2)
   )
   obj<- TMB::MakeADFun(
     data = list(
       model = "testing",
       test = "persistent_graph",
       pg_re = pg_re,
-      pg_edges = edges(staRVe:::idxR_to_C(pg_graph$dag)),
+      pg_edges = edges(idxR_to_C(pg_graph$dag)),
       pg_dists = distances(pg_graph$dag)
     ),
     para = list(
       dummy = 0
     ),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -177,34 +177,34 @@ test_that("C++ persistent_graph",{
 
 test_that("C++ transient_graph",{
   pg_re<- array(seq(6*3*2),dim=c(6,3,2))
-  pg_graph<- construct_dag(
+  pg_graph<- construct_persistent_graph(
     points[1:6,],
-    new("staRVe_settings",n_neighbours=2)
+    new("settings",n_neighbours=2)
   )
 
   tg_re<- array(seq(6*2),dim=c(6,2))
-  tg_graph<- construct_transient_dag(
+  tg_graph<- construct_transient_graph(
     points[7:12,],
     pg_graph$locations,
     time = c(0,0,0,2,3,3),
-    new("staRVe_settings",n_neighbours=2)
+    new("settings",n_neighbours=2)
   )
   obj<- TMB::MakeADFun(
     data = list(
       model = "testing",
       test = "transient_graph",
       pg_re = pg_re,
-      pg_edges = edges(staRVe:::idxR_to_C(pg_graph$dag)),
+      pg_edges = edges(idxR_to_C(pg_graph$dag)),
       pg_dists = distances(pg_graph$dag),
       tg_re = tg_re,
-      tg_edges = edges(staRVe:::idxR_to_C(tg_graph)),
+      tg_edges = edges(idxR_to_C(tg_graph)),
       tg_dists = distances(tg_graph),
       t = c(0,0,0,2,3,3)
     ),
     para = list(
       dummy = 0
     ),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -251,19 +251,19 @@ test_that("C++ nngp",{
                   c(4,-0.2,0.5))
 
   pg_re<- array(seq(6*nt*2),dim=c(6,nt,2))
-  pg_graph<- construct_dag(
+  pg_graph<- construct_persistent_graph(
     points[1:6,],
-    new("staRVe_settings",n_neighbours=2)
+    new("settings",n_neighbours=2)
   )
 
   tg_re<- array(seq(nt*2),dim=c(nt,2))
   tg_time<- seq(nt)-1
   tg_time[2:3]<- 0
-  tg_graph<- construct_transient_dag(
+  tg_graph<- construct_transient_graph(
     points[rep(8,nt),],
     pg_graph$locations,
     time = tg_time,
-    new("staRVe_settings",n_neighbours=2)
+    new("settings",n_neighbours=2)
   )
 
   cv_pars<- cbind(c(1,0.5),
@@ -277,10 +277,10 @@ test_that("C++ nngp",{
       ts_re = ts_re,
       ts_pars = ts_pars,
       pg_re = pg_re,
-      pg_edges = edges(staRVe:::idxR_to_C(pg_graph$dag)),
+      pg_edges = edges(idxR_to_C(pg_graph$dag)),
       pg_dists = distances(pg_graph$dag),
       tg_re = tg_re,
-      tg_edges = edges(staRVe:::idxR_to_C(tg_graph)),
+      tg_edges = edges(idxR_to_C(tg_graph)),
       tg_dists = distances(tg_graph),
       t = tg_time,
       cv_pars = cv_pars,
@@ -289,7 +289,7 @@ test_that("C++ nngp",{
     para = list(
       dummy = 0
     ),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -339,7 +339,7 @@ test_that("C++ inv_link_function",{
       x = x
     ),
     para = list(dummy = 0),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -413,7 +413,7 @@ test_that("C++ distribution",{
       size = size
     ),
     para = list(dummy = 0),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -520,7 +520,7 @@ test_that("C++ family",{
       size = size
     ),
     para = list(dummy = 0),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
@@ -572,19 +572,19 @@ test_that("C++ observations",{
                   c(-5,-0.2,0.5))
 
   pg_re<- array(seq(6*nt*2),dim=c(6,nt,2))
-  pg_graph<- construct_dag(
+  pg_graph<- construct_persistent_graph(
     points[1:6,],
-    new("staRVe_settings",n_neighbours=2)
+    new("settings",n_neighbours=2)
   )
 
   tg_re<- array(seq(nt*2),dim=c(nt,2))
   tg_time<- seq(nt)-1
   tg_time[2:3]<- 0
-  tg_graph<- construct_transient_dag(
+  tg_graph<- construct_transient_graph(
     points[rep(8,nt),],
     pg_graph$locations,
     time = tg_time,
-    new("staRVe_settings",n_neighbours=2)
+    new("settings",n_neighbours=2)
   )
 
   cv_pars<- cbind(c(1,0.5),
@@ -624,10 +624,10 @@ test_that("C++ observations",{
       ts_re = ts_re,
       ts_pars = ts_pars,
       pg_re = pg_re,
-      pg_edges = edges(staRVe:::idxR_to_C(pg_graph$dag)),
+      pg_edges = edges(idxR_to_C(pg_graph$dag)),
       pg_dists = distances(pg_graph$dag),
       tg_re = tg_re,
-      tg_edges = edges(staRVe:::idxR_to_C(tg_graph)),
+      tg_edges = edges(idxR_to_C(tg_graph)),
       tg_dists = distances(tg_graph),
       t = tg_time,
       cv_pars = cv_pars,
@@ -643,7 +643,7 @@ test_that("C++ observations",{
     para = list(
       dummy = 0
     ),
-    DLL = "staRVe_model"
+    DLL = "starve_TMB"
   )
   report<- obj$report()
 
