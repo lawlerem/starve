@@ -10,7 +10,7 @@ NULL
 #' @param process_parameters A process_parameters object
 #' @param observation_parameters A observation_parameters object
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "parameters",

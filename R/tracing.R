@@ -13,7 +13,7 @@ NULL
 #' @param parameter_hessian A matrix
 #' @param parameter_covariance A matrix
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "tracing",
@@ -49,10 +49,11 @@ setMethod(f = "opt_time",
           signature = "tracing",
           definition = function(x) return(x@opt_time)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn tracing_class Set optimization time (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn tracing_class Set optimization time
+#' @noRd
 setReplaceMethod(f = "opt_time",
                  signature = "tracing",
                  definition = function(x,value) {
@@ -70,10 +71,11 @@ setMethod(f = "hess_time",
           signature = "tracing",
           definition = function(x) return(x@hess_time)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn tracing_class Set hessian computation time (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn tracing_class Set hessian computation time
+#' @noRd
 setReplaceMethod(f = "hess_time",
                  signature = "tracing",
                  definition = function(x,value) {
@@ -90,10 +92,11 @@ setMethod(f = "sdr_time",
           signature = "tracing",
           definition = function(x) return(x@sdr_time)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn tracing_class Set standard error computation time (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn tracing_class Set standard error computation time
+#' @noRd
 setReplaceMethod(f = "sdr_time",
                  signature = "tracing",
                  definition = function(x,value) {
@@ -110,10 +113,11 @@ setMethod(f = "parameter_hessian",
           signature = "tracing",
           definition = function(x) return(x@parameter_hessian)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn tracing_class Set parameter estimator hessian matrix (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn tracing_class Set parameter estimator hessian matrix
+#' @noRd
 setReplaceMethod(f = "parameter_hessian",
                  signature = "tracing",
                  definition = function(x,value) {
@@ -130,10 +134,11 @@ setMethod(f = "parameter_covariance",
           signature = "tracing",
           definition = function(x) return(x@parameter_covariance)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn tracing_class Set parameter estimator covariance matrix (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn tracing_class Set parameter estimator covariance matrix
+#' @noRd
 setReplaceMethod(f = "parameter_covariance",
                  signature = "tracing",
                  definition = function(x,value) {

@@ -4,31 +4,19 @@
 \name{dag-class}
 \alias{dag-class}
 \alias{edges,dag-method}
-\alias{edges<-,dag-method}
 \alias{distances,dag-method}
-\alias{distances<-,dag-method}
 \alias{distance_units,dag-method}
 \alias{distance_units<-,dag-method}
-\alias{idxC_to_R,dag-method}
-\alias{idxR_to_C,dag-method}
 \alias{show,dag-method}
 \title{An S4 class to hold a directed acyclic graph with distances.}
 \usage{
 \S4method{edges}{dag}(x)
 
-\S4method{edges}{dag}(x) <- value
-
 \S4method{distances}{dag}(x)
-
-\S4method{distances}{dag}(x) <- value
 
 \S4method{distance_units}{dag}(x)
 
 \S4method{distance_units}{dag}(x) <- value
-
-\S4method{idxC_to_R}{dag}(x)
-
-\S4method{idxR_to_C}{dag}(x)
 
 \S4method{show}{dag}(object)
 }
@@ -46,20 +34,12 @@ An S4 class to hold a directed acyclic graph with distances.
 \itemize{
 \item \code{edges,dag-method}: Get edge list
 
-\item \code{edges<-,dag-method}: Set edge list (for internal use only)
-
 \item \code{distances,dag-method}: Get list of edge distances
-
-\item \code{distances<-,dag-method}: Set list of edge distances (for internal use only)
 
 \item \code{distance_units,dag-method}: Get distance units
 
 \item \code{distance_units<-,dag-method}: Set distance units. Edge distances are automatically converted
 to the new units.
-
-\item \code{idxC_to_R,dag-method}: Add 1 to all vertices in the graph edge list (for internal use only)
-
-\item \code{idxR_to_C,dag-method}: Subtract 1 from all vertices in the graph edge list (for internal use only)
 
 \item \code{show,dag-method}: Print method
 }}
@@ -94,7 +74,6 @@ Other starve_classes:
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
 \code{\link{starve-class}},
-\code{\link{starve_classes}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

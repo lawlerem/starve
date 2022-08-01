@@ -10,9 +10,7 @@
 \alias{tg_re,process-method}
 \alias{tg_re<-,process-method}
 \alias{persistent_graph,process-method}
-\alias{persistent_graph<-,process-method}
 \alias{transient_graph,process-method}
-\alias{transient_graph<-,process-method}
 \alias{parameters,process-method}
 \alias{parameters<-,process,ANY-method}
 \alias{random_effects,process-method}
@@ -32,11 +30,7 @@
 
 \S4method{persistent_graph}{process}(x)
 
-\S4method{persistent_graph}{process}(x) <- value
-
 \S4method{transient_graph}{process}(x)
-
-\S4method{transient_graph}{process}(x) <- value
 
 \S4method{parameters}{process}(x)
 
@@ -68,11 +62,7 @@ An S4 class to hold the process information for a starve model.
 
 \item \code{persistent_graph,process-method}: Get persistent graph
 
-\item \code{persistent_graph<-,process-method}: Set persistent graph (for internal use only)
-
 \item \code{transient_graph,process-method}: Get transient graph
-
-\item \code{transient_graph<-,process-method}: Set transient graph (for internal use  only)
 
 \item \code{parameters,process-method}: Get parameters as a process_parameters object
 
@@ -109,7 +99,6 @@ Other starve_classes:
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
 \code{\link{starve-class}},
-\code{\link{starve_classes}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

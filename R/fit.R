@@ -309,16 +309,15 @@ setMethod(f = "strv_predict",
 #'   the predicted random effects take into account uncertainty in the model
 #'   parameter estimates.
 NULL
-#' Predict random effects from likelihood function
-#'
-#' @param x A starve object
-#' @param predictions A long_stars object
-#' @param dist_tol A small number so that prediction variances are not
-#'   computationally singular
-#'
-#' @return An \code{sf} object with predictions for random effects (w) and
-#'   their standard errors.
-#'
+# #' Predict random effects from likelihood function
+# #'
+# #' @param x A starve object
+# #' @param predictions A long_stars object
+# #' @param dist_tol A small number so that prediction variances are not
+# #'   computationally singular
+# #'
+# #' @return An \code{sf} object with predictions for random effects (w) and
+# #'   their standard errors.
 #' @noRd
 predict_w<- function(x,
                       predictions,
@@ -413,15 +412,14 @@ predict_w<- function(x,
 #'   are independent from the random effects, which may not be true if the covariates
 #'   are spatially structured due to an effect called spatial confounding.
 NULL
-#' Update random effect predictions to include covariates (link scale)
-#'
-#' @param x A starve object. If se = TRUE, should be a starve object.
-#' @param predictions A long_stars object, typically the output of predict_w.
-#'   Should contain covariate data in slot 'locations'
-#' @param se Should standard errors be calculated?
-#'
-#' @return A long_stars object with predictions and standard errors for the linear term.
-#'
+# #' Update random effect predictions to include covariates (link scale)
+# #'
+# #' @param x A starve object. If se = TRUE, should be a starve object.
+# #' @param predictions A long_stars object, typically the output of predict_w.
+# #'   Should contain covariate data in slot 'locations'
+# #' @param se Should standard errors be calculated?
+# #'
+# #' @return A long_stars object with predictions and standard errors for the linear term.
 #' @noRd
 predict_linear<- function(x,
                           predictions,
@@ -488,18 +486,17 @@ predict_linear<- function(x,
 #'   the prediction is obtained via the delta method using a second-order Taylor
 #'   approximation.
 NULL
-#' Update predictions on link scale to the response scale
-#'
-#' A second-order Taylor approximation (delta method) is used
-#'
-#' @param x A starve object. If se = TRUE, should be a fitted starve object.
-#' @param predictions A data.frame, typically the output of predict_linear.
-#'   Must contain at least the columns linear and linear_se.
-#' @param se Should standard errors be calculated?
-#'
-#' @return A data.frame including the supplied linear_predictions and the predictions
-#'   on the response scale with standard errors
-#'
+# #' Update predictions on link scale to the response scale
+# #'
+# #' A second-order Taylor approximation (delta method) is used
+# #'
+# #' @param x A starve object. If se = TRUE, should be a fitted starve object.
+# #' @param predictions A data.frame, typically the output of predict_linear.
+# #'   Must contain at least the columns linear and linear_se.
+# #' @param se Should standard errors be calculated?
+# #'
+# #' @return A data.frame including the supplied linear_predictions and the predictions
+# #'   on the response scale with standard errors
 #' @noRd
 predict_response<- function(x,
                              predictions,

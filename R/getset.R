@@ -20,6 +20,8 @@ NULL
 #' @seealso \linkS4class{dag}, \linkS4class{long_stars}, \linkS4class{tracing}, \linkS4class{starve}
 #'
 #' @name starve_access
+#'
+#' @keywords internal
 NULL
 
 
@@ -105,7 +107,8 @@ setGeneric(name = "distance_units<-",
 setGeneric(name = "distances",
            def = function(x) standardGeneric("distances")
 )
-#' @describeIn starve_access Set distances
+# #' @describeIn starve_access Set distances
+#' @noRd
 setGeneric(name = "distances<-",
            def = function(x,value) standardGeneric("distances<-")
 )
@@ -121,7 +124,8 @@ setGeneric(name = "distances<-",
 setGeneric(name = "edges",
            def = function(x) standardGeneric("edges")
 )
-#' @describeIn starve_access Set edges
+# #' @describeIn starve_access Set edges
+#' @noRd
 setGeneric(name = "edges<-",
            def = function(x,value) standardGeneric("edges<-")
 )
@@ -174,7 +178,8 @@ setGeneric(name = "graph",
 setGeneric(name = "hess_time",
            def = function(x) standardGeneric("hess_time")
 )
-#' @describeIn starve_access Set hessian computation time
+# #' @describeIn starve_access Set hessian computation time
+#' @noRd
 setGeneric(name = "hess_time<-",
            def = function(x,value) standardGeneric("hess_time<-")
 )
@@ -229,6 +234,7 @@ setGeneric(name = "max_distance",
            def = function(x) standardGeneric("max_distance")
 )
 #' @describeIn starve_access Set max distance
+#' @export
 setGeneric(name = "max_distance<-",
            def = function(x,value) standardGeneric("max_distance<-")
 )
@@ -243,7 +249,8 @@ setGeneric(name = "max_distance<-",
 setGeneric(name = "n_neighbours",
            def = function(x) standardGeneric("n_neighbours")
 )
-#' @describeIn starve_access Set n_neighbours setting
+# #' @describeIn starve_access Set n_neighbours setting
+#' @noRd
 setGeneric(name = "n_neighbours<-",
            def = function(x,value) standardGeneric("n_neighbours<-")
 )
@@ -253,32 +260,36 @@ setGeneric(name = "n_neighbours<-",
 
 # O
 
-#' @describeIn starve_access Get TMB::MakeADFun object
-#' @export
+# #' @describeIn starve_access Get TMB::MakeADFun object
+#' @noRd
 setGeneric(name = "obj",
   def = function(x) standardGeneric("obj")
 )
-#' @describeIn starve_access Set TMB::MakeADFun object
+# #' @describeIn starve_access Set TMB::MakeADFun object
+#' @noRd
 setGeneric(name = "obj<-",
   def = function(x,value) standardGeneric("obj<-")
 )
 
 
-#' @describeIn starve_access Get observations
+# #' @describeIn starve_access Get observations
+#' @noRd
 setGeneric(name = "observations",
            def = function(x) standardGeneric("observations")
 )
-#' @describeIn starve_access Set observations
+# #' @describeIn starve_access Set observations
+#' @noRd
 setGeneric(name = "observations<-",
            def = function(x,value) standardGeneric("observations<-")
 )
 
-#' @describeIn starve_access Get optimizer object
-#' @export
+# #' @describeIn starve_access Get optimizer object
+#' @noRd
 setGeneric(name = "opt",
   def = function(x) standardGeneric("opt")
 )
-#' @describeIn starve_access Set optimizer object
+# #' @describeIn starve_access Set optimizer object
+#' @noRd
 setGeneric(name = "opt<-",
   def = function(x,value) standardGeneric("opt<-")
 )
@@ -288,7 +299,8 @@ setGeneric(name = "opt<-",
 setGeneric(name = "opt_time",
            def = function(x) standardGeneric("opt_time")
 )
-#' @describeIn starve_access Set optimization time
+# #' @describeIn starve_access Set optimization time
+#' @noRd
 setGeneric(name = "opt_time<-",
            def = function(x,value) standardGeneric("opt_time<-")
 )
@@ -303,7 +315,8 @@ setGeneric(name = "opt_time<-",
 setGeneric(name = "parameter_covariance",
            def = function(x) standardGeneric("parameter_covariance")
 )
-#' @describeIn starve_access Set parameter estimator covariance matrix
+# #' @describeIn starve_access Set parameter estimator covariance matrix
+#' @noRd
 setGeneric(name = "parameter_covariance<-",
            def = function(x,value) standardGeneric("parameter_covariance<-")
 )
@@ -313,7 +326,8 @@ setGeneric(name = "parameter_covariance<-",
 setGeneric(name = "parameter_hessian",
            def = function(x) standardGeneric("parameter_hessian")
 )
-#' @describeIn starve_access Set parameter estimator hessian matrix
+# #' @describeIn starve_access Set parameter estimator hessian matrix
+#' @noRd
 setGeneric(name = "parameter_hessian<-",
            def = function(x,value) standardGeneric("parameter_hessian<-")
 )
@@ -330,10 +344,12 @@ setGeneric(name = "parameters<-",
 )
 
 #' @describeIn starve_access Get persistent graph
+#' @export
 setGeneric(name = "persistent_graph",
            def = function(x) standardGeneric("persistent_graph")
 )
-#' @describeIn starve_access Set persistent graph
+# #' @describeIn starve_access Set persistent graph
+#' @noRd
 setGeneric(name = "persistent_graph<-",
            def = function(x,value) standardGeneric("persistent_graph<-")
 )
@@ -349,11 +365,13 @@ setGeneric(name = "pg_re<-",
            def = function(x,value) standardGeneric("pg_re<-")
 )
 
-#' @describeIn starve_access Get process
+# #' @describeIn starve_access Get process
+#' @noRd
 setGeneric(name = "process",
            def = function(x) standardGeneric("process")
 )
-#' @describeIn starve_access Set process
+# #' @describeIn starve_access Set process
+#' @noRd
 setGeneric(name = "process<-",
            def = function(x,value) standardGeneric("process<-")
 )
@@ -400,12 +418,13 @@ setGeneric(name = "response_parameters<-",
 
 # S
 
-#' @describeIn starve_access Get TMB::sdreport object
-#' @export
+# #' @describeIn starve_access Get TMB::sdreport object
+#' @noRd
 setGeneric(name = "sdr",
            def = function(x) standardGeneric("sdr")
 )
-#' @describeIn starve_access Set TMB::sdreport object
+# #' @describeIn starve_access Set TMB::sdreport object
+#' @noRd
 setGeneric(name = "sdr<-",
            def = function(x,value) standardGeneric("sdr<-")
 )
@@ -415,7 +434,8 @@ setGeneric(name = "sdr<-",
 setGeneric(name = "sdr_time",
            def = function(x) standardGeneric("sdr_time")
 )
-#' @describeIn starve_access Set standard error computation time
+# #' @describeIn starve_access Set standard error computation time
+#' @noRd
 setGeneric(name = "sdr_time<-",
            def = function(x,value) standardGeneric("sdr_time<-")
 )
@@ -425,7 +445,8 @@ setGeneric(name = "sdr_time<-",
 setGeneric(name = "settings",
            def = function(x) standardGeneric("settings")
 )
-#' @describeIn starve_access Set settings
+# #' @describeIn starve_access Set settings
+#' @noRd
 setGeneric(name = "settings<-",
            def = function(x,value) standardGeneric("settings<-")
 )
@@ -468,8 +489,8 @@ setGeneric(name = "time_effects<-",
            def = function(x,value) standardGeneric("time_effects<-")
 )
 
-#' @describeIn starve_access Get time name used
-#' @keywords internal
+# #' @describeIn starve_access Get time name used
+#' @noRd
 setGeneric(name = "time_name",
            def = function(x) standardGeneric("time_name")
 )
@@ -493,12 +514,13 @@ setGeneric(name = "timing",
 )
 
 
-#' @describeIn starve_access Get TMB_out
-#' @export
+# #' @describeIn starve_access Get TMB_out
+#' @noRd
 setGeneric(name = "TMB_out",
            def = function(x) standardGeneric("TMB_out")
 )
-#' @describeIn starve_access Set TMB_out
+# #' @describeIn starve_access Set TMB_out
+#' @noRd
 setGeneric(name = "TMB_out<-",
            def = function(x,value) standardGeneric("TMB_out<-")
 )
@@ -508,7 +530,8 @@ setGeneric(name = "TMB_out<-",
 setGeneric(name = "tracing",
            def = function(x) standardGeneric("tracing")
 )
-#' @describeIn starve_access Set tracing information
+# #' @describeIn starve_access Set tracing information
+#' @noRd
 setGeneric(name = "tracing<-",
            def = function(x,value) standardGeneric("tracing<-")
 )
@@ -517,7 +540,8 @@ setGeneric(name = "tracing<-",
 setGeneric(name = "transient_graph",
            def = function(x) standardGeneric("transient_graph")
 )
-#' @describeIn starve_access Set transient graph
+# #' @describeIn starve_access Set transient graph
+#' @noRd
 setGeneric(name = "transient_graph<-",
            def = function(x,value) standardGeneric("transient_graph<-")
 )

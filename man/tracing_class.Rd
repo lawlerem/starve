@@ -4,38 +4,23 @@
 \name{tracing-class}
 \alias{tracing-class}
 \alias{opt_time,tracing-method}
-\alias{opt_time<-,tracing-method}
 \alias{hess_time,tracing-method}
-\alias{hess_time<-,tracing-method}
 \alias{sdr_time,tracing-method}
-\alias{sdr_time<-,tracing-method}
 \alias{parameter_hessian,tracing-method}
-\alias{parameter_hessian<-,tracing-method}
 \alias{parameter_covariance,tracing-method}
-\alias{parameter_covariance<-,tracing-method}
 \alias{timing,tracing-method}
 \alias{show,tracing-method}
 \title{An S4 class to hold optimization tracing for a starve model}
 \usage{
 \S4method{opt_time}{tracing}(x)
 
-\S4method{opt_time}{tracing}(x) <- value
-
 \S4method{hess_time}{tracing}(x)
-
-\S4method{hess_time}{tracing}(x) <- value
 
 \S4method{sdr_time}{tracing}(x)
 
-\S4method{sdr_time}{tracing}(x) <- value
-
 \S4method{parameter_hessian}{tracing}(x)
 
-\S4method{parameter_hessian}{tracing}(x) <- value
-
 \S4method{parameter_covariance}{tracing}(x)
-
-\S4method{parameter_covariance}{tracing}(x) <- value
 
 \S4method{timing}{tracing}(x)
 
@@ -43,8 +28,6 @@
 }
 \arguments{
 \item{x}{An object}
-
-\item{value}{A replacement value}
 
 \item{object}{An object}
 }
@@ -55,23 +38,13 @@ An S4 class to hold optimization tracing for a starve model
 \itemize{
 \item \code{opt_time,tracing-method}: Get optimization time
 
-\item \code{opt_time<-,tracing-method}: Set optimization time (for internal use only)
-
 \item \code{hess_time,tracing-method}: Get hessian computation time
-
-\item \code{hess_time<-,tracing-method}: Set hessian computation time (for internal use only)
 
 \item \code{sdr_time,tracing-method}: Get standard error computation time
 
-\item \code{sdr_time<-,tracing-method}: Set standard error computation time (for internal use only)
-
 \item \code{parameter_hessian,tracing-method}: Get parameter estimator hessian matrix
 
-\item \code{parameter_hessian<-,tracing-method}: Set parameter estimator hessian matrix (for internal use only)
-
 \item \code{parameter_covariance,tracing-method}: Get parameter estimator covariance matrix
-
-\item \code{parameter_covariance<-,tracing-method}: Set parameter estimator covariance matrix (for internal use only)
 
 \item \code{timing,tracing-method}: Get all timing information as a list with elements
 fit, hessian, and sdr.
@@ -104,7 +77,6 @@ Other starve_classes:
 \code{\link{process-class}},
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
-\code{\link{starve-class}},
-\code{\link{starve_classes}}
+\code{\link{starve-class}}
 }
 \concept{starve_classes}

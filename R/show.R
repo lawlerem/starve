@@ -3,7 +3,6 @@ NULL
 
 #' @param object An object
 #'
-#' @export
 #' @describeIn dag_class Print method
 setMethod(f = "show",
           signature = "dag",

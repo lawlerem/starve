@@ -3,36 +3,16 @@
 \docType{class}
 \name{TMB_out-class}
 \alias{TMB_out-class}
-\alias{obj,TMB_out-method}
-\alias{obj<-,TMB_out-method}
-\alias{opt,TMB_out-method}
-\alias{opt<-,TMB_out-method}
-\alias{sdr,TMB_out-method}
-\alias{sdr<-,TMB_out-method}
 \alias{convergence,TMB_out-method}
 \alias{show,TMB_out-method}
 \title{An S4 class to hold TMB-related objects}
 \usage{
-\S4method{obj}{TMB_out}(x)
-
-\S4method{obj}{TMB_out}(x) <- value
-
-\S4method{opt}{TMB_out}(x)
-
-\S4method{opt}{TMB_out}(x) <- value
-
-\S4method{sdr}{TMB_out}(x)
-
-\S4method{sdr}{TMB_out}(x) <- value
-
 \S4method{convergence}{TMB_out}(x)
 
 \S4method{show}{TMB_out}(object)
 }
 \arguments{
 \item{x}{An object}
-
-\item{value}{A replacement value}
 
 \item{object}{An object}
 }
@@ -41,18 +21,6 @@ An S4 class to hold TMB-related objects
 }
 \section{Functions}{
 \itemize{
-\item \code{obj,TMB_out-method}: Get TMB::MakeADFun object
-
-\item \code{obj<-,TMB_out-method}: Set TMB::MakeADFun object
-
-\item \code{opt,TMB_out-method}: Get output of optimizer
-
-\item \code{opt<-,TMB_out-method}: Set output of optimizer
-
-\item \code{sdr,TMB_out-method}: Get output of TMB::sdreport
-
-\item \code{sdr<-,TMB_out-method}: Set output of TMB::sdreport
-
 \item \code{convergence,TMB_out-method}: Get convergence message from optimizer
 
 \item \code{show,TMB_out-method}: Print method
@@ -79,7 +47,6 @@ Other starve_classes:
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
 \code{\link{starve-class}},
-\code{\link{starve_classes}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

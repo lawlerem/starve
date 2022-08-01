@@ -10,7 +10,7 @@ NULL
 #' @param locations An sf object with a time column and point geometries
 #' @param var_names A character vector
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "long_stars",

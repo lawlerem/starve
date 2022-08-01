@@ -10,7 +10,7 @@ NULL
 #' @param covariance_function Which covariance function to use
 #' @param time_parameters A data.frame
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "process_parameters",

@@ -32,7 +32,7 @@ NULL
 #'   The location of row i of x will be the same location as locations
 #'   answer[i] of the graph of y.
 #'
-#' @keywords internal
+#' @noRd
 setGeneric(name = "create_graph_idx",
            def = function(x,y,...) standardGeneric("create_graph_idx")
 )
@@ -78,16 +78,17 @@ setGeneric(name = "create_graph_idx",
 #'
 #' @param x An object with numeric entries
 #'
-#' @keywords internal
-#'
 #' @name idx_exchange
+#' @noRd
 NULL
 
-#' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
+# #' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
+#' @noRd
 setGeneric(name = "idxC_to_R",
            def = function(x) standardGeneric("idxC_to_R")
 )
-#' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
+# #' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
+#' @noRd
 setGeneric(name = "idxR_to_C",
            def = function(x) standardGeneric("idxR_to_C")
 )
@@ -198,7 +199,7 @@ setGeneric(name = "strv_simulate",
 #'
 #' @return An updated copy of x
 #'
-#' @keywords internal
+#' @noRd
 setGeneric(name = "strv_update",
            def = function(x,y) standardGeneric("strv_update")
 )
@@ -212,7 +213,7 @@ setGeneric(name = "strv_update",
 #'
 #' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
 #'
-#' @keywords internal
+#' @noRd
 setGeneric(name = "TMB_in",
            def = function(x) standardGeneric("TMB_in")
 )

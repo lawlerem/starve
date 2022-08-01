@@ -23,19 +23,10 @@
 #'
 #' @name starve_classes
 #'
-#' @keywords internal
+#' @noRd
 NULL
 
 # All stars slots should have dimensions in order: space, time, variable
-
-#' Constructors for the starve package
-#'
-#' @param .Object The object to create
-#'
-#' @keywords internal
-#'
-#' @name  starve-construct
-NULL
 
 
 setOldClass("formula")

@@ -70,7 +70,6 @@ Other starve_classes:
 \code{\link{process-class}},
 \code{\link{settings-class}},
 \code{\link{starve-class}},
-\code{\link{starve_classes}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

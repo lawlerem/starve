@@ -10,7 +10,7 @@ NULL
 #' @param response_distribution Which response distribution to use
 #' @param fixed_effects A data.frame
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "observation_parameters",

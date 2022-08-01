@@ -6,12 +6,10 @@
 \alias{formula,settings-method}
 \alias{formula<-,settings-method}
 \alias{n_neighbours,settings-method}
-\alias{n_neighbours<-,settings-method}
 \alias{distance_units,settings-method}
 \alias{distance_units<-,settings-method}
 \alias{max_distance,settings-method}
 \alias{max_distance<-,settings-method}
-\alias{time_name,settings-method}
 \title{An S4 class to hold settings for a starve model}
 \usage{
 \S4method{formula}{settings}(x)
@@ -20,8 +18,6 @@
 
 \S4method{n_neighbours}{settings}(x)
 
-\S4method{n_neighbours}{settings}(x) <- value
-
 \S4method{distance_units}{settings}(x)
 
 \S4method{distance_units}{settings}(x) <- value
@@ -29,8 +25,6 @@
 \S4method{max_distance}{settings}(x)
 
 \S4method{max_distance}{settings}(x) <- value
-
-\S4method{time_name}{settings}(x)
 }
 \arguments{
 \item{x}{An object}
@@ -48,8 +42,6 @@ An S4 class to hold settings for a starve model
 
 \item \code{n_neighbours,settings-method}: Get maximum number of neighbours used in graphs
 
-\item \code{n_neighbours<-,settings-method}: Set maximum number of neighbours used in graphs.
-
 \item \code{distance_units,settings-method}: Get distance units used for the model.
 
 \item \code{distance_units<-,settings-method}: Set distance units. Automatically converts max_distance
@@ -58,9 +50,6 @@ setting to new units.
 \item \code{max_distance,settings-method}: Get maximum distance for edges in the graph
 
 \item \code{max_distance<-,settings-method}: Set maximum distance for edges in the graph
-
-\item \code{time_name,settings-method}: Get the name of the time variable used in formula
-(for internal use only)
 }}
 
 \section{Slots}{
@@ -87,7 +76,6 @@ Other starve_classes:
 \code{\link{process-class}},
 \code{\link{process_parameters-class}},
 \code{\link{starve-class}},
-\code{\link{starve_classes}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

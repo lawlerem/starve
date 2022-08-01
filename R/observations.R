@@ -11,7 +11,7 @@ NULL
 #' @param transient_graph A dag object
 #' @param parameters An observation_parameters object
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "observations",

@@ -13,7 +13,7 @@ NULL
 #' @param TMB_out A TMB_out object
 #' @param settings A settings object
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "starve",
@@ -41,17 +41,19 @@ setMethod(
 ###        ###
 ##############
 
-#' @param x An object
-#'
-#' @describeIn starve_class Get the process part of the model (for internal use only)
+# #' @param x An object
+# #'
+# #' @describeIn starve_class Get the process part of the model
+#' @noRd
 setMethod(f = "process",
           signature = "starve",
           definition = function(x) return(x@process)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn starve_class Set the process part of the model (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn starve_class Set the process part of the model
+#' @noRd
 setReplaceMethod(f = "process",
                  signature = "starve",
                  definition = function(x,value) {
@@ -61,17 +63,19 @@ setReplaceMethod(f = "process",
 
 
 
-#' @param x An object
-#'
-#' @describeIn starve_class Get the observation part of the model (for internal use only)
+# #' @param x An object
+# #'
+# #' @describeIn starve_class Get the observation part of the model
+#' @noRd
 setMethod(f = "observations",
           signature = "starve",
           definition = function(x) return(x@observations)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn starve_class Set the observation part of the model (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn starve_class Set the observation part of the model
+#' @noRd
 setReplaceMethod(f = "observations",
                  signature = "starve",
                  definition = function(x,value) {
@@ -89,9 +93,10 @@ setMethod(f = "settings",
           signature = "starve",
           definition = function(x) return(x@settings)
 )
-#' @param x An object
-#'
-#' @describeIn starve_class Set model settings (for internal use only)
+# #' @param x An object
+# #'
+# #' @describeIn starve_class Set model settings
+#' @noRd
 setReplaceMethod(f = "settings",
                  signature = "starve",
                  definition = function(x,value) {
@@ -109,10 +114,11 @@ setMethod(f = "tracing",
           signature = "starve",
           definition = function(x) return(x@tracing)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn starve_class Set tracing information (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn starve_class Set tracing information
+#' @noRd
 setReplaceMethod(f = "tracing",
                  signature = "starve",
                  definition = function(x,value) {
@@ -121,17 +127,19 @@ setReplaceMethod(f = "tracing",
 })
 
 
-#' @param x An object
-#'
-#' @describeIn starve_class Get TMB objects (for internal use only)
+# #' @param x An object
+# #'
+# #' @describeIn starve_class Get TMB objects
+#' @noRd
 setMethod(f = "TMB_out",
           signature = "starve",
           definition = function(x) return(x@TMB_out)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn starve_class Set TMB objects (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn starve_class Set TMB objects
+#' @noRd
 setReplaceMethod(f = "TMB_out",
                  signature = "starve",
                  definition = function(x,value) {
@@ -228,15 +236,17 @@ setMethod(f = "random_effects",
 #' @param x An object
 #'
 #' @describeIn starve_class Get persistent graph
+#' @export
 setMethod(f = "persistent_graph",
           signature = "starve",
           definition = function(x) {
   return(persistent_graph(process(x)))
 })
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn starve_class Set persistent graph (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn starve_class Set persistent graph
+#' @noRd
 setReplaceMethod(f = "persistent_graph",
                  signature = "starve",
                  definition = function(x,value) {
@@ -248,15 +258,17 @@ setReplaceMethod(f = "persistent_graph",
 #' @param x An object
 #'
 #' @describeIn starve_class Get transient graph
+#' @export
 setMethod(f = "transient_graph",
           signature = "starve",
           definition = function(x) {
   return(transient_graph(process(x)))
 })
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn starve_class Set transient graph (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn starve_class Set transient graph
+#' @noRd
 setReplaceMethod(f = "transient_graph",
                  signature = "starve",
                  definition = function(x,value) {
@@ -565,10 +577,11 @@ setReplaceMethod(f = "formula",
 })
 
 
-#' @param x An object
-#'
-#' @describeIn starve_class Get the name of the time variable used in
-#'   the model formula (for internal use only)
+# #' @param x An object
+# #'
+# #' @describeIn starve_class Get the name of the time variable used in
+# #'   the model formula
+#' @noRd
 setMethod(f = "time_name",
           signature = "starve",
           definition = function(x) {
@@ -635,7 +648,8 @@ setMethod(f = "timing",
 ###         ###
 ###############
 
-#' @describeIn TMB_in Convert a starve object to a list for \code{TMB::MakeADFun}
+# #' @describeIn TMB_in Convert a starve object to a list for \code{TMB::MakeADFun}
+#' @noRd
 setMethod(f = "TMB_in",
           signature = "starve",
           definition = function(x) {
@@ -815,8 +829,9 @@ setMethod(f = "TMB_in",
 })
 
 
-#' @describeIn strv_update Update model parameters and random effects
-#'   from a fitted TMB::MakeADFun object
+# #' @describeIn strv_update Update model parameters and random effects from a
+# #'   fitted TMB::MakeADFun object
+#' @noRd
 setMethod(f = "strv_update",
           signature = c(x = "starve",
                         y = "TMB_out"),

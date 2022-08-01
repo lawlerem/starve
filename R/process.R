@@ -14,7 +14,7 @@ NULL
 #' @param transient_graph A dag object
 #' @param parameters A process_parameters object
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "process",
@@ -126,10 +126,11 @@ setMethod(f = "persistent_graph",
           signature = "process",
           definition = function(x) return(x@persistent_graph)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn process_class Set persistent graph (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn process_class Set persistent graph
+#' @noRd
 setReplaceMethod(f = "persistent_graph",
                  signature = "process",
                  definition = function(x,value) {
@@ -145,10 +146,11 @@ setMethod(f = "transient_graph",
           signature = "process",
           definition = function(x) return(x@transient_graph)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn process_class Set transient graph (for internal use  only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn process_class Set transient graph
+#' @noRd
 setReplaceMethod(f = "transient_graph",
                  signature = "process",
                  definition = function(x,value) {
@@ -202,11 +204,12 @@ setMethod(f = "random_effects",
 ###############
 
 
-#' @param x An sf object
-#' @param y A process object
-#'
-#' @describeIn create_graph_idx Locations in the sf object x will be given an
-#'   index pointing to either a persistent graph or transient graph location of y.
+# #' @param x An sf object
+# #' @param y A process object
+# #'
+# #' @describeIn create_graph_idx Locations in the sf object x will be given an
+# #'   index pointing to either a persistent graph or transient graph location of y.
+#' @noRd
 setMethod(
   f = "create_graph_idx",
   signature = c("sf","process"),

@@ -100,7 +100,9 @@ add_random_effects_by_time<- function(x,times) {
 
 # C
 
-# cbind.matrix but instead of recycling short vectors it pads with NA
+#' cbind.matrix but instead of recycling short vectors it pads with NA
+#'
+#' @noRd
 cbind_no_recycle<- function(...) {
   args<- list(...)
   n<- max(do.call(c,lapply(args,length)))
@@ -601,7 +603,9 @@ response_from_formula<- function(x,data) {
   return(response)
 }
 
-# Return the names of response variables in a multivariate formula
+#' Return the names of response variables in a multivariate formula
+#'
+#' @noRd
 response_names<- function(x) {
   # Get out just the left-hand side of the formula
   the_terms<- terms(x,specials=c("time","space","sample.size"))
@@ -893,6 +897,9 @@ time_from_formula<- function(x,data,return="vector") {
   return(ans)
 }
 
+#' Retrieve the name of the time variable from a formula
+#'
+#' @noRd
 setMethod(f = "time_name",
           signature = "formula",
           definition = function(x) {
@@ -941,8 +948,10 @@ setMethod(f = "time_name",
 
 # W
 
-# Copied from the stars source code
-# Returns which dimensions are sf geometries
+#' Copied from the stars source code
+#' Returns which dimensions are sf geometries
+#'
+#' @noRd
 which_sfc<- function(x) {
   if( inherits(x,"stars") ) {
     x<- stars::st_dimensions(x)

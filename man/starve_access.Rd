@@ -12,16 +12,13 @@
 \alias{distance_units}
 \alias{distance_units<-}
 \alias{distances}
-\alias{distances<-}
 \alias{edges}
-\alias{edges<-}
 \alias{fixed_effects}
 \alias{fixed_effects<-}
 \alias{formula}
 \alias{formula<-}
 \alias{graph}
 \alias{hess_time}
-\alias{hess_time<-}
 \alias{link_function}
 \alias{link_function<-}
 \alias{locations}
@@ -29,54 +26,32 @@
 \alias{max_distance}
 \alias{max_distance<-}
 \alias{n_neighbours}
-\alias{n_neighbours<-}
-\alias{obj}
-\alias{obj<-}
-\alias{observations}
-\alias{observations<-}
-\alias{opt}
-\alias{opt<-}
 \alias{opt_time}
-\alias{opt_time<-}
 \alias{parameter_covariance}
-\alias{parameter_covariance<-}
 \alias{parameter_hessian}
-\alias{parameter_hessian<-}
 \alias{parameters}
 \alias{parameters<-}
 \alias{persistent_graph}
-\alias{persistent_graph<-}
 \alias{pg_re}
 \alias{pg_re<-}
-\alias{process}
-\alias{process<-}
 \alias{random_effects}
 \alias{response_distribution}
 \alias{response_distribution<-}
 \alias{response_parameters}
 \alias{response_parameters<-}
-\alias{sdr}
-\alias{sdr<-}
 \alias{sdr_time}
-\alias{sdr_time<-}
 \alias{settings}
-\alias{settings<-}
 \alias{spatial_parameters}
 \alias{spatial_parameters<-}
 \alias{tg_re}
 \alias{tg_re<-}
 \alias{time_effects}
 \alias{time_effects<-}
-\alias{time_name}
 \alias{time_parameters}
 \alias{time_parameters<-}
 \alias{timing}
-\alias{TMB_out}
-\alias{TMB_out<-}
 \alias{tracing}
-\alias{tracing<-}
 \alias{transient_graph}
-\alias{transient_graph<-}
 \alias{values}
 \alias{values<-}
 \title{A list of accessor functions for the starve package}
@@ -101,11 +76,7 @@ distance_units(x) <- value
 
 distances(x)
 
-distances(x) <- value
-
 edges(x)
-
-edges(x) <- value
 
 fixed_effects(x)
 
@@ -118,8 +89,6 @@ formula(x) <- value
 graph(x)
 
 hess_time(x)
-
-hess_time(x) <- value
 
 link_function(x)
 
@@ -135,31 +104,11 @@ max_distance(x) <- value
 
 n_neighbours(x)
 
-n_neighbours(x) <- value
-
-obj(x)
-
-obj(x) <- value
-
-observations(x)
-
-observations(x) <- value
-
-opt(x)
-
-opt(x) <- value
-
 opt_time(x)
-
-opt_time(x) <- value
 
 parameter_covariance(x)
 
-parameter_covariance(x) <- value
-
 parameter_hessian(x)
-
-parameter_hessian(x) <- value
 
 parameters(x)
 
@@ -167,15 +116,9 @@ parameters(x) <- value
 
 persistent_graph(x)
 
-persistent_graph(x) <- value
-
 pg_re(x)
 
 pg_re(x) <- value
-
-process(x)
-
-process(x) <- value
 
 random_effects(x)
 
@@ -187,17 +130,9 @@ response_parameters(x)
 
 response_parameters(x) <- value
 
-sdr(x)
-
-sdr(x) <- value
-
 sdr_time(x)
 
-sdr_time(x) <- value
-
 settings(x)
-
-settings(x) <- value
 
 spatial_parameters(x)
 
@@ -211,25 +146,15 @@ time_effects(x)
 
 time_effects(x) <- value
 
-time_name(x)
-
 time_parameters(x)
 
 time_parameters(x) <- value
 
 timing(x)
 
-TMB_out(x)
-
-TMB_out(x) <- value
-
 tracing(x)
 
-tracing(x) <- value
-
 transient_graph(x)
-
-transient_graph(x) <- value
 
 values(x)
 
@@ -273,11 +198,7 @@ These accessor functions are used to extract different components from the
 
 \item \code{distances}: Get distances
 
-\item \code{distances<-}: Set distances
-
 \item \code{edges}: Get edges
-
-\item \code{edges<-}: Set edges
 
 \item \code{fixed_effects}: Get fixed effects
 
@@ -290,8 +211,6 @@ These accessor functions are used to extract different components from the
 \item \code{graph}: Get graph
 
 \item \code{hess_time}: Get hessian computation time
-
-\item \code{hess_time<-}: Set hessian computation time
 
 \item \code{link_function}: Get link function
 
@@ -307,31 +226,11 @@ These accessor functions are used to extract different components from the
 
 \item \code{n_neighbours}: Get n_neighbours setting
 
-\item \code{n_neighbours<-}: Set n_neighbours setting
-
-\item \code{obj}: Get TMB::MakeADFun object
-
-\item \code{obj<-}: Set TMB::MakeADFun object
-
-\item \code{observations}: Get observations
-
-\item \code{observations<-}: Set observations
-
-\item \code{opt}: Get optimizer object
-
-\item \code{opt<-}: Set optimizer object
-
 \item \code{opt_time}: Get optimization time
-
-\item \code{opt_time<-}: Set optimization time
 
 \item \code{parameter_covariance}: Get parameter estimator covariance matrix
 
-\item \code{parameter_covariance<-}: Set parameter estimator covariance matrix
-
 \item \code{parameter_hessian}: Get parameter estimator hessian matrix
-
-\item \code{parameter_hessian<-}: Set parameter estimator hessian matrix
 
 \item \code{parameters}: Get parameters
 
@@ -339,15 +238,9 @@ These accessor functions are used to extract different components from the
 
 \item \code{persistent_graph}: Get persistent graph
 
-\item \code{persistent_graph<-}: Set persistent graph
-
 \item \code{pg_re}: Get persistent graph random effects
 
 \item \code{pg_re<-}: Set persistent graph random effects
-
-\item \code{process}: Get process
-
-\item \code{process<-}: Set process
 
 \item \code{random_effects}: Get random effects
 
@@ -359,17 +252,9 @@ These accessor functions are used to extract different components from the
 
 \item \code{response_parameters<-}: Set response distribution parameters
 
-\item \code{sdr}: Get TMB::sdreport object
-
-\item \code{sdr<-}: Set TMB::sdreport object
-
 \item \code{sdr_time}: Get standard error computation time
 
-\item \code{sdr_time<-}: Set standard error computation time
-
 \item \code{settings}: Get settings
-
-\item \code{settings<-}: Set settings
 
 \item \code{spatial_parameters}: Get spatial parameters
 
@@ -383,25 +268,15 @@ These accessor functions are used to extract different components from the
 
 \item \code{time_effects<-}: Set time effects
 
-\item \code{time_name}: Get time name used
-
 \item \code{time_parameters}: Get time parameters
 
 \item \code{time_parameters<-}: Set time parameters
 
 \item \code{timing}: Get model computation times
 
-\item \code{TMB_out}: Get TMB_out
-
-\item \code{TMB_out<-}: Set TMB_out
-
 \item \code{tracing}: Get tracing information
 
-\item \code{tracing<-}: Set tracing information
-
 \item \code{transient_graph}: Get transient graph
-
-\item \code{transient_graph<-}: Set transient graph
 
 \item \code{values}: Get values
 

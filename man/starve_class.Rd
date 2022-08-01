@@ -3,16 +3,8 @@
 \docType{class}
 \name{starve-class}
 \alias{starve-class}
-\alias{process,starve-method}
-\alias{process<-,starve-method}
-\alias{observations,starve-method}
-\alias{observations<-,starve-method}
 \alias{settings,starve-method}
-\alias{settings<-,starve-method}
 \alias{tracing,starve-method}
-\alias{tracing<-,starve-method}
-\alias{TMB_out,starve-method}
-\alias{TMB_out<-,starve-method}
 \alias{time_effects,starve-method}
 \alias{time_effects<-,starve-method}
 \alias{pg_re,starve-method}
@@ -21,9 +13,7 @@
 \alias{tg_re<-,starve-method}
 \alias{random_effects,starve-method}
 \alias{persistent_graph,starve-method}
-\alias{persistent_graph<-,starve-method}
 \alias{transient_graph,starve-method}
-\alias{transient_graph<-,starve-method}
 \alias{graph,starve-method}
 \alias{covariance_function,starve-method}
 \alias{covariance_function<-,starve-method}
@@ -47,7 +37,6 @@
 \alias{distance_units<-,starve-method}
 \alias{formula,starve-method}
 \alias{formula<-,starve-method}
-\alias{time_name,starve-method}
 \alias{parameters,starve-method}
 \alias{parameters<-,starve,parameters-method}
 \alias{convergence,starve-method}
@@ -55,25 +44,9 @@
 \alias{show,starve-method}
 \title{An S4 class describing a starve model.}
 \usage{
-\S4method{process}{starve}(x)
-
-\S4method{process}{starve}(x) <- value
-
-\S4method{observations}{starve}(x)
-
-\S4method{observations}{starve}(x) <- value
-
 \S4method{settings}{starve}(x)
 
-\S4method{settings}{starve}(x) <- value
-
 \S4method{tracing}{starve}(x)
-
-\S4method{tracing}{starve}(x) <- value
-
-\S4method{TMB_out}{starve}(x)
-
-\S4method{TMB_out}{starve}(x) <- value
 
 \S4method{time_effects}{starve}(x)
 
@@ -91,11 +64,7 @@
 
 \S4method{persistent_graph}{starve}(x)
 
-\S4method{persistent_graph}{starve}(x) <- value
-
 \S4method{transient_graph}{starve}(x)
-
-\S4method{transient_graph}{starve}(x) <- value
 
 \S4method{graph}{starve}(x)
 
@@ -143,8 +112,6 @@
 
 \S4method{formula}{starve}(x) <- value
 
-\S4method{time_name}{starve}(x)
-
 \S4method{parameters}{starve}(x)
 
 \S4method{parameters}{starve,parameters}(x) <- value
@@ -167,25 +134,9 @@ An S4 class describing a starve model.
 }
 \section{Functions}{
 \itemize{
-\item \code{process,starve-method}: Get the process part of the model (for internal use only)
-
-\item \code{process<-,starve-method}: Set the process part of the model (for internal use only)
-
-\item \code{observations,starve-method}: Get the observation part of the model (for internal use only)
-
-\item \code{observations<-,starve-method}: Set the observation part of the model (for internal use only)
-
 \item \code{settings,starve-method}: Get model settings
 
-\item \code{settings<-,starve-method}: Set model settings (for internal use only)
-
 \item \code{tracing,starve-method}: Get tracing information, see \link{tracing}.
-
-\item \code{tracing<-,starve-method}: Set tracing information (for internal use only)
-
-\item \code{TMB_out,starve-method}: Get TMB objects (for internal use only)
-
-\item \code{TMB_out<-,starve-method}: Set TMB objects (for internal use only)
 
 \item \code{time_effects,starve-method}: Get temporal random effects
 
@@ -204,11 +155,7 @@ effects and the transient graph random effects.
 
 \item \code{persistent_graph,starve-method}: Get persistent graph
 
-\item \code{persistent_graph<-,starve-method}: Set persistent graph (for internal use only)
-
 \item \code{transient_graph,starve-method}: Get transient graph
-
-\item \code{transient_graph<-,starve-method}: Set transient graph (for internal use only)
 
 \item \code{graph,starve-method}: Get a list containing the persistent and transient graphs
 
@@ -267,9 +214,6 @@ get_starve_distributions("link") for valid link functions.
 
 \item \code{formula<-,starve-method}: Set formula used for the model
 
-\item \code{time_name,starve-method}: Get the name of the time variable used in
-the model formula (for internal use only)
-
 \item \code{parameters,starve-method}: Get all model parameters as a parameters object
 
 \item \code{parameters<-,starve,parameters-method}: Set all model parameters with a new
@@ -305,7 +249,6 @@ Other starve_classes:
 \code{\link{process-class}},
 \code{\link{process_parameters-class}},
 \code{\link{settings-class}},
-\code{\link{starve_classes}},
 \code{\link{tracing-class}}
 }
 \concept{starve_classes}

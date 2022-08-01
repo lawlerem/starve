@@ -11,7 +11,7 @@ NULL
 #' @param distances A list of distances
 #' @param distance_units Which distance units to use
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "dag",
@@ -42,10 +42,11 @@ setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn dag_class Set edge list (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn dag_class Set edge list
+#' @noRd
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -63,10 +64,11 @@ setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn dag_class Set list of edge distances (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn dag_class Set list of edge distances
+#' @noRd
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -368,7 +370,8 @@ construct_prediction_graph<- function(pred,
 
 
 
-#' @describeIn dag_class Add 1 to all vertices in the graph edge list (for internal use only)
+# #' @describeIn idx_exchange Add 1 to all vertices in the graph edge list
+#' @noRd
 setMethod(f = "idxC_to_R",
           signature = "dag",
           definition = function(x) {
@@ -379,7 +382,8 @@ setMethod(f = "idxC_to_R",
   })
   return(x)
 })
-#' @describeIn dag_class Subtract 1 from all vertices in the graph edge list (for internal use only)
+# #' @describeIn idx_exchange Subtract 1 from all vertices in the graph edge list
+#' @noRd
 setMethod(f = "idxR_to_C",
           signature = "dag",
           definition = function(x) {

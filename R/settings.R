@@ -11,7 +11,7 @@ NULL
 #' @param n_neighbours An integer
 #' @param distance_units Which distance units to use
 #'
-#' @rdname starve-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "settings",
@@ -66,10 +66,10 @@ setMethod(f = "n_neighbours",
           signature = "settings",
           definition = function(x) return(x@n_neighbours)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn settings_class Set maximum number of neighbours used in graphs.
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn settings_class Set maximum number of neighbours used in graphs.
 setReplaceMethod(f = "n_neighbours",
                  signature = "settings",
                  definition = function(x,value) {
@@ -125,10 +125,9 @@ setReplaceMethod(f = "max_distance",
 })
 
 
-#' @param x An object
-#'
-#' @describeIn settings_class Get the name of the time variable used in formula
-#'   (for internal use only)
+# #' @param x An object
+# #'
+# #' @describeIn settings_class Get the name of the time variable used in formula
 setMethod(f = "time_name",
           signature = "settings",
           definition = function(x) {
