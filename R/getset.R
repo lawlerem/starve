@@ -453,13 +453,13 @@ setGeneric(name = "settings<-",
 
 #' @describeIn starve_access Get spatial parameters
 #' @export
-setGeneric(name = "spatial_parameters",
-           def = function(x) standardGeneric("spatial_parameters")
+setGeneric(name = "space_parameters",
+           def = function(x) standardGeneric("space_parameters")
 )
 #' @describeIn starve_access Set spatial parameters
 #' @export
-setGeneric(name = "spatial_parameters<-",
-           def = function(x,value) standardGeneric("spatial_parameters<-")
+setGeneric(name = "space_parameters<-",
+           def = function(x,value) standardGeneric("space_parameters<-")
 )
 
 

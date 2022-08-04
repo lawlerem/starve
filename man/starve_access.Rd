@@ -41,8 +41,8 @@
 \alias{response_parameters<-}
 \alias{sdr_time}
 \alias{settings}
-\alias{spatial_parameters}
-\alias{spatial_parameters<-}
+\alias{space_parameters}
+\alias{space_parameters<-}
 \alias{tg_re}
 \alias{tg_re<-}
 \alias{time_effects}
@@ -134,9 +134,9 @@ sdr_time(x)
 
 settings(x)
 
-spatial_parameters(x)
+space_parameters(x)
 
-spatial_parameters(x) <- value
+space_parameters(x) <- value
 
 tg_re(x)
 
@@ -256,9 +256,9 @@ These accessor functions are used to extract different components from the
 
 \item \code{settings}: Get settings
 
-\item \code{spatial_parameters}: Get spatial parameters
+\item \code{space_parameters}: Get spatial parameters
 
-\item \code{spatial_parameters<-}: Set spatial parameters
+\item \code{space_parameters<-}: Set spatial parameters
 
 \item \code{tg_re}: Get transient graph random effects
 

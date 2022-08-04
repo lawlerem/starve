@@ -5,8 +5,8 @@
 \alias{process_parameters-class}
 \alias{covariance_function,process_parameters-method}
 \alias{covariance_function<-,process_parameters-method}
-\alias{spatial_parameters,process_parameters-method}
-\alias{spatial_parameters<-,process_parameters-method}
+\alias{space_parameters,process_parameters-method}
+\alias{space_parameters<-,process_parameters-method}
 \alias{time_parameters,process_parameters-method}
 \alias{time_parameters<-,process_parameters-method}
 \title{An S4 class to hold process parameters for a starve model.}
@@ -15,9 +15,9 @@
 
 \S4method{covariance_function}{process_parameters}(x) <- value
 
-\S4method{spatial_parameters}{process_parameters}(x)
+\S4method{space_parameters}{process_parameters}(x)
 
-\S4method{spatial_parameters}{process_parameters}(x) <- value
+\S4method{space_parameters}{process_parameters}(x) <- value
 
 \S4method{time_parameters}{process_parameters}(x)
 
@@ -39,9 +39,9 @@ An S4 class to hold process parameters for a starve model.
 get_starve_distributions("covariance") for valid covariance functions.
 Setting the covariance function also overwrites the spatial parameters.
 
-\item \code{spatial_parameters,process_parameters-method}: Get spatial parameters
+\item \code{space_parameters,process_parameters-method}: Get spatial parameters
 
-\item \code{spatial_parameters<-,process_parameters-method}: Set spatial parameters
+\item \code{space_parameters<-,process_parameters-method}: Set spatial parameters
 
 \item \code{time_parameters,process_parameters-method}: Get time parameters
 
@@ -54,7 +54,7 @@ Setting the covariance function also overwrites the spatial parameters.
 \item{\code{covariance_function}}{The covariance function(s), must be one from
 get_starve_distributions("covariance").}
 
-\item{\code{spatial_parameters}}{A list containing spatial parameters for each response variable.}
+\item{\code{space_parameters}}{A list containing spatial parameters for each response variable.}
 
 \item{\code{time_parameters}}{A list containing time parameters for each response variable.}
 }}

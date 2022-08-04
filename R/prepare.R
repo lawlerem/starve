@@ -216,11 +216,11 @@ strv_prepare_process<- function(data,
   # but if nu is supplied for matern need to set nu
   for( i in seq_along(covariance$nu) ) {
     if( covariance$covariance[[i]] == "matern" & !is.na(covariance$nu[[i]]) ) {
-      spatial_parameters(parameters)[[i]]["nu","par"]<- covariance$nu[[i]]
-      spatial_parameters(parameters)[[i]]["nu","fixed"]<- TRUE
+      space_parameters(parameters)[[i]]["nu","par"]<- covariance$nu[[i]]
+      space_parameters(parameters)[[i]]["nu","fixed"]<- TRUE
     } else {}
   }
-  names(spatial_parameters(parameters))<- response_names(formula(settings))
+  names(space_parameters(parameters))<- response_names(formula(settings))
 
   time_parameters(parameters)<- lapply(attr(time_col,"type"),function(tt) {
     df<- data.frame(

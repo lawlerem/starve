@@ -320,20 +320,20 @@ setReplaceMethod(f = "covariance_function",
 #'
 #' @export
 #' @describeIn starve_class Get spatial parameters
-setMethod(f = "spatial_parameters",
+setMethod(f = "space_parameters",
           signature = "starve",
           definition = function(x) {
-  return(spatial_parameters(parameters(x)))
+  return(space_parameters(parameters(x)))
 })
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
 #' @describeIn starve_class Set spatial parameters
-setReplaceMethod(f = "spatial_parameters",
+setReplaceMethod(f = "space_parameters",
                  signature = "starve",
                  definition = function(x,value) {
-  spatial_parameters(parameters(x))<- value
+  space_parameters(parameters(x))<- value
   return(x)
 })
 
@@ -523,7 +523,7 @@ setMethod(f = "distance_units",
 setReplaceMethod(f = "distance_units",
                  signature = "starve",
                  definition = function(x,value) {
-  ranges<- lapply(spatial_parameters(x),function(sp) {
+  ranges<- lapply(space_parameters(x),function(sp) {
     units::set_units(sp["range","par"],
                      distance_units(x),
                      mode="standard")
@@ -533,7 +533,7 @@ setReplaceMethod(f = "distance_units",
   distance_units(transient_graph(observations(x)))<- value
   ranges<- lapply(ranges,units::set_units,value,mode="standard")
   for( i in seq_along(ranges) ) {
-    spatial_parameters(x)[[i]]["range","par"]<- units::drop_units(ranges[[i]])
+    space_parameters(x)[[i]]["range","par"]<- units::drop_units(ranges[[i]])
   }
   return(x)
 })
@@ -709,21 +709,21 @@ setMethod(f = "TMB_in",
         switch(covariance_function(x)[[v]],
           c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
             ifelse( # std. dev. > 0
-                spatial_parameters(x)[[v]]["sd","par"] > 0 ||
-                spatial_parameters(x)[[v]]["sd","fixed"] == TRUE,
-              log(spatial_parameters(x)[[v]]["sd","par"]),
+                space_parameters(x)[[v]]["sd","par"] > 0 ||
+                space_parameters(x)[[v]]["sd","fixed"] == TRUE,
+              log(space_parameters(x)[[v]]["sd","par"]),
               log(1)
             ),
             ifelse( # rho > 0
-              spatial_parameters(x)[[v]]["range","par"] > 0 ||
-              spatial_parameters(x)[[v]]["range","fixed"] == TRUE,
-              log(spatial_parameters(x)[[v]]["range","par"]),
+              space_parameters(x)[[v]]["range","par"] > 0 ||
+              space_parameters(x)[[v]]["range","fixed"] == TRUE,
+              log(space_parameters(x)[[v]]["range","par"]),
               log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
             ),
             ifelse( # nu > 0
-                spatial_parameters(x)[[v]]["nu","par"] > 0 ||
-                spatial_parameters(x)[[v]]["nu","fixed"] == TRUE,
-              log(spatial_parameters(x)[[v]]["nu","par"]),
+                space_parameters(x)[[v]]["nu","par"] > 0 ||
+                space_parameters(x)[[v]]["nu","fixed"] == TRUE,
+              log(space_parameters(x)[[v]]["nu","par"]),
               log(0.5)
             )
           )
@@ -801,7 +801,7 @@ setMethod(f = "TMB_in",
     ),
     working_cv_pars = do.call(cbind_no_recycle,
       lapply(seq(n_response(formula(x))),function(v) {
-        spatial_parameters(x)[[v]][,"fixed"]
+        space_parameters(x)[[v]][,"fixed"]
       })
     ),
     working_response_pars = do.call(cbind_no_recycle,
@@ -844,8 +844,8 @@ setMethod(f = "strv_update",
 
   # Spatial parameters
   for( i in seq(n_response(formula(x))) ) {
-    spatial_parameters(x)[[i]]$par<- sdr_est$cv_pars[,i]
-    spatial_parameters(x)[[i]]$se<- sdr_se$cv_pars[,i]
+    space_parameters(x)[[i]]$par<- sdr_est$cv_pars[,i]
+    space_parameters(x)[[i]]$se<- sdr_se$cv_pars[,i]
   }
 
   # Time parameters

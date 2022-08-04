@@ -71,26 +71,26 @@ setReplaceMethod(f = "covariance_function",
                             row.names = c("sd","range","nu")),
     )
   })
-  try(names(spatial_pars)<- names(spatial_parameters(x)))
+  try(names(spatial_pars)<- names(space_parameters(x)))
 
-  spatial_parameters(x)<- spatial_pars
+  space_parameters(x)<- spatial_pars
   return(x)
 })
 
 
 #' @param x An object
 #' @describeIn process_parameters_class Get spatial parameters
-setMethod(f = "spatial_parameters",
+setMethod(f = "space_parameters",
           signature = "process_parameters",
-          definition = function(x) return(x@spatial_parameters)
+          definition = function(x) return(x@space_parameters)
 )
 #' @param x An object
 #' @param value A replacement value
 #' @describeIn process_parameters_class Set spatial parameters
-setReplaceMethod(f = "spatial_parameters",
+setReplaceMethod(f = "space_parameters",
                  signature = "process_parameters",
                  definition = function(x,value) {
-  x@spatial_parameters<- value
+  x@space_parameters<- value
   return(x)
 })
 

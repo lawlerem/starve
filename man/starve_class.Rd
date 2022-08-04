@@ -17,8 +17,8 @@
 \alias{graph,starve-method}
 \alias{covariance_function,starve-method}
 \alias{covariance_function<-,starve-method}
-\alias{spatial_parameters,starve-method}
-\alias{spatial_parameters<-,starve-method}
+\alias{space_parameters,starve-method}
+\alias{space_parameters<-,starve-method}
 \alias{time_parameters,starve-method}
 \alias{time_parameters<-,starve-method}
 \alias{dat,starve-method}
@@ -72,9 +72,9 @@
 
 \S4method{covariance_function}{starve}(x) <- value
 
-\S4method{spatial_parameters}{starve}(x)
+\S4method{space_parameters}{starve}(x)
 
-\S4method{spatial_parameters}{starve}(x) <- value
+\S4method{space_parameters}{starve}(x) <- value
 
 \S4method{time_parameters}{starve}(x)
 
@@ -165,9 +165,9 @@ effects and the transient graph random effects.
 get_starve_distributions("covariance") for valid covariance functions.
 Setting the covariance function also overwrites the spatial parameters.
 
-\item \code{spatial_parameters,starve-method}: Get spatial parameters
+\item \code{space_parameters,starve-method}: Get spatial parameters
 
-\item \code{spatial_parameters<-,starve-method}: Set spatial parameters
+\item \code{space_parameters<-,starve-method}: Set spatial parameters
 
 \item \code{time_parameters,starve-method}: Get time parameters
 

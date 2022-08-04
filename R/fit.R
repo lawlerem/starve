@@ -122,7 +122,7 @@ setMethod(f = "strv_simulate",
 
   # Parameters are simulated from, not estimated, so get rid of standard errors
   for( i in seq_along(response_names(formula(object))) ) {
-    spatial_parameters(object)[[i]]$se<- NA
+    space_parameters(object)[[i]]$se<- NA
     time_parameters(object)[[i]]$se<- NA
     response_parameters(object)[[i]]$se<- rep(NA,nrow(response_parameters(object)[[i]]))
     fixed_effects(object)[[i]]$se<- rep(NA,nrow(fixed_effects(object)[[i]]))

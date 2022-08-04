@@ -112,7 +112,7 @@ setClass(
 #'
 #' @slot covariance_function The covariance function(s), must be one from
 #'   get_starve_distributions("covariance").
-#' @slot spatial_parameters A list containing spatial parameters for each response variable.
+#' @slot space_parameters A list containing spatial parameters for each response variable.
 #' @slot time_parameters A list containing time parameters for each response variable.
 #'
 #' @family starve_classes
@@ -124,7 +124,7 @@ setClass(
   Class = "process_parameters",
   slots = c(
     covariance_function = "character",
-    spatial_parameters = "list",
+    space_parameters = "list",
     time_parameters = "list"
   )
 )
