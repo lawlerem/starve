@@ -335,7 +335,7 @@ predict_w<- function(x,
 
   # Prepare input for TMB, TMB_in(x) doesn't take care of pred_* things
   TMB_input<- TMB_in(x)
-  TMB_input$data$pred_edges<- edges(idxR_to_C(dag))
+  TMB_input$data$pred_edges<- edges(convert_idxR_to_C(dag))
   TMB_input$data$pred_dists<- distances(dag)
   TMB_input$data$pred_t<- c(locations(predictions)[,time_name(x),drop=TRUE]- min(stars::st_get_dimension_values(pg_re(x),time_name(x))))
 

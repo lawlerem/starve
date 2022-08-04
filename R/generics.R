@@ -84,13 +84,13 @@ NULL
 
 # #' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
 #' @noRd
-setGeneric(name = "idxC_to_R",
-           def = function(x) standardGeneric("idxC_to_R")
+setGeneric(name = "convert_idxC_to_R",
+           def = function(x) standardGeneric("convert_idxC_to_R")
 )
 # #' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
 #' @noRd
-setGeneric(name = "idxR_to_C",
-           def = function(x) standardGeneric("idxR_to_C")
+setGeneric(name = "convert_idxR_to_C",
+           def = function(x) standardGeneric("convert_idxR_to_C")
 )
 
 

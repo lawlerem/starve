@@ -161,7 +161,7 @@ construct_persistent_graph<- function(x,
             edges = dag$edge_list,
             distances = dag$dist_list,
             distance_units = distance_units(settings))
-  dag<- idxC_to_R(dag)
+  dag<- convert_idxC_to_R(dag)
   return(list(locations = x,
               dag = dag))
 }
@@ -372,7 +372,7 @@ construct_prediction_graph<- function(pred,
 
 # #' @describeIn idx_exchange Add 1 to all vertices in the graph edge list
 #' @noRd
-setMethod(f = "idxC_to_R",
+setMethod(f = "convert_idxC_to_R",
           signature = "dag",
           definition = function(x) {
   edges(x)<- lapply(edges(x),function(e) {
@@ -384,7 +384,7 @@ setMethod(f = "idxC_to_R",
 })
 # #' @describeIn idx_exchange Subtract 1 from all vertices in the graph edge list
 #' @noRd
-setMethod(f = "idxR_to_C",
+setMethod(f = "convert_idxR_to_C",
           signature = "dag",
           definition = function(x) {
   edges(x)<- lapply(edges(x),function(e) {
