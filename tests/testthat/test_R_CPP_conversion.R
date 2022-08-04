@@ -57,7 +57,7 @@ test_that("TMB in (R to C++)",{
     df,
     n_neighbours = 3
   )
-  TMB_in<- TMB_in(sm)
+  TMB_in<- convert_to_TMB_list(sm)
 
   expect_equal(TMB_in$data$model,"model")
   expect_equal(dim(TMB_in$para$ts_re),c(1,1))
@@ -95,7 +95,7 @@ test_that("TMB in (R to C++)",{
     n_neighbours = 3,
     distribution = "compois"
   )
-  TMB_in<- TMB_in(sm)
+  TMB_in<- convert_to_TMB_list(sm)
 
   expect_equal(TMB_in$data$model,"model")
   expect_equal(dim(TMB_in$para$ts_re),c(3,1))

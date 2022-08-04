@@ -214,8 +214,8 @@ setGeneric(name = "strv_update",
 #' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
 #'
 #' @noRd
-setGeneric(name = "TMB_in",
-           def = function(x) standardGeneric("TMB_in")
+setGeneric(name = "convert_to_TMB_list",
+           def = function(x) standardGeneric("convert_to_TMB_list")
 )
 
 

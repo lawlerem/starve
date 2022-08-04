@@ -9,7 +9,7 @@
 setMethod(f = "strv_fit",
           signature = "starve",
           definition = function(object,silent = FALSE,...) {
-  TMB_input<- TMB_in(object)
+  TMB_input<- convert_to_TMB_list(object)
 
   TMB_out<- new("TMB_out")
   tracing<- new("tracing")
@@ -104,7 +104,7 @@ setMethod(f = "strv_simulate",
                          conditional = FALSE,
                          ...) {
 
-  TMB_input<- TMB_in(object)
+  TMB_input<- convert_to_TMB_list(object)
   if( conditional ) {
     # If conditional, the random effects are not re-simulated
     TMB_input$data$conditional_sim<- conditional
@@ -333,8 +333,8 @@ predict_w<- function(x,
     model = x
   )
 
-  # Prepare input for TMB, TMB_in(x) doesn't take care of pred_* things
-  TMB_input<- TMB_in(x)
+  # Prepare input for TMB, convert_to_TMB_list(x) doesn't take care of pred_* things
+  TMB_input<- convert_to_TMB_list(x)
   TMB_input$data$pred_edges<- edges(convert_idxR_to_C(dag))
   TMB_input$data$pred_dists<- distances(dag)
   TMB_input$data$pred_t<- c(locations(predictions)[,time_name(x),drop=TRUE]- min(stars::st_get_dimension_values(pg_re(x),time_name(x))))

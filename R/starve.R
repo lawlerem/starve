@@ -648,9 +648,9 @@ setMethod(f = "timing",
 ###         ###
 ###############
 
-# #' @describeIn TMB_in Convert a starve object to a list for \code{TMB::MakeADFun}
+# #' @describeIn convert_to_TMB_list Convert a starve object to a list for \code{TMB::MakeADFun}
 #' @noRd
-setMethod(f = "TMB_in",
+setMethod(f = "convert_to_TMB_list",
           signature = "starve",
           definition = function(x) {
   min_t<- min(stars::st_get_dimension_values(pg_re(x),time_name(x)))
