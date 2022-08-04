@@ -13,14 +13,14 @@ NULL
 
 #' Append random effects for hind- and fore-casting
 #'
-#' @param x A staRVe_model object
+#' @param x A starve object
 #' @param time What times are needed? Only need to supply min and max values
 #'
 #' @return A copy of x with extra temporal and spatio-temporal random effects
 #'
 #' @noRd
-.add_random_effects_by_time<- function(x,times) {
-  model_times<- stars::st_get_dimension_values(pg_re(x),.time_name(x))
+add_random_effects_by_time<- function(x,times) {
+  model_times<- stars::st_get_dimension_values(pg_re(x),time_name(x))
 
   ### Add extra spatio-temporal random effects
   new_dims<- stars::st_dimensions(pg_re(x))
@@ -29,22 +29,22 @@ NULL
     relist<- lapply(relist,function(va) {
       return(abind::abind(array(0,dim = c(dim(va)[[1]],min(model_times)-min(times),dim(va)[[3]])),
                           va,
-                          along = which(names(new_dims) == .time_name(x)),
+                          along = which(names(new_dims) == time_name(x)),
                           use.first.dimnames = FALSE
                         ))
     })
-    new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
-    new_dims[[.time_name(x)]]$offset<- min(times)
+    new_dims[[time_name(x)]]$to<- new_dims[[time_name(x)]]$to + new_dims[[time_name(x)]]$offset - min(times)
+    new_dims[[time_name(x)]]$offset<- min(times)
   } else {}
   if( max(times) > max(model_times) ) {
     relist<- lapply(relist,function(va) {
       return(abind::abind(va,
                           array(0,dim = c(dim(va)[[1]],max(times)-max(model_times),dim(va)[[3]])),
-                          along = which(names(new_dims) == .time_name(x)),
+                          along = which(names(new_dims) == time_name(x)),
                           use.first.dimnames = TRUE
                         ))
     })
-    new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
+    new_dims[[time_name(x)]]$to<- max(times) - new_dims[[time_name(x)]]$offset + 1
   } else {}
   relist<- lapply(relist,function(va) {
     dimnames(va)<- NULL
@@ -59,22 +59,22 @@ NULL
     relist<- lapply(relist,function(va) {
       return(abind::abind(array(0,dim = c(min(model_times)-min(times),dim(va)[[2]])),
                           va,
-                          along = which(names(new_dims) == .time_name(x)),
+                          along = which(names(new_dims) == time_name(x)),
                           use.first.dimnames = FALSE
                         ))
     })
-    new_dims[[.time_name(x)]]$to<- new_dims[[.time_name(x)]]$to + new_dims[[.time_name(x)]]$offset - min(times)
-    new_dims[[.time_name(x)]]$offset<- min(times)
+    new_dims[[time_name(x)]]$to<- new_dims[[time_name(x)]]$to + new_dims[[time_name(x)]]$offset - min(times)
+    new_dims[[time_name(x)]]$offset<- min(times)
   } else {}
   if( max(times) > max(model_times) ) {
     relist<- lapply(relist,function(va) {
       return(abind::abind(va,
                           array(0,dim = c(max(times)-max(model_times),dim(va)[[2]])),
-                          along = which(names(new_dims) == .time_name(x)),
+                          along = which(names(new_dims) == time_name(x)),
                           use.first.dimnames = TRUE
                         ))
     })
-    new_dims[[.time_name(x)]]$to<- max(times) - new_dims[[.time_name(x)]]$offset + 1
+    new_dims[[time_name(x)]]$to<- max(times) - new_dims[[time_name(x)]]$offset + 1
   } else {}
   relist<- lapply(relist,function(va) {
     dimnames(va)<- NULL
@@ -100,8 +100,10 @@ NULL
 
 # C
 
-# cbind.matrix but instead of recycling short vectors it pads with NA
-.cbind_no_recycle<- function(...) {
+#' cbind.matrix but instead of recycling short vectors it pads with NA
+#'
+#' @noRd
+cbind_no_recycle<- function(...) {
   args<- list(...)
   n<- max(do.call(c,lapply(args,length)))
   args<- lapply(args,function(x) {
@@ -114,21 +116,21 @@ NULL
 #' Retrieve a spatial covariance function from a formula.
 #'
 #' @param x A formula object with a space(covariance,nu) term. The covariance
-#'   argument must be one those listed in get_staRVe_distributions("covariance").
+#'   argument must be one those listed in get_starve_distributions("covariance").
 #'   The `nu' argument is only necessary when using the Matern covariance, and
 #'   supplying it fixes the value of nu (the smoothness parameter).
 #'
 #' @return A list containing the name of the covariance function and the value of nu.
 #'
 #' @noRd
-.covariance_from_formula<- function(x) {
+covariance_from_formula<- function(x) {
   # Set up what the "space" term does in the formula
   space<- function(covariance,nu) {
     # Find the closest match for covariance function
     if( missing(covariance) ) {covariance<- "exponential"}
 
-    covar<- pmatch(covariance,get_staRVe_distributions("covariance"),duplicates.ok = TRUE)
-    covar<- unname(get_staRVe_distributions("covariance")[covar])
+    covar<- pmatch(covariance,get_starve_distributions("covariance"),duplicates.ok = TRUE)
+    covar<- unname(get_starve_distributions("covariance")[covar])
 
     # Grab value for nu, only used for "matern"
     # If nu is supplied (for matern) it's going to be held constant
@@ -137,8 +139,8 @@ NULL
     }
 
     return(list(
-      covariance = rep(covar,length.out=.n_response(x)),
-      nu = rep(as.numeric(nu),length.out=.n_response(x))
+      covariance = rep(covar,length.out=n_response(x)),
+      nu = rep(as.numeric(nu),length.out=n_response(x))
     ))
   }
 
@@ -146,8 +148,8 @@ NULL
   the_terms<- terms(x,specials=c("time","space","sample.size"))
   the_idx<- attr(the_terms,"specials")$space
   if( length(the_idx) == 0 ) {
-    return(list(covariance = rep("exponential",.n_response(x)),
-                nu = rep(0.5,.n_response(x))))
+    return(list(covariance = rep("exponential",n_response(x)),
+                nu = rep(0.5,n_response(x))))
   } else if( length(the_idx) > 1 ) {
     stop("Multiple `space` terms found in formula. Only one is allowed")
   } else {}
@@ -160,13 +162,13 @@ NULL
 #' Convert covariance function (character) to (int)
 #'
 #' @param covariance Name of the covariance function to use. Check
-#'   get_staRVe_distributions("covariance")
+#'   get_starve_distributions("covariance")
 #'
 #' @return The integer code for the named covariance function (index from 0)
 #'
 #' @noRd
-.covariance_to_code<- function(covariance) {
-  covar_code<- pmatch(covariance,get_staRVe_distributions("covariance"),duplicates.ok=TRUE)
+covariance_to_code<- function(covariance) {
+  covar_code<- pmatch(covariance,get_starve_distributions("covariance"),duplicates.ok=TRUE)
   if( is.na(covar_code) || covar_code == 0 ) {
     stop("Supplied covariance function is not implemented, or matches multiple covariance functions.")
   } else {}
@@ -184,13 +186,13 @@ NULL
 #' Convert response distribution (character) to (int)
 #'
 #' @param distribution Name of the response_distribution to use. Check
-#'   get_staRVe_distributions("distribution")
+#'   get_starve_distributions("distribution")
 #'
 #' @return The integer code for the named response distribution (index from 0)
 #'
 #' @noRd
-.distribution_to_code<- function(distribution) {
-  distribution_code<- pmatch(distribution,get_staRVe_distributions("distribution"),duplicates.ok=TRUE)
+distribution_to_code<- function(distribution) {
+  distribution_code<- pmatch(distribution,get_starve_distributions("distribution"),duplicates.ok=TRUE)
   if( is.na(distribution_code) || distribution_code == 0  ) {
     stop("Supplied distribution is not implemented, or matches multiple distributions.")
   } else {}
@@ -217,7 +219,7 @@ NULL
 
 # G
 
-#' List of staRVe model options
+#' List of starve model options
 #'
 #' Print a list of implemented response distributions, link functions, and
 #'   covariance functions.
@@ -287,7 +289,7 @@ NULL
 #'  `which` parameter.
 #'
 #' @export
-get_staRVe_distributions<- function(which = c("distribution","link","covariance")) {
+get_starve_distributions<- function(which = c("distribution","link","covariance")) {
   # All of these indices have to align with the C++ code
   if( "distribution" %in% which ) {
     # Check C++ in src/include/family.hpp
@@ -357,13 +359,13 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' Convert link function (character) to (int)
 #'
 #' @param link Name of the link function to use. Check
-#'   get_staRVe_distributions("link")
+#'   get_starve_distributions("link")
 #'
 #' @return The integer code for the named link function (index from 0)
 #'
 #' @noRd
-.link_to_code<- function(link) {
-  link_code<- pmatch(link,get_staRVe_distributions("link"),duplicates.ok=TRUE)
+link_to_code<- function(link) {
+  link_code<- pmatch(link,get_starve_distributions("link"),duplicates.ok=TRUE)
   if( is.na(link_code) || link_code == 0 ) {
     stop("Supplied link function is not implemented, or matches multiple link functions.")
   } else {}
@@ -374,10 +376,10 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @return The locations of the first geometry dimension
 #'
 #' @noRd
-.locations_from_stars<- function(x) {
-  sf_obj<- sf::st_as_sf(stars::st_dimensions(x)[[.which_sfc(x)]][["values"]])
-  colnames(sf_obj)<- .which_sfc(x)
-  st_geometry(sf_obj)<- .which_sfc(x)
+locations_from_stars<- function(x) {
+  sf_obj<- sf::st_as_sf(stars::st_dimensions(x)[[which_sfc(x)]][["values"]])
+  colnames(sf_obj)<- which_sfc(x)
+  st_geometry(sf_obj)<- which_sfc(x)
 
   return(sf_obj)
 }
@@ -393,7 +395,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @return A copy of x where logical values are converted to factors
 #'
 #' @noRd
-.logical_to_map<- function(x) {
+logical_to_map<- function(x) {
   x[is.na(x)]<- TRUE
   if( any( !is.logical(x) ) ) {
     stop("Only logical values can be converted to a TMB `map` list.")
@@ -423,7 +425,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'   factors, interaction terms, etc. are expanded to their own variables.
 #'
 #' @noRd
-.mean_design_from_formula<- function(x,data,return = "model.matrix") {
+mean_design_from_formula<- function(x,data,return = "model.matrix") {
   data<- as.data.frame(data)
   the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
   if( length(attr(the_terms,"term.labels")) == 0 ) {
@@ -472,8 +474,8 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @return A character vector giving the names of covariates used in a formula.
 #'
 #' @noRd
-.names_from_formula<- function(x) {
-  # Don't use colnames(.mean_design_from_formula(...,return="all.vars")) since
+names_from_formula<- function(x) {
+  # Don't use colnames(mean_design_from_formula(...,return="all.vars")) since
   # I don't want to supply a data.frame
   the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
   if( length(attr(the_terms,"term.labels")) == 0 ) {
@@ -490,7 +492,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 }
 
 # Return the number of response variables in a formula
-.n_response<- function(x) return(length(.response_names(x)))
+n_response<- function(x) return(length(response_names(x)))
 
 
 
@@ -516,7 +518,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'  or an integer vector of sorted indices (\code{return='order'}).
 #'
 #' @noRd
-.order_by_location<- function(x,time=NULL,return="sort") {
+order_by_location<- function(x,time=NULL,return="sort") {
     # Get location coordinate in data.frame form (separate column for each coordinate)
     coords<- as.data.frame(sf::st_coordinates(x))
     # If time is supplied, add it as the first column
@@ -563,7 +565,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'  containing the name of the response variable.
 #'
 #' @noRd
-.response_from_formula<- function(x,data) {
+response_from_formula<- function(x,data) {
   data<- data.frame(data)
   # Get out just the left-hand side of the formula
   the_terms<- terms(x,specials=c("time","space","sample.size"))
@@ -601,8 +603,10 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   return(response)
 }
 
-# Return the names of response variables in a multivariate formula
-.response_names<- function(x) {
+#' Return the names of response variables in a multivariate formula
+#'
+#' @noRd
+response_names<- function(x) {
   # Get out just the left-hand side of the formula
   the_terms<- terms(x,specials=c("time","space","sample.size"))
   if( attr(the_terms,"response") == 0 ) {
@@ -644,7 +648,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @return A data.frame with a single column for the sample size.
 #'
 #' @noRd
-.sample_size_from_formula<- function(x,data,unique_vars=FALSE) {
+sample_size_from_formula<- function(x,data,unique_vars=FALSE) {
   data<- data.frame(data)
   # Get out just the "sample.size" term from the formula (as a character string)
   the_terms<- terms(x,specials=c("time","space","sample.size"))
@@ -671,7 +675,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
     } else {}
       var_call<- var_call[-1]
   } else {}
-  var_call<- rep(var_call,length.out=.n_response(x))
+  var_call<- rep(var_call,length.out=n_response(x))
 
   char_vars<- unique(paste(var_call[sapply(var_call,is.symbol) | sapply(var_call,is.character)]))
   missing_vars<- char_vars[!(char_vars %in% colnames(data))]
@@ -686,7 +690,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
       sample.size<- data[,char_vars,drop=FALSE]
     }
   } else {
-    sample.size<-  as.data.frame(matrix(1,nrow=nrow(data),ncol=.n_response(x)))
+    sample.size<-  as.data.frame(matrix(1,nrow=nrow(data),ncol=n_response(x)))
     for( i in seq_along(var_call) ) {
       if( identical(NA,var_call[[i]]) ) {
         sample.size[,i]<- as.data.frame(matrix(1,nrow=nrow(data),ncol=1))
@@ -718,7 +722,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @return An \code{sf} data.frame.
 #'
 #' @noRd
-.sf_from_raster_list<- function(x,time_name) {
+sf_from_raster_list<- function(x,time_name) {
     # sf_list will be a list of sf objects, each of which has a columns
     # for a single covariate, the time index, and the geometry
   sf_list<- lapply(x,function(raster_brick) {
@@ -791,7 +795,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #' @param var_column The name of the column in x giving the variable
 #'
 #' @noRd
-.sf_to_stars<- function(x,time_column="time",var_column="variable") {
+sf_to_stars<- function(x,time_column="time",var_column="variable") {
   if( !(time_column %in% colnames(x)) ) {
     stop(paste(time_column,"not present in column names of x"))
   } else {}
@@ -840,7 +844,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 #'  type of time process (ar1, random walk, or independent).
 #'
 #' @noRd
-.time_from_formula<- function(x,data) {
+time_from_formula<- function(x,data,return="vector") {
   # Set up what the "time" term does in the formula
   time<- function(time_var,type="ar1") {
     if( length(time_var) != 1 ) {
@@ -857,11 +861,11 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
       data[,time_var]<- floor(data[,time_var,drop=TRUE])
     } else {}
     # Find the closest match for type of temporal structure
-    # Why is this not in get_staRVe_distributions? They're not really different structures?
+    # Why is this not in get_starve_distributions? They're not really different structures?
     time_col<- as.data.frame(data)[,time_var,drop=FALSE]
     type<- pmatch(type,c("ar1","rw","independent"),duplicates.ok=TRUE)
     type<- c("ar1","rw","independent")[type]
-    attr(time_col,"type")<- rep(type,length.out=.n_response(x))
+    attr(time_col,"type")<- rep(type,length.out=n_response(x))
     return(time_col)
   }
 
@@ -871,7 +875,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   if( length(the_idx) == 0 ) {
     time_col<- data.frame(rep(0,nrow(data)))
     colnames(time_col)<- "Time"
-    attr(time_col,"type")<- rep("independent",.n_response(x))
+    attr(time_col,"type")<- rep("independent",n_response(x))
     return(time_col)
   } else if( length(the_idx) > 1 ) {
     stop("Multiple `time` terms found in formula. Only one is allowed.")
@@ -879,11 +883,26 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
   the_call<- attr(the_terms,"variables")[[the_idx+1]]
   the_call[[2]]<- as.character(the_call[[2]]) # puts variable name in quotes
+  column<- eval(the_call)
 
-  return(eval(the_call))
+  if( return == "vector" ) {
+    ans<- column[[1]]
+    attr(ans,"type")<- attr(column,"type")
+  } else if(return == "column") {
+    ans<- column
+  } else {
+    stop("Return type must be either 'vector' or 'column'.")
+  }
+
+  return(ans)
 }
 
-.time_name_from_formula<- function(x) {
+#' Retrieve the name of the time variable from a formula
+#'
+#' @noRd
+setMethod(f = "time_name",
+          signature = "formula",
+          definition = function(x) {
   the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^time",term.labels,value=TRUE)
@@ -908,7 +927,7 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
   } else {}
 
   return(attr(new_terms,"term.labels")[[1]])
-}
+})
 
 
 
@@ -929,9 +948,11 @@ get_staRVe_distributions<- function(which = c("distribution","link","covariance"
 
 # W
 
-# Copied from the stars source code
-# Returns which dimensions are sf geometries
-.which_sfc<- function(x) {
+#' Copied from the stars source code
+#' Returns which dimensions are sf geometries
+#'
+#' @noRd
+which_sfc<- function(x) {
   if( inherits(x,"stars") ) {
     x<- stars::st_dimensions(x)
     idx<- which(sapply(x, function(i) inherits(i$values, "sfc")))

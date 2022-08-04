@@ -2,16 +2,16 @@ bbox<- sf::st_polygon(list(rbind(c(0,0),c(0,1),c(1,1),c(1,0),c(0,0))))
 nt<- 5
 npert<- 5
 
-# .covariance_from_formula
+# covariance_from_formula
 test_that("Covariance function from formula",{
   expect_covariance_function_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(.covariance_from_formula(formula)$covariance,expected)
+      expect_equal(covariance_from_formula(formula)$covariance,expected)
     ))
   }
   expect_nu_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(.covariance_from_formula(formula)$nu,.(expected))
+      expect_equal(covariance_from_formula(formula)$nu,.(expected))
     ))
   }
 
@@ -36,7 +36,7 @@ test_that("Covariance function from formula",{
   expect_covariance_function_equal(ff[[5]],"matern")
   expect_nu_equal(ff[[5]],NaN)
   expect_covariance_function_equal(ff[[6]],"matern")
-  eval(bquote(expect_error(.covariance_from_formula(ff[[7]]),"Multiple")))
+  eval(bquote(expect_error(covariance_from_formula(ff[[7]]),"Multiple")))
   expect_nu_equal(ff[[6]],1)
   expect_covariance_function_equal(ff[[8]],c("exponential","exponential"))
   expect_covariance_function_equal(ff[[9]],c("exponential","exponential"))
@@ -45,17 +45,17 @@ test_that("Covariance function from formula",{
   expect_nu_equal(ff[[11]],c(0.5,NaN))
 })
 
-# .mean_design_from_formula
+# mean_design_from_formula
 test_that("Covariates from formula",{
   expect_val_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(.mean_design_from_formula(formula,test_data,return_type),expected,ignore_attr=TRUE)
+      expect_equal(mean_design_from_formula(formula,test_data,return_type),expected,ignore_attr=TRUE)
     ))
   }
   # expect_ncol is  ad hoc way to check I'm getting the variable expansions (factors, poly) I want
   expect_colnames_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(colnames(.mean_design_from_formula(formula,test_data,return_type)),expected)
+      expect_equal(colnames(mean_design_from_formula(formula,test_data,return_type)),expected)
     ))
   }
   test_data<- sf::st_sf(
@@ -187,11 +187,11 @@ test_that("Covariates from formula",{
 
 })
 
-# .names_from_formula
+# names_from_formula
 test_that("Covariate names from formula",{
   expect_val_equal<- function(formula,expected) {
     eval(bquote(
-      expect_identical(.names_from_formula(.(formula)),expected)
+      expect_identical(names_from_formula(.(formula)),expected)
     ))
   }
   ff<- c(
@@ -223,16 +223,16 @@ test_that("Covariate names from formula",{
   expect_val_equal(ff[[12]],character(0))
 })
 
-# .response_from_formula
+# response_from_formula
 test_that("Response variable from formula",{
   expect_val_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(staRVe:::.response_from_formula(.(formula),test_data),expected,ignore_attr=TRUE)
+      expect_equal(response_from_formula(.(formula),test_data),expected,ignore_attr=TRUE)
     ))
   }
   expect_name_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(attributes(.response_from_formula(.(formula),test_data))$name,expected)
+      expect_equal(attributes(response_from_formula(.(formula),test_data))$name,expected)
     ))
   }
 
@@ -253,7 +253,7 @@ test_that("Response variable from formula",{
     cbind(y,q) ~ 1 # 8
   )
 
-  eval(bquote(expect_error(.response_from_formula(ff[[1]],test_data),"Response variable")))
+  eval(bquote(expect_error(response_from_formula(ff[[1]],test_data),"Response variable")))
 
   f<- ff[[2]]
   expect_val_equal(f,data.frame(y=test_data$y))
@@ -264,27 +264,27 @@ test_that("Response variable from formula",{
   expect_name_equal(f,"response")
 
   f<- ff[[4]]
-  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Response variable")))
+  eval(bquote(expect_error(response_from_formula(.(f),test_data),"Response variable")))
 
   f<- ff[[5]]
   expect_val_equal(f,data.frame(y=test_data$y,response=test_data$response))
   expect_name_equal(f,c("y","response"))
 
   f<- ff[[6]]
-  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"In LHS of formula")))
+  eval(bquote(expect_error(response_from_formula(.(f),test_data),"In LHS of formula")))
 
   f<- ff[[7]]
-  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"In LHS of formula")))
+  eval(bquote(expect_error(response_from_formula(.(f),test_data),"In LHS of formula")))
 
   f<- ff[[8]]
-  eval(bquote(expect_error(.response_from_formula(.(f),test_data),"Response variable")))
+  eval(bquote(expect_error(response_from_formula(.(f),test_data),"Response variable")))
 })
 
-# .sample_size_from_formula
+# sample_size_from_formula
 test_that("Sample size variable from formula",{
   expect_val_equal<- function(formula,unique_vars,expected) {
     eval(bquote(
-      expect_equal(.sample_size_from_formula(.(formula),test_data,unique_vars),expected)
+      expect_equal(sample_size_from_formula(.(formula),test_data,unique_vars),expected)
     ))
   }
   test_data<- sf::st_sf(
@@ -334,13 +334,13 @@ test_that("Sample size variable from formula",{
   expect_val_equal(f,FALSE,data.frame(x1=test_data$x1))
 
   f<- ff[[6]]
-  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"In sample.size term")))
+  eval(bquote(expect_error(sample_size_from_formula(.(f),test_data),"In sample.size term")))
 
   f<- ff[[7]]
-  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"Multiple `sample.size`")))
+  eval(bquote(expect_error(sample_size_from_formula(.(f),test_data),"Multiple `sample.size`")))
 
   f<- ff[[8]]
-  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"Sample.size variable")))
+  eval(bquote(expect_error(sample_size_from_formula(.(f),test_data),"Sample.size variable")))
 
   f<- ff[[9]]
   expect_val_equal(f,TRUE,as.data.frame(matrix(1,nrow=nrow(test_data),ncol=0)))
@@ -371,24 +371,24 @@ test_that("Sample size variable from formula",{
   expect_val_equal(f,FALSE,data.frame(x1=test_data$x1,x2=test_data$x2))
 
   f<- ff[[16]]
-  eval(bquote(expect_error(.sample_size_from_formula(.(f),test_data),"Sample.size variable")))
+  eval(bquote(expect_error(sample_size_from_formula(.(f),test_data),"Sample.size variable")))
 })
 
-# .time_from_formula & .time_name_from_formula
+# time_from_formula & time_name
 test_that("Time information from formula",{
   expect_time_val_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(.time_from_formula(.(formula),test_data),expected,ignore_attr=T)
+      expect_equal(time_from_formula(.(formula),test_data,return="column"),expected,ignore_attr=T)
     ))
   }
   expect_time_type_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(attributes(.time_from_formula(.(formula),test_data))$type,.(expected))
+      expect_equal(attributes(time_from_formula(.(formula),test_data,return="column"))$type,.(expected))
     ))
   }
   expect_time_name_equal<- function(formula,expected) {
     eval(bquote(
-      expect_equal(colnames(.time_from_formula(.(formula),test_data)),.(expected))
+      expect_equal(colnames(time_from_formula(.(formula),test_data,return="column")),.(expected))
     ))
   }
 
@@ -417,7 +417,7 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,"ar1")
   expect_time_name_equal(f,"t")
   eval(bquote(
-    expect_match(.time_name_from_formula(.(f)),"t")
+    expect_match(time_name(.(f)),"t")
   ))
 
   f<- ff[[2]]
@@ -425,7 +425,7 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,"ar1")
   expect_time_name_equal(f,"t")
   eval(bquote(
-    expect_match(.time_name_from_formula(.(f)),"t")
+    expect_match(time_name(.(f)),"t")
   ))
 
   f<- ff[[3]]
@@ -433,7 +433,7 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,"rw")
   expect_time_name_equal(f,"t")
   eval(bquote(
-    expect_match(.time_name_from_formula(.(f)),"t")
+    expect_match(time_name(.(f)),"t")
   ))
 
   f<- ff[[4]]
@@ -441,7 +441,7 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,"independent")
   expect_time_name_equal(f,"t")
   eval(bquote(
-    expect_match(.time_name_from_formula(.(f)),"t")
+    expect_match(time_name(.(f)),"t")
   ))
 
   f<- ff[[5]]
@@ -449,28 +449,28 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,"ar1")
   expect_time_name_equal(f,"year")
   eval(bquote(
-    expect_match(.time_name_from_formula(.(f)),"year")
+    expect_match(time_name(.(f)),"year")
   ))
 
   f<- ff[[6]]
   eval(bquote(
-    expect_error(staRVe:::.time_from_formula(.(f),test_data),
+    expect_error(time_from_formula(.(f),test_data),
                  "Time variable must be numeric.")
   ))
 
   f<- ff[[7]]
   eval(bquote(
-    expect_error(staRVe:::.time_from_formula(.(f),test_data),"Time variable month")
+    expect_error(time_from_formula(.(f),test_data),"Time variable month")
   ))
 
   f<- ff[[8]]
   eval(bquote(
-    expect_error(staRVe:::.time_from_formula(.(f),test_data),"Multiple `time` terms")
+    expect_error(time_from_formula(.(f),test_data),"Multiple `time` terms")
   ))
 
   f<- ff[[9]]
   eval(bquote(
-    expect_error(staRVe:::.time_from_formula(.(f),test_data),"Must supply exactly one")
+    expect_error(time_from_formula(.(f),test_data),"Must supply exactly one")
   ))
 
   f<- ff[[10]]
@@ -478,7 +478,7 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,"independent")
   expect_time_name_equal(f,"Time")
   eval(bquote(
-    expect_match(.time_name_from_formula(.(f)),"Time")
+    expect_match(time_name(.(f)),"Time")
   ))
 
   f<- ff[[11]]
@@ -486,7 +486,7 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,c("ar1","ar1"))
   expect_time_name_equal(f,"t")
   eval(bquote(
-    expect_equal(.time_name_from_formula(.(f)),"t")
+    expect_equal(time_name(.(f)),"t")
   ))
 
   f<- ff[[12]]
@@ -494,6 +494,6 @@ test_that("Time information from formula",{
   expect_time_type_equal(f,c("ar1","rw"))
   expect_time_name_equal(f,"t")
   eval(bquote(
-    expect_equal(.time_name_from_formula(.(f)),"t")
+    expect_equal(time_name(.(f)),"t")
   ))
 })

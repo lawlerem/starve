@@ -11,7 +11,7 @@ NULL
 #' @param distances A list of distances
 #' @param distance_units Which distance units to use
 #'
-#' @rdname staRVe-construct
+#' @noRd
 setMethod(
   f = "initialize",
   signature = "dag",
@@ -37,15 +37,16 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @describeIn dag Get edge list
+#' @describeIn dag_class Get edge list
 setMethod(f = "edges",
           signature = "dag",
           definition = function(x) return(x@edges)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn dag Set edge list (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn dag_class Set edge list
+#' @noRd
 setReplaceMethod(f = "edges",
                  signature = "dag",
                  definition = function(x,value) {
@@ -58,15 +59,16 @@ setReplaceMethod(f = "edges",
 #' @param x An object
 #'
 #' @export
-#' @describeIn dag Get list of edge distances
+#' @describeIn dag_class Get list of edge distances
 setMethod(f = "distances",
           signature = "dag",
           definition = function(x) return(x@distances)
 )
-#' @param x An object
-#' @param value A replacement value
-#'
-#' @describeIn dag Set list of edge distances (for internal use only)
+# #' @param x An object
+# #' @param value A replacement value
+# #'
+# #' @describeIn dag_class Set list of edge distances
+#' @noRd
 setReplaceMethod(f = "distances",
                  signature = "dag",
                  definition = function(x,value) {
@@ -79,7 +81,7 @@ setReplaceMethod(f = "distances",
 #' @param x An object
 #'
 #' @export
-#' @describeIn dag Get distance units
+#' @describeIn dag_class Get distance units
 setMethod(f = "distance_units",
           signature = "dag",
           definition = function(x) return(x@distance_units)
@@ -87,7 +89,7 @@ setMethod(f = "distance_units",
 #' @param x An object
 #' @param value A replacement value
 #' @export
-#' @describeIn dag Set distance units. Graph distances are automatically converted
+#' @describeIn dag_class Set distance units. Edge distances are automatically converted
 #'   to the new units.
 setReplaceMethod(f = "distance_units",
                  signature = "dag",
@@ -119,19 +121,19 @@ setReplaceMethod(f = "distance_units",
 #' Construct directed acyclic graphs
 #'
 #' @param x,y \code{sf} objects of point geometries
-#' @param settings An object of class \code{staRVe_settings}
+#' @param settings An object of class \code{settings}
 #' @param silent Should intermediate calculations be shown?
 #'
 #' @return An object of class \code{dag}; construct_dag instead returns a list
 #'   with elements "locations" giving the sorted copy of locations and "dag"
 #'   giving the constructed graph of class \code{dag}.
 #'
-#' @seealso dag For class definition of directed acyclic graphs
+#' @seealso dag_class For class definition of directed acyclic graphs
 #'
-#' @name construct_dag
+#' @name construct_graph
 NULL
 
-#' @describeIn construct_dag Construct a directed acyclic graph for a single
+#' @describeIn construct_graph Construct a directed acyclic graph for a single
 #'   \code{sf} object. This function uses a greedy algorithm to sort the locations
 #'   of x. The first location of x is the first location of the sorted copy.
 #'   Subsequent locations of the sorted copy are found iteratively by taking
@@ -147,32 +149,30 @@ NULL
 #'
 #'   A vertex with index i in either the "to" or "from" vertices represents the location
 #'   in row i of the sorted copy of x.
-#'
-#' @export
-construct_dag<- function(x,
-                         settings = new("staRVe_settings"),
-                         silent = TRUE) {
+construct_persistent_graph<- function(x,
+                                           settings = new("settings"),
+                                           silent = TRUE) {
   dist_matrix<- as.matrix(units::set_units(sf::st_distance(x),
                                            distance_units(settings),
                                            mode="standard"))
-  dag<- .rcpp_dist_to_dag(d=dist_matrix,n_neighbours=min(nrow(x),n_neighbours(settings)))
+  dag<- dist_to_dag(d=dist_matrix,n_neighbours=min(nrow(x),n_neighbours(settings)))
   x<- x[dag$order+1,]
   dag<- new("dag",
             edges = dag$edge_list,
             distances = dag$dist_list,
             distance_units = distance_units(settings))
-  dag<- idxC_to_R(dag)
+  dag<- convert_idxC_to_R(dag)
   return(list(locations = x,
               dag = dag))
 }
 
 #' @param time A numeric vector containing the time index of each row in x.
 #'
-#' @describeIn construct_dag Construct a directed acyclic graph with "to" vertices
+#' @describeIn construct_graph Construct a directed acyclic graph with "to" vertices
 #'   representing locations in x and "from" vertices representing locations in y.
-#'   Unlike construct_dag, neither x nor y are sorted, but the time argument
-#'   must already be sorted when given as an argument (make sure that the locations
-#'   in x are likewise sorted according to their respective times).
+#'   Unlike strv_construct_persistent_graph, neither x nor y are sorted, but the
+#'   time argument must already be sorted when given as an argument (make sure
+#'   that the locations in x are likewise sorted according to their respective times).
 #'
 #'   The locations in x are first split into groups according to the values of the
 #'   time argument. Then within each group each location is given a graph element
@@ -184,13 +184,11 @@ construct_dag<- function(x,
 #'   subset of x in the same time index group. Note that the same value of i may be used
 #'   if there is more than one unique value in the time argument. A vertex with i in the
 #'   "from" vertices represents the location in row i of y.
-#'
-#' @export
-construct_transient_dag<- function(x,
-                                   y,
-                                   time = 0,
-                                   settings = new("staRVe_settings"),
-                                   silent = TRUE) {
+construct_transient_graph<- function(x,
+                                          y,
+                                          time = 0,
+                                          settings = new("settings"),
+                                          silent = TRUE) {
   if( nrow(x) == 0 ) {
     return(new("dag",distance_units=distance_units(settings)))
   } else {}
@@ -209,7 +207,7 @@ construct_transient_dag<- function(x,
     time<- rep(0,nrow(x))
   } else if( length(time) != nrow(x) ) {
     stop("Time needs to be the same length as x.")
-  } else if( !all.equal(time,sort(time)) ) {
+  } else if( !all.equal(c(time),sort(time)) ) {
     stop("Time must be sorted.")
   } else {}
 
@@ -258,13 +256,12 @@ construct_transient_dag<- function(x,
 }
 
 #' @param pred A long_stars object
-#' @param model A staRVe_model object
+#' @param model A starve object
 #'
-#' @describeIn construct_dag Works essentially the same as \code{construct_transient_dag},
+#' @describeIn construct_graph Works essentially the same as \code{construct_transient_graph},
 #'   with a few minor differences. Instead of directly supplying the locations for the
 #'   "from" vertices, the "from" vertices are taken from the locations used in the
-#'   persistent graph (construct_dag) and transient graph (construct_transient_dag)
-#'   from the model argument.
+#'   persistent graph and transient graph from the model argument.
 #'
 #'   The locations in pred are grouped according to their time index in pred.
 #'   Each location is given a graph element with a single "to" vertex representing
@@ -278,14 +275,12 @@ construct_transient_dag<- function(x,
 #'   vertices represents the j'th location of the persistent graph if j <= k where
 #'   k is the number of persistent graph locations, or represents the  (j-k)'th location
 #'   of the transient graph with the same time index as the "to" vertex.
-#'
-#' @export
-construct_pred_dag<- function(pred,
-                              model,
-                              silent = TRUE) {
+construct_prediction_graph<- function(pred,
+                                      model,
+                                      silent = TRUE) {
   settings<- settings(model)
-  colnames(locations(pred))[colnames(locations(pred)) == attr(locations(pred),"sf_column")]<- attr(.locations_from_stars(pg_re(model)),"sf_column")
-  st_geometry(locations(pred))<- attr(.locations_from_stars(pg_re(model)),"sf_column")
+  colnames(locations(pred))[colnames(locations(pred)) == attr(locations(pred),"sf_column")]<- attr(locations_from_stars(pg_re(model)),"sf_column")
+  st_geometry(locations(pred))<- attr(locations_from_stars(pg_re(model)),"sf_column")
   # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(max_distance(settings),
                               distance_units(settings),
@@ -293,20 +288,20 @@ construct_pred_dag<- function(pred,
   max_distance(settings)<- as.numeric(units::set_units(max_dist,"m"))
   ### st_nn expects meters.
 
-  pg_s<- sf::st_geometry(.locations_from_stars(pg_re(model)))
+  pg_s<- sf::st_geometry(locations_from_stars(pg_re(model)))
   tg_s<- sf::st_geometry(locations(tg_re(model)))
 
-  t<- .time_from_formula(formula(model),locations(pred))[[1]]
-  if( !all.equal(t,sort(t)) ) {
+  t<- time_from_formula(formula(model),locations(pred))
+  if( !all.equal(c(t),sort(t)) ) {
     stop("The rows of pred must be sorted by their time index.")
   } else {}
 
-  g_by_t<- lapply(stars::st_get_dimension_values(pg_re(model),.time_name(model)),function(t) {
-    pr_s<- locations(pred)[.time_from_formula(formula(model),locations(pred))[[1]]==t,]
+  g_by_t<- lapply(stars::st_get_dimension_values(pg_re(model),time_name(model)),function(t) {
+    pr_s<- locations(pred)[time_from_formula(formula(model),locations(pred))==t,]
     if( length(tg_s) > 0 ) {
       g_s<- sf::st_sf(geom=c(
         pg_s,
-        sf::st_sfc(unique(tg_s[.time_from_formula(formula(model),locations(tg_re(model)))[[1]]==t]))
+        sf::st_sfc(unique(tg_s[time_from_formula(formula(model),locations(tg_re(model)))==t]))
       ))
     } else {
       g_s<- sf::st_sf(geom=pg_s)
@@ -375,8 +370,9 @@ construct_pred_dag<- function(pred,
 
 
 
-#' @describeIn idx_exchange Add 1 to all vertices in the graph edge list
-setMethod(f = "idxC_to_R",
+# #' @describeIn idx_exchange Add 1 to all vertices in the graph edge list
+#' @noRd
+setMethod(f = "convert_idxC_to_R",
           signature = "dag",
           definition = function(x) {
   edges(x)<- lapply(edges(x),function(e) {
@@ -386,8 +382,9 @@ setMethod(f = "idxC_to_R",
   })
   return(x)
 })
-#' @describeIn idx_exchange Subtract 1 from all vertices in the graph edge list
-setMethod(f = "idxR_to_C",
+# #' @describeIn idx_exchange Subtract 1 from all vertices in the graph edge list
+#' @noRd
+setMethod(f = "convert_idxR_to_C",
           signature = "dag",
           definition = function(x) {
   edges(x)<- lapply(edges(x),function(e) {

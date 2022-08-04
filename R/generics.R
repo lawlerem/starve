@@ -23,17 +23,27 @@ NULL
 
 # C
 
+#' Convert a model object into a form suitable for TMB input.
+#'
+#' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
+#'
+#' @noRd
+setGeneric(name = "convert_to_TMB_list",
+           def = function(x) standardGeneric("convert_to_TMB_list")
+)
+
 #' Create an index connecting locations to a graph
 #'
 #' @param x An object with locations
 #' @param y An object with graph locations
 #'
-#' @return An integer vector with size equal to the number of rows of x. The location of row i of x will be the same
-#'   location as locations answer[i] of the graph of y.
+#' @return An integer vector with size equal to the number of rows of x.
+#'   The location of row i of x will be the same location as locations
+#'   answer[i] of the graph of y.
 #'
-#' @keywords internal
-setGeneric(name = ".create_graph_idx",
-           def = function(x,y,...) standardGeneric(".create_graph_idx")
+#' @noRd
+setGeneric(name = "create_graph_idx",
+           def = function(x,y,...) standardGeneric("create_graph_idx")
 )
 
 
@@ -77,18 +87,19 @@ setGeneric(name = ".create_graph_idx",
 #'
 #' @param x An object with numeric entries
 #'
-#' @keywords internal
-#'
 #' @name idx_exchange
+#' @noRd
 NULL
 
-#' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
-setGeneric(name = "idxC_to_R",
-           def = function(x) standardGeneric("idxC_to_R")
+# #' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
+#' @noRd
+setGeneric(name = "convert_idxC_to_R",
+           def = function(x) standardGeneric("convert_idxC_to_R")
 )
-#' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
-setGeneric(name = "idxR_to_C",
-           def = function(x) standardGeneric("idxR_to_C")
+# #' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
+#' @noRd
+setGeneric(name = "convert_idxR_to_C",
+           def = function(x) standardGeneric("convert_idxR_to_C")
 )
 
 
@@ -153,16 +164,15 @@ setGeneric(name = "idxR_to_C",
 #'
 #' Takes an unfitted model object and performs inference.
 #'
-#' @param x A model object to be fitted.
+#' @param object A model object to be fitted.
 #' @param ... Options to be passed
 #'
-#' @return A fitted model object.
+#' @return A fitted model object
 #'
 #' @export
-setGeneric(name = "staRVe_fit",
-           def = function(x,...) standardGeneric("staRVe_fit")
+setGeneric(name = "strv_fit",
+           def = function(object,...) standardGeneric("strv_fit")
 )
-
 
 
 #' Use a fitted model to predict.
@@ -174,8 +184,8 @@ setGeneric(name = "staRVe_fit",
 #' @return Predictions for the new data
 #'
 #' @export
-setGeneric(name = "staRVe_predict",
-           def = function(x,new_data,...) standardGeneric("staRVe_predict")
+setGeneric(name = "strv_predict",
+           def = function(x,new_data,...) standardGeneric("strv_predict")
 )
 
 #' Simulate from a model object.
@@ -187,29 +197,9 @@ setGeneric(name = "staRVe_predict",
 #'   the original data
 #'
 #' @export
-setGeneric(name = "staRVe_simulate",
-           def = function(object,...) standardGeneric("staRVe_simulate")
+setGeneric(name = "strv_simulate",
+           def = function(object,...) standardGeneric("strv_simulate")
 )
-
-
-
-
-# T
-
-
-#' Convert an into a form suitable for TMB input.
-#'
-#' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
-#'
-#' @keywords internal
-setGeneric(name = "TMB_in",
-           def = function(x) standardGeneric("TMB_in")
-)
-
-
-
-
-# U
 
 #' Update a model from a fitted object
 #'
@@ -218,10 +208,22 @@ setGeneric(name = "TMB_in",
 #'
 #' @return An updated copy of x
 #'
-#' @keywords internal
-setGeneric(name = "update_staRVe_model",
-           def = function(x,y) standardGeneric("update_staRVe_model")
+#' @noRd
+setGeneric(name = "strv_update",
+           def = function(x,y) standardGeneric("strv_update")
 )
+
+
+
+
+# T
+
+
+
+
+
+# U
+
 
 
 

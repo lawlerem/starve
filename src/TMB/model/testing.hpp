@@ -1,4 +1,4 @@
-// Headers are included in staRVe.cpp
+// Headers are included in starve.cpp
 
 #undef TMB_OBJECTIVE_PTR
 #define TMB_OBJECTIVE_PTR obj

@@ -23,7 +23,7 @@ A spatio-temporal dataset containing yearly counts of the Carolina wren from
 }
 \details{
 We obtained the data the "Spatio-Temporal Statistics with R" book by C. K.
-  Wikle et al, available at \url{spatetimewithr.org}. The original citation
+  Wikle et al, available at \url{spacetimewithr.org}. The original citation
   for the dataset is given below.
 }
 \keyword{datasets}

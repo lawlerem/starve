@@ -1,25 +1,25 @@
 #' @param silent Should intermediate calculations be printed?
 #'
-#' @describeIn staRVe_fit Takes an unfitted staRVe_model object and performs
+#' @describeIn strv_fit Takes an unfitted starve object and performs
 #'   maximum likelihood inference via the \code{TMB} package to obtain parameter
 #'   and random effect estimates with their associated standard errors. Options
 #'   in the \dots argument are passed to TMB::MakeADFun and TMB::sdreport.
 #'
 #' @export
-setMethod(f = "staRVe_fit",
-          signature = "staRVe_model",
-          definition = function(x,silent = FALSE,...) {
-  TMB_input<- TMB_in(x)
+setMethod(f = "strv_fit",
+          signature = "starve",
+          definition = function(object,silent = FALSE,...) {
+  TMB_input<- convert_to_TMB_list(object)
 
   TMB_out<- new("TMB_out")
-  tracing<- new("staRVe_tracing")
+  tracing<- new("tracing")
 
   obj(TMB_out)<- TMB::MakeADFun(
     data = TMB_input$data,
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe_model",
+    DLL = "starve_TMB",
     silent = silent,
     ...
   )
@@ -75,24 +75,17 @@ setMethod(f = "staRVe_fit",
     )
   }) -> sdr_time(tracing)
 
-  # Update staRVe_model based on parameter estimates
-  fit<- new("staRVe_model_fit",
-            staRVe_model = x,
-            tracing = tracing,
-            TMB_out = TMB_out)
-
-  as(fit,"staRVe_model")<- update_staRVe_model(
-    x = as(fit,"staRVe_model"),
-    y = TMB_out(fit)
-  )
+  # Update starve object based on parameter estimates
+  tracing(object)<- tracing
+  TMB_out(object)<- TMB_out
+  object<- strv_update(object,TMB_out)
 
   # Get random effects, predictions on link scale, and predictions on response scale
-  data_predictions(fit)<- .predict_linear(fit,data_predictions(fit))
-  data_predictions(fit)<- .predict_response(fit,data_predictions(fit))
+  data_predictions(object)<- predict_linear(object,data_predictions(object))
+  data_predictions(object)<- predict_response(object,data_predictions(object))
 
-  return(fit)
+  return(object)
 })
-
 
 
 #' @param conditional Logical. If false (default), new random effects and new
@@ -100,18 +93,18 @@ setMethod(f = "staRVe_fit",
 #'   conditional on the random effect values in the supplied model.
 #
 #' @export
-#' @describeIn staRVe_simulate Simulate a new dataset from the model, with the
+#' @describeIn strv_simulate Simulate a new dataset from the model, with the
 #' option to simulate a new set of random effects as well. The parameter values
 #' used in the simulations are those set in \code{parameters(model)}. Returns
-#' a \code{staRVe_model} object with simulated random effects (if \code{conditional=FALSE})
+#' a \code{starve} object with simulated random effects (if \code{conditional=FALSE})
 #' and simulated data.
-setMethod(f = "staRVe_simulate",
-          signature = "staRVe_model",
+setMethod(f = "strv_simulate",
+          signature = "starve",
           def = function(object,
                          conditional = FALSE,
                          ...) {
 
-  TMB_input<- TMB_in(object)
+  TMB_input<- convert_to_TMB_list(object)
   if( conditional ) {
     # If conditional, the random effects are not re-simulated
     TMB_input$data$conditional_sim<- conditional
@@ -122,14 +115,14 @@ setMethod(f = "staRVe_simulate",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe_model",
+    DLL = "starve_TMB",
     silent = TRUE,
     ...
   )
 
   # Parameters are simulated from, not estimated, so get rid of standard errors
-  for( i in seq_along(.response_names(formula(object))) ) {
-    spatial_parameters(object)[[i]]$se<- NA
+  for( i in seq_along(response_names(formula(object))) ) {
+    space_parameters(object)[[i]]$se<- NA
     time_parameters(object)[[i]]$se<- NA
     response_parameters(object)[[i]]$se<- rep(NA,nrow(response_parameters(object)[[i]]))
     fixed_effects(object)[[i]]$se<- rep(NA,nrow(fixed_effects(object)[[i]]))
@@ -148,8 +141,8 @@ setMethod(f = "staRVe_simulate",
 
   # Update random effects used for observations
   s<- dat(object)$graph_idx
-  t<- .time_from_formula(formula(object),dat(object))[[1]]-min(.time_from_formula(formula(object),dat(object)))+1
-  std_tg_t<- .time_from_formula(formula(object),locations(tg_re(object))) - min(.time_from_formula(formula(object),dat(object)))+1
+  t<- time_from_formula(formula(object),dat(object))-min(time_from_formula(formula(object),dat(object)))+1
+  std_tg_t<- time_from_formula(formula(object),locations(tg_re(object))) - min(time_from_formula(formula(object),dat(object)))+1
   for( i in seq(nrow(dat(object))) ) {
     if( s[[i]] <= dim(pg_re(object))[[1]] ) {
       values(data_predictions(object))$w[i,]<- pg_re(object)$w[s[[i]],t[[i]],]
@@ -161,15 +154,15 @@ setMethod(f = "staRVe_simulate",
 
   # Simulated values don't have standard errors, update linear and response predictions
   # to correspond to the simulated random effects
-  data_predictions(object)<- .predict_linear(object,data_predictions(object),se = FALSE)
-  data_predictions(object)<- .predict_response(object,data_predictions(object),se=FALSE)
+  data_predictions(object)<- predict_linear(object,data_predictions(object),se = FALSE)
+  data_predictions(object)<- predict_response(object,data_predictions(object),se=FALSE)
 
   # Update response observations to be the simulated value
-  dat(object)[,attr(.response_from_formula(formula(settings(object)),
+  dat(object)[,attr(response_from_formula(formula(settings(object)),
                                           dat(object)),"name")]<- sims$obs
 
-  # Turn into staRVe_fit so you have access to TMB obj
-  object<- new("staRVe_model_fit",staRVe_model = object)
+  # Update convergence/message and TMB::MakeADFun obj
+  opt(TMB_out(object))$convergence<- 0
   opt(TMB_out(object))$message<- "Simulated realization from model"
   obj(TMB_out(object))<- obj
 
@@ -178,28 +171,28 @@ setMethod(f = "staRVe_simulate",
 
 
 #' @export
-#' @describeIn staRVe_predict Predict/forecast at the specific locations and
+#' @describeIn strv_predict Predict/forecast at the specific locations and
 #'   times given in \code{new_data}. Any covariates used to fit the model
 #'   should be included in the rows of \code{new_data}. Returns a \code{long_stars}
 #'   object containing a copy of \code{new_data} and the associated predictions
 #'   and standard errors for the random effects and response mean on both the
 #'   link and natural scale.
-setMethod(f = "staRVe_predict",
-          signature = c("staRVe_model_fit","sf"),
+setMethod(f = "strv_predict",
+          signature = c("starve","sf"),
           definition = function(x,
                                 new_data) {
   ### Check that we have all covariates, if there are covariates in the model
-  covar_names<- .names_from_formula(formula(x))
+  covar_names<- names_from_formula(formula(x))
 
   if( !all(covar_names %in% colnames(new_data)) ) {
     stop("Missing covariates, please add them to the prediction locations.")
   } else {}
-  predictions<- new("long_stars",new_data,var_names=.response_names(formula(x)))
+  predictions<- new("long_stars",new_data,var_names=response_names(formula(x)))
 
   # Get predictions and standard errors
-  predictions<- .predict_w(x,predictions)
-  predictions<- .predict_linear(x,predictions)
-  predictions<- .predict_response(x,predictions)
+  predictions<- predict_w(x,predictions)
+  predictions<- predict_linear(x,predictions)
+  predictions<- predict_response(x,predictions)
 
   return(predictions)
 })
@@ -220,7 +213,7 @@ setMethod(f = "staRVe_predict",
 #' in the model data.
 #'
 #' @export
-#' @describeIn staRVe_predict Predictions will be made for all raster cells
+#' @describeIn strv_predict Predictions will be made for all raster cells
 #'   whose value are not NA. If the raster has no values, then predictions will
 #'   be made at every raster cell. Raster predictions are not treated as areal
 #'   data, instead point predictions are made at the midpoint of each raster cell.
@@ -228,53 +221,53 @@ setMethod(f = "staRVe_predict",
 #'   Returns a \code{stars} object whose first two dimensions are the raster
 #'   geometry of \code{new_data}, the third dimension is the time index given
 #'   in \code{time}, and the fourth dimension is the response variable.
-setMethod(f = "staRVe_predict",
-          signature = c("staRVe_model_fit","RasterLayer"),
+setMethod(f = "strv_predict",
+          signature = c("starve","RasterLayer"),
           definition = function(x,new_data,covariates,time="model") {
   # Convert raster to sf
   uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(new_data,spatial=TRUE))
   uniq_prediction_points<- uniq_prediction_points[,attr(uniq_prediction_points,"sf_column")]
   if( identical(time,"model") ) {
-    time<- seq(min(dat(x)[,.time_name(x),drop=TRUE]),max(dat(x)[,.time_name(x),drop=TRUE]))
+    time<- seq(min(dat(x)[,time_name(x),drop=TRUE]),max(dat(x)[,time_name(x),drop=TRUE]))
   } else {
     time<- seq(min(time),max(time))
   }
   prediction_points<- sf::st_sf(data.frame(time = rep(time,each=nrow(uniq_prediction_points)),
                                            geom = rep(sf::st_geometry(uniq_prediction_points),length(time))))
-  colnames(prediction_points)[[1]]<- .time_name(x)
+  colnames(prediction_points)[[1]]<- time_name(x)
 
   # Dispatch predictions based on if covariates are in the model and
   # if they are supplied
-  covar_names<- .names_from_formula(formula(settings(x)))
+  covar_names<- names_from_formula(formula(settings(x)))
   if( missing(covariates) && (length(covar_names) == 0) ) {
-    pred<- staRVe_predict(x,prediction_points)
+    pred<- strv_predict(x,prediction_points)
   } else if( missing(covariates) && (length(covar_names) != 0) ) {
     stop("Missing covariates, please supply them.")
   } else if( !all(covar_names %in% names(covariates)) ) {
     stop("Missing some covariates. Check the names of your raster covariates.")
   } else {
-    covar_points<- .sf_from_raster_list(covariates,time_name=.time_name(x))
+    covar_points<- sf_from_raster_list(covariates,time_name=time_name(x))
     colnames(prediction_points)[[2]]<- attr(covar_points,"sf_column")
     sf::st_geometry(prediction_points)<- attr(covar_points,"sf_column")
     prediction_points<- do.call(rbind,Map(
       sf::st_join,
-      split(prediction_points,prediction_points[,.time_name(x),drop=TRUE]),
-      split(covar_points,covar_points[,.time_name(x),drop=TRUE]),
-      suffix = lapply(unique(covar_points[,.time_name(x),drop=TRUE]),function(t) return(c("",".a")))
+      split(prediction_points,prediction_points[,time_name(x),drop=TRUE]),
+      split(covar_points,covar_points[,time_name(x),drop=TRUE]),
+      suffix = lapply(unique(covar_points[,time_name(x),drop=TRUE]),function(t) return(c("",".a")))
     ))
 
-    prediction_points[,paste0(.time_name(x),".a")]<- NULL
-    pred<- staRVe_predict(x,prediction_points)
+    prediction_points[,paste0(time_name(x),".a")]<- NULL
+    pred<- strv_predict(x,prediction_points)
   }
 
   # Convert predictions to stars object
   # should have dimension 4 : x coordinate, y coordinate, time, variable
-  var_stars<- lapply(seq_along(.n_response(formula(x))),function(i) {
+  var_stars<- lapply(seq_along(n_response(formula(x))),function(i) {
     pred_sf_list<- cbind(do.call(cbind,values(pred)[,,i]),locations(pred))
-    pred_sf_list<- lapply(split(pred_sf_list,pred_sf_list[,.time_name(x),drop=TRUE]),
+    pred_sf_list<- lapply(split(pred_sf_list,pred_sf_list[,time_name(x),drop=TRUE]),
                           stars::st_rasterize,
                           template = stars::st_as_stars(new_data))
-    pred_stars<- do.call(c,c(pred_sf_list,list(along = .time_name(x))))
+    pred_stars<- do.call(c,c(pred_sf_list,list(along = time_name(x))))
     return(pred_stars)
   })
 
@@ -284,10 +277,10 @@ setMethod(f = "staRVe_predict",
   } else {
     pred_stars<- do.call(c,c(var_stars,list(along = "variable")))
   }
-  pred_stars[[.time_name(x)]]<- NULL
-  attr(pred_stars,"dimensions")[[.time_name(x)]]$delta<- 1
-  attr(pred_stars,"dimensions")[[.time_name(x)]]$offset<- min(time)
-  attr(pred_stars,"dimensions")[["variable"]]$values<- .response_names(formula(x))
+  pred_stars[[time_name(x)]]<- NULL
+  attr(pred_stars,"dimensions")[[time_name(x)]]$delta<- 1
+  attr(pred_stars,"dimensions")[[time_name(x)]]$offset<- min(time)
+  attr(pred_stars,"dimensions")[["variable"]]$values<- response_names(formula(x))
   names(pred_stars)[1:6]<- names(values(pred))[1:6]
 
   return(pred_stars)
@@ -295,42 +288,62 @@ setMethod(f = "staRVe_predict",
 
 
 
-#' Predict random effects from likelihood function
+#' @rdname strv_predict
 #'
-#' @param x A starve_model_fit object
-#' @param predictions A long_stars object
-#' @param dist_tol A small number so that prediction variances are not
-#'   computationally singular
+#' @name predict_w
 #'
-#' @return An \code{sf} object with predictions for random effects (w) and
-#'   their standard errors.
+#' @section Random effect predictions:
+#' Predictions of spatio-temporal random effects.
 #'
+#' If there are prediction times that are outside the range of times of the
+#'   model, then persistent graph random effects are added to the model to cover
+#'   these additional times. Then a prediction graph is created which describes
+#'   which random effect locations (including both persistent graph and transient
+#'   graph locations) are used as nearest neighbours when finding the predictive
+#'   distribution for the spatio-temporal random effect at each prediction location.
+#'
+#' We then add the predictive distributions for the prediction random effects
+#'   to the model likelihood function. The predicted values and standard errors
+#'   for the random effect are found by optimizing the augmented likelihood function
+#'   evaluated at the model parameter values. Note that the standard errors for
+#'   the predicted random effects take into account uncertainty in the model
+#'   parameter estimates.
+NULL
+# #' Predict random effects from likelihood function
+# #'
+# #' @param x A starve object
+# #' @param predictions A long_stars object
+# #' @param dist_tol A small number so that prediction variances are not
+# #'   computationally singular
+# #'
+# #' @return An \code{sf} object with predictions for random effects (w) and
+# #'   their standard errors.
 #' @noRd
-.predict_w<- function(x,
+predict_w<- function(x,
                       predictions,
                       dist_tol = 0.00001,
                       ...) {
   # Add random effects for times not present in the original model,
   # only added to pass to TMB
-  pred_times<- unique(locations(predictions)[,.time_name(x),drop=TRUE])
-  x<- .add_random_effects_by_time(x,pred_times)
+  pred_times<- unique(locations(predictions)[,time_name(x),drop=TRUE])
+  x<- add_random_effects_by_time(x,pred_times)
 
-  dag<- construct_pred_dag(
+  dag<- construct_prediction_graph(
     pred = predictions,
     model = x
   )
 
-  # Prepare input for TMB, TMB_in(x) doesn't take care of pred_* things
-  TMB_input<- TMB_in(x)
-  TMB_input$data$pred_edges<- edges(idxR_to_C(dag))
+  # Prepare input for TMB, convert_to_TMB_list(x) doesn't take care of pred_* things
+  TMB_input<- convert_to_TMB_list(x)
+  TMB_input$data$pred_edges<- edges(convert_idxR_to_C(dag))
   TMB_input$data$pred_dists<- distances(dag)
-  TMB_input$data$pred_t<- c(locations(predictions)[,.time_name(x),drop=TRUE]- min(stars::st_get_dimension_values(pg_re(x),.time_name(x))))
+  TMB_input$data$pred_t<- c(locations(predictions)[,time_name(x),drop=TRUE]- min(stars::st_get_dimension_values(pg_re(x),time_name(x))))
 
   TMB_input$para$pred_re<- values(predictions)$w
   intersects<- do.call(c,lapply(edges(dag),function(e) return(length(e$from) == 1)))
   TMB_input$map$pred_re<- array(FALSE,dim=dim(TMB_input$para$pred_re))
   TMB_input$map$pred_re[intersects,]<- TRUE
-  TMB_input$map$pred_re<- .logical_to_map(TMB_input$map$pred_re)
+  TMB_input$map$pred_re<- logical_to_map(TMB_input$map$pred_re)
 
   # Create the TMB object and evaluate it at the ML estimates
   obj<- TMB::MakeADFun(
@@ -338,7 +351,7 @@ setMethod(f = "staRVe_predict",
     para = TMB_input$para,
     random = TMB_input$rand,
     map = TMB_input$map,
-    DLL = "staRVe_model",
+    DLL = "starve_TMB",
     silent = TRUE,
     ...
   )
@@ -357,8 +370,8 @@ setMethod(f = "staRVe_predict",
   values(predictions)$w_se<- se$pred_re
 
   s<- do.call(c,lapply(edges(dag),function(e) return(e$from[[1]])))
-  t<- .time_from_formula(formula(x),locations(predictions))[[1]]-min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
-  std_tg_t<- .time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),.time_name(x)))+1
+  t<- time_from_formula(formula(x),locations(predictions))-min(stars::st_get_dimension_values(pg_re(x),time_name(x)))+1
+  std_tg_t<- time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),time_name(x)))+1
   for( i in seq(nrow(locations(predictions))) ) {
     if( !intersects[[i]] ) {
       next;
@@ -377,39 +390,60 @@ setMethod(f = "staRVe_predict",
   return(predictions)
 }
 
-#' Update random effect predictions to include covariates (link scale)
+
+
+
+#' @rdname strv_predict
 #'
-#' @param x A staRVe_model object. If se = TRUE, should be a staRVe_model_fit object.
-#' @param predictions A long_stars object, typically the output of .predict_w.
-#'   Should contain covariate data in slot 'locations'
-#' @param se Should standard errors be calculated?
+#' @name predict_linear
 #'
-#' @return A long_stars object with predictions and standard errors for the linear term.
+#' @section Linear predictions:
+#' Predictions of response mean before applying the link function.
 #'
+#' The predicted value for the linear predictor is given by X*beta + w where
+#'   X is the covariate value for the prediction location, beta is the vector of
+#'   model regression coefficients, and w is the predicted random effect value
+#'   for the prediction location.
+#'
+#' The standard error for the prediction is given by sqrt(X*SE*X^T + w_se^2) where
+#'   SE is the parameter estimate covariance matrix for the regression coefficients
+#'   and w_se is the standard errors for the random effect prediction. Note that
+#'   these standard errors assume that the estimators for the regression coeffiecients
+#'   are independent from the random effects, which may not be true if the covariates
+#'   are spatially structured due to an effect called spatial confounding.
+NULL
+# #' Update random effect predictions to include covariates (link scale)
+# #'
+# #' @param x A starve object. If se = TRUE, should be a starve object.
+# #' @param predictions A long_stars object, typically the output of predict_w.
+# #'   Should contain covariate data in slot 'locations'
+# #' @param se Should standard errors be calculated?
+# #'
+# #' @return A long_stars object with predictions and standard errors for the linear term.
 #' @noRd
-.predict_linear<- function(x,
-                           predictions,
-                           se = TRUE) {
+predict_linear<- function(x,
+                          predictions,
+                          se = TRUE) {
   ### No intercept since it's already taken care of in predict_w
-  if( length(.names_from_formula(formula(x))) == 0 ) {
+  if( length(names_from_formula(formula(x))) == 0 ) {
     # If there are no covariates, there's nothing to do
     values(predictions)$linear<- values(predictions)$w
     if( se ) { values(predictions)$linear_se<- values(predictions)$w_se }
       else { values(predictions)$linear_se[]<- NA }
   } else {
     # Create design matrix from covariates
-    design<- as.matrix(.mean_design_from_formula(formula(x),
+    design<- as.matrix(mean_design_from_formula(formula(x),
                                                  locations(predictions)))
 
     # Create linear predictions
-    for( v in seq(.n_response(formula(x))) ) {
+    for( v in seq(n_response(formula(x))) ) {
       beta<- fixed_effects(x)[[v]][,"par"]
       names(beta)<- rownames(fixed_effects(x)[[v]])
       values(predictions)$linear[,v]<- design %*% beta + cbind(values(predictions)$w[,v])
     }
 
     if( se ) {
-      for( v in seq(.n_response(formula(x))) ) {
+      for( v in seq(n_response(formula(x))) ) {
         # Create parameter covariance estimate for fixed effects
         par_cov<- matrix(0,ncol=nrow(fixed_effects(x)[[v]]),nrow=nrow(fixed_effects(x)[[v]]))
         colnames(par_cov)<- rownames(par_cov)<- row.names(fixed_effects(x)[[v]])
@@ -437,35 +471,49 @@ setMethod(f = "staRVe_predict",
   return(predictions)
 }
 
-#' Update predictions on link scale to the response scale
+
+
+
+#' @rdname strv_predict
 #'
-#' A second-order Taylor approximation (delta method) is used
+#' @name predict_response
 #'
-#' @param x A staRVe_model object. If se = TRUE, should be a staRVe_model_fit object.
-#' @param predictions A data.frame, typically the output of .predict_linear.
-#'   Must contain at least the columns linear and linear_se.
-#' @param se Should standard errors be calculated?
+#' @section Response predictions:
+#' Predictions of response mean after applying the link function.
 #'
-#' @return A data.frame including the supplied linear_predictions and the predictions
-#'   on the response scale with standard errors
-#'
+#' The predicted value for the response mean is the linear predictor transformed
+#'   to the scale of data by applying the link function. The standard error for
+#'   the prediction is obtained via the delta method using a second-order Taylor
+#'   approximation.
+NULL
+# #' Update predictions on link scale to the response scale
+# #'
+# #' A second-order Taylor approximation (delta method) is used
+# #'
+# #' @param x A starve object. If se = TRUE, should be a fitted starve object.
+# #' @param predictions A data.frame, typically the output of predict_linear.
+# #'   Must contain at least the columns linear and linear_se.
+# #' @param se Should standard errors be calculated?
+# #'
+# #' @return A data.frame including the supplied linear_predictions and the predictions
+# #'   on the response scale with standard errors
 #' @noRd
-.predict_response<- function(x,
+predict_response<- function(x,
                              predictions,
                              se = TRUE) {
-  for( v in seq(.n_response(formula(x))) ) {
+  for( v in seq(n_response(formula(x))) ) {
     # Just need to specify which link function is used
     # Will get the function and gradient from TMB, evaluated at
     # linear and linear_se
     data<- list(
       model = "family",
-      link_code = .link_to_code(link_function(x)[[v]])
+      link_code = link_to_code(link_function(x)[[v]])
     )
     para<- list(x = 0)
     link_function<- TMB::MakeADFun(
       data = data,
       para = para,
-      DLL = "staRVe_model",
+      DLL = "starve_TMB",
       silent = TRUE
     )
 
