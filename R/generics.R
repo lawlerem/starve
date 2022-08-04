@@ -23,6 +23,15 @@ NULL
 
 # C
 
+#' Convert a model object into a form suitable for TMB input.
+#'
+#' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
+#'
+#' @noRd
+setGeneric(name = "convert_to_TMB_list",
+           def = function(x) standardGeneric("convert_to_TMB_list")
+)
+
 #' Create an index connecting locations to a graph
 #'
 #' @param x An object with locations
@@ -209,14 +218,6 @@ setGeneric(name = "strv_update",
 
 # T
 
-#' Convert a model object into a form suitable for TMB input.
-#'
-#' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
-#'
-#' @noRd
-setGeneric(name = "convert_to_TMB_list",
-           def = function(x) standardGeneric("convert_to_TMB_list")
-)
 
 
 
