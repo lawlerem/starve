@@ -8,13 +8,17 @@ setMethod(f = "show",
           signature = "dag",
           definition = function(object) {
   n_nodes<- length(edges(object))
-  avg_deg<- median(do.call(c,lapply(edges(object),function(x) length(x[[2]]))))
-  avg_dist<- mean(do.call(c,lapply(distances(object),c)))
   cat("\n")
-  print(paste0("A directed acyclic graph with ",n_nodes,
-               " nodes, with an median in-degree of ",avg_deg,"."))
-  print(paste0("The average edge distance is ",round(avg_dist,2),"",
-               distance_units(object),"."))
+  if( n_nodes > 0 ) {
+    avg_deg<- median(do.call(c,lapply(edges(object),function(x) length(x[[2]]))))
+    avg_dist<- mean(do.call(c,lapply(distances(object),c)))
+    print(paste0("A directed acyclic graph with ",n_nodes,
+                 " nodes, with an median in-degree of ",avg_deg,"."))
+    print(paste0("The average edge distance is ",round(avg_dist,2),"",
+                 distance_units(object),"."))
+  } else {
+    print(paste0("An empty directed acyclic graph."))
+  }
 
   return(invisible())
 })
@@ -96,18 +100,35 @@ setMethod(f = "show",
 setMethod(f = "show",
           signature = "starve",
           definition = function(object) {
+  cat("A starve model object\n\n")
+  cat("Model formula: ")
+  print(formula(object))
+
+  cat("Response distribution: ")
+  cat(response_distribution(object))
   cat("\n")
-  print(convergence(object))
+
+  cat("Link function: ")
+  cat(link_function(object))
   cat("\n")
-  print(parameters(object))
+
+  cat("Optimizer message: ")
+  cat(convergence(object))
+  cat("\n\n")
+
+
+  cat(paste("Data is a simple feature collection with",nrow(dat(object)),"features\n"))
+  cat("CRS: ")
+  cat(format(sf::st_crs(dat(object))))
   cat("\n")
-  # cat("Random Effects")
-  # cat("\n")
-  # print(random_effects(object))
-  # cat("\n")
-  cat("Data")
+  cat("Bounding times: ")
+  t<- time_from_formula(formula(object),dat(object))
+  cat(c(min(t),max(t)))
   cat("\n")
-  print(dat(object))
+  cat("Bounding box:\n")
+  print(sf::st_bbox(dat(object)))
+  cat("\n")
+
 
   return(invisible())
 })

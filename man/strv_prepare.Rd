@@ -10,7 +10,7 @@ strv_prepare(
   formula,
   data,
   nodes = data,
-  n_neighbours = 15,
+  n_neighbours = 10,
   persistent_graph = NA,
   transient_graph = NA,
   distribution = "gaussian",
@@ -35,7 +35,7 @@ variables needed to fit the model.}
 \item{nodes}{An `sf` object containing point geometries, defaulting to \code{data}.
 These locations will be used as the locations for the persistent graph.}
 
-\item{n_neighbours}{An integer (default=15) giving the (maximum) number of parents for each node.}
+\item{n_neighbours}{An integer (default=10) giving the (maximum) number of parents for each node.}
 
 \item{persistent_graph}{If an object of class \code{dag} is supplied, that
 graph is used for the persistent graph.}
@@ -62,8 +62,8 @@ the supplied \code{distance_units}.}
 from the \code{units} package. Which distance units should the model use?
 Defaults to "km".}
 
-\item{fit}{Logical. Should parameter estimates be found? If so, the starting
-values for the optimizer will use the default values.}
+\item{fit}{Logical (Default=FALSE). Should parameter estimates be found?
+If so, the starting values for the optimizer will use the default values.}
 
 \item{...}{Extra options to pass to \link{strv_fit} if fit=TRUE}
 
@@ -77,10 +77,10 @@ A starve object. If fit=TRUE, the returned model parameters will be
 }
 \description{
 'strv_prepare' is used to take an existing `simple features` data.frame
-   with point geometries, time information, covariates, and a response variable
-   and perform all of the pre-processing steps necessary to fit a model with the
-   \code{fit} function. See the description for \link{strv_prepare_process} and
-   \link{strv_prepare_observations} for more details on how each part is prepared.
+  with point geometries, time information, covariates, and a response variable
+  and perform all of the pre-processing steps necessary to fit a model with the
+  \code{fit} function. See the description for \link{strv_prepare_process} and
+  \link{strv_prepare_observations} for more details on how each part is prepared.
 }
 \details{
 The formula object should always be of the form
