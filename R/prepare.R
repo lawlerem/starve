@@ -74,19 +74,20 @@ NULL
 #' @seealso starve_class
 #'
 #' @export
-strv_prepare<- function(formula,
-                        data,
-                        nodes = data,
-                        n_neighbours = 10,
-                        persistent_graph = NA,
-                        transient_graph = NA,
-                        distribution = "gaussian",
-                        link = "default",
-                        silent = TRUE,
-                        max_dist = Inf,
-                        distance_units = "km",
-                        fit = FALSE,
-                        ...) {
+strv_prepare<- function(
+    formula,
+    data,
+    nodes = data,
+    n_neighbours = 10,
+    persistent_graph = NA,
+    transient_graph = NA,
+    distribution = "gaussian",
+    link = "default",
+    silent = TRUE,
+    max_dist = Inf,
+    distance_units = "km",
+    fit = FALSE,
+    ...) {
   model<- new("starve")
 
   # Set the settings in the model
@@ -134,10 +135,11 @@ strv_prepare<- function(formula,
 #'   Before creating the persistent graph any duplicate locations in nodes
 #'   are removed. Before creating the transient graph any location in data that
 #'   is present in nodes is removed.
-strv_prepare_process<- function(data,
-                                nodes,
-                                persistent_graph,
-                                settings ) {
+strv_prepare_process<- function(
+    data,
+    nodes,
+    persistent_graph,
+    settings) {
   process<- new("process")
 
   # Return a time column with name and type (ar1/rw/etc) attributes
@@ -262,11 +264,12 @@ strv_prepare_process<- function(data,
 #'   and fixed effect parameters for the model according to the options specified
 #'   in the formula element of the settings argument. Also adds a column "graph_idx"
 #'   to the supplied data.
-strv_prepare_observations<- function(data,
-                                     process,
-                                     settings,
-                                     distribution,
-                                     link) {
+strv_prepare_observations<- function(
+    data,
+    process,
+    settings,
+    distribution,
+    link) {
   observations<- new("observations")
 
   # data = "sf"

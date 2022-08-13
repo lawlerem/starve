@@ -6,9 +6,10 @@
 #'   in the \dots argument are passed to TMB::MakeADFun and TMB::sdreport.
 #'
 #' @export
-setMethod(f = "strv_fit",
-          signature = "starve",
-          definition = function(object,silent = FALSE,...) {
+setMethod(
+    f = "strv_fit",
+    signature = "starve",
+    definition = function(object, silent = FALSE, ...) {
   TMB_input<- convert_to_TMB_list(object)
 
   TMB_out<- new("TMB_out")
@@ -98,12 +99,10 @@ setMethod(f = "strv_fit",
 #' used in the simulations are those set in \code{parameters(model)}. Returns
 #' a \code{starve} object with simulated random effects (if \code{conditional=FALSE})
 #' and simulated data.
-setMethod(f = "strv_simulate",
-          signature = "starve",
-          def = function(object,
-                         conditional = FALSE,
-                         ...) {
-
+setMethod(
+    f = "strv_simulate",
+    signature = "starve",
+    def = function(object, conditional = FALSE, ...) {
   TMB_input<- convert_to_TMB_list(object)
   if( conditional ) {
     # If conditional, the random effects are not re-simulated
@@ -177,10 +176,10 @@ setMethod(f = "strv_simulate",
 #'   object containing a copy of \code{new_data} and the associated predictions
 #'   and standard errors for the random effects and response mean on both the
 #'   link and natural scale.
-setMethod(f = "strv_predict",
-          signature = c("starve","sf"),
-          definition = function(x,
-                                new_data) {
+setMethod(
+    f = "strv_predict",
+    signature = c("starve", "sf"),
+    definition = function(x, new_data) {
   ### Check that we have all covariates, if there are covariates in the model
   covar_names<- names_from_formula(formula(x))
 
@@ -221,9 +220,10 @@ setMethod(f = "strv_predict",
 #'   Returns a \code{stars} object whose first two dimensions are the raster
 #'   geometry of \code{new_data}, the third dimension is the time index given
 #'   in \code{time}, and the fourth dimension is the response variable.
-setMethod(f = "strv_predict",
-          signature = c("starve","RasterLayer"),
-          definition = function(x,new_data,covariates,time="model") {
+setMethod(
+    f = "strv_predict",
+    signature = c("starve", "RasterLayer"),
+    definition = function(x, new_data, covariates, time="model") {
   # Convert raster to sf
   uniq_prediction_points<- sf::st_as_sf(raster::rasterToPoints(new_data,spatial=TRUE))
   uniq_prediction_points<- uniq_prediction_points[,attr(uniq_prediction_points,"sf_column")]
@@ -319,10 +319,7 @@ NULL
 # #' @return An \code{sf} object with predictions for random effects (w) and
 # #'   their standard errors.
 #' @noRd
-predict_w<- function(x,
-                      predictions,
-                      dist_tol = 0.00001,
-                      ...) {
+predict_w<- function(x, predictions, dist_tol = 0.00001, ...) {
   # Add random effects for times not present in the original model,
   # only added to pass to TMB
   pred_times<- unique(locations(predictions)[,time_name(x),drop=TRUE])
@@ -421,9 +418,7 @@ NULL
 # #'
 # #' @return A long_stars object with predictions and standard errors for the linear term.
 #' @noRd
-predict_linear<- function(x,
-                          predictions,
-                          se = TRUE) {
+predict_linear<- function(x, predictions, se = TRUE) {
   ### No intercept since it's already taken care of in predict_w
   if( length(names_from_formula(formula(x))) == 0 ) {
     # If there are no covariates, there's nothing to do
@@ -498,9 +493,7 @@ NULL
 # #' @return A data.frame including the supplied linear_predictions and the predictions
 # #'   on the response scale with standard errors
 #' @noRd
-predict_response<- function(x,
-                             predictions,
-                             se = TRUE) {
+predict_response<- function(x, predictions, se = TRUE) {
   for( v in seq(n_response(formula(x))) ) {
     # Just need to specify which link function is used
     # Will get the function and gradient from TMB, evaluated at

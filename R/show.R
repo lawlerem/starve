@@ -4,9 +4,10 @@ NULL
 #' @param object An object
 #'
 #' @describeIn dag_class Print method
-setMethod(f = "show",
-          signature = "dag",
-          definition = function(object) {
+setMethod(
+    f = "show",
+    signature = "dag",
+    definition = function(object) {
   n_nodes<- length(edges(object))
   cat("\n")
   if( n_nodes > 0 ) {
@@ -20,7 +21,7 @@ setMethod(f = "show",
     print(paste0("An empty directed acyclic graph."))
   }
 
-  return(invisible())
+  return(invisible(object))
 })
 
 # setMethod(f = "show",
@@ -57,9 +58,10 @@ setMethod(f = "show",
 #'
 #' @export
 #' @describeIn tracing_class Print method
-setMethod(f = "show",
-          signature = "tracing",
-          definition = function(object) {
+setMethod(
+    f = "show",
+    signature = "tracing",
+    definition = function(object) {
   cat("\n")
   cat("Time elapsed while fitting the model:")
   cat("\n")
@@ -74,21 +76,22 @@ setMethod(f = "show",
   print(parameter_covariance(object))
   cat("\n")
 
-  return(invisible())
+  return(invisible(object))
 })
 
 #' @param object An object
 #'
 #' @export
 #' @describeIn TMB_out_class Print method
-setMethod(f = "show",
-          signature = "TMB_out",
-          definition = function(object) {
+setMethod(
+    f = "show",
+    signature = "TMB_out",
+    definition = function(object) {
   cat("\n")
   cat("An class containing TMB objects: obj, opt, and sdr.")
   cat("\n")
 
-  return(invisible())
+  return(invisible(object))
 })
 
 
@@ -97,9 +100,10 @@ setMethod(f = "show",
 #'
 #' @export
 #' @describeIn starve_class Print method
-setMethod(f = "show",
-          signature = "starve",
-          definition = function(object) {
+setMethod(
+    f = "show",
+    signature = "starve",
+    definition = function(object) {
   cat("A starve model object\n\n")
   cat("Model formula: ")
   print(formula(object))
@@ -130,7 +134,7 @@ setMethod(f = "show",
   cat("\n")
 
 
-  return(invisible())
+  return(invisible(object))
 })
 
 

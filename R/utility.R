@@ -19,7 +19,7 @@ NULL
 #' @return A copy of x with extra temporal and spatio-temporal random effects
 #'
 #' @noRd
-add_random_effects_by_time<- function(x,times) {
+add_random_effects_by_time<- function(x, times) {
   model_times<- stars::st_get_dimension_values(pg_re(x),time_name(x))
 
   ### Add extra spatio-temporal random effects
@@ -289,7 +289,7 @@ distribution_to_code<- function(distribution) {
 #'  `which` parameter.
 #'
 #' @export
-get_starve_distributions<- function(which = c("distribution","link","covariance")) {
+get_starve_distributions<- function(which = c("distribution", "link", "covariance")) {
   # All of these indices have to align with the C++ code
   if( "distribution" %in% which ) {
     # Check C++ in src/include/family.hpp
@@ -425,7 +425,7 @@ logical_to_map<- function(x) {
 #'   factors, interaction terms, etc. are expanded to their own variables.
 #'
 #' @noRd
-mean_design_from_formula<- function(x,data,return = "model.matrix") {
+mean_design_from_formula<- function(x, data, return = "model.matrix") {
   data<- as.data.frame(data)
   the_terms<- delete.response(terms(x,specials=c("time","space","sample.size")))
   if( length(attr(the_terms,"term.labels")) == 0 ) {
@@ -518,7 +518,7 @@ n_response<- function(x) return(length(response_names(x)))
 #'  or an integer vector of sorted indices (\code{return='order'}).
 #'
 #' @noRd
-order_by_location<- function(x,time=NULL,return="sort") {
+order_by_location<- function(x, time=NULL, return="sort") {
     # Get location coordinate in data.frame form (separate column for each coordinate)
     coords<- as.data.frame(sf::st_coordinates(x))
     # If time is supplied, add it as the first column
@@ -565,7 +565,7 @@ order_by_location<- function(x,time=NULL,return="sort") {
 #'  containing the name of the response variable.
 #'
 #' @noRd
-response_from_formula<- function(x,data) {
+response_from_formula<- function(x, data) {
   data<- data.frame(data)
   # Get out just the left-hand side of the formula
   the_terms<- terms(x,specials=c("time","space","sample.size"))
@@ -648,7 +648,7 @@ response_names<- function(x) {
 #' @return A data.frame with a single column for the sample size.
 #'
 #' @noRd
-sample_size_from_formula<- function(x,data,unique_vars=FALSE) {
+sample_size_from_formula<- function(x, data, unique_vars=FALSE) {
   data<- data.frame(data)
   # Get out just the "sample.size" term from the formula (as a character string)
   the_terms<- terms(x,specials=c("time","space","sample.size"))
@@ -722,7 +722,7 @@ sample_size_from_formula<- function(x,data,unique_vars=FALSE) {
 #' @return An \code{sf} data.frame.
 #'
 #' @noRd
-sf_from_raster_list<- function(x,time_name) {
+sf_from_raster_list<- function(x, time_name) {
     # sf_list will be a list of sf objects, each of which has a columns
     # for a single covariate, the time index, and the geometry
   sf_list<- lapply(x,function(raster_brick) {
@@ -795,7 +795,7 @@ sf_from_raster_list<- function(x,time_name) {
 #' @param var_column The name of the column in x giving the variable
 #'
 #' @noRd
-sf_to_stars<- function(x,time_column="time",var_column="variable") {
+sf_to_stars<- function(x, time_column="time", var_column="variable") {
   if( !(time_column %in% colnames(x)) ) {
     stop(paste(time_column,"not present in column names of x"))
   } else {}
@@ -844,7 +844,7 @@ sf_to_stars<- function(x,time_column="time",var_column="variable") {
 #'  type of time process (ar1, random walk, or independent).
 #'
 #' @noRd
-time_from_formula<- function(x,data,return="vector") {
+time_from_formula<- function(x, data, return="vector") {
   # Set up what the "time" term does in the formula
   time<- function(time_var,type="ar1") {
     if( length(time_var) != 1 ) {
@@ -900,9 +900,10 @@ time_from_formula<- function(x,data,return="vector") {
 #' Retrieve the name of the time variable from a formula
 #'
 #' @noRd
-setMethod(f = "time_name",
-          signature = "formula",
-          definition = function(x) {
+setMethod(
+    f = "time_name",
+    signature = "formula",
+    definition = function(x) {
   the_terms<- terms(x,specials=c("time","space","sample.size"))
   term.labels<- attr(the_terms,"term.labels")
   the_call<- grep("^time",term.labels,value=TRUE)

@@ -28,8 +28,9 @@ NULL
 #' @return A list with elements data, para, map, and rand to supply to TMB::MakeADFun
 #'
 #' @noRd
-setGeneric(name = "convert_to_TMB_list",
-           def = function(x) standardGeneric("convert_to_TMB_list")
+setGeneric(
+  name = "convert_to_TMB_list",
+  def = function(x) standardGeneric("convert_to_TMB_list")
 )
 
 #' Create an index connecting locations to a graph
@@ -42,8 +43,9 @@ setGeneric(name = "convert_to_TMB_list",
 #'   answer[i] of the graph of y.
 #'
 #' @noRd
-setGeneric(name = "create_graph_idx",
-           def = function(x,y,...) standardGeneric("create_graph_idx")
+setGeneric(
+  name = "create_graph_idx",
+  def = function(x, y, ...) standardGeneric("create_graph_idx")
 )
 
 
@@ -93,13 +95,15 @@ NULL
 
 # #' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
 #' @noRd
-setGeneric(name = "convert_idxC_to_R",
-           def = function(x) standardGeneric("convert_idxC_to_R")
+setGeneric(
+  name = "convert_idxC_to_R",
+  def = function(x) standardGeneric("convert_idxC_to_R")
 )
 # #' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
 #' @noRd
-setGeneric(name = "convert_idxR_to_C",
-           def = function(x) standardGeneric("convert_idxR_to_C")
+setGeneric(
+  name = "convert_idxR_to_C",
+  def = function(x) standardGeneric("convert_idxR_to_C")
 )
 
 
@@ -170,8 +174,9 @@ setGeneric(name = "convert_idxR_to_C",
 #' @return A fitted model object
 #'
 #' @export
-setGeneric(name = "strv_fit",
-           def = function(object,...) standardGeneric("strv_fit")
+setGeneric(
+  name = "strv_fit",
+  def = function(object, ...) standardGeneric("strv_fit")
 )
 
 
@@ -184,8 +189,9 @@ setGeneric(name = "strv_fit",
 #' @return Predictions for the new data
 #'
 #' @export
-setGeneric(name = "strv_predict",
-           def = function(x,new_data,...) standardGeneric("strv_predict")
+setGeneric(
+  name = "strv_predict",
+  def = function(x, new_data, ...) standardGeneric("strv_predict")
 )
 
 #' Simulate from a model object.
@@ -197,8 +203,9 @@ setGeneric(name = "strv_predict",
 #'   the original data
 #'
 #' @export
-setGeneric(name = "strv_simulate",
-           def = function(object,...) standardGeneric("strv_simulate")
+setGeneric(
+  name = "strv_simulate",
+  def = function(object, ...) standardGeneric("strv_simulate")
 )
 
 #' Update a model from a fitted object
@@ -209,8 +216,9 @@ setGeneric(name = "strv_simulate",
 #' @return An updated copy of x
 #'
 #' @noRd
-setGeneric(name = "strv_update",
-           def = function(x,y) standardGeneric("strv_update")
+setGeneric(
+  name = "strv_update",
+  def = function(x, y) standardGeneric("strv_update")
 )
 
 

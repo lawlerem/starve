@@ -13,19 +13,19 @@ NULL
 #'
 #' @noRd
 setMethod(
-  f = "initialize",
-  signature = "dag",
-  definition = function(.Object,
-                        edges = list(),
-                        distances = list(),
-                        distance_units = "km") {
-    edges(.Object)<- edges
-    distances(.Object)<- distances
-    distance_units(.Object)<- distance_units
+    f = "initialize",
+    signature = "dag",
+    definition = function(
+      .Object,
+      edges = list(),
+      distances = list(),
+      distance_units = "km") {
+  edges(.Object)<- edges
+  distances(.Object)<- distances
+  distance_units(.Object)<- distance_units
 
-    return(.Object)
-  }
-)
+  return(.Object)
+})
 
 
 ##################
@@ -38,18 +38,22 @@ setMethod(
 #'
 #' @export
 #' @describeIn dag_class Get edge list
-setMethod(f = "edges",
-          signature = "dag",
-          definition = function(x) return(x@edges)
-)
+setMethod(
+    f = "edges",
+    signature = "dag",
+    definition = function(x) {
+  return(x@edges)
+})
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
 # #' @describeIn dag_class Set edge list
 #' @noRd
-setReplaceMethod(f = "edges",
-                 signature = "dag",
-                 definition = function(x,value) {
+setReplaceMethod(
+    f = "edges",
+    signature = "dag",
+    definition = function(x, value) {
   x@edges<- value
   return(x)
 })
@@ -60,18 +64,21 @@ setReplaceMethod(f = "edges",
 #'
 #' @export
 #' @describeIn dag_class Get list of edge distances
-setMethod(f = "distances",
-          signature = "dag",
-          definition = function(x) return(x@distances)
-)
+setMethod(
+    f = "distances",
+    signature = "dag",
+    definition = function(x) {
+  return(x@distances)
+})
 # #' @param x An object
 # #' @param value A replacement value
 # #'
 # #' @describeIn dag_class Set list of edge distances
 #' @noRd
-setReplaceMethod(f = "distances",
-                 signature = "dag",
-                 definition = function(x,value) {
+setReplaceMethod(
+    f = "distances",
+    signature = "dag",
+    definition = function(x, value) {
   x@distances<- value
   return(x)
 })
@@ -82,18 +89,21 @@ setReplaceMethod(f = "distances",
 #'
 #' @export
 #' @describeIn dag_class Get distance units
-setMethod(f = "distance_units",
-          signature = "dag",
-          definition = function(x) return(x@distance_units)
-)
+setMethod(
+    f = "distance_units",
+    signature = "dag",
+    definition = function(x) {
+  return(x@distance_units)
+})
 #' @param x An object
 #' @param value A replacement value
 #' @export
 #' @describeIn dag_class Set distance units. Edge distances are automatically converted
 #'   to the new units.
-setReplaceMethod(f = "distance_units",
-                 signature = "dag",
-                 definition = function(x,value) {
+setReplaceMethod(
+    f = "distance_units",
+    signature = "dag",
+    definition = function(x, value) {
   if( length(distance_units(x)) > 0 ) {
     # Only convert units if units were previously set
     dists<- distances(x)
@@ -149,9 +159,10 @@ NULL
 #'
 #'   A vertex with index i in either the "to" or "from" vertices represents the location
 #'   in row i of the sorted copy of x.
-construct_persistent_graph<- function(x,
-                                           settings = new("settings"),
-                                           silent = TRUE) {
+construct_persistent_graph<- function(
+    x,
+    settings = new("settings"),
+    silent = TRUE) {
   dist_matrix<- as.matrix(units::set_units(sf::st_distance(x),
                                            distance_units(settings),
                                            mode="standard"))
@@ -184,11 +195,12 @@ construct_persistent_graph<- function(x,
 #'   subset of x in the same time index group. Note that the same value of i may be used
 #'   if there is more than one unique value in the time argument. A vertex with i in the
 #'   "from" vertices represents the location in row i of y.
-construct_transient_graph<- function(x,
-                                          y,
-                                          time = 0,
-                                          settings = new("settings"),
-                                          silent = TRUE) {
+construct_transient_graph<- function(
+    x,
+    y,
+    time = 0,
+    settings = new("settings"),
+    silent = TRUE) {
   if( nrow(x) == 0 ) {
     return(new("dag",distance_units=distance_units(settings)))
   } else {}
@@ -275,9 +287,10 @@ construct_transient_graph<- function(x,
 #'   vertices represents the j'th location of the persistent graph if j <= k where
 #'   k is the number of persistent graph locations, or represents the  (j-k)'th location
 #'   of the transient graph with the same time index as the "to" vertex.
-construct_prediction_graph<- function(pred,
-                                      model,
-                                      silent = TRUE) {
+construct_prediction_graph<- function(
+    pred,
+    model,
+    silent = TRUE) {
   settings<- settings(model)
   colnames(locations(pred))[colnames(locations(pred)) == attr(locations(pred),"sf_column")]<- attr(locations_from_stars(pg_re(model)),"sf_column")
   st_geometry(locations(pred))<- attr(locations_from_stars(pg_re(model)),"sf_column")
@@ -372,9 +385,10 @@ construct_prediction_graph<- function(pred,
 
 # #' @describeIn idx_exchange Add 1 to all vertices in the graph edge list
 #' @noRd
-setMethod(f = "convert_idxC_to_R",
-          signature = "dag",
-          definition = function(x) {
+setMethod(
+    f = "convert_idxC_to_R",
+    signature = "dag",
+    definition = function(x) {
   edges(x)<- lapply(edges(x),function(e) {
     e[["to"]]<- e[["to"]]+1
     e[["from"]]<- e[["from"]]+1
@@ -384,9 +398,10 @@ setMethod(f = "convert_idxC_to_R",
 })
 # #' @describeIn idx_exchange Subtract 1 from all vertices in the graph edge list
 #' @noRd
-setMethod(f = "convert_idxR_to_C",
-          signature = "dag",
-          definition = function(x) {
+setMethod(
+    f = "convert_idxR_to_C",
+    signature = "dag",
+    definition = function(x) {
   edges(x)<- lapply(edges(x),function(e) {
     e[["to"]]<- e[["to"]]-1
     e[["from"]]<- e[["from"]]-1
