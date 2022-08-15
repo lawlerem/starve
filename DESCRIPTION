@@ -1,17 +1,18 @@
 Package: starve
-Title: Spatio-Temporal Analysis of Research Vessel data
+Title: Spatio-Temporal Analysis of Research surVEy data
 Version: 0.17.0
 Authors@R:
     person(given = "Ethan",
            family = "Lawler",
            role = c("aut", "cre"),
            email = "lawlerem@dal.ca")
-Description: Fits hierarchical spatio-temporal generalized linear mixed models to
-    point-referenced data in discrete time. Models are fit using maximum likelihood
-    inference via the TMB (Template Model Builder) package. This package interfaces
-    with the sf (simple features) spatial data package for ease of use. In
-    addition to inference, models can be used to simulate data or predict at
-    unobserved locations and/or at unobserved times.
+Description: Fits hierarchical spatio-temporal generalized linear mixed models
+    to point-referenced data in discrete time. Models are fit using maximum
+    likelihood inference via the TMB (Template Model Builder) package. This
+    package interfaces with the sf (simple features), raster, and stars spatial
+    data packages for ease of use. In addition to inference, models can be used
+    to simulate data or predict at unobserved locations and/or at unobserved
+    times.
 License: GPL-3
 Encoding: UTF-8
 URL: https://github.com/lawlerem/starve
