@@ -1,3 +1,0 @@
-Install using devtools::install_github("lawlerem/staRVe",build_vignettes=F).
-
-To build the vignettes use build_vignettes=T.

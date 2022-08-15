@@ -1,10 +1,10 @@
-// Headers included in staRVe.cpp
+// Headers included in starve.cpp
 
 #undef TMB_OBJECTIVE_PTR
 #define TMB_OBJECTIVE_PTR obj
 
 template<class Type>
-Type family(objective_function<Type>* obj) {
+Type family_f(objective_function<Type>* obj) {
   DATA_INTEGER(link_code);
   PARAMETER(x);
 

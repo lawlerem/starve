@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // order_d_matrix
 Eigen::VectorXi order_d_matrix(Eigen::MatrixXd& d);
-RcppExport SEXP _staRVe_order_d_matrix(SEXP dSEXP) {
+RcppExport SEXP _starve_order_d_matrix(SEXP dSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -24,7 +24,7 @@ END_RCPP
 }
 // lowest_k
 Eigen::VectorXi lowest_k(const Eigen::VectorXd& d, const int k);
-RcppExport SEXP _staRVe_lowest_k(SEXP dSEXP, SEXP kSEXP) {
+RcppExport SEXP _starve_lowest_k(SEXP dSEXP, SEXP kSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -36,7 +36,7 @@ END_RCPP
 }
 // dist_to_dag
 SEXP dist_to_dag(const Eigen::Map<Eigen::MatrixXd>& d, const int n_neighbours);
-RcppExport SEXP _staRVe_dist_to_dag(SEXP dSEXP, SEXP n_neighboursSEXP) {
+RcppExport SEXP _starve_dist_to_dag(SEXP dSEXP, SEXP n_neighboursSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,13 +48,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_staRVe_order_d_matrix", (DL_FUNC) &_staRVe_order_d_matrix, 1},
-    {"_staRVe_lowest_k", (DL_FUNC) &_staRVe_lowest_k, 2},
-    {"_staRVe_dist_to_dag", (DL_FUNC) &_staRVe_dist_to_dag, 2},
+    {"_starve_order_d_matrix", (DL_FUNC) &_starve_order_d_matrix, 1},
+    {"_starve_lowest_k", (DL_FUNC) &_starve_lowest_k, 2},
+    {"_starve_dist_to_dag", (DL_FUNC) &_starve_dist_to_dag, 2},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_staRVe(DllInfo *dll) {
+RcppExport void R_init_starve(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

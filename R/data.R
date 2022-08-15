@@ -4,7 +4,7 @@
 #'   the North American Breeding Bird Survey, between the years 1967 and 2014.
 #'
 #' We obtained the data the "Spatio-Temporal Statistics with R" book by C. K.
-#'   Wikle et al, available at \url{spatetimewithr.org}. The original citation
+#'   Wikle et al, available at \url{spacetimewithr.org}. The original citation
 #'   for the dataset is given below.
 #'
 #' @format An sf object of point geometries containing 1,575 rows and 2 fields:
@@ -18,9 +18,18 @@
 #' Haddock survey data from the Scotian shelf
 #'
 #' A spatio-temporal dataset containing observations of haddock abundance
-#'   from a yearly scientific survey on the Scotian shelf from the years 1982 to 2017.
+#'   from a yearly scientific survey on the Scotian shelf from the years 1982 to
+#'   2017.
 #'
-#' The data were obtained from the Department of Fisheries and Oceans Canada.
+#' The data were obtained from the Department of Fisheries and Oceans Canada and
+#'   are more thoroughly described in the following paper.
+#'
+#' Jubinville, I. / Lawler, E. / Tattrie, S. / Shackell, N. L. / Mills Flemming,
+#'   J. / Worm, B. Distributions of Threatened Skates and Commercial Fisheries
+#'   Inform Conservation Hotspots 2021. Mar Ecol Prog Ser , Vol. 679, p. 1-18
+#'
+#' @source \url{https://doi.org/10.3354/meps13938}
+#'
 #'
 #' @format An sf object of point geometries containing 6,434 rows and 11 fields:
 #' \describe{

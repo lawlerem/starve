@@ -1,21 +1,22 @@
-Package: staRVe
-Title: Spatio-Temporal Analysis of Research Vessel data
-Version: 0.17.0
+Package: starve
+Title: Spatio-Temporal Analysis of Research surVEy data
+Version: 0.18.0
 Authors@R:
     person(given = "Ethan",
            family = "Lawler",
            role = c("aut", "cre"),
            email = "lawlerem@dal.ca")
-Description: Fits hierarchical spatio-temporal generalized linear mixed models to
-    point-referenced data in discrete time. Models are fit using maximum likelihood
-    inference via the TMB (Template Model Builder) package. This package interfaces
-    with the sf (simple features) spatial data package for ease of use. In
-    addition to inference, models can be used to simulate data or predict at
-    unobserved locations and/or at unobserved times.
+Description: Fits hierarchical spatio-temporal generalized linear mixed models
+    to point-referenced data in discrete time. Models are fit using maximum
+    likelihood inference via the TMB (Template Model Builder) package. This
+    package interfaces with the sf (simple features), raster, and stars spatial
+    data packages for ease of use. In addition to inference, models can be used
+    to simulate data or predict at unobserved locations and/or at unobserved
+    times.
 License: GPL-3
 Encoding: UTF-8
-URL: https://github.com/lawlerem/staRVe
-BugReports: https://github.com/lawlerem/staRVe/issues
+URL: https://github.com/lawlerem/starve
+BugReports: https://github.com/lawlerem/starve/issues
 LazyData: true
 ByteCompile: true
 Imports:
@@ -23,7 +24,6 @@ Imports:
     TMB (>= 1.7.16),
     nngeo (>= 0.3.0),
     units,
-    raster,
     Rcpp,
     stars,
     abind
@@ -31,17 +31,20 @@ LinkingTo:
     Rcpp,
     RcppEigen,
     TMB
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests:
     MASS,
     knitr,
+    raster,
     rmarkdown,
     igraph,
     testthat (>= 3.0.0),
+    condMVNorm,
+    mvtnorm
 VignetteBuilder: knitr
 Depends:
     sf,
-    R (>= 2.10)
+    R (>= 3.5.0)
 Collate:
     'RcppExports.R'
     'classes.R'
@@ -53,16 +56,16 @@ Collate:
     'data.R'
     'fit.R'
     'imports.R'
+    'long_stars.R'
+    'observation_parameters.R'
+    'process_parameters.R'
+    'process.R'
+    'observations.R'
+    'parameters.R'
+    'tracing.R'
+    'settings.R'
+    'starve.R'
+    'prepare.R'
     'show.R'
     'src.R'
-    'staRVe_settings.R'
-    'staRVe_observation_parameters.R'
-    'staRVe_process_parameters.R'
-    'staRVe_parameters.R'
-    'staRVe_predictions.R'
-    'staRVe_process.R'
-    'staRVe_observations.R'
-    'staRVe_model.R'
-    'staRVe_tracing.R'
-    'staRVe_fit.R'
 Config/testthat/edition: 3

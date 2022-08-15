@@ -1,3 +1,3 @@
-#' @useDynLib staRVe, .registration=TRUE
-#' @useDynLib staRVe_model
+#' @useDynLib starve, .registration=TRUE
+#' @useDynLib starve_TMB
 NULL

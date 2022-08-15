@@ -11,7 +11,7 @@ if(length(tmb_flags) == 0) tmb_flags <- ""
 ##                       to = "..", overwrite = TRUE))
 ## }
 
-tmb_name <- "staRVe_model"
+tmb_name <- "starve_TMB"
 if(file.exists(paste0(tmb_name, ".cpp"))) {
   TMB::compile(file = paste0(tmb_name, ".cpp"),
                PKG_CXXFLAGS = tmb_flags,
