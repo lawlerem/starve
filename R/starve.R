@@ -51,6 +51,7 @@ setMethod(
     definition = function(x) {
   return(x@process)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -76,6 +77,7 @@ setMethod(
     definition = function(x) {
   return(x@observations)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -101,6 +103,7 @@ setMethod(
     definition = function(x) {
   return(x@settings)
 })
+
 # #' @param x An object
 # #'
 # #' @describeIn starve_class Set model settings
@@ -125,6 +128,7 @@ setMethod(
     definition = function(x) {
   return(x@tracing)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -139,6 +143,7 @@ setReplaceMethod(
 })
 
 
+
 # #' @param x An object
 # #'
 # #' @describeIn starve_class Get TMB objects
@@ -149,6 +154,7 @@ setMethod(
     definition = function(x) {
   return(x@TMB_out)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -168,7 +174,6 @@ setReplaceMethod(
 ### Meta-Access ###
 ###################
 
-
 ### From process
 
 #' @param x An object
@@ -181,6 +186,7 @@ setMethod(
     definition = function(x) {
   return(time_effects(process(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -194,6 +200,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -204,6 +212,7 @@ setMethod(
     definition = function(x) {
   return(pg_re(process(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -217,6 +226,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -227,6 +238,7 @@ setMethod(
     definition = function(x) {
   return(tg_re(process(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -239,6 +251,8 @@ setReplaceMethod(
   tg_re(process(x))<- value
   return(x)
 })
+
+
 
 #' @param x An object
 #'
@@ -254,7 +268,6 @@ setMethod(
 
 
 
-
 #' @param x An object
 #'
 #' @describeIn starve_class Get persistent graph
@@ -265,6 +278,7 @@ setMethod(
     definition = function(x) {
   return(persistent_graph(process(x)))
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -279,6 +293,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @describeIn starve_class Get transient graph
@@ -289,6 +304,7 @@ setMethod(
     definition = function(x) {
   return(transient_graph(process(x)))
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -303,6 +319,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @export
@@ -311,8 +328,10 @@ setMethod(
     f = "graph",
     signature = "starve",
     definition = function(x) {
-  graph<- list(persistent_graph = persistent_graph(x),
-               transient_graph = transient_graph(x))
+  graph<- list(
+    persistent_graph = persistent_graph(x),
+    transient_graph = transient_graph(x)
+  )
   return(graph)
 })
 
@@ -330,6 +349,7 @@ setMethod(
     definition = function(x) {
   return(covariance_function(parameters(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -345,6 +365,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -355,6 +377,7 @@ setMethod(
     definition = function(x) {
   return(space_parameters(parameters(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -368,6 +391,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -378,6 +403,7 @@ setMethod(
     definition = function(x) {
   return(time_parameters(parameters(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -406,6 +432,7 @@ setMethod(
     definition = function(x) {
   return(dat(observations(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -422,6 +449,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @export
@@ -434,6 +462,7 @@ setMethod(
     definition = function(x) {
   return(data_predictions(observations(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -449,7 +478,6 @@ setReplaceMethod(
 
 
 
-
 ### From observation_parameters
 
 #' @param x An object
@@ -462,6 +490,7 @@ setMethod(
     definition = function(x) {
   return(response_distribution(parameters(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -478,6 +507,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -488,6 +519,7 @@ setMethod(
     definition = function(x) {
   return(response_parameters(parameters(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -501,6 +533,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -511,6 +545,7 @@ setMethod(
     definition = function(x) {
   return(link_function(parameters(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -525,6 +560,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -535,6 +572,7 @@ setMethod(
     definition = function(x) {
   return(fixed_effects(parameters(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -549,6 +587,7 @@ setReplaceMethod(
 })
 
 
+
 ### From settings
 
 #' @param x An object
@@ -561,6 +600,7 @@ setMethod(
     definition = function(x) {
   return(distance_units(settings(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -570,20 +610,23 @@ setReplaceMethod(
     f = "distance_units",
     signature = "starve",
     definition = function(x, value) {
-  ranges<- lapply(space_parameters(x),function(sp) {
-    units::set_units(sp["range","par"],
-                     distance_units(x),
-                     mode="standard")
+  ranges<- lapply(space_parameters(x), function(sp) {
+    units::set_units(
+      sp["range", "par"],
+      distance_units(x),
+      mode = "standard"
+    )
   })
   distance_units(settings(x))<- value
   distance_units(persistent_graph(process(x)))<- value
-  distance_units(transient_graph(observations(x)))<- value
-  ranges<- lapply(ranges,units::set_units,value,mode="standard")
+  distance_units(transient_graph(process(x)))<- value
+  ranges<- lapply(ranges, units::set_units, value, mode = "standard")
   for( i in seq_along(ranges) ) {
-    space_parameters(x)[[i]]["range","par"]<- units::drop_units(ranges[[i]])
+    space_parameters(x)[[i]]["range", "par"]<- units::drop_units(ranges[[i]])
   }
   return(x)
 })
+
 
 
 #' @param x An object
@@ -596,6 +639,7 @@ setMethod(
     definition = function(x) {
   return(formula(settings(x)))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -605,18 +649,23 @@ setReplaceMethod(
     f = "formula",
     signature = "starve",
     definition = function(x, value) {
-  if( !all(all.vars(value) %in% colnames(dat(x))) ) {
-    stop("Not changing formula. Some variables present in new formula which are not available in dat(x)")
+  var_name_check<- all.vars(value) %in% colnames(dat(x))
+  if( !all(var_name_check) ) {
+    stop(
+      "Not changing formula. Some variables present in new formula which are not available in dat(x)"
+    )
   } else {}
   formula(settings(x))<- value
 
-  design<- mean_design_from_formula(value,dat(x))
-  fe<- lapply(fixed_effects(x),function(v) {
-    data.frame(
-      par = numeric(ncol(design)),
-      se = rep(NA,ncol(design)),
-      fixed = rep(FALSE,ncol(design)),
-      row.names = colnames(design)
+  design<- mean_design_from_formula(value, dat(x))
+  fe<- lapply(fixed_effects(x), function(v) {
+    return(
+      data.frame(
+        par = numeric(ncol(design)),
+        se = rep(NA, ncol(design)),
+        fixed = rep(FALSE, ncol(design)),
+        row.names = colnames(design)
+      )
     )
   })
   try(names(fe)<- names(fixed_effects(x)))
@@ -624,6 +673,7 @@ setReplaceMethod(
 
   return(x)
 })
+
 
 
 # #' @param x An object
@@ -639,6 +689,7 @@ setMethod(
 })
 
 
+
 ### Extras
 
 #' @param x An object
@@ -649,11 +700,14 @@ setMethod(
     f = "parameters",
     signature = "starve",
     definition = function(x) {
-  parameters<- new("parameters",
-                   process_parameters = parameters(process(x)),
-                   observation_parameters = parameters(observations(x)))
+  parameters<- new(
+    "parameters",
+    process_parameters = parameters(process(x)),
+    observation_parameters = parameters(observations(x))
+  )
   return(parameters)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -664,8 +718,8 @@ setReplaceMethod(
     f = "parameters",
     signature = c("starve", "parameters"),
     definition = function(x, value) {
-  parameters(process(x))<- as(value,"process_parameters")
-  parameters(observations(x))<- as(value,"observation_parameters")
+  parameters(process(x))<- as(value, "process_parameters")
+  parameters(observations(x))<- as(value, "observation_parameters")
   return(x)
 })
 
@@ -682,6 +736,8 @@ setMethod(
   return(convergence(TMB_out(x)))
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -695,58 +751,85 @@ setMethod(
 
 
 
-
 ###############
 ###         ###
 ### Utility ###
 ###         ###
 ###############
 
-# #' @describeIn convert_to_TMB_list Convert a starve object to a list for \code{TMB::MakeADFun}
+# #' @describeIn convert_to_TMB_list Convert a starve object to a list for
+# #'   \code{TMB::MakeADFun}
 #' @noRd
 setMethod(
     f = "convert_to_TMB_list",
     signature = "starve",
     definition = function(x) {
-  min_t<- min(stars::st_get_dimension_values(pg_re(x),time_name(x)))
+  min_t<- min(
+    stars::st_get_dimension_values(
+      pg_re(x),
+      time_name(x)
+    )
+  )
 
   data<- list(
     model = "model",
     conditional_sim = FALSE,
     pg_edges = edges(convert_idxR_to_C(persistent_graph(x))),
     pg_dists = distances(persistent_graph(x)),
-    tg_t = c(time_from_formula(formula(settings(x)),locations(tg_re(x))))-min_t,
+    tg_t = c( # Remove attributes
+      time_from_formula(formula(x), locations(tg_re(x))) - min_t
+    ),
     tg_edges = edges(convert_idxR_to_C(transient_graph(x))),
     tg_dists = distances(transient_graph(x)),
     cv_code = covariance_to_code(covariance_function(x)),
     distribution_code = distribution_to_code(response_distribution(x)),
     link_code = link_to_code(link_function(x)),
-    obs = as.matrix(response_from_formula(formula(x),dat(x))),
+    obs = as.matrix(response_from_formula(formula(x), dat(x))),
     idx = cbind(
-      dat(x)$graph_idx-1,
-      c(time_from_formula(formula(x),dat(x)))-min_t
+      dat(x)$graph_idx - 1,
+      c(
+        time_from_formula(formula(x), dat(x)) - min_t
+      )
     ),
-    sample_size = as.matrix(sample_size_from_formula(formula(x),dat(x),unique_vars=FALSE)),
-    mean_design = as.matrix(mean_design_from_formula(formula(x),dat(x),"model.matrix")),
-    pred_edges = vector(mode="list",length=0),
-    pred_dists = vector(mode="list",length=0),
+    sample_size = as.matrix(
+      sample_size_from_formula(
+        formula(x),
+        dat(x),
+        unique_vars = FALSE
+      )
+    ),
+    mean_design = as.matrix(
+      mean_design_from_formula(
+        formula(x),
+        dat(x),
+        "model.matrix"
+      )
+    ),
+    pred_edges = vector(mode = "list", length = 0),
+    pred_dists = vector(mode= "list", length = 0),
     pred_t = integer(0)
   )
+
+  response_seq<- seq(n_response(formula(x)))
+  bounds_check<- function(x, min, max) {
+    par<- x[, "par"]
+    fixed<- x[, "fixed"]
+    return( (min < par && par < max) || fixed )
+  }
   para<- list(
     ts_re = time_effects(x)[["w"]],
-    working_ts_pars = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
-        c(time_parameters(x)[[v]]["mu","par"],
-          ifelse( # -1 <= ar1 <= +1
-              (time_parameters(x)[[v]]["ar1","par"] >= -1
-                && time_parameters(x)[[v]]["ar1","par"] <= 1) ||
-              time_parameters(x)[[v]]["ar1","fixed"] == TRUE,
-            qlogis(0.5*(1+time_parameters(x)[[v]]["ar1","par"])),
-            qlogis(0.5*(1+0))
+    working_ts_pars = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        c(
+          time_parameters(x)[[v]]["mu", "par"],
+          ifelse( # -1 < ar1 < +1
+            bounds_check(time_parameters(x)[[v]]["ar1", ], -1, 1),
+            qlogis(0.5 * (1 + time_parameters(x)[[v]]["ar1", "par"])),
+            qlogis(0.5 * (1 + 0))
           ),
           ifelse( # sd > 0
-              time_parameters(x)[[v]]["sd","par"] > 0 ||
-              time_parameters(x)[[v]]["sd","fixed"] == TRUE,
+            bounds_check(time_parameters(x)[[v]]["sd", ], 0, Inf),
             log(time_parameters(x)[[v]]["sd","par"]),
             log(1)
           )
@@ -754,126 +837,131 @@ setMethod(
       })
     ),
     pg_re = pg_re(x)[["w"]],
-    tg_re = (if(nrow(locations(tg_re(x))) == 0) {
-        array(0,dim=c(0,n_response(formula(x))))
+    tg_re = (if( nrow(locations(tg_re(x))) == 0 ) {
+        array(0, dim = c(0, n_response(formula(x))))
       } else {
         values(tg_re(x))[["w"]]
       }),
-    working_cv_pars = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
+    working_cv_pars = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        par_df<- space_parameters(x)[[v]]
         switch(covariance_function(x)[[v]],
-          c(# Default -- all Matern-type covariance functions (exponential, gaussian, etc)
+          c( # Default:  Matern-type covariance functions
             ifelse( # std. dev. > 0
-                space_parameters(x)[[v]]["sd","par"] > 0 ||
-                space_parameters(x)[[v]]["sd","fixed"] == TRUE,
-              log(space_parameters(x)[[v]]["sd","par"]),
+              bounds_check(par_df["sd", ], 0, Inf),
+              log(par_df["sd", "par"]),
               log(1)
             ),
             ifelse( # rho > 0
-              space_parameters(x)[[v]]["range","par"] > 0 ||
-              space_parameters(x)[[v]]["range","fixed"] == TRUE,
-              log(space_parameters(x)[[v]]["range","par"]),
-              log(100*mean(do.call(c,distances(graph(x)$persistent_graph))))
+              bounds_check(par_df["range", ], 0, Inf),
+              log(par_df["range", "par"]),
+              log(10 * mean(
+                do.call(
+                  c,
+                  distances(graph(x)$persistent_graph)
+                )
+              ))
             ),
             ifelse( # nu > 0
-                space_parameters(x)[[v]]["nu","par"] > 0 ||
-                space_parameters(x)[[v]]["nu","fixed"] == TRUE,
-              log(space_parameters(x)[[v]]["nu","par"]),
+              bounds_check(par_df["nu", ], 0, Inf),
+              log(par_df["nu", "par"]),
               log(0.5)
             )
           )
-        )}
-      )
+        )
+      })
     ),
-    working_response_pars = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
+    working_response_pars = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        par_df<- response_parameters(x)[[v]]
         switch(response_distribution(x)[[v]],
           gaussian = ifelse( # Normal; std. dev. > 0
-                response_parameters(x)[[v]]["sd","par"] > 0 ||
-                response_parameters(x)[[v]]["sd","fixed"] == TRUE,
-              log(response_parameters(x)[[v]]["sd","par"]),
-              log(1)
-            ),
+            bounds_check(par_df["sd", ], 0, Inf),
+            log(par_df["sd", "par"]),
+            log(1)
+          ),
           poisson = numeric(0), # Poisson; NA
           `negative binomial` = ifelse( # Neg. Binom.; overdispersion >= 1
-                response_parameters(x)[[v]]["overdispersion","par"] >= 1 ||
-                response_parameters(x)[[v]]["overdispersion","fixed"] == TRUE,
-              log(response_parameters(x)[[v]]["overdispersion","par"]-1),
-              log(1)
-            ),
+            bounds_check(par_df["overdispersion", ], 1, Inf),
+            log(par_df["overdispersion", "par"] - 1),
+            log(1)
+          ),
           bernoulli = numeric(0), # Bernoulli; NA
           gamma = ifelse( # Gamma; std. dev. > 0
-                response_parameters(x)[[v]]["sd","par"] > 0 ||
-                response_parameters(x)[[v]]["sd","fixed"] == TRUE,
-              log(response_parameters(x)[[v]]["sd","par"]),
-              log(1)
-            ), # Gamma; std. dev.
+            bounds_check(par_df["sd", ], 0, Inf),
+            log(par_df["sd", "par"]),
+            log(1)
+          ),
           lognormal = ifelse( # Log-Normal; std. dev. > 0
-                response_parameters(x)[[v]]["sd","par"] > 0 ||
-                response_parameters(x)[[v]]["sd","fixed"] == TRUE,
-              log(response_parameters(x)[[v]]["sd","par"]),
-              log(1)
-            ), # Log-normal; std. dev.
+            bounds_check(par_df["sd", ], 0, Inf),
+            log(par_df["sd", "par"]),
+            log(1)
+          ),
           binomial = numeric(0), # Binomial; NA
           atLeastOneBinomial = numeric(0), # atLeastOneBinomial; NA
           compois = ifelse( # Conway-Maxwell-Poisson; dispersion > 0
-                response_parameters(x)[[v]]["dispersion","par"] > 0 ||
-                response_parameters(x)[[v]]["dispersion","fixed"] == TRUE,
-              log(response_parameters(x)[[v]]["dispersion","par"]),
-              log(1)
-            ),
+            bounds_check(par_df["dispersion", ], 0, Inf),
+            log(par_df["dispersion", "par"]),
+            log(1)
+          ),
           tweedie = c( # tweedie
             ifelse( # dispersion>0
-              response_parameters(x)[[v]]["dispersion","par"] > 0 ||
-              response_parameters(x)[[v]]["dispersion","fixed"] == TRUE,
-              log(response_parameters(x)[[v]]["dispersion","par"]),
+              bounds_check(par_df["dispersion", ], 0, Inf),
+              log(par_df["dispersion", "par"]),
               log(1)
             ),
             ifelse( # 1<power<2
-              (0 < response_parameters(x)[[v]]["power","par"] &&
-               response_parameters(x)[[v]]["power","par"] < 1) ||
-              response_parameters(x)[[v]]["power","par"] == TRUE,
-              qlogis(response_parameters(x)[[v]]["power","par"]-1),
-              qlogis(1.5-1)
+              bounds_check(par_df["power", ], 1, 2),
+              qlogis(par_df["power", "par"] - 1),
+              qlogis(1.5 - 1)
             )
           )
         )}
       )
     ),
-    beta = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
-        fixed_effects(x)[[v]][colnames(data$mean_design),"par"]
+    beta = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        fixed_effects(x)[[v]][colnames(data$mean_design), "par"]
       })
     ),
-    pred_re = array(0,dim=c(0,n_response(formula(x))))
+    pred_re = array(0, dim = c(0, n_response(formula(x))))
   )
-  rand<- c("ts_re","pg_re","tg_re","pred_re")
+  rand<- c(
+    "ts_re",
+    "pg_re",
+    "tg_re",
+    "pred_re"
+  )
   map<- list(
-    working_ts_pars = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
-        time_parameters(x)[[v]][,"fixed"]
+    working_ts_pars = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        time_parameters(x)[[v]][, "fixed"]
       })
     ),
-    working_cv_pars = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
-        space_parameters(x)[[v]][,"fixed"]
+    working_cv_pars = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        space_parameters(x)[[v]][, "fixed"]
       })
     ),
-    working_response_pars = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
-        switch((nrow(response_parameters(x)[[v]]) > 0)+1,
-          logical(0),
-          response_parameters(x)[[v]][,"fixed"]
-        )
+    working_response_pars = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        return(response_parameters(x)[[v]][, "fixed"])
       })
     ),
-    beta = do.call(cbind_no_recycle,
-      lapply(seq(n_response(formula(x))),function(v) {
-        fixed_effects(x)[[v]][colnames(data$mean_design),"fixed"]
+    beta = do.call(
+      cbind_no_recycle,
+      lapply(response_seq, function(v) {
+        fixed_effects(x)[[v]][colnames(data$mean_design), "fixed"]
       })
     )
   )
-  map<- lapply(map,logical_to_map)
+  map<- lapply(map, logical_to_map)
 
   return(list(
     data = data,
@@ -891,22 +979,27 @@ setMethod(
     f = "strv_update",
     signature = c("starve", "TMB_out"),
     definition = function(x, y) {
-  sdr_est<- c(as.list(sdr(y),"Estimate",report=TRUE),
-              as.list(sdr(y),"Estimate",report=FALSE))
-  sdr_se<- c(as.list(sdr(y),"Std. Error",report=TRUE),
-             as.list(sdr(y),"Std. Error",report=FALSE))
-  par_names<- character(0)
+  sdr_est<- c(
+    as.list(sdr(y), "Estimate", report = TRUE),
+    as.list(sdr(y), "Estimate", report = FALSE)
+  )
+  sdr_se<- c(
+    as.list(sdr(y), "Std. Error", report = TRUE),
+    as.list(sdr(y), "Std. Error", report = FALSE)
+  )
+
+  response_seq<- seq(n_response(formula(x)))
 
   # Spatial parameters
-  for( i in seq(n_response(formula(x))) ) {
-    space_parameters(x)[[i]]$par<- sdr_est$cv_pars[,i]
-    space_parameters(x)[[i]]$se<- sdr_se$cv_pars[,i]
+  for( i in response_seq ) {
+    space_parameters(x)[[i]]$par<- sdr_est$cv_pars[, i]
+    space_parameters(x)[[i]]$se<- sdr_se$cv_pars[, i]
   }
 
   # Time parameters
-  for( i in seq(n_response(formula(x))) ) {
-    time_parameters(x)[[i]]$par<- sdr_est$ts_pars[,i]
-    time_parameters(x)[[i]]$se<- sdr_se$ts_pars[,i]
+  for( i in response_seq ) {
+    time_parameters(x)[[i]]$par<- sdr_est$ts_pars[, i]
+    time_parameters(x)[[i]]$se<- sdr_se$ts_pars[, i]
   }
 
   # Temporal random effects
@@ -924,31 +1017,35 @@ setMethod(
   } else {}
 
   # Fixed effects
-  for( i in seq(n_response(formula(x))) ) {
-    fixed_effects(x)[[i]]$par<- sdr_est$beta[,i]
-    fixed_effects(x)[[i]]$se<- sdr_se$beta[,i]
+  for( i in response_seq ) {
+    fixed_effects(x)[[i]]$par<- sdr_est$beta[, i]
+    fixed_effects(x)[[i]]$se<- sdr_se$beta[, i]
   }
 
   # Response distribution parameters
-  for( i in seq(n_response(formula(x))) ) {
+  for( i in response_seq ) {
     # Need seq(nrow(respone_parameters... to get rid of trailing NAs
     if( nrow(response_parameters(x)[[i]]) > 0 ) {
-      response_parameters(x)[[i]]$par<- sdr_est$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
-      response_parameters(x)[[i]]$se<- sdr_se$response_pars[seq(nrow(response_parameters(x)[[i]])),i]
+      rows<- seq(nrow(response_parameters(x)[[i]]))
+      response_parameters(x)[[i]]$par<- sdr_est$response_pars[rows,i]
+      response_parameters(x)[[i]]$se<- sdr_se$response_pars[rows,i]
     } else {}
   }
 
   # Update the random effects for the observations
   s<- dat(x)$graph_idx
-  t<- time_from_formula(formula(x),dat(x))-min(stars::st_get_dimension_values(pg_re(x),time_name(x)))+1
-  std_tg_t<- time_from_formula(formula(x),locations(tg_re(x))) - min(stars::st_get_dimension_values(pg_re(x),time_name(x)))+1
+  min_t<- min(stars::st_get_dimension_values(pg_re(x), time_name(x)))
+  t<- time_from_formula(formula(x), dat(x)) - min_t + 1
+  std_tg_t<- time_from_formula(formula(x),locations(tg_re(x))) - min_t + 1
   for( i in seq(nrow(dat(x))) ) {
     if( s[[i]] <= dim(pg_re(x))[[1]] ) {
-      values(data_predictions(x))$w[i,]<- pg_re(x)$w[s[[i]],t[[i]],]
-      values(data_predictions(x))$w_se[i,]<- pg_re(x)$se[s[[i]],t[[i]],]
+      values(data_predictions(x))$w[i, ]<- pg_re(x)$w[s[[i]], t[[i]], ]
+      values(data_predictions(x))$w_se[i, ]<- pg_re(x)$se[s[[i]], t[[i]], ]
     } else {
-      values(data_predictions(x))$w[i,]<- values(tg_re(x))$w[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
-      values(data_predictions(x))$w_se[i,]<- values(tg_re(x))$se[std_tg_t == t[[i]],,drop=FALSE][s[[i]]-dim(pg_re(x))[[1]],]
+      this_t_tg<- which(std_tg_t == t[[i]])
+      row<- this_t_tg[s[[i]] - dim(pg_re(x))[[1]]]
+      values(data_predictions(x))$w[i,]<- values(tg_re(x))$w[row, ]
+      values(data_predictions(x))$w_se[i,]<- values(tg_re(x))$se[row, ]
     }
   }
 

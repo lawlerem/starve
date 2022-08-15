@@ -23,18 +23,18 @@ strv_predict(x, new_data, ...)
 \item{...}{Extra options}
 
 \item{covariates}{A list of \code{Raster*} objects for raster predictions.
- If the model has no covariates, then nothing needs to be supplied.
+  If the model has no covariates, then nothing needs to be supplied.
 
- If \code{new_data} is of class \code{RasterLayer}, then \code{covariates}
- should be a list of \code{Raster*} objects. Each \code{Raster*} object should
- contain data for one covariate, should have one layer for each time unit,
- and should have the same raster geometry as the \code{new_data} object. The
- layer names of each raster layer should be of the form \code{T####}, where
- \code{####} gives the specific time index. The geometry of all the
- \code{Raster*} objects should be identical.}
+  If \code{new_data} is of class \code{RasterLayer}, then \code{covariates}
+  should be a list of \code{Raster*} objects. Each \code{Raster*} object
+  shouldcontain data for one covariate, should have one layer for each time
+  unit, and should have the same raster geometry as the \code{new_data}
+  object. The layer names of each raster layer should be of the form
+  \code{T####}, where \code{####} gives the specific time index. The geometry
+  of all the \code{Raster*} objects should be identical.}
 
 \item{time}{Integer vector. At what time indices should predictions be made?
- For the default value "model", predictions are made for every time present
+For the default value "model", predictions are made for every time present
 in the model data.}
 }
 \value{
@@ -47,19 +47,19 @@ Use a fitted model to predict.
 \itemize{
 \item \code{x = starve,new_data = sf}: Predict/forecast at the specific locations and
 times given in \code{new_data}. Any covariates used to fit the model
-should be included in the rows of \code{new_data}. Returns a \code{long_stars}
-object containing a copy of \code{new_data} and the associated predictions
-and standard errors for the random effects and response mean on both the
-link and natural scale.
+should be included in the rows of \code{new_data}. Returns a
+\code{long_stars} object containing a copy of \code{new_data} and the
+associated predictions and standard errors for the random effects and
+response mean on both the link and natural scale.
 
 \item \code{x = starve,new_data = RasterLayer}: Predictions will be made for all raster cells
 whose value are not NA. If the raster has no values, then predictions will
 be made at every raster cell. Raster predictions are not treated as areal
-data, instead point predictions are made at the midpoint of each raster cell.
-The value of the midpoint prediction is taken as the prediction for that cell.
-Returns a \code{stars} object whose first two dimensions are the raster
-geometry of \code{new_data}, the third dimension is the time index given
-in \code{time}, and the fourth dimension is the response variable.
+data, instead point predictions are made at the midpoint of each raster
+cell. The value of the midpoint prediction is taken as the prediction for
+that cell. Returns a \code{stars} object whose first two dimensions are the
+raster geometry of \code{new_data}, the third dimension is the time index
+given in \code{time}, and the fourth dimension is the response variable.
 }}
 
 \section{Random effect predictions}{
@@ -69,16 +69,17 @@ Predictions of spatio-temporal random effects.
 If there are prediction times that are outside the range of times of the
   model, then persistent graph random effects are added to the model to cover
   these additional times. Then a prediction graph is created which describes
-  which random effect locations (including both persistent graph and transient
-  graph locations) are used as nearest neighbours when finding the predictive
-  distribution for the spatio-temporal random effect at each prediction location.
+  which random effect locations (including both persistent graph and
+  transient graph locations) are used as nearest neighbours when finding
+  the predictive distribution for the spatio-temporal random effect at each
+  prediction location.
 
 We then add the predictive distributions for the prediction random effects
   to the model likelihood function. The predicted values and standard errors
-  for the random effect are found by optimizing the augmented likelihood function
-  evaluated at the model parameter values. Note that the standard errors for
-  the predicted random effects take into account uncertainty in the model
-  parameter estimates.
+  for the random effect are found by optimizing the augmented likelihood
+  function evaluated at the model parameter values. Note that the standard
+  errors for the predicted random effects take into account uncertainty in
+  the model parameter estimates.
 }
 
 \section{Linear predictions}{
@@ -90,12 +91,13 @@ The predicted value for the linear predictor is given by X*beta + w where
   model regression coefficients, and w is the predicted random effect value
   for the prediction location.
 
-The standard error for the prediction is given by sqrt(X*SE*X^T + w_se^2) where
-  SE is the parameter estimate covariance matrix for the regression coefficients
-  and w_se is the standard errors for the random effect prediction. Note that
-  these standard errors assume that the estimators for the regression coeffiecients
-  are independent from the random effects, which may not be true if the covariates
-  are spatially structured due to an effect called spatial confounding.
+The standard error for the prediction is given by sqrt(X*SE*X^T + w_se^2)
+  where SE is the parameter estimate covariance matrix for the regression
+  coefficients and w_se is the standard errors for the random effect
+  prediction. Note that these standard errors assume that the estimators for
+  the regression coeffiecients are independent from the random effects, which
+  may not be true if the covariates are spatially structured due to an effect
+  called spatial confounding.
 }
 
 \section{Response predictions}{

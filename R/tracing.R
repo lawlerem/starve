@@ -51,6 +51,7 @@ setMethod(
     definition = function(x) {
   return(x@opt_time)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -76,6 +77,7 @@ setMethod(
     definition = function(x) {
   return(x@hess_time)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -90,6 +92,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @export
@@ -100,6 +103,7 @@ setMethod(
     definition = function(x) {
   return(x@sdr_time)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -114,6 +118,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @export
@@ -124,6 +129,7 @@ setMethod(
     definition = function(x) {
   return(x@parameter_hessian)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -138,6 +144,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @export
@@ -148,6 +155,7 @@ setMethod(
     definition = function(x) {
   return(x@parameter_covariance)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -176,8 +184,10 @@ setMethod(
     f = "timing",
     signature = "tracing",
     definition = function(x) {
-  timings<- list(fit = opt_time(x),
-                 hessian = hess_time(x),
-                 sdr = sdr_time(x))
+  timings<- list(
+    fit = opt_time(x),
+    hessian = hess_time(x),
+    sdr = sdr_time(x)
+  )
   return(timings)
 })

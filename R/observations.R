@@ -33,7 +33,6 @@ setMethod(
 ###        ###
 ##############
 
-
 #' @param x An object
 #'
 #' @export
@@ -45,6 +44,7 @@ setMethod(
     definition = function(x) {
   return(locations(x@data_predictions))
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -61,6 +61,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @export
@@ -72,6 +73,7 @@ setMethod(
     definition = function(x) {
   return(x@data_predictions)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -87,7 +89,6 @@ setReplaceMethod(
 
 
 
-
 #' @param x An object
 #'
 #' @export
@@ -99,13 +100,14 @@ setMethod(
     definition = function(x) {
   return(x@parameters)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
 #' @describeIn observations_class Set parameters using a new
 #'   observation_parameters object. Not the recommended way to
-#'   modify specific parmaeter values, instead see the package vignette
+#'   modify specific parameter values, instead see vignette("starve-tour").
 setReplaceMethod(
     f = "parameters",
     signature = "observations",

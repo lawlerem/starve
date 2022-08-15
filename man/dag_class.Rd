@@ -38,8 +38,8 @@ An S4 class to hold a directed acyclic graph with distances.
 
 \item \code{distance_units,dag-method}: Get distance units
 
-\item \code{distance_units<-,dag-method}: Set distance units. Edge distances are automatically converted
-to the new units.
+\item \code{distance_units<-,dag-method}: Set distance units. Edge distances are automatically
+converted to the new units.
 
 \item \code{show,dag-method}: Print method
 }}

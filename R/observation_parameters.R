@@ -59,66 +59,96 @@ setReplaceMethod(
     f = "response_distribution",
     signature = "observation_parameters",
     definition = function(x, value) {
-  value<- unname(get_starve_distributions("distribution")[pmatch(value,get_starve_distributions("distribution"),duplicates.ok=TRUE)])
+  match<- pmatch(
+    value,
+    get_starve_distributions("distribution"),
+    duplicates.ok = TRUE
+  )
+  value<- unname(get_starve_distributions("distribution")[match])
   x@response_distribution<- value
 
-  response_pars<- lapply(value,function(rd) {
+  response_pars<- lapply(value, function(rd) {
     switch(rd,
-      gaussian = data.frame(par = 0,
-                            se = 0,
-                            fixed = FALSE,
-                            row.names = "sd"),
-      poisson = data.frame(par = numeric(0),
-                           se = numeric(0),
-                           fixed = logical(0)),
-      `negative binomial` = data.frame(par = 0,
-                                       se = 0,
-                                       fixed = FALSE,
-                                       row.names = "overdispersion"),
-      bernoulli = data.frame(par = numeric(0),
-                             se = numeric(0),
-                             fixed = logical(0)),
-      gamma = data.frame(par = 0,
-                         se = 0,
-                         fixed = FALSE,
-                         row.names = "sd"),
-      lognormal = data.frame(par = 0,
-                             se = 0,
-                             fixed = FALSE,
-                             row.names = "sd"),
-      binomial = data.frame(par = numeric(0),
-                            se = numeric(0),
-                            fixed = logical(0)),
-      atLeastOneBinomial = data.frame(par = numeric(0),
-                                      se = numeric(0),
-                                      fixed = logical(0)),
-      compois = data.frame(par = 0,
-                           se = 0,
-                           fixed = FALSE,
-                           row.names = "dispersion"),
-      tweedie = data.frame(par = numeric(2),
-                           se = numeric(2),
-                           fixed = c(FALSE,FALSE),
-                           row.names = c("dispersion","power"))
+      gaussian = data.frame(
+        par = 0,
+        se = 0,
+        fixed = FALSE,
+        row.names = "sd"
+      ),
+      poisson = data.frame(
+        par = numeric(0),
+        se = numeric(0),
+        fixed = logical(0)
+      ),
+      `negative binomial` = data.frame(
+        par = 0,
+        se = 0,
+        fixed = FALSE,
+        row.names = "overdispersion"
+      ),
+      bernoulli = data.frame(
+        par = numeric(0),
+        se = numeric(0),
+        fixed = logical(0)
+      ),
+      gamma = data.frame(
+        par = 0,
+        se = 0,
+        fixed = FALSE,
+        row.names = "sd"
+      ),
+      lognormal = data.frame(
+        par = 0,
+        se = 0,
+        fixed = FALSE,
+        row.names = "sd"
+      ),
+      binomial = data.frame(
+        par = numeric(0),
+        se = numeric(0),
+        fixed = logical(0)
+      ),
+      atLeastOneBinomial = data.frame(
+        par = numeric(0),
+        se = numeric(0),
+        fixed = logical(0)
+      ),
+      compois = data.frame(
+        par = 0,
+        se = 0,
+        fixed = FALSE,
+        row.names = "dispersion"
+      ),
+      tweedie = data.frame(
+        par = numeric(2),
+        se = numeric(2),
+        fixed = c(FALSE, FALSE),
+        row.names = c("dispersion", "power")
+      )
     )
   })
   try(names(response_pars)<- names(response_parameters(x)))
   response_parameters(x)<- response_pars
 
-  link_function(x)<- do.call(c,lapply(value,function(rd) {
-    switch(rd,
-      gaussian = "identity",
-      poisson = "log",
-      `negative binomial` = "log",
-      bernoulli = "logit",
-      gamma = "log",
-      lognormal = "log",
-      binomial = "logit",
-      atLeastOneBinomial = "logit",
-      compois = "log",
-      tweedie = "log"
-    )
-  }))
+  link_function(x)<- do.call(
+    c,
+    lapply(value, function(rd) {
+      return(
+        switch(rd,
+          gaussian = "identity",
+          poisson = "log",
+          `negative binomial` = "log",
+          bernoulli = "logit",
+          gamma = "log",
+          lognormal = "log",
+          binomial = "logit",
+          atLeastOneBinomial = "logit",
+          compois = "log",
+          tweedie = "log"
+        )
+      )
+    })
+  )
 
   return(x)
 })
@@ -135,6 +165,7 @@ setMethod(
     definition = function(x) {
   return(x@response_parameters)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -160,6 +191,7 @@ setMethod(
     definition = function(x) {
   return(x@link_function)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -170,13 +202,15 @@ setReplaceMethod(
     f = "link_function",
     signature = "observation_parameters",
     definition = function(x, value) {
-  x@link_function<- unname(
-    get_starve_distributions("link")[
-      pmatch(value,get_starve_distributions("link"),duplicates.ok=TRUE)
-    ]
+  match<- pmatch(
+    value,
+    get_starve_distributions("link"),
+    duplicates.ok = TRUE
   )
+  x@link_function<- unname(get_starve_distributions("link")[match])
   return(x)
 })
+
 
 
 #' @param x An object
@@ -189,6 +223,7 @@ setMethod(
     definition = function(x) {
   return(x@fixed_effects)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'

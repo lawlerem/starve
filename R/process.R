@@ -73,6 +73,7 @@ setMethod(
     definition = function(x) {
   return(x@time_effects)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -86,21 +87,26 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
-#' @describeIn process_class Get spatio-temporal random effects for persistent graph
+#' @describeIn process_class Get spatio-temporal random effects for persistent
+#'   graph
 setMethod(
     f = "pg_re",
     signature = "process",
     definition = function(x) {
   return(x@pg_re)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn process_class Set spatio-temporal random effects for persistent graph
+#' @describeIn process_class Set spatio-temporal random effects for persistent
+#'   graph
 setReplaceMethod(
     f = "pg_re",
     signature = "process",
@@ -109,21 +115,26 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
-#' @describeIn process_class Get spatio-temporal random effects for transient graph
+#' @describeIn process_class Get spatio-temporal random effects for transient
+#'   graph
 setMethod(
     f = "tg_re",
     signature = "process",
     definition = function(x) {
   return(x@tg_re)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn process_class Set spatio-temporal random effects for transient graph
+#' @describeIn process_class Set spatio-temporal random effects for transient
+#'   graph
 setReplaceMethod(
     f = "tg_re",
     signature = "process",
@@ -144,6 +155,7 @@ setMethod(
     definition = function(x) {
   return(x@persistent_graph)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -157,6 +169,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -167,6 +181,7 @@ setMethod(
     definition = function(x) {
   return(x@transient_graph)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -180,6 +195,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -190,13 +207,14 @@ setMethod(
     definition = function(x) {
   return(x@parameters)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
 #' @describeIn process_class Set parameters using a new process_parameters
-#'   object. Not the recommended way to modify specific parameter values, instead see the
-#'   package vignette.
+#'   object. Not the recommended way to modify specific parameter values,
+#'   instead see vignette("starve-tour").
 setReplaceMethod(
     f = "parameters",
     signature = "process",
@@ -204,7 +222,6 @@ setReplaceMethod(
   x@parameters<- value
   return(x)
 })
-
 
 
 
@@ -217,8 +234,10 @@ setMethod(
     f = "random_effects",
     signature = "process",
     definition = function(x) {
-  return(list(pg_re = pg_re(x),
-              tg_re = tg_re(x)))
+  return(list(
+    pg_re = pg_re(x),
+    tg_re = tg_re(x)
+  ))
 })
 
 
@@ -229,12 +248,12 @@ setMethod(
 ###         ###
 ###############
 
-
 # #' @param x An sf object
 # #' @param y A process object
 # #'
 # #' @describeIn create_graph_idx Locations in the sf object x will be given an
-# #'   index pointing to either a persistent graph or transient graph location of y.
+# #'   index pointing to either a persistent graph or transient graph location
+# #'   of y.
 #' @noRd
 setMethod(
     f = "create_graph_idx",
@@ -242,24 +261,50 @@ setMethod(
     definition = function(x, y, settings) {
   pg_s<- locations_from_stars(pg_re(y))
   tg_s<- locations(tg_re(y)) # Should also have a time column
-  tg_t<- time_from_formula(formula(settings),tg_s)
+  tg_t<- time_from_formula(formula(settings), tg_s)
 
-  # Get persistent graph locations
-  v<- sf::st_equals(x,pg_s)
-  v<- do.call(c,lapply(v,function(x) if(length(x)==0) {return(NA)} else {return(x[[1]])}))
+  # Get idx for locations coinciding with persistent graph
+  v<- sf::st_equals(x, pg_s)
+  v<- do.call(
+    c,
+    lapply(v, function(x) {
+      if( length(x) == 0 ) {
+        return(NA)
+      } else {
+        return(x[[1]])
+      }
+    })
+  )
+  tg_x<- x[is.na(v), ]
 
-  # Get transient graph locations
-  splitx<- split(x[is.na(v),],time_from_formula(formula(settings),x[is.na(v),]))
-  splitv<- lapply(splitx,function(t_x) {
-    vv<- sf::st_equals(t_x,tg_s[tg_t==time_from_formula(formula(settings),t_x)[[1]],])
-    vv<- do.call(c,lapply(vv,function(x) if(length(x)==0) {return(NA)} else {return(x[[1]])}))
-    vv<- vv+nrow(pg_s)
+  # Get idx for locations coinciding with transient graph
+  splitx<- split(
+    tg_x,
+    time_from_formula(formula(settings), tg_x)
+  )
+  splitv<- lapply(splitx, function(t_x) {
+    t_tg_s<- tg_s[tg_t == time_from_formula(formula(settings), t_x)[[1]], ]
+    vv<- sf::st_equals(t_x, t_tg_s)
+    vv<- do.call(
+      c,
+      lapply(vv, function(x) {
+        if( length(x) == 0 ) {
+          return(NA)
+        } else {
+          return(x[[1]])
+        }
+      })
+    )
+    vv<- vv + nrow(pg_s)
     return(vv)
   })
-  v[is.na(v)]<- do.call(c,splitv)
+  v[is.na(v)]<- do.call(c, splitv)
 
   if( any(is.na(v)) ) {
-    stop("Some data locations do not coincide with any random effect locations. Try re-creating the process object.")
+    stop(paste(
+      "Some data locations do not coincide with any random effect locations. \n",
+      "Try re-creating the process object."
+    ))
   } else {}
 
   return(v)

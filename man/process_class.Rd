@@ -52,13 +52,17 @@ An S4 class to hold the process information for a starve model.
 
 \item \code{time_effects<-,process-method}: Set temporal random effects
 
-\item \code{pg_re,process-method}: Get spatio-temporal random effects for persistent graph
+\item \code{pg_re,process-method}: Get spatio-temporal random effects for persistent
+graph
 
-\item \code{pg_re<-,process-method}: Set spatio-temporal random effects for persistent graph
+\item \code{pg_re<-,process-method}: Set spatio-temporal random effects for persistent
+graph
 
-\item \code{tg_re,process-method}: Get spatio-temporal random effects for transient graph
+\item \code{tg_re,process-method}: Get spatio-temporal random effects for transient
+graph
 
-\item \code{tg_re<-,process-method}: Set spatio-temporal random effects for transient graph
+\item \code{tg_re<-,process-method}: Set spatio-temporal random effects for transient
+graph
 
 \item \code{persistent_graph,process-method}: Get persistent graph
 
@@ -67,8 +71,8 @@ An S4 class to hold the process information for a starve model.
 \item \code{parameters,process-method}: Get parameters as a process_parameters object
 
 \item \code{parameters<-,process,ANY-method}: Set parameters using a new process_parameters
-object. Not the recommended way to modify specific parameter values, instead see the
-package vignette.
+object. Not the recommended way to modify specific parameter values,
+instead see vignette("starve-tour").
 
 \item \code{random_effects,process-method}: Get list containing the persistent graph random
 effects and the transient graph random effects.

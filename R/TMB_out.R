@@ -45,6 +45,7 @@ setMethod(
     definition = function(x) {
   return(x@obj)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -58,6 +59,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 # #' @param x An object
 # #'
 # #' @describeIn TMB_out_class Get output of optimizer
@@ -68,6 +71,7 @@ setMethod(
     definition = function(x) {
   return(x@opt)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -81,6 +85,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 # #' @param x An object
 # #'
 # #' @describeIn TMB_out_class Get output of TMB::sdreport
@@ -91,6 +97,7 @@ setMethod(
     definition = function(x) {
   return(x@sdr)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'

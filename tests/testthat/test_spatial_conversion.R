@@ -70,6 +70,7 @@ test_that("Add random effects by time",{
       variable = "y"
     )
   )
+
   expect_equal(pg_re(add_random_effects_by_time(init,11:14)),re)
   expect_equal(time_effects(add_random_effects_by_time(init,11:14)),te)
 

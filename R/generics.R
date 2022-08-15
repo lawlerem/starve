@@ -33,6 +33,8 @@ setGeneric(
   def = function(x) standardGeneric("convert_to_TMB_list")
 )
 
+
+
 #' Create an index connecting locations to a graph
 #'
 #' @param x An object with locations
@@ -93,13 +95,14 @@ setGeneric(
 #' @noRd
 NULL
 
-# #' @describeIn idx_exchange Add 1 to all indices to convert from C++ to R
+# #' @describeIn idx_exchange Add 1 to indices to convert from C++ to R
 #' @noRd
 setGeneric(
   name = "convert_idxC_to_R",
   def = function(x) standardGeneric("convert_idxC_to_R")
 )
-# #' @describeIn idx_exchange Subtract 1 from all indices to convert from R to C++
+
+# #' @describeIn idx_exchange Subtract 1 from indices to convert from R to C++
 #' @noRd
 setGeneric(
   name = "convert_idxR_to_C",
@@ -180,6 +183,7 @@ setGeneric(
 )
 
 
+
 #' Use a fitted model to predict.
 #'
 #' @param x A fitted model
@@ -194,6 +198,8 @@ setGeneric(
   def = function(x, new_data, ...) standardGeneric("strv_predict")
 )
 
+
+
 #' Simulate from a model object.
 #'
 #' @param object A model object to simulate from.
@@ -207,6 +213,8 @@ setGeneric(
   name = "strv_simulate",
   def = function(object, ...) standardGeneric("strv_simulate")
 )
+
+
 
 #' Update a model from a fitted object
 #'

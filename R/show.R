@@ -11,12 +11,30 @@ setMethod(
   n_nodes<- length(edges(object))
   cat("\n")
   if( n_nodes > 0 ) {
-    avg_deg<- median(do.call(c,lapply(edges(object),function(x) length(x[[2]]))))
-    avg_dist<- mean(do.call(c,lapply(distances(object),c)))
-    print(paste0("A directed acyclic graph with ",n_nodes,
-                 " nodes, with an median in-degree of ",avg_deg,"."))
-    print(paste0("The average edge distance is ",round(avg_dist,2),"",
-                 distance_units(object),"."))
+    avg_deg<- median(
+      do.call(
+        c,
+        lapply(
+          edges(object),
+          function(x) length(x[[2]])
+        )
+      )
+    )
+    avg_dist<- mean(
+      do.call(
+        c,
+        lapply(
+          distances(object),
+          c
+        )
+      )
+    )
+    print(paste0(
+      "A directed acyclic graph with ", n_nodes, " nodes, with an median in-degree of ", avg_deg, "."
+    ))
+    print(paste0(
+      "The average edge distance is ", round(avg_dist, 2), "", distance_units(object), "."
+    ))
   } else {
     print(paste0("An empty directed acyclic graph."))
   }
@@ -63,14 +81,17 @@ setMethod(
     signature = "tracing",
     definition = function(object) {
   cat("\n")
+
   cat("Time elapsed while fitting the model:")
   cat("\n")
   print(timing(object))
   cat("\n\n")
+
   cat("Estimated parameter hessian matrix:")
   cat("\n")
   print(parameter_hessian(object))
   cat("\n\n")
+
   cat("Estimated parameter covariance matrix:")
   cat("\n")
   print(parameter_covariance(object))
@@ -121,13 +142,15 @@ setMethod(
   cat("\n\n")
 
 
-  cat(paste("Data is a simple feature collection with",nrow(dat(object)),"features\n"))
+  cat(paste(
+    "Data is a simple feature collection with", nrow(dat(object)), "features\n"
+  ))
   cat("CRS: ")
   cat(format(sf::st_crs(dat(object))))
   cat("\n")
   cat("Bounding times: ")
-  t<- time_from_formula(formula(object),dat(object))
-  cat(c(min(t),max(t)))
+  t<- time_from_formula(formula(object), dat(object))
+  cat(c(min(t), max(t)))
   cat("\n")
   cat("Bounding box:\n")
   print(sf::st_bbox(dat(object)))

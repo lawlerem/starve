@@ -21,15 +21,38 @@ setMethod(
         geometry = sf::st_sfc(sf::st_point())[-1]
       ),
       var_names = "y") {
-  nidx<- max(1,nrow(locations))
+  nidx<- max(1, nrow(locations))
   values(.Object)<- stars::st_as_stars(
-    list(w = array(0,dim=c(nidx,length(var_names))),
-         w_se = array(NA_real_,dim=c(nidx,length(var_names))),
-         linear = array(0,dim=c(nidx,length(var_names))),
-         linear_se = array(NA_real_,dim=c(nidx,length(var_names))),
-         response = array(0,dim=c(nidx,length(var_names))),
-         response_se = array(NA_real_,dim=c(nidx,length(var_names)))),
-    dimensions = stars::st_dimensions(i=seq(length.out=nidx),variable=var_names)
+    list(
+      w = array(
+        0,
+        dim = c(nidx, length(var_names))
+      ),
+      w_se = array(
+        NA_real_,
+        dim=c(nidx, length(var_names))
+      ),
+      linear = array(
+        0,
+        dim = c(nidx, length(var_names))
+      ),
+      linear_se = array(
+        NA_real_,
+        dim = c(nidx, length(var_names))
+      ),
+      response = array(
+        0,
+        dim = c(nidx, length(var_names))
+      ),
+      response_se = array(
+        NA_real_,
+        dim = c(nidx, length(var_names))
+      )
+    ),
+    dimensions = stars::st_dimensions(
+      i = seq(length.out = nidx),
+      variable = var_names
+    )
   )
   locations(.Object)<- locations
 
@@ -54,6 +77,7 @@ setMethod(
     definition = function(x) {
   return(x@values)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -67,6 +91,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -77,6 +103,7 @@ setMethod(
     definition = function(x) {
   return(x@locations)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'

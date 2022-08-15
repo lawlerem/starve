@@ -23,10 +23,10 @@ library(starve)
 #> Linking to GEOS 3.11.0, GDAL 3.5.1, PROJ 9.0.1; sf_use_s2() is TRUE
 ```
 
-The starve package implements a spatio-temporal GLMM for analyzing discrete-time, continuous-space data.
+The starve package implements a spatio-temporal generalized linear mixed model for analyzing discrete-time, continuous-space data.
 Throughout this vignette we will refer to the time unit as year/yearly, although any other regular unit (daily, monthly, etc.) can be used.
-Functionality include maximum likelihood inference, model-based spatial interpolation and forecasting and hindcasting, and simulations.
-The sf and raster packages are tightly integrated into the starve package, allowing users to easily incorporate the starve package into their existing workflows.
+Functionality includes maximum likelihood inference, model-based spatial interpolation, forecasting and hindcasting, and simulations.
+The sf, raster, and stars packages are tightly integrated into the starve package, allowing users to easily incorporate the starve package into their existing workflows.
 
 The spatio-temporal GLMM is structured as a hierarchical model with 3 levels:
 
@@ -78,7 +78,7 @@ We'll work with a smaller subset of the data in the vignette.
 
 
 ```r
-bird_survey<- subset(bird_survey,year >= 2005)
+bird_survey<- subset(bird_survey, year >= 2005)
 ```
 
 
@@ -106,154 +106,59 @@ The new starve object is shown below.
 
 ```r
 bird_model
+#> A starve model object
 #> 
-#> [1] "Model not yet fitted."
+#> Model formula: cnt ~ time(year)
+#> Response distribution: poisson
+#> Link function: log
+#> Optimizer message: Model not yet fitted.
 #> 
-#> An object of class "parameters"
-#> Slot "covariance_function":
-#> [1] "exponential"
-#> 
-#> Slot "spatial_parameters":
-#> $cnt
-#>       par se fixed
-#> sd    0.0  0 FALSE
-#> range 0.0  0 FALSE
-#> nu    0.5  0  TRUE
-#> 
-#> 
-#> Slot "time_parameters":
-#> $cnt
-#>     par se fixed
-#> mu    0 NA FALSE
-#> ar1   0 NA FALSE
-#> sd    0 NA FALSE
-#> 
-#> 
-#> Slot "response_distribution":
-#> [1] "poisson"
-#> 
-#> Slot "response_parameters":
-#> $cnt
-#> [1] par   se    fixed
-#> <0 rows> (or 0-length row.names)
-#> 
-#> 
-#> Slot "link_function":
-#> [1] "log"
-#> 
-#> Slot "fixed_effects":
-#> $cnt
-#> [1] par   se    fixed
-#> <0 rows> (or 0-length row.names)
-#> 
-#> 
-#> 
-#> Data
-#> Simple feature collection with 404 features and 3 fields
-#> Geometry type: POINT
-#> Dimension:     XY
-#> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
-#> Geodetic CRS:  WGS 84
-#> First 10 features:
-#>     cnt year graph_idx                       geom
-#> 422   1 2005        63 POINT (-95.23445 40.46577)
-#> 417   7 2005        62 POINT (-95.03312 40.02546)
-#> 402   5 2005        59 POINT (-94.66548 39.65398)
-#> 415   7 2005        58 POINT (-94.50103 39.39702)
-#> 416   3 2005        57 POINT (-94.14222 40.10026)
-#> 392   3 2005        29   POINT (-94.1192 37.1404)
-#> 420   4 2005        43 POINT (-94.10504 38.66985)
-#> 384  11 2005        37  POINT (-93.9101 36.66086)
-#> 391   7 2005        26 POINT (-93.85185 37.77059)
-#> 397   2 2005        24 POINT (-93.84015 38.19498)
+#> Data is a simple feature collection with 404 features
+#> CRS: WGS 84
+#> Bounding times: 2005 2014
+#> Bounding box:
+#>      xmin      ymin      xmax      ymax 
+#> -95.23445  36.11935 -89.24779  40.47128
 ```
 
 
 ```r
-spatial_parameters(bird_model)$cnt["range","par"]<- 80
-spatial_parameters(bird_model)$cnt["range","fixed"]<- TRUE
+space_parameters(bird_model)$cnt["range", "par"]<- 80
+space_parameters(bird_model)$cnt["range", "fixed"]<- TRUE
 ```
 
 The individual components of a 'starve" object are explained in the following sections.
-For now, note the columns labelled 'par' in the 'time_parameters', 'spatial_parameters', 'response_parameters', and 'fixed_effects' slots (the latter two of which have 0 rows in this particular model).
-These are the parameter values for the model.
-The 'strv_fit' function finds the maximum likelihood (ML) estimates of these parameters.
-The parameter values in the starve object will be the starting values used when finding the ML estimate.
+For now, note that printing the model give a summary of the model form, including the model formula, response distribution, link function, and an optimizer message that gives info on if/how the model is fit, and a summary of the data.
+The 'strv_fit' function finds the maximum likelihood (ML) estimates of the model parameters.
+The parameter values in the starve object will be the starting values used when finding the ML estimate, and unless you change them then default starting values will be used.
 Details for changing these values is given in section [Modifying a starve model].
 
 
 ```r
 bird_model<- strv_fit(
   bird_model,
-  silent=T
+  silent = TRUE
 )
 ```
 
-The output of the 'strv_fit' function is a 'starve' object with the ML parameter estimates.
+The output of the 'strv_fit' function is a 'starve' object with the ML parameter estimates, and you can see that the optimizer message has changed to tell you if the optimization procedure successfully converged.
 
 
 ```r
 bird_model
+#> A starve model object
 #> 
-#> [1] "relative convergence (4)"
+#> Model formula: cnt ~ time(year)
+#> Response distribution: poisson
+#> Link function: log
+#> Optimizer message: relative convergence (4)
 #> 
-#> An object of class "parameters"
-#> Slot "covariance_function":
-#> [1] "exponential"
-#> 
-#> Slot "spatial_parameters":
-#> $cnt
-#>               par          se fixed
-#> sd     0.05213431 0.003913888 FALSE
-#> range 80.00000000 0.000000000  TRUE
-#> nu     0.50000000 0.000000000  TRUE
-#> 
-#> 
-#> Slot "time_parameters":
-#> $cnt
-#>           par         se fixed
-#> mu  2.0066592 0.36396113 FALSE
-#> ar1 0.9235859 0.03168324 FALSE
-#> sd  0.1462888 0.07689308 FALSE
-#> 
-#> 
-#> Slot "response_distribution":
-#> [1] "poisson"
-#> 
-#> Slot "response_parameters":
-#> $cnt
-#> [1] par   se    fixed
-#> <0 rows> (or 0-length row.names)
-#> 
-#> 
-#> Slot "link_function":
-#> [1] "log"
-#> 
-#> Slot "fixed_effects":
-#> $cnt
-#> [1] par   se    fixed
-#> <0 rows> (or 0-length row.names)
-#> 
-#> 
-#> 
-#> Data
-#> Simple feature collection with 404 features and 3 fields
-#> Geometry type: POINT
-#> Dimension:     XY
-#> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
-#> Geodetic CRS:  WGS 84
-#> First 10 features:
-#>     cnt year graph_idx                       geom
-#> 422   1 2005        63 POINT (-95.23445 40.46577)
-#> 417   7 2005        62 POINT (-95.03312 40.02546)
-#> 402   5 2005        59 POINT (-94.66548 39.65398)
-#> 415   7 2005        58 POINT (-94.50103 39.39702)
-#> 416   3 2005        57 POINT (-94.14222 40.10026)
-#> 392   3 2005        29   POINT (-94.1192 37.1404)
-#> 420   4 2005        43 POINT (-94.10504 38.66985)
-#> 384  11 2005        37  POINT (-93.9101 36.66086)
-#> 391   7 2005        26 POINT (-93.85185 37.77059)
-#> 397   2 2005        24 POINT (-93.84015 38.19498)
+#> Data is a simple feature collection with 404 features
+#> CRS: WGS 84
+#> Bounding times: 2005 2014
+#> Bounding box:
+#>      xmin      ymin      xmax      ymax 
+#> -95.23445  36.11935 -89.24779  40.47128
 ```
 
 
@@ -289,10 +194,23 @@ Some messages that indicate the optimization routine failed to converge are
 
 See '?nlminb' and the PORT routines documentation for more details.
 
+
 The parameters hold the parameter values/estimates, the standard errors of the parameter estimates (for a fitted model), and whether the parameters are held fixed in the model.
 These quantities are held in the 'par', 'se', and 'fixed' columns, respectively.
 The spatial covariance function, response distribution, and link function used are also part of the parameter descriptions.
 The parameters are split into groups according to the different conceptual parts of the model.
+
+
+```r
+covariance_function(bird_model)
+#> [1] "exponential"
+space_parameters(bird_model)
+#> $cnt
+#>               par          se fixed
+#> sd     0.05149631 0.003859773 FALSE
+#> range 80.00000000 0.000000000  TRUE
+#> nu     0.50000000 0.000000000  TRUE
+```
 
 The spatial parameters describe the spatial covariance function for each response variable.
 The starve package uses a Matern covariance function with the following parameters:
@@ -302,16 +220,13 @@ The starve package uses a Matern covariance function with the following paramete
 - **nu**: a smoothness parameter. Higher values correspond to smoother spatial surfaces. The smoothness parameter is only estimated when the covariance function is 'matern'. Must be greater than 0.
 
 
-
 ```r
-covariance_function(bird_model)
-#> [1] "exponential"
-spatial_parameters(bird_model)
+time_parameters(bird_model)
 #> $cnt
-#>               par          se fixed
-#> sd     0.05213431 0.003913888 FALSE
-#> range 80.00000000 0.000000000  TRUE
-#> nu     0.50000000 0.000000000  TRUE
+#>           par         se fixed
+#> mu  1.9894915 0.33874433 FALSE
+#> ar1 0.9259455 0.03137069 FALSE
+#> sd  0.1292182 0.08643885 FALSE
 ```
 
 The time parameters describe the temporal structure of the random effects.
@@ -320,20 +235,6 @@ An autoregressive order 1 AR(1) model is used:
 - **mu**: A mean parameter. The overall mean or the baseline level of the random effects.
 - **ar1**: A correlation parameter. Higher values correspond to adjacent years being more highly correlated. Must be between -1 and +1.
 - **sd**: A scale parameter. Higher values correspond to more year-to-year variation. Must be greater than 0.
-
-
-
-```r
-time_parameters(bird_model)
-#> $cnt
-#>           par         se fixed
-#> mu  2.0066592 0.36396113 FALSE
-#> ar1 0.9235859 0.03168324 FALSE
-#> sd  0.1462888 0.07689308 FALSE
-```
-
-The response parameters describe e.g. the observation error, overdispersion, etc.
-The specific parameters depend on the response distribution used and are described in section [Response distribution].
 
 
 ```r
@@ -345,8 +246,9 @@ response_parameters(bird_model)
 #> <0 rows> (or 0-length row.names)
 ```
 
-The fixed effects describe the effects of covariates, as in a generalized linear model.
-A description of how to include covariates in a starve analysis is given in section [Including covariates].
+The response parameters describe e.g. the observation error, overdispersion, etc.
+The specific parameters depend on the response distribution used and are described in section [Response distribution].
+
 
 
 ```r
@@ -356,7 +258,9 @@ fixed_effects(bird_model)
 #> <0 rows> (or 0-length row.names)
 ```
 
-You can extract all of the parameter values using the 'parameters' function.
+The fixed effects describe the effects of covariates, as in a generalized linear model.
+A description of how to include covariates in a starve analysis is given in section [Including covariates].
+
 
 
 ```r
@@ -365,10 +269,10 @@ parameters(bird_model)
 #> Slot "covariance_function":
 #> [1] "exponential"
 #> 
-#> Slot "spatial_parameters":
+#> Slot "space_parameters":
 #> $cnt
 #>               par          se fixed
-#> sd     0.05213431 0.003913888 FALSE
+#> sd     0.05149631 0.003859773 FALSE
 #> range 80.00000000 0.000000000  TRUE
 #> nu     0.50000000 0.000000000  TRUE
 #> 
@@ -376,9 +280,9 @@ parameters(bird_model)
 #> Slot "time_parameters":
 #> $cnt
 #>           par         se fixed
-#> mu  2.0066592 0.36396113 FALSE
-#> ar1 0.9235859 0.03168324 FALSE
-#> sd  0.1462888 0.07689308 FALSE
+#> mu  1.9894915 0.33874433 FALSE
+#> ar1 0.9259455 0.03137069 FALSE
+#> sd  0.1292182 0.08643885 FALSE
 #> 
 #> 
 #> Slot "response_distribution":
@@ -399,6 +303,8 @@ parameters(bird_model)
 #> <0 rows> (or 0-length row.names)
 ```
 
+You can extract all of the parameter values using the 'parameters' function.
+
 
 ## Random effect predictions
 
@@ -412,8 +318,8 @@ time_effects(bird_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
 #>          Min.   1st Qu.    Median      Mean  3rd Qu.      Max.
-#> w   1.8029625 1.9525085 1.9773921 2.0001284 2.083588 2.1469142
-#> se  0.1354263 0.1829738 0.2140333 0.2091044 0.240983 0.2626549
+#> w   1.8311170 1.9565328 1.9644131 2.0001637 2.079084 2.1349304
+#> se  0.1425165 0.1868914 0.2160742 0.2151038 0.244742 0.2810572
 #> dimension(s):
 #>          from to offset delta refsys point values
 #> year        1 10   2005     1     NA FALSE   NULL
@@ -421,7 +327,7 @@ time_effects(bird_model)
 ```
 
 The spatio-temporal random effects describe a spatial surface that varies from year to year.
-The locations of the random effects act like the nodes in a mesh used in the R-INLA package, or basis functions used in a spline model.
+The locations of the random effects act like the nodes in a mesh used in the INLA package, or basis functions used in a spline model.
 The spatial surface at new locations are predicted using the values of these random effects.
 The random effects are split into two groups.
 The persistent graph random effects are placed at nodes that re-occur at the same location every year, and thus help
@@ -434,8 +340,8 @@ pg_re(bird_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>           Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
-#> w   0.05718306 1.2907399 1.8610265 1.8200176 2.3879027 3.6965085
-#> se  0.13909556 0.2317798 0.3151045 0.3574355 0.4570195 0.9009079
+#> w   0.07190553 1.2898495 1.8695070 1.8195227 2.3891039 3.6931705
+#> se  0.13865263 0.2321807 0.3137034 0.3563984 0.4538327 0.8961573
 #> dimension(s):
 #>          from to offset delta refsys point
 #> geom        1 63     NA    NA WGS 84  TRUE
@@ -485,8 +391,8 @@ random_effects(bird_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>           Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
-#> w   0.05718306 1.2907399 1.8610265 1.8200176 2.3879027 3.6965085
-#> se  0.13909556 0.2317798 0.3151045 0.3574355 0.4570195 0.9009079
+#> w   0.07190553 1.2898495 1.8695070 1.8195227 2.3891039 3.6931705
+#> se  0.13865263 0.2321807 0.3137034 0.3563984 0.4538327 0.8961573
 #> dimension(s):
 #>          from to offset delta refsys point
 #> geom        1 63     NA    NA WGS 84  TRUE
@@ -533,13 +439,13 @@ data_predictions(bird_model)
 #> Slot "values":
 #> stars object with 2 dimensions and 6 attributes
 #> attribute(s):
-#>                    Min.   1st Qu.    Median     Mean    3rd Qu.       Max.
-#> w            0.05718306 1.4308494 1.9736939 1.947796  2.5315131  3.6965085
-#> w_se         0.13909556 0.2097548 0.2528972 0.270597  0.3130637  0.5481214
-#> linear       0.05718306 1.4308494 1.9736939 1.947796  2.5315131  3.6965085
-#> linear_se    0.13909556 0.2097548 0.2528972 0.270597  0.3130637  0.5481214
-#> response     1.05884963 4.1823690 7.1972278 9.420112 12.5725152 40.3063282
-#> response_se  0.56629261 1.3245597 1.8694097 2.096810  2.6744114  5.8212710
+#>                    Min.   1st Qu.    Median      Mean    3rd Qu.       Max.
+#> w            0.07190553 1.4405398 1.9781818 1.9475905  2.5354778  3.6931705
+#> w_se         0.13865263 0.2100599 0.2533709 0.2706754  0.3133941  0.5462116
+#> linear       0.07190553 1.4405398 1.9781818 1.9475905  2.5354778  3.6931705
+#> linear_se    0.13865263 0.2100599 0.2533709 0.2706754  0.3133941  0.5462116
+#> response     1.07455382 4.2229842 7.2295973 9.4200013 12.6224613 40.1720117
+#> response_se  0.57135559 1.3207965 1.8857317 2.0977277  2.6955289  5.8001441
 #> dimension(s):
 #>          from  to offset delta refsys point values
 #> i           1 404      1     1     NA FALSE   NULL
@@ -595,10 +501,13 @@ We can add the random effect and response mean predictions to the data for plott
 
 ```r
 tmp<- cbind(
-  do.call(cbind,values(data_predictions(bird_model))[,,1]),
+  do.call(
+    cbind,
+    values(data_predictions(bird_model))[, , 1]
+  ),
   dat(bird_model)
 )
-colnames(tmp)[1:6]<- c("w","w_se","linear","linear_se","response","response_se")
+colnames(tmp)[1:6]<- c("w", "w_se", "linear", "linear_se", "response", "response_se")
 tmp
 #> Simple feature collection with 404 features and 9 fields
 #> Geometry type: POINT
@@ -607,16 +516,16 @@ tmp
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
 #>            w      w_se   linear linear_se  response response_se cnt year
-#> 422 1.182315 0.3156465 1.182315 0.3156465  3.261916    1.054947   1 2005
-#> 417 1.712440 0.2631765 1.712440 0.2631765  5.542471    1.483690   7 2005
-#> 402 1.802291 0.2610136 1.802291 0.2610136  6.063522    1.609392   5 2005
-#> 415 2.034726 0.2350254 2.034726 0.2350254  7.650158    1.822641   7 2005
-#> 416 1.331535 0.2954090 1.331535 0.2954090  3.786851    1.142815   3 2005
-#> 392 1.854636 0.2518557 1.854636 0.2518557  6.389372    1.634519   3 2005
-#> 420 1.888163 0.2514839 1.888163 0.2514839  6.607218    1.687676   4 2005
-#> 384 2.340759 0.2237427 2.340759 0.2237427 10.389121    2.353401  11 2005
-#> 391 1.995752 0.2369982 1.995752 0.2369982  7.357733    1.768086   7 2005
-#> 397 1.528491 0.2665774 1.528491 0.2665774  4.611214    1.250894   2 2005
+#> 422 1.179892 0.3136286 1.179892 0.3136286  3.254024    1.045350   1 2005
+#> 417 1.705660 0.2618878 1.705660 0.2618878  5.505020    1.466209   7 2005
+#> 402 1.800773 0.2594937 1.800773 0.2594937  6.054328    1.597289   5 2005
+#> 415 2.032948 0.2337168 2.032948 0.2337168  7.636569    1.809003   7 2005
+#> 416 1.329678 0.2933801 1.329678 0.2933801  3.779827    1.132536   3 2005
+#> 392 1.851794 0.2506113 1.851794 0.2506113  6.371239    1.621581   3 2005
+#> 420 1.896124 0.2496938 1.896124 0.2496938  6.660031    1.688690   4 2005
+#> 384 2.336048 0.2229222 2.336048 0.2229222 10.340296    2.333543  11 2005
+#> 391 1.995064 0.2355331 1.995064 0.2355331  7.352677    1.755652   7 2005
+#> 397 1.528142 0.2647238 1.528142 0.2647238  4.609605    1.241467   2 2005
 #>     graph_idx                       geom
 #> 422        63 POINT (-95.23445 40.46577)
 #> 417        62 POINT (-95.03312 40.02546)
@@ -650,7 +559,7 @@ settings(bird_model)
 #> cnt ~ time(year)
 #> 
 #> Slot "n_neighbours":
-#> [1] 15
+#> [1] 10
 #> 
 #> Slot "distance_units":
 #> [1] "km"
@@ -671,16 +580,16 @@ Changing the covariance function also resets the spatial parameters, and updates
 
 
 ```r
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 #> $cnt
 #>               par          se fixed
-#> sd     0.05213431 0.003913888 FALSE
+#> sd     0.05149631 0.003859773 FALSE
 #> range 80.00000000 0.000000000  TRUE
 #> nu     0.50000000 0.000000000  TRUE
 
 covariance_function(bird_model)<- "matern32"
 
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 #> $cnt
 #>       par se fixed
 #> sd    0.0  0 FALSE
@@ -695,7 +604,7 @@ You can also change the 'se' and 'fixed' columns in the same way.
 
 
 ```r
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 #> $cnt
 #>       par se fixed
 #> sd    0.0  0 FALSE
@@ -704,15 +613,15 @@ spatial_parameters(bird_model)
 time_parameters(bird_model)
 #> $cnt
 #>           par         se fixed
-#> mu  2.0066592 0.36396113 FALSE
-#> ar1 0.9235859 0.03168324 FALSE
-#> sd  0.1462888 0.07689308 FALSE
+#> mu  1.9894915 0.33874433 FALSE
+#> ar1 0.9259455 0.03137069 FALSE
+#> sd  0.1292182 0.08643885 FALSE
 
-time_parameters(bird_model)$cnt[c("mu","ar1"),"par"]<- c(10,0.75)
-spatial_parameters(bird_model)$cnt["range","par"]<- 80
-spatial_parameters(bird_model)$cnt["range","fixed"]<- T
+time_parameters(bird_model)$cnt[c("mu", "ar1"), "par"]<- c(10, 0.75)
+space_parameters(bird_model)$cnt["range", "par"]<- 80
+space_parameters(bird_model)$cnt["range", "fixed"]<- TRUE
 
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 #> $cnt
 #>        par se fixed
 #> sd     0.0  0 FALSE
@@ -721,9 +630,9 @@ spatial_parameters(bird_model)
 time_parameters(bird_model)
 #> $cnt
 #>            par         se fixed
-#> mu  10.0000000 0.36396113 FALSE
-#> ar1  0.7500000 0.03168324 FALSE
-#> sd   0.1462888 0.07689308 FALSE
+#> mu  10.0000000 0.33874433 FALSE
+#> ar1  0.7500000 0.03137069 FALSE
+#> sd   0.1292182 0.08643885 FALSE
 ```
 
 Changing the response distribution will automatically update the response parameters, and will change the link function based on the valid range of the response mean for that distribution.
@@ -826,7 +735,7 @@ fixed_effects(bird_model)
 #> [1] par   se    fixed
 #> <0 rows> (or 0-length row.names)
 
-formula(bird_model)<- cnt~elev+time(year)
+formula(bird_model)<- cnt ~ elev + time(year)
 
 formula(bird_model)
 #> cnt ~ elev + time(year)
@@ -841,7 +750,7 @@ Distances are standardized within the model so changing the distance units shoul
 
 
 ```r
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 #> $cnt
 #>        par se fixed
 #> sd     0.0  0 FALSE
@@ -850,35 +759,28 @@ spatial_parameters(bird_model)
 graph(bird_model)
 #> $persistent_graph
 #> 
-#> [1] "A directed acyclic graph with 49 nodes, with an median in-degree of 15."
-#> [1] "The average edge distance is 112.2km."
+#> [1] "A directed acyclic graph with 54 nodes, with an median in-degree of 10."
+#> [1] "The average edge distance is 90.66km."
 #> 
 #> $transient_graph
-#> Warning in mean.default(do.call(c, lapply(distances(object), c))): argument is
-#> not numeric or logical: returning NA
 #> 
-#> [1] "A directed acyclic graph with 0 nodes, with an median in-degree of ."
-#> [1] "The average edge distance is NAkm."
+#> [1] "An empty directed acyclic graph."
 distance_units(bird_model)<- "ft"
-#> Error in (function (classes, fdef, mtable) : unable to find an inherited method for function 'transient_graph' for signature '"observations"'
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 #> $cnt
-#>        par se fixed
-#> sd     0.0  0 FALSE
-#> range 80.0  0  TRUE
-#> nu     1.5  0  TRUE
+#>            par se fixed
+#> sd         0.0  0 FALSE
+#> range 262467.2  0  TRUE
+#> nu         1.5  0  TRUE
 graph(bird_model)
 #> $persistent_graph
 #> 
-#> [1] "A directed acyclic graph with 49 nodes, with an median in-degree of 15."
-#> [1] "The average edge distance is 112.2km."
+#> [1] "A directed acyclic graph with 54 nodes, with an median in-degree of 10."
+#> [1] "The average edge distance is 297430.69ft."
 #> 
 #> $transient_graph
-#> Warning in mean.default(do.call(c, lapply(distances(object), c))): argument is
-#> not numeric or logical: returning NA
 #> 
-#> [1] "A directed acyclic graph with 0 nodes, with an median in-degree of ."
-#> [1] "The average edge distance is NAkm."
+#> [1] "An empty directed acyclic graph."
 ```
 
 
@@ -905,7 +807,10 @@ pred_points<- st_sample(
   st_as_sfc(st_bbox(bird_survey)),
   size = 25
 )
-pred_points<- st_sf(geom = pred_points,year=rep(2012:2016,each=5))
+pred_points<- st_sf(
+  geom = pred_points,
+  year = rep(2012:2016, each = 5)
+)
 pred_points
 #> Simple feature collection with 25 features and 1 field
 #> Geometry type: POINT
@@ -943,13 +848,13 @@ sf_pred
 #> Slot "values":
 #> stars object with 2 dimensions and 6 attributes
 #> attribute(s):
-#>                   Min.  1st Qu.    Median      Mean  3rd Qu.       Max.
-#> w            0.5778736 1.398270 1.8673943 1.8267352 2.208435  3.2386208
-#> w_se         0.2205022 0.306287 0.4561979 0.4713482 0.640092  0.7676484
-#> linear       0.5778736 1.398270 1.8673943 1.8267352 2.208435  3.2386208
-#> linear_se    0.2205022 0.306287 0.4561979 0.4713482 0.640092  0.7676484
-#> response     1.7822446 4.048191 6.4714119 7.8895585 9.101458 25.4985292
-#> response_se  0.8849758 1.946282 2.9582462 3.3045789 4.303532  6.1377236
+#>                   Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
+#> w            0.5743433 1.3811713 1.8612697 1.8220030 2.1972667  3.252203
+#> w_se         0.2183548 0.3034367 0.4471111 0.4646962 0.6246919  0.754356
+#> linear       0.5743433 1.3811713 1.8612697 1.8220030 2.1972667  3.252203
+#> linear_se    0.2183548 0.3034367 0.4471111 0.4646962 0.6246919  0.754356
+#> response     1.7759638 3.9795602 6.4318981 7.8752109 9.0003794 25.847206
+#> response_se  0.8771502 1.9261910 2.8786432 3.2365043 4.1049406  5.928878
 #> dimension(s):
 #>          from to offset delta refsys point values
 #> i           1 25      1     1     NA FALSE   NULL
@@ -980,10 +885,10 @@ These predictions can be converted to a single sf data.frame fairly easily.
 
 ```r
 tmp<- cbind(
-  do.call(cbind,values(sf_pred)[,,1]),
+  do.call(cbind,values(sf_pred)[, , 1]),
   locations(sf_pred)
 )
-colnames(tmp)[1:6]<- c("w","w_se","linear","linear_se","response","response_se")
+colnames(tmp)[1:6]<- c("w", "w_se", "linear", "linear_se", "response", "response_se")
 tmp
 #> Simple feature collection with 25 features and 7 fields
 #> Geometry type: POINT
@@ -992,16 +897,16 @@ tmp
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
 #>            w      w_se    linear linear_se  response response_se year
-#> 1  1.8955512 0.2865761 1.8955512 0.2865761  6.656217   1.9462823 2012
-#> 2  2.2084346 0.3062870 2.2084346 0.3062870  9.101458   2.8522878 2012
-#> 3  2.5666402 0.4376130 2.5666402 0.4376130 13.022000   5.9651888 2012
-#> 4  2.9497865 0.3030088 2.9497865 0.3030088 19.101874   5.9194017 2012
-#> 5  0.5778736 0.4711003 0.5778736 0.4711003  1.782245   0.8849758 2012
-#> 6  2.0253046 0.3628623 2.0253046 0.3628623  7.578419   2.8389998 2013
-#> 7  1.4405064 0.4669397 1.4405064 0.4669397  4.222834   2.0765089 2013
-#> 8  1.3647776 0.3618621 1.3647776 0.3618621  3.914852   1.4622764 2013
-#> 9  2.8740005 0.2918437 2.8740005 0.2918437 17.707716   5.2767796 2013
-#> 10 3.2386208 0.2205022 3.2386208 0.2205022 25.498529   5.6904143 2013
+#> 1  1.8936657 0.2842439 1.8936657 0.2842439  6.643678   1.9261910 2012
+#> 2  2.1972667 0.3034367 2.1972667 0.3034367  9.000379   2.7932030 2012
+#> 3  2.5549501 0.4316747 2.5549501 0.4316747 12.870657   5.8090011 2012
+#> 4  2.9444298 0.2997785 2.9444298 0.2997785 18.999825   5.8222976 2012
+#> 5  0.5743433 0.4688127 0.5743433 0.4688127  1.775964   0.8771502 2012
+#> 6  2.0279095 0.3586221 2.0279095 0.3586221  7.598186   2.8111235 2013
+#> 7  1.4415828 0.4624025 1.4415828 0.4624025  4.227382   2.0565887 2013
+#> 8  1.3763507 0.3570432 1.3763507 0.3570432  3.960423   1.4584115 2013
+#> 9  2.8588279 0.2885053 2.8588279 0.2885053 17.441072   5.1354812 2013
+#> 10 3.2522025 0.2183548 3.2522025 0.2183548 25.847206   5.7107389 2013
 #>                          geom
 #> 1  POINT (-93.44969 37.48708)
 #> 2   POINT (-92.76769 36.7374)
@@ -1048,13 +953,13 @@ strv_predict(
 )
 #> stars object with 4 dimensions and 6 attributes
 #> attribute(s):
-#>                   Min.   1st Qu.    Median     Mean   3rd Qu.       Max.
-#> w            0.1615913 1.2324027 1.8309501 1.733903 2.2950947  3.3125145
-#> w_se         0.2479856 0.3589519 0.4197394 0.412666 0.4536503  0.6910461
-#> linear       0.1615913 1.2324027 1.8309501 1.733903 2.2950947  3.3125145
-#> linear_se    0.2479856 0.3589519 0.4197394 0.412666 0.4536503  0.6910461
-#> response     1.1753798 3.4294719 6.2401135 7.095404 9.9256294 27.4540749
-#> response_se  0.6431997 1.5589103 2.5806664 2.784185 3.7161595  7.6653008
+#>                   Min.   1st Qu.    Median      Mean    3rd Qu.      Max.
+#> w            0.1785328 1.2302633 1.8241130 1.7333403  2.3126393  3.301629
+#> w_se         0.2458533 0.3556013 0.4154899 0.4089841  0.4487114  0.683468
+#> linear       0.1785328 1.2302633 1.8241130 1.7333403  2.3126393  3.301629
+#> linear_se    0.2458533 0.3556013 0.4154899 0.4089841  0.4487114  0.683468
+#> response     1.1954621 3.4221325 6.1978362 7.1262945 10.1010797 27.156843
+#> response_se  0.6456785 1.5226590 2.5492215 2.7704882  3.6785018  7.498415
 #> dimension(s):
 #>          from to   offset     delta refsys point        values x/y
 #> x           1  5 -95.2344   1.19733 WGS 84 FALSE          NULL [x]
@@ -1069,7 +974,7 @@ See '?raster::mask' for details on creating raster with NAs.
 
 ```r
 pred_raster[]<- 0
-pred_raster[3,3]<- NA
+pred_raster[3, 3]<- NA
 pred_raster
 #> class      : RasterLayer 
 #> dimensions : 5, 5, 25  (nrow, ncol, ncell)
@@ -1090,13 +995,13 @@ pred_out<- strv_predict(
   bird_model,
   pred_raster
 )
-pred_out$response[,,1,1]
-#>          [,1]     [,2]      [,3]      [,4]      [,5]
-#> [1,] 4.615803 7.672447  6.713338  6.804606  7.755325
-#> [2,] 3.424155 4.829670  5.403129 14.478708 11.001679
-#> [3,] 3.325594 5.522541        NA 10.201815  7.046480
-#> [4,] 4.897331 6.301414 13.208526  9.802879 10.857169
-#> [5,] 7.078449 8.047967 10.407504 14.204704 11.183505
+pred_out$response[, , 1, 1]
+#>          [,1]     [,2]      [,3]     [,4]      [,5]
+#> [1,] 4.595541 7.582502  6.831593  6.73246  7.663349
+#> [2,] 3.428379 4.833342  5.370199 14.47482 10.936831
+#> [3,] 3.309876 5.394929        NA 10.30159  7.071058
+#> [4,] 4.819618 6.279708 13.484937 10.05760 10.879663
+#> [5,] 6.903951 7.948005 10.597116 14.10767 11.057125
 ```
 
 For raster predictions an additional 'time' option is available to specify which years to make predictions for, with the default behaviour being to predict every year between the earliest and latest year in the original dataset.
@@ -1111,12 +1016,12 @@ strv_predict(
 #> stars object with 4 dimensions and 6 attributes
 #> attribute(s):
 #>                   Min.   1st Qu.    Median      Mean   3rd Qu.       Max. NA's
-#> w            0.5569947 1.3213066 1.7767298 1.7402396 2.1608855  3.2150192    5
-#> w_se         0.4142775 0.6395674 0.7250005 0.7219569 0.8223608  0.9714563    5
-#> linear       0.5569947 1.3213066 1.7767298 1.7402396 2.1608855  3.2150192    5
-#> linear_se    0.4142775 0.6395674 0.7250005 0.7219569 0.8223608  0.9714563    5
-#> response     1.7454191 3.7520235 5.9106681 6.8113929 8.6829796 24.9037724    5
-#> response_se  1.2097532 3.1630877 4.5958772 5.2097580 6.5890510 13.6785221    5
+#> w            0.5411165 1.2974578 1.7896265 1.7272752 2.1457890  3.2069449    5
+#> w_se         0.4042275 0.6325751 0.7226648 0.7163256 0.8173013  0.9605696    5
+#> linear       0.5411165 1.2974578 1.7896265 1.7272752 2.1457890  3.2069449    5
+#> linear_se    0.4042275 0.6325751 0.7226648 0.7163256 0.8173013  0.9605696    5
+#> response     1.7179240 3.6648861 5.9877410 6.8124258 8.5508947 24.7035007    5
+#> response_se  1.1786307 2.9771994 4.4255650 5.1608529 6.5614954 13.1951571    5
 #> dimension(s):
 #>          from to   offset     delta refsys point        values x/y
 #> x           1  5 -95.2344   1.19733 WGS 84 FALSE          NULL [x]
@@ -1143,34 +1048,45 @@ No record of the previous values are stored.
 
 ```r
 sim_model<- strv_prepare(
-  cnt~time(year),
+  cnt ~ time(year),
   bird_survey,
-  distribution="poisson",
-  fit=T
+  distribution = "poisson",
+  fit = TRUE
 )
 sim_model<- strv_simulate(sim_model)
 sim_model
+#> A starve model object
 #> 
-#> [1] "Simulated realization from model"
+#> Model formula: cnt ~ time(year)
+#> Response distribution: poisson
+#> Link function: log
+#> Optimizer message: Simulated realization from model
 #> 
+#> Data is a simple feature collection with 404 features
+#> CRS: WGS 84
+#> Bounding times: 2005 2014
+#> Bounding box:
+#>      xmin      ymin      xmax      ymax 
+#> -95.23445  36.11935 -89.24779  40.47128
+parameters(sim_model)
 #> An object of class "parameters"
 #> Slot "covariance_function":
 #> [1] "exponential"
 #> 
-#> Slot "spatial_parameters":
+#> Slot "space_parameters":
 #> $cnt
-#>                par se fixed
-#> sd      0.04618762 NA FALSE
-#> range 154.77282931 NA FALSE
-#> nu      0.50000000 NA  TRUE
+#>               par se fixed
+#> sd      0.0454728 NA FALSE
+#> range 141.2524496 NA FALSE
+#> nu      0.5000000 NA  TRUE
 #> 
 #> 
 #> Slot "time_parameters":
 #> $cnt
 #>              par se fixed
-#> mu  2.238769e+00 NA FALSE
-#> ar1 9.334288e-01 NA FALSE
-#> sd  3.439219e-05 NA FALSE
+#> mu  2.219418e+00 NA FALSE
+#> ar1 9.384590e-01 NA FALSE
+#> sd  3.987924e-05 NA FALSE
 #> 
 #> 
 #> Slot "response_distribution":
@@ -1189,27 +1105,6 @@ sim_model
 #> $cnt
 #> [1] par   se    fixed
 #> <0 rows> (or 0-length row.names)
-#> 
-#> 
-#> 
-#> Data
-#> Simple feature collection with 404 features and 3 fields
-#> Geometry type: POINT
-#> Dimension:     XY
-#> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
-#> Geodetic CRS:  WGS 84
-#> First 10 features:
-#>     cnt year graph_idx                       geom
-#> 422  26 2005        63 POINT (-95.23445 40.46577)
-#> 417  29 2005        62 POINT (-95.03312 40.02546)
-#> 402  10 2005        59 POINT (-94.66548 39.65398)
-#> 415  25 2005        58 POINT (-94.50103 39.39702)
-#> 416  19 2005        57 POINT (-94.14222 40.10026)
-#> 392  33 2005        29   POINT (-94.1192 37.1404)
-#> 420  17 2005        43 POINT (-94.10504 38.66985)
-#> 384  24 2005        37  POINT (-93.9101 36.66086)
-#> 391  16 2005        26 POINT (-93.85185 37.77059)
-#> 397  22 2005        24 POINT (-93.84015 38.19498)
 ```
 
 To simulate from a completely new model you first have to create a template sf data.frame.
@@ -1222,11 +1117,11 @@ We will use a sf data.frame with a 4x4 grid of points replicated over 5 years.
 sim_df<- st_as_sf(
   data.frame(
     y = 0,
-    t = rep(1:5,each=16),
-    ycoord = rep(1:4,4),
-    xcoord = rep(1:4,each=4)
+    t = rep(1:5, each = 16),
+    ycoord = rep(1:4, 4),
+    xcoord = rep(1:4, each = 4)
   ),
-  coords = c("ycoord","xcoord")
+  coords = c("ycoord", "xcoord")
 )
 sim_df
 #> Simple feature collection with 80 features and 2 fields
@@ -1248,10 +1143,10 @@ sim_df
 #> 10 0 1 POINT (2 3)
 
 sim_model<- strv_prepare(
-  y~time(t),
+  y ~ time(t),
   sim_df,
   distribution = "gaussian",
-  fit = F
+  fit = FALSE
 )
 ```
 
@@ -1260,19 +1155,34 @@ After doing so you can simulate new random effects and data from the model.
 
 
 ```r
-time_parameters(sim_model)$y[c("mu","ar1","sd"),"par"]<- c(10,0.7,1)
-spatial_parameters(sim_model)$y[c("sd","range"),"par"]<- c(2,0.5)
-response_parameters(sim_model)$y["sd","par"]<- 0.5
+time_parameters(sim_model)$y[c("mu", "ar1", "sd"), "par"]<- c(10, 0.7, 1)
+space_parameters(sim_model)$y[c("sd", "range"), "par"]<- c(2, 0.5)
+response_parameters(sim_model)$y["sd", "par"]<- 0.5
 sim_model<- strv_simulate(sim_model)
-sim_model
-#> 
-#> [1] "Simulated realization from model"
-#> 
+dat(sim_model)
+#> Simple feature collection with 80 features and 3 fields
+#> Geometry type: POINT
+#> Dimension:     XY
+#> Bounding box:  xmin: 1 ymin: 1 xmax: 4 ymax: 4
+#> CRS:           NA
+#> First 10 features:
+#>            y t graph_idx    geometry
+#> 1   9.891189 1         1 POINT (1 1)
+#> 5   8.381199 1         5 POINT (1 2)
+#> 9   9.848376 1         9 POINT (1 3)
+#> 13  8.132670 1        13 POINT (1 4)
+#> 2   7.266278 1         2 POINT (2 1)
+#> 6  10.578628 1         6 POINT (2 2)
+#> 10  8.019771 1        10 POINT (2 3)
+#> 14  4.554173 1        14 POINT (2 4)
+#> 3   5.608597 1         3 POINT (3 1)
+#> 7   8.396912 1         7 POINT (3 2)
+parameters(sim_model)
 #> An object of class "parameters"
 #> Slot "covariance_function":
 #> [1] "exponential"
 #> 
-#> Slot "spatial_parameters":
+#> Slot "space_parameters":
 #> $y
 #>       par se fixed
 #> sd    2.0 NA FALSE
@@ -1304,27 +1214,6 @@ sim_model
 #> $y
 #> [1] par   se    fixed
 #> <0 rows> (or 0-length row.names)
-#> 
-#> 
-#> 
-#> Data
-#> Simple feature collection with 80 features and 3 fields
-#> Geometry type: POINT
-#> Dimension:     XY
-#> Bounding box:  xmin: 1 ymin: 1 xmax: 4 ymax: 4
-#> CRS:           NA
-#> First 10 features:
-#>           y t graph_idx    geometry
-#> 1  16.04436 1         1 POINT (1 1)
-#> 5  15.05160 1         5 POINT (1 2)
-#> 9  13.92175 1         9 POINT (1 3)
-#> 13 12.99514 1        13 POINT (1 4)
-#> 2  11.75740 1         2 POINT (2 1)
-#> 6  14.47301 1         6 POINT (2 2)
-#> 10 14.46695 1        10 POINT (2 3)
-#> 14 14.11784 1        14 POINT (2 4)
-#> 3  14.61475 1         3 POINT (3 1)
-#> 7  14.87963 1         7 POINT (3 2)
 ```
 
 
@@ -1340,12 +1229,12 @@ time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
 #>        w           se          
-#>  Min.   :10.38   Mode:logical  
-#>  1st Qu.:10.54   NA's:5        
-#>  Median :10.89                 
-#>  Mean   :11.37                 
-#>  3rd Qu.:11.21                 
-#>  Max.   :13.85                 
+#>  Min.   :7.502   Mode:logical  
+#>  1st Qu.:7.806   NA's:5        
+#>  Median :8.053                 
+#>  Mean   :7.989                 
+#>  3rd Qu.:8.262                 
+#>  Max.   :8.322                 
 #> dimension(s):
 #>          from to offset delta refsys point values
 #> t           1  5      1     1     NA FALSE   NULL
@@ -1354,25 +1243,19 @@ pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 5.091   Mode:logical  
-#>  1st Qu.: 9.011   NA's:80       
-#>  Median :10.606                 
-#>  Mean   :10.817                 
-#>  3rd Qu.:13.032                 
-#>  Max.   :15.994                 
+#>  Min.   : 3.124   Mode:logical  
+#>  1st Qu.: 6.582   NA's:80       
+#>  Median : 7.756                 
+#>  Mean   : 7.682                 
+#>  3rd Qu.: 9.217                 
+#>  Max.   :11.528                 
 #> dimension(s):
 #>          from to offset delta refsys point                      values
 #> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
 #> t           1  5      1     1     NA FALSE                        NULL
 #> variable    1  1     NA    NA     NA FALSE                           y
 head(dat(sim_model)$y)
-#>          [,1]
-#> [1,] 16.04436
-#> [2,] 15.05160
-#> [3,] 13.92175
-#> [4,] 12.99514
-#> [5,] 11.75740
-#> [6,] 14.47301
+#> [1]  9.891189  8.381199  9.848376  8.132670  7.266278 10.578628
 sim_model<- strv_simulate(
   sim_model
 )
@@ -1380,12 +1263,12 @@ time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 9.264   Mode:logical  
-#>  1st Qu.: 9.866   NA's:5        
-#>  Median :11.395                 
-#>  Mean   :10.814                 
-#>  3rd Qu.:11.428                 
-#>  Max.   :12.118                 
+#>  Min.   : 7.732   Mode:logical  
+#>  1st Qu.:10.826   NA's:5        
+#>  Median :11.478                 
+#>  Mean   :10.787                 
+#>  3rd Qu.:11.719                 
+#>  Max.   :12.181                 
 #> dimension(s):
 #>          from to offset delta refsys point values
 #> t           1  5      1     1     NA FALSE   NULL
@@ -1394,31 +1277,25 @@ pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 6.092   Mode:logical  
-#>  1st Qu.: 9.492   NA's:80       
-#>  Median :10.686                 
-#>  Mean   :10.877                 
-#>  3rd Qu.:12.567                 
-#>  Max.   :16.218                 
+#>  Min.   : 3.979   Mode:logical  
+#>  1st Qu.: 9.130   NA's:80       
+#>  Median :10.735                 
+#>  Mean   :10.617                 
+#>  3rd Qu.:12.167                 
+#>  Max.   :15.758                 
 #> dimension(s):
 #>          from to offset delta refsys point                      values
 #> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
 #> t           1  5      1     1     NA FALSE                        NULL
 #> variable    1  1     NA    NA     NA FALSE                           y
 head(dat(sim_model)$y)
-#>           [,1]
-#> [1,] 10.004497
-#> [2,] 13.613470
-#> [3,]  9.172723
-#> [4,] 13.881187
-#> [5,] 12.545160
-#> [6,]  9.634249
+#> [1]  7.519813  9.280342 11.673805  9.254610  8.113644  7.067058
 ```
 
 
 ## Simulating only observations
 
-Simulations of only new data, conditional on the existing time effects and random effects, can be made by giving the 'conditional=T' option.
+Simulations of only new data, conditional on the existing time effects and random effects, can be made by giving the 'conditional=TRUE' option.
 Note that the time effects and random effects are the same before and after simulation, but that the response variable is different.
 
 
@@ -1427,12 +1304,12 @@ time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 9.264   Mode:logical  
-#>  1st Qu.: 9.866   NA's:5        
-#>  Median :11.395                 
-#>  Mean   :10.814                 
-#>  3rd Qu.:11.428                 
-#>  Max.   :12.118                 
+#>  Min.   : 7.732   Mode:logical  
+#>  1st Qu.:10.826   NA's:5        
+#>  Median :11.478                 
+#>  Mean   :10.787                 
+#>  3rd Qu.:11.719                 
+#>  Max.   :12.181                 
 #> dimension(s):
 #>          from to offset delta refsys point values
 #> t           1  5      1     1     NA FALSE   NULL
@@ -1441,39 +1318,33 @@ pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 6.092   Mode:logical  
-#>  1st Qu.: 9.492   NA's:80       
-#>  Median :10.686                 
-#>  Mean   :10.877                 
-#>  3rd Qu.:12.567                 
-#>  Max.   :16.218                 
+#>  Min.   : 3.979   Mode:logical  
+#>  1st Qu.: 9.130   NA's:80       
+#>  Median :10.735                 
+#>  Mean   :10.617                 
+#>  3rd Qu.:12.167                 
+#>  Max.   :15.758                 
 #> dimension(s):
 #>          from to offset delta refsys point                      values
 #> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
 #> t           1  5      1     1     NA FALSE                        NULL
 #> variable    1  1     NA    NA     NA FALSE                           y
 head(dat(sim_model)$y)
-#>           [,1]
-#> [1,] 10.004497
-#> [2,] 13.613470
-#> [3,]  9.172723
-#> [4,] 13.881187
-#> [5,] 12.545160
-#> [6,]  9.634249
+#> [1]  7.519813  9.280342 11.673805  9.254610  8.113644  7.067058
 sim_model<- strv_simulate(
   sim_model,
-  conditional=T
+  conditional = TRUE
 )
 time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 9.264   Mode:logical  
-#>  1st Qu.: 9.866   NA's:5        
-#>  Median :11.395                 
-#>  Mean   :10.814                 
-#>  3rd Qu.:11.428                 
-#>  Max.   :12.118                 
+#>  Min.   : 7.732   Mode:logical  
+#>  1st Qu.:10.826   NA's:5        
+#>  Median :11.478                 
+#>  Mean   :10.787                 
+#>  3rd Qu.:11.719                 
+#>  Max.   :12.181                 
 #> dimension(s):
 #>          from to offset delta refsys point values
 #> t           1  5      1     1     NA FALSE   NULL
@@ -1482,25 +1353,19 @@ pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 6.092   Mode:logical  
-#>  1st Qu.: 9.492   NA's:80       
-#>  Median :10.686                 
-#>  Mean   :10.877                 
-#>  3rd Qu.:12.567                 
-#>  Max.   :16.218                 
+#>  Min.   : 3.979   Mode:logical  
+#>  1st Qu.: 9.130   NA's:80       
+#>  Median :10.735                 
+#>  Mean   :10.617                 
+#>  3rd Qu.:12.167                 
+#>  Max.   :15.758                 
 #> dimension(s):
 #>          from to offset delta refsys point                      values
 #> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
 #> t           1  5      1     1     NA FALSE                        NULL
 #> variable    1  1     NA    NA     NA FALSE                           y
 head(dat(sim_model)$y)
-#>           [,1]
-#> [1,] 10.017073
-#> [2,] 14.597501
-#> [3,]  9.893089
-#> [4,] 12.051603
-#> [5,] 11.835742
-#> [6,]  9.231888
+#> [1]  9.088818  8.993705 11.890719 10.081252  7.361262  7.049294
 ```
 
 
@@ -1533,16 +1398,16 @@ All covariates that are named in the model formula are also present in the data 
 
 ```r
 bird_model<- strv_prepare(
-  cnt ~ elev+temp+time(year),
+  cnt ~ elev + temp + time(year),
   bird_survey,
   distribution = "poisson",
-  fit = T
+  fit = TRUE
 )
 fixed_effects(bird_model)
 #> $cnt
 #>               par         se fixed
-#> elev  0.001391316 0.02556837 FALSE
-#> temp -0.008900537 0.02606195 FALSE
+#> elev -0.001530904 0.02637356 FALSE
+#> temp  0.055148435 0.02473195 FALSE
 dat(bird_model)
 #> Simple feature collection with 404 features and 5 fields
 #> Geometry type: POINT
@@ -1550,17 +1415,17 @@ dat(bird_model)
 #> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>            elev       temp cnt year graph_idx                       geom
-#> 422  1.34828796  2.1010647   1 2005        63 POINT (-95.23445 40.46577)
-#> 417  0.82879056  1.9879366   7 2005        62 POINT (-95.03312 40.02546)
-#> 402 -0.06566962 -0.1125152   5 2005        59 POINT (-94.66548 39.65398)
-#> 415 -0.78372086 -0.9049937   7 2005        58 POINT (-94.50103 39.39702)
-#> 416  2.12633511  0.5939944   3 2005        57 POINT (-94.14222 40.10026)
-#> 392  0.50074447 -1.9722455   3 2005        29   POINT (-94.1192 37.1404)
-#> 420 -0.89223203  0.9132973   4 2005        43 POINT (-94.10504 38.66985)
-#> 384 -0.17104232 -0.3689395  11 2005        37  POINT (-93.9101 36.66086)
-#> 391  0.70427131 -0.5244365   7 2005        26 POINT (-93.85185 37.77059)
-#> 397 -2.27217139  0.8688053   2 2005        24 POINT (-93.84015 38.19498)
+#>           elev        temp cnt year graph_idx                       geom
+#> 422  0.9072227  0.26233355   1 2005        63 POINT (-95.23445 40.46577)
+#> 417 -0.7617050 -1.35049412   7 2005        62 POINT (-95.03312 40.02546)
+#> 402  0.4249136 -0.47306635   5 2005        59 POINT (-94.66548 39.65398)
+#> 415 -0.5561445 -0.96943566   7 2005        58 POINT (-94.50103 39.39702)
+#> 416 -0.4008697 -0.11856966   3 2005        57 POINT (-94.14222 40.10026)
+#> 392 -0.3445642 -1.09132773   3 2005        29   POINT (-94.1192 37.1404)
+#> 420  0.9499547 -0.88194970   4 2005        43 POINT (-94.10504 38.66985)
+#> 384  0.8287906  1.98793662  11 2005        37  POINT (-93.9101 36.66086)
+#> 391  0.7272536  0.04271795   7 2005        26 POINT (-93.85185 37.77059)
+#> 397  0.9610694  0.18945147   2 2005        24 POINT (-93.84015 38.19498)
 ```
 
 More complex covariate effects such as interaction terms, transformations, and polynomial functions can be included in the model formula.
@@ -1568,17 +1433,17 @@ More complex covariate effects such as interaction terms, transformations, and p
 
 ```r
 bird_model<- strv_prepare(
-  cnt ~ I(abs(temp))+poly(elev,2) + time(year),
+  cnt ~ I(abs(temp)) + poly(elev, 2) + time(year),
   bird_survey,
   distribution = "poisson",
-  fit = T
+  fit = TRUE
 )
 fixed_effects(bird_model)
 #> $cnt
-#>                        par        se fixed
-#> I(abs(temp))   -0.04310055 0.0444570 FALSE
-#> poly(elev, 2)1 -0.02728057 0.4892432 FALSE
-#> poly(elev, 2)2 -0.42637251 0.5284338 FALSE
+#>                        par         se fixed
+#> I(abs(temp))    0.00152017 0.03941195 FALSE
+#> poly(elev, 2)1 -0.03240787 0.50385275 FALSE
+#> poly(elev, 2)2  0.49380021 0.47159868 FALSE
 dat(bird_model)
 #> Simple feature collection with 404 features and 5 fields
 #> Geometry type: POINT
@@ -1586,17 +1451,17 @@ dat(bird_model)
 #> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>           temp        elev cnt year graph_idx                       geom
-#> 422  2.1010647  1.34828796   1 2005        63 POINT (-95.23445 40.46577)
-#> 417  1.9879366  0.82879056   7 2005        62 POINT (-95.03312 40.02546)
-#> 402 -0.1125152 -0.06566962   5 2005        59 POINT (-94.66548 39.65398)
-#> 415 -0.9049937 -0.78372086   7 2005        58 POINT (-94.50103 39.39702)
-#> 416  0.5939944  2.12633511   3 2005        57 POINT (-94.14222 40.10026)
-#> 392 -1.9722455  0.50074447   3 2005        29   POINT (-94.1192 37.1404)
-#> 420  0.9132973 -0.89223203   4 2005        43 POINT (-94.10504 38.66985)
-#> 384 -0.3689395 -0.17104232  11 2005        37  POINT (-93.9101 36.66086)
-#> 391 -0.5244365  0.70427131   7 2005        26 POINT (-93.85185 37.77059)
-#> 397  0.8688053 -2.27217139   2 2005        24 POINT (-93.84015 38.19498)
+#>            temp       elev cnt year graph_idx                       geom
+#> 422  0.26233355  0.9072227   1 2005        63 POINT (-95.23445 40.46577)
+#> 417 -1.35049412 -0.7617050   7 2005        62 POINT (-95.03312 40.02546)
+#> 402 -0.47306635  0.4249136   5 2005        59 POINT (-94.66548 39.65398)
+#> 415 -0.96943566 -0.5561445   7 2005        58 POINT (-94.50103 39.39702)
+#> 416 -0.11856966 -0.4008697   3 2005        57 POINT (-94.14222 40.10026)
+#> 392 -1.09132773 -0.3445642   3 2005        29   POINT (-94.1192 37.1404)
+#> 420 -0.88194970  0.9499547   4 2005        43 POINT (-94.10504 38.66985)
+#> 384  1.98793662  0.8287906  11 2005        37  POINT (-93.9101 36.66086)
+#> 391  0.04271795  0.7272536   7 2005        26 POINT (-93.85185 37.77059)
+#> 397  0.18945147  0.9610694   2 2005        24 POINT (-93.84015 38.19498)
 ```
 
 
@@ -1607,10 +1472,10 @@ We'll use the simpler covariate model for predictions.
 
 ```r
 bird_model<- strv_prepare(
-  cnt ~ elev+temp + time(year),
+  cnt ~ elev + temp + time(year),
   bird_survey,
   distribution = "poisson",
-  fit = T
+  fit = TRUE
 )
 ```
 
@@ -1622,27 +1487,30 @@ pred_points<- st_sample(
   st_as_sfc(st_bbox(bird_survey)),
   size = 25
 )
-pred_points<- st_sf(geom = pred_points,year=rep(2012:2016,each=5))
+pred_points<- st_sf(
+  geom = pred_points,
+  year = rep(2012:2016, each = 5)
+)
 pred_points$elev<- rnorm(nrow(pred_points))
 pred_points$temp<- rnorm(nrow(pred_points))
 pred_points
 #> Simple feature collection with 25 features and 3 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -94.70626 ymin: 36.32475 xmax: -89.3367 ymax: 40.27905
+#> Bounding box:  xmin: -95.15498 ymin: 36.21214 xmax: -89.75344 ymax: 40.35134
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>    year                       geom       elev        temp
-#> 1  2012  POINT (-93.20955 40.1978) -0.1568384 -0.43431142
-#> 2  2012 POINT (-92.32139 36.32475)  0.1788332  0.79416674
-#> 3  2012 POINT (-91.44953 37.92631)  0.7984350 -0.58376076
-#> 4  2012 POINT (-91.46018 39.82648) -1.9367221 -0.42972340
-#> 5  2012 POINT (-91.32337 40.27905)  1.6294998 -0.58097020
-#> 6  2013 POINT (-89.92608 36.58008) -1.6585110  1.04889877
-#> 7  2013  POINT (-93.16452 38.5783) -0.6631657 -2.01526012
-#> 8  2013 POINT (-93.91487 36.43181)  0.4648332 -0.43874186
-#> 9  2013 POINT (-91.21353 36.97279) -2.2180651 -0.09840643
-#> 10 2013 POINT (-93.95435 38.32576) -2.1743246  1.00846581
+#>    year                       geom        elev       temp
+#> 1  2012 POINT (-95.15498 37.93436) -0.09840643  0.4703777
+#> 2  2012  POINT (-89.75344 39.5785)  1.00846581  0.3356741
+#> 3  2012 POINT (-95.14561 36.41512) -0.82732277  1.5741667
+#> 4  2012 POINT (-90.84599 36.51493)  0.24684041  0.8341889
+#> 5  2012 POINT (-90.24617 37.92396)  1.13449375  0.2189963
+#> 6  2013  POINT (-90.5351 40.35134) -0.80550036  0.1519377
+#> 7  2013 POINT (-93.07369 38.76934) -0.31044326 -1.0368923
+#> 8  2013 POINT (-92.87761 38.35209) -0.28163080  0.4513662
+#> 9  2013 POINT (-90.73921 39.39198) -1.01051802  1.4318069
+#> 10 2013 POINT (-93.15171 37.53583)  0.98690528  0.9491188
 ```
 
 The output is the same as predictions without covariates, but the covariates used are also included in the resulting 'long_stars' object.
@@ -1658,12 +1526,12 @@ strv_predict(
 #> stars object with 2 dimensions and 6 attributes
 #> attribute(s):
 #>                   Min.   1st Qu.    Median      Mean   3rd Qu.       Max.
-#> w            0.1736099 1.4626037 1.6519147 1.7133580 2.2924910  2.8210557
-#> w_se         0.2282538 0.4008931 0.5007249 0.5265086 0.6248978  0.9158901
-#> linear       0.1772573 1.4607508 1.6564665 1.7143263 2.2987976  2.8111438
-#> linear_se    0.2296221 0.4039551 0.5008448 0.5280909 0.6266136  0.9165831
-#> response     1.1939383 4.3091935 5.2407597 6.8415394 9.9621972 16.6289282
-#> response_se  0.7609315 1.9847516 2.9945639 3.7579912 5.4172425 10.2216381
+#> w            0.4337881 1.0607123 1.7590924 1.7132263 2.2267261  3.2009888
+#> w_se         0.2460823 0.3673565 0.4823502 0.4893581 0.6096465  0.7538131
+#> linear       0.4434004 1.0597415 1.7139219 1.7176241 2.2832601  3.1895010
+#> linear_se    0.2470282 0.3683301 0.4824978 0.4904452 0.6100288  0.7544784
+#> response     1.5579960 2.8856249 5.5506881 7.5969329 9.8086055 24.2763094
+#> response_se  0.9093627 1.5924302 2.8044815 3.4246183 4.5274684  9.0578221
 #> dimension(s):
 #>          from to offset delta refsys point values
 #> i           1 25      1     1     NA FALSE   NULL
@@ -1673,27 +1541,27 @@ strv_predict(
 #> Simple feature collection with 25 features and 3 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -94.70626 ymin: 36.32475 xmax: -89.3367 ymax: 40.27905
+#> Bounding box:  xmin: -95.15498 ymin: 36.21214 xmax: -89.75344 ymax: 40.35134
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>    year                       geom       elev        temp
-#> 1  2012  POINT (-93.20955 40.1978) -0.1568384 -0.43431142
-#> 2  2012 POINT (-92.32139 36.32475)  0.1788332  0.79416674
-#> 3  2012 POINT (-91.44953 37.92631)  0.7984350 -0.58376076
-#> 4  2012 POINT (-91.46018 39.82648) -1.9367221 -0.42972340
-#> 5  2012 POINT (-91.32337 40.27905)  1.6294998 -0.58097020
-#> 6  2013 POINT (-89.92608 36.58008) -1.6585110  1.04889877
-#> 7  2013  POINT (-93.16452 38.5783) -0.6631657 -2.01526012
-#> 8  2013 POINT (-93.91487 36.43181)  0.4648332 -0.43874186
-#> 9  2013 POINT (-91.21353 36.97279) -2.2180651 -0.09840643
-#> 10 2013 POINT (-93.95435 38.32576) -2.1743246  1.00846581
+#>    year                       geom        elev       temp
+#> 1  2012 POINT (-95.15498 37.93436) -0.09840643  0.4703777
+#> 2  2012  POINT (-89.75344 39.5785)  1.00846581  0.3356741
+#> 3  2012 POINT (-95.14561 36.41512) -0.82732277  1.5741667
+#> 4  2012 POINT (-90.84599 36.51493)  0.24684041  0.8341889
+#> 5  2012 POINT (-90.24617 37.92396)  1.13449375  0.2189963
+#> 6  2013  POINT (-90.5351 40.35134) -0.80550036  0.1519377
+#> 7  2013 POINT (-93.07369 38.76934) -0.31044326 -1.0368923
+#> 8  2013 POINT (-92.87761 38.35209) -0.28163080  0.4513662
+#> 9  2013 POINT (-90.73921 39.39198) -1.01051802  1.4318069
+#> 10 2013 POINT (-93.15171 37.53583)  0.98690528  0.9491188
 ```
 
 
 
 
-## Raster predictions
 
+## Raster predictions
 
 Covariates for raster predictions need to be supplied in a specific format: a list with a named element for each covariate.
 The elements need to have the same name as the covariate.
@@ -1710,16 +1578,16 @@ pred_raster<- raster(
   nrow = 5,
   ncol = 5
 )
-raster_elev<- stack(lapply(min(bird_survey$year):2019,function(year) {
+raster_elev<- stack(lapply(min(bird_survey$year):2019, function(year) {
   band<- pred_raster
   band[]<- rnorm(ncell(band))
-  names(band)<- paste0("T",year)
+  names(band)<- paste0("T", year)
   return(band)
 }))
-raster_temp<- stack(lapply(min(bird_survey$year):2019,function(year) {
+raster_temp<- stack(lapply(min(bird_survey$year):2019 ,function(year) {
   band<- pred_raster
   band[]<- rnorm(ncell(band))
-  names(band)<- paste0("T",year)
+  names(band)<- paste0("T", year)
   return(band)
 }))
 pred_covar<- list(
@@ -1734,8 +1602,8 @@ pred_covar
 #> extent     : -95.23445, -89.24779, 36.11935, 40.47128  (xmin, xmax, ymin, ymax)
 #> crs        : +proj=longlat +datum=WGS84 +no_defs 
 #> names      :     T2005,     T2006,     T2007,     T2008,     T2009,     T2010,     T2011,     T2012,     T2013,     T2014,     T2015,     T2016,     T2017,     T2018,     T2019 
-#> min values : -1.036892, -3.418857, -2.062440, -1.518286, -1.957272, -2.600349, -1.742927, -2.254533, -1.757465, -1.430715, -2.662935, -1.714059, -1.912300, -2.004042, -2.211060 
-#> max values :  1.574167,  1.537536,  1.605621,  1.845269,  1.354448,  1.440349,  1.297540,  1.640590,  2.197493,  1.855871,  2.438909,  1.426925,  2.286333,  2.742359,  2.219493 
+#> min values : -3.418857, -2.062440, -1.723448, -1.957272, -2.600349, -1.742927, -2.254533, -1.757465, -2.662935, -1.377822, -1.714059, -1.912300, -2.004042, -2.211060, -2.030086 
+#> max values :  1.537536,  1.845269,  1.354448,  1.249079,  1.440349,  1.432193,  1.843411,  2.197493,  1.728091,  2.438909,  1.775691,  2.742359,  2.219493,  1.541506,  1.161871 
 #> 
 #> 
 #> $temp
@@ -1745,8 +1613,8 @@ pred_covar
 #> extent     : -95.23445, -89.24779, 36.11935, 40.47128  (xmin, xmax, ymin, ymax)
 #> crs        : +proj=longlat +datum=WGS84 +no_defs 
 #> names      :     T2005,     T2006,     T2007,     T2008,     T2009,     T2010,     T2011,     T2012,     T2013,     T2014,     T2015,     T2016,     T2017,     T2018,     T2019 
-#> min values : -2.030086, -2.113791, -2.222009, -2.118209, -2.085452, -2.822138, -3.701192, -1.136959, -2.303146, -2.639094, -1.620791, -2.298241, -1.350512, -1.750296, -2.093928 
-#> max values :  1.490701,  2.165628,  1.378064,  2.040302,  1.729857,  1.938088,  1.379020,  2.884803,  2.630402,  1.742325,  1.767252,  1.460482,  2.572266,  2.863586,  1.666899
+#> min values : -2.222009, -2.118209, -1.847952, -2.085452, -2.822138, -3.701192, -1.474486, -2.303146, -2.639094, -2.298241, -1.420547, -1.750296, -2.093928, -1.490359, -1.148627 
+#> max values : 2.1656276, 2.0403016, 1.8421039, 1.7298567, 1.9380880, 1.4341396, 2.8848033, 2.6304022, 0.7742199, 1.7672524, 1.7344098, 2.8635858, 1.9149066, 1.6668995, 1.6124974
 ```
 
 For raster predictions, covariates are supplied to 'strv_predict' by giving the covariate raster list for the covariates is supplied as the third argument.
@@ -1762,15 +1630,24 @@ strv_predict(
 )
 #> stars object with 4 dimensions and 8 attributes
 #> attribute(s):
-#>                     Min.    1st Qu.      Median        Mean   3rd Qu.      Max.
-#> w            -0.04625461  1.2150404  1.83080041  1.73781299 2.2882786  3.328640
-#> w_se          0.23293327  0.3808917  0.45557338  0.53669571 0.6393080  1.176374
-#> linear       -0.04422722  1.2143137  1.83665872  1.73802571 2.2918081  3.340366
-#> linear_se     0.23417380  0.3827674  0.45749804  0.53814964 0.6400083  1.177985
-#> response      0.95673656  3.3680949  6.27553511  7.13943341 9.8929124 28.229454
-#> response_se   0.60713613  1.9500360  3.27284098  3.79992045 4.9988906 15.111821
-#> elev         -3.41885710 -0.5791440  0.01681079 -0.01760247 0.6390919  2.742359
-#> temp         -3.70119214 -0.7568049 -0.01412138 -0.02665122 0.6404161  2.884803
+#>                      Min.    1st Qu.      Median        Mean    3rd Qu.
+#> w             0.026504120  1.1978117  1.84100068  1.73237986  2.2805742
+#> w_se          0.228572965  0.3723104  0.44044849  0.52486726  0.6525957
+#> linear        0.005097097  1.2145507  1.84210026  1.73029349  2.3136318
+#> linear_se     0.231181860  0.3739160  0.44165832  0.52636825  0.6531663
+#> response      1.005110145  3.3687861  6.30977678  7.16050844 10.1111088
+#> response_se   0.567298234  1.8231915  3.05749083  3.73590886  4.8347173
+#> elev         -3.418857098 -0.5830220  0.01710944 -0.02733674  0.6350922
+#> temp         -3.701192141 -0.7444533 -0.05331650 -0.03859074  0.6366460
+#>                   Max.
+#> w             3.317222
+#> w_se          1.109247
+#> linear        3.365296
+#> linear_se     1.109636
+#> response     28.942074
+#> response_se  14.787893
+#> elev          2.742359
+#> temp          2.884803
 #> dimension(s):
 #>          from to   offset     delta refsys point        values x/y
 #> x           1  5 -95.2344   1.19733 WGS 84 FALSE          NULL [x]
@@ -1778,6 +1655,8 @@ strv_predict(
 #> year        1 15     2005         1     NA    NA 2005,...,2019    
 #> variable    1  1       NA        NA     NA    NA           cnt
 ```
+
+
 
 
 
@@ -1929,10 +1808,10 @@ parameters(bird_model)
 #> Slot "covariance_function":
 #> [1] "exponential"
 #> 
-#> Slot "spatial_parameters":
+#> Slot "space_parameters":
 #> $cnt
 #>               par          se fixed
-#> sd     0.05213431 0.003913888 FALSE
+#> sd     0.05149631 0.003859773 FALSE
 #> range 80.00000000 0.000000000  TRUE
 #> nu     0.50000000 0.000000000  TRUE
 #> 
@@ -1940,9 +1819,9 @@ parameters(bird_model)
 #> Slot "time_parameters":
 #> $cnt
 #>           par         se fixed
-#> mu  2.0066592 0.36396113 FALSE
-#> ar1 0.9235859 0.03168324 FALSE
-#> sd  0.1462888 0.07689308 FALSE
+#> mu  1.9894915 0.33874433 FALSE
+#> ar1 0.9259455 0.03137069 FALSE
+#> sd  0.1292182 0.08643885 FALSE
 #> 
 #> 
 #> Slot "response_distribution":
@@ -1962,19 +1841,19 @@ parameters(bird_model)
 #> [1] par   se    fixed
 #> <0 rows> (or 0-length row.names)
 
-time_parameters(bird_model)$cnt["ar1","par"]<- 0
-time_parameters(bird_model)$cnt["ar1","fixed"]<- T
-bird_model<- strv_fit(bird_model,silent=T)
+time_parameters(bird_model)$cnt["ar1", "par"]<- 0
+time_parameters(bird_model)$cnt["ar1", "fixed"]<- TRUE
+bird_model<- strv_fit(bird_model, silent = TRUE)
 
 parameters(bird_model)
 #> An object of class "parameters"
 #> Slot "covariance_function":
 #> [1] "exponential"
 #> 
-#> Slot "spatial_parameters":
+#> Slot "space_parameters":
 #> $cnt
 #>              par          se fixed
-#> sd     0.1050402 0.005070933 FALSE
+#> sd     0.1042155 0.005035682 FALSE
 #> range 80.0000000 0.000000000  TRUE
 #> nu     0.5000000 0.000000000  TRUE
 #> 
@@ -1982,9 +1861,9 @@ parameters(bird_model)
 #> Slot "time_parameters":
 #> $cnt
 #>              par         se fixed
-#> mu  2.019741e+00 0.08374696 FALSE
+#> mu  2.037032e+00 0.08868931 FALSE
 #> ar1 0.000000e+00 0.00000000  TRUE
-#> sd  5.856547e-05 0.07227955 FALSE
+#> sd  5.313066e-05 0.07370894 FALSE
 #> 
 #> 
 #> Slot "response_distribution":

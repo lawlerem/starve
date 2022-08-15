@@ -5,13 +5,14 @@ NULL
 #' Create an object of class \code{starve}.
 #'
 #' 'strv_prepare' is used to take an existing `simple features` data.frame
-#'   with point geometries, time information, covariates, and a response variable
-#'   and perform all of the pre-processing steps necessary to fit a model with the
-#'   \code{fit} function. See the description for \link{strv_prepare_process} and
-#'   \link{strv_prepare_observations} for more details on how each part is prepared.
+#'   with point geometries, time information, covariates, and a response
+#'   variable and perform all of the pre-processing steps necessary to fit a
+#'   model with the \code{fit} function. See the description for
+#'   \link{strv_prepare_process} and \link{strv_prepare_observations} for more
+#'   details on how each part is prepared.
 #'
-#' The formula object should always be of the form
-#'   \code{y ~ sample.size(n)+mean(x+z) + time(t,type="ar1") + space("matern",nu=1.5)},
+#' The formula object should always be of the form \code{y ~ sample.size(n) +
+#'   mean(x + z) + time(t, type = "ar1") + space("matern", nu = 1.5)},
 #'   though possibly with some terms missing.
 #'
 #' The variable y should be replaced with the desired response variable.
@@ -20,32 +21,36 @@ NULL
 #'   \code{binomial}, \code{atLeastOneBinomial}, or \code{tweedie}.
 #'   If it is missing the sample sizes are assumed to all be 1.
 #'
-#' The variables in the \code{mean(...)} term are used as covariates for the mean
-#'   of the response variable. Any formula valid for the \code{lm} command can be used
-#'   inside the \code{mean(...)}, such as \code{I(x^2)}. Any missing covariate values
-#'   will likely cause errors. If the \code{mean(...)} term is missing, no covariates will be used.
+#' The variables in the \code{mean(...)} term are used as covariates for the
+#'   mean of the response variable. Any formula valid for the \code{lm} command
+#'   can be used inside the \code{mean(...)}, such as \code{I(x^2)}. Any missing
+#'   covariate values will likely cause errors. If the \code{mean(...)} term is
+#'   missing, no covariates will be used.
 #'
-#' The \code{time(...)} term indicates which column, if any, holds the time index.
-#'   The variable t should be replaced with the desired time index. There are currently
-#'   three valid options for the `type' argument in \code{time(t,type="ar1")} --
-#'   "ar1" for an AR(1) structure, "rw" for a random walk, and "independent" for
-#'   independent spatial fields each year. If the \code{time(...)} term is missing,
-#'   all observations are assumed to be at the same time and a purely spatial model
-#'   is used.
+#' The \code{time(...)} term indicates which column, if any, holds the time
+#'   index. The variable t should be replaced with the desired time index. There
+#'   are currently three valid options for the `type' argument in
+#'   \code{time(t,type="ar1")} -- "ar1" for an AR(1) structure, "rw" for a
+#'   random walk, and "independent" for independent spatial fields each year. If
+#'   the \code{time(...)} term is missing, all observations are assumed to be
+#'   at the same time and a purely spatial model is used.
 #'
 #' The \code{space(...)} term specifies the spatial covariance function. See
 #'   \code{get_starve_distributions("covariance")} for valid names to supply.
 #'   If using the "matern" option you can supply a value for the smoothness
-#'   parameter nu, which will be held constant in model fitting. If nu is not given,
-#'   then it will be freely estimated in the model. If the \code{space(...)} term
-#'   as a whole is missing, an exponential covariance function is assumed.
+#'   parameter nu, which will be held constant in model fitting. If nu is not
+#'   given, then it will be freely estimated in the model. If the
+#'   \code{space(...)} term as a whole is missing, an exponential covariance
+#'   function is assumed.
 #'
 #' @param formula A formula object. See the 'Details' section below.
 #' @param data An `sf` object containing point geometries, and any other
 #'   variables needed to fit the model.
-#' @param nodes An `sf` object containing point geometries, defaulting to \code{data}.
-#'  These locations will be used as the locations for the persistent graph.
-#' @param n_neighbours An integer (default=10) giving the (maximum) number of parents for each node.
+#' @param nodes An `sf` object containing point geometries, defaulting to
+#'   \code{data}. These locations will be used as the locations for the
+#'   persistent graph.
+#' @param n_neighbours An integer (default=10) giving the (maximum) number of
+#'   parents for each node.
 #' @param persistent_graph If an object of class \code{dag} is supplied, that
 #'   graph is used for the persistent graph.
 #' @param transient_graph If an object of class \code{dag} is supplied, that
@@ -57,10 +62,10 @@ NULL
 #'   \code{get_starve_distributions("link")} for valid options.
 #'   The default link function changes depending on the response distribution.
 #' @param silent Logical. Should intermediate calculations be printed?
-#' @param max_dist Numeric. The maximum allowable distance for edges in the transient
-#'   graph, or for graphs computed when using the \code{starve_predict} function.
-#'   Unless this has a units attribute, units are assumed to be the same as
-#'   the supplied \code{distance_units}.
+#' @param max_dist Numeric. The maximum allowable distance for edges in the
+#'   transient graph, or for graphs computed when using the
+#'   \code{starve_predict} function. Unless this has a units attribute, units
+#'   are assumed to be the same as the supplied \code{distance_units}.
 #' @param distance_units Any value that can be used as a \code{units} object
 #'   from the \code{units} package. Which distance units should the model use?
 #'   Defaults to "km".
@@ -69,7 +74,8 @@ NULL
 #' @param ... Extra options to pass to \link{strv_fit} if fit=TRUE
 #'
 #' @return A starve object. If fit=TRUE, the returned model parameters will be
-#'   estimated using the \link{strv_fit} function using the default starting values.
+#'   estimated using the \link{strv_fit} function using the default starting
+#'   values.
 #'
 #' @seealso starve_class
 #'
@@ -91,7 +97,8 @@ strv_prepare<- function(
   model<- new("starve")
 
   # Set the settings in the model
-  settings(model)<- new("settings",
+  settings(model)<- new(
+    "settings",
     formula = formula,
     n_neighbours = n_neighbours,
     distance_units = distance_units,
@@ -116,7 +123,7 @@ strv_prepare<- function(
   )
 
   if( fit ) {
-    model<- strv_fit(model,silent = silent,...)
+    model<- strv_fit(model, silent = silent, ...)
   } else {}
 
   return(model)
@@ -126,11 +133,12 @@ strv_prepare<- function(
 
 #' @param settings A settings object
 #'
-#' @describeIn strv_prepare Creates a new process object with the correct dimensions for the
-#'   temporal random effects, persistent graph random effects, and transient
-#'   graph random effects. Initializes the temporal and spatial parameters for
-#'   the model according to the options specified in the formula element of the
-#'   settings argument. Constructs the persistent and transient graph, see \link{construct_graph}.
+#' @describeIn strv_prepare Creates a new process object with the correct
+#'   dimensions for the temporal random effects, persistent graph random
+#'   effects, and transient graph random effects. Initializes the temporal and
+#'   spatial parameters for the model according to the options specified in the
+#'   formula element of the settings argument. Constructs the persistent and
+#'   transient graph, see \link{construct_graph}.
 #'
 #'   Before creating the persistent graph any duplicate locations in nodes
 #'   are removed. Before creating the transient graph any location in data that
@@ -143,63 +151,107 @@ strv_prepare_process<- function(
   process<- new("process")
 
   # Return a time column with name and type (ar1/rw/etc) attributes
-  time_col<- time_from_formula(formula(settings),data)
-  time_seq<- seq(min(time_col),max(time_col))
+  time_col<- time_from_formula(formula(settings), data)
+  time_seq<- seq(min(time_col), max(time_col))
+  sf_name<- attr(data, "sf_column")
+
+
 
   # time_effects = "data.frame"
   time_effects(process)<- stars::st_as_stars(
-    list(w = array(0,dim=c(length(time_seq),n_response(formula(settings)))),
-         se = array(0,dim=c(length(time_seq),n_response(formula(settings))))
+    list(
+      w = array(
+        0,
+        dim = c(
+          length(time_seq),
+          n_response(formula(settings))
+        )
+      ),
+      se = array(
+        0,
+        dim = c(
+          length(time_seq),
+          n_response(formula(settings))
+        )
+      )
     ),
-    dimensions = stars::st_dimensions(time = time_seq,variable = response_names(formula(settings)))
+    dimensions = stars::st_dimensions(
+      time = time_seq,
+      variable = response_names(formula(settings))
+    )
   )
   names(stars::st_dimensions(time_effects(process)))[[1]]<- time_name(settings)
 
 
   # pg_re = "sf",
-  uniq_nodes<- unique(nodes[,attr(nodes,"sf_column")])
+  colnames(nodes)[colnames(nodes) == attr(nodes,"sf_column")]<- sf_name
+  st_geometry(nodes)<- sf_name
+  uniq_nodes<- unique(nodes[, sf_name])
 
-  if( !identical(persistent_graph,NA) ) {
+  if( !identical(persistent_graph, NA) ) {
     distance_units(persistent_graph)<- distance_units(settings)
     persistent_graph(process)<- persistent_graph
   } else {
-    graph<- construct_persistent_graph(uniq_nodes,settings=settings,silent=TRUE)
+    graph<- construct_persistent_graph(
+      uniq_nodes,
+      settings = settings,
+      silent = TRUE
+    )
     uniq_nodes<- graph$locations
     persistent_graph(process)<- graph$dag
   }
 
   pg_re(process)<- stars::st_as_stars(
-    list(w = array(0,dim=c(nrow(uniq_nodes),length(time_seq),n_response(formula(settings)))),
-         se = array(0,dim=c(nrow(uniq_nodes),length(time_seq),n_response(formula(settings))))
+    list(
+      w = array(
+        0,
+        dim = c(
+          nrow(uniq_nodes),
+          length(time_seq),
+          n_response(formula(settings))
+        )
+      ),
+      se = array(
+        0,
+        dim = c(
+          nrow(uniq_nodes),
+          length(time_seq),
+          n_response(formula(settings))
+        )
+      )
     ),
-    dimensions = stars::st_dimensions(geom = sf::st_geometry(uniq_nodes),
-                                      time = time_seq,
-                                      variable = response_names(formula(settings)))
+    dimensions = stars::st_dimensions(
+      geom = sf::st_geometry(uniq_nodes),
+      time = time_seq,
+      variable = response_names(formula(settings))
+    )
   )
   names(stars::st_dimensions(pg_re(process)))[[2]]<- time_name(settings)
-
 
 
   # tg_re = "sf"
   # Construct transient graph if not supplied
   pg_locs<- locations_from_stars(pg_re(process))
-  colnames(pg_locs)[colnames(pg_locs) == attr(pg_locs,"sf_column")]<- attr(data,"sf_column")
-  st_geometry(pg_locs)<- attr(data,"sf_column")
-  data<- data[lengths(st_equals(data,pg_locs)) == 0,]
+  colnames(pg_locs)[colnames(pg_locs) == attr(pg_locs,"sf_column")]<- sf_name
+  st_geometry(pg_locs)<- sf_name
+  data<- data[lengths(sf::st_equals(data, pg_locs)) == 0, ]
 
   transient_graph(process)<- construct_transient_graph(
     x = data,
     y = pg_locs,
-    time = time_from_formula(formula(settings),data),
+    time = time_from_formula(formula(settings), data),
     settings = settings
   )
-  tg_re(process)<- new("long_stars",
-                       locations = sf::st_sf(data.frame(
-                          time_from_formula(formula(settings),data,return="column")
-                         ),
-                         geom = sf::st_geometry(data)
-                       ),
-                       var_names = response_names(formula(settings)))
+  tg_re(process)<- new(
+    "long_stars",
+    locations = sf::st_sf(
+      time_from_formula(
+        formula(settings),
+        data,
+        return = "column"),
+      geom = sf::st_geometry(data)
+    ),
+    var_names = response_names(formula(settings)))
   names(values(tg_re(process)))[[2]]<- "se"
   values(tg_re(process))$linear<- NULL
   values(tg_re(process))$linear_se<- NULL
@@ -217,33 +269,37 @@ strv_prepare_process<- function(
   # covariance_function<- takes care of settings spatial parameters,
   # but if nu is supplied for matern need to set nu
   for( i in seq_along(covariance$nu) ) {
-    if( covariance$covariance[[i]] == "matern" & !is.na(covariance$nu[[i]]) ) {
-      space_parameters(parameters)[[i]]["nu","par"]<- covariance$nu[[i]]
-      space_parameters(parameters)[[i]]["nu","fixed"]<- TRUE
+    if( covariance$covariance[[i]] == "matern" && !is.na(covariance$nu[[i]]) ) {
+      space_parameters(parameters)[[i]]["nu", "par"]<- covariance$nu[[i]]
+      space_parameters(parameters)[[i]]["nu", "fixed"]<- TRUE
     } else {}
   }
   names(space_parameters(parameters))<- response_names(formula(settings))
 
-  time_parameters(parameters)<- lapply(attr(time_col,"type"),function(tt) {
+  time_parameters(parameters)<- lapply(attr(time_col, "type"), function(tt) {
     df<- data.frame(
-      par = c(0,
-              switch(tt,
-                     ar1 = 0,
-                     independent = 0,
-                     rw = 1),
-              0),
+      par = c(
+        0,
+        switch(tt,
+          ar1 = 0,
+          independent = 0,
+          rw = 0.99
+        ),
+        0),
       se = NA,
-      fixed = c(FALSE,
-                switch(tt,
-                       ar1 = FALSE,
-                       independent = TRUE,
-                       rw = TRUE),
-                FALSE),
-      row.names = c("mu","ar1","sd")
+      fixed = c(
+        FALSE,
+        switch(tt,
+          ar1 = FALSE,
+          independent = TRUE,
+          rw = TRUE
+        ),
+        FALSE),
+      row.names = c("mu", "ar1", "sd")
     )
     if( length(unique(time_seq)) == 1 ) {
       # If purely spatial data, we don't need time parameters
-      df[c("ar1","sd"),"fixed"]<- c(TRUE,TRUE)
+      df[c("ar1", "sd"), "fixed"]<- c(TRUE, TRUE)
     } else {}
     return(df)
   })
@@ -274,17 +330,20 @@ strv_prepare_observations<- function(
 
   # data = "sf"
   # Put in lexicographic ordering by time, then S->N / W->E
-  data<- order_by_location(data,time = data[[time_name(settings)]])
+  data<- order_by_location(data, time = data[[time_name(settings)]])
 
-  data_predictions(observations)<- new("long_stars",
-    sf::st_sf(data.frame(
-      mean_design_from_formula(formula(settings),data,return = "all.vars"),
-      sample_size_from_formula(formula(settings),data,unique_vars = TRUE),
-      response_from_formula(formula(settings),data),
-      time_from_formula(formula(settings),data,"column"),
-      graph_idx = create_graph_idx(data,process,settings),
-      data[,attr(data,"sf_column")]
-    )),
+  data_predictions(observations)<- new(
+    "long_stars",
+    sf::st_sf(
+      data.frame(
+        mean_design_from_formula(formula(settings), data, return = "all.vars"),
+        sample_size_from_formula(formula(settings), data, unique_vars = TRUE),
+        response_from_formula(formula(settings), data),
+        time_from_formula(formula(settings), data, "column"),
+        graph_idx = create_graph_idx(data, process, settings),
+        data[, attr(data, "sf_column")]
+      )
+    ),
     var_names = response_names(formula(settings))
   )
 
@@ -296,24 +355,33 @@ strv_prepare_observations<- function(
   # Match supplied response distribution to valid options
   # response_distribution<- also takes care of response parameters
   # and link function
-  response_distribution(parameters)<- rep(distribution,length.out=n_response(formula(settings)))
+  response_distribution(parameters)<- rep(
+    distribution,
+    length.out = n_response(formula(settings))
+  )
   names(response_parameters(parameters))<- response_names(formula(settings))
 
   # Match supplied link function with valid options
-  if( !identical(link,"default") ) {
-    link_function(parameters)<- rep(link,length.out=n_response(formula(settings)))
+  if( !identical(link, "default") ) {
+    link_function(parameters)<- rep(
+      link,
+      length.out = n_response(formula(settings))
+    )
   } else {}
 
   # Set up fixed effects according to covariates formula
-  nff<- colnames(mean_design_from_formula(formula(settings),data))
-  fixed_effects(parameters)<- lapply(response_names(formula(settings)),function(rr) {
-    return(data.frame(
-      par = numeric(length(nff)),
-      se = rep(NA,length(nff)),
-      fixed = rep(FALSE,length(nff)),
-      row.names = nff
-    ))
-  })
+  nff<- colnames(mean_design_from_formula(formula(settings), data))
+  fixed_effects(parameters)<- lapply(
+    response_names(formula(settings)),
+    function(rr) {
+      return(data.frame(
+        par = numeric(length(nff)),
+        se = rep(NA, length(nff)),
+        fixed = rep(FALSE, length(nff)),
+        row.names = nff
+      ))
+    }
+  )
   names(fixed_effects(parameters))<- response_names(formula(settings))
   parameters(observations)<- parameters
 

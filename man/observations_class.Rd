@@ -50,7 +50,7 @@ observation_parameters object.
 
 \item \code{parameters<-,observations,ANY-method}: Set parameters using a new
 observation_parameters object. Not the recommended way to
-modify specific parmaeter values, instead see the package vignette
+modify specific parameter values, instead see vignette("starve-tour").
 }}
 
 \section{Slots}{

@@ -28,9 +28,9 @@ Simulate from a model object.
 \section{Methods (by class)}{
 \itemize{
 \item \code{starve}: Simulate a new dataset from the model, with the
-option to simulate a new set of random effects as well. The parameter values
-used in the simulations are those set in \code{parameters(model)}. Returns
-a \code{starve} object with simulated random effects (if \code{conditional=FALSE})
-and simulated data.
+option to simulate a new set of random effects as well. The parameter
+values used in the simulations are those set in \code{parameters(model)}.
+Returns a \code{starve} object with simulated random effects (if
+\code{conditional=FALSE})and simulated data.
 }}
 

@@ -48,6 +48,7 @@ setMethod(
     definition = function(x) {
   return(x@formula)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -61,6 +62,8 @@ setReplaceMethod(
   return(x)
 })
 
+
+
 #' @param x An object
 #'
 #' @export
@@ -71,6 +74,7 @@ setMethod(
     definition = function(x) {
   return(x@n_neighbours)
 })
+
 # #' @param x An object
 # #' @param value A replacement value
 # #'
@@ -84,6 +88,7 @@ setReplaceMethod(
 })
 
 
+
 #' @param x An object
 #'
 #' @export
@@ -94,23 +99,32 @@ setMethod(
     definition = function(x) {
   return(x@distance_units)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
 #' @export
-#' @describeIn settings_class Set distance units. Automatically converts max_distance
-#'   setting to new units.
+#' @describeIn settings_class Set distance units. Automatically converts
+#'   max_distance setting to new units.
 setReplaceMethod(
     f = "distance_units",
     signature = "settings",
     definition = function(x, value) {
-  max_distance<- units::set_units(max_distance(x),distance_units(x),mode="standard")
+  max_distance<- units::set_units(
+    max_distance(x),
+    distance_units(x),
+    mode = "standard"
+  )
   x@distance_units<- value
-
-  max_distance<- units::set_units(max_distance,value,mode="standard")
+  max_distance<- units::set_units(
+    max_distance,
+    value,
+    mode = "standard"
+  )
   max_distance(x)<- units::drop_units(max_distance)
   return(x)
 })
+
 
 
 #' @param x An object
@@ -123,6 +137,7 @@ setMethod(
     definition = function(x) {
   return(x@max_distance)
 })
+
 #' @param x An object
 #' @param value A replacement value
 #'
@@ -137,9 +152,11 @@ setReplaceMethod(
 })
 
 
+
 # #' @param x An object
 # #'
-# #' @describeIn settings_class Get the name of the time variable used in formula
+# #' @describeIn settings_class Get the name of the time variable used in
+# #'   formula
 setMethod(
     f = "time_name",
     signature = "settings",
