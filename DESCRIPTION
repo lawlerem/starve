@@ -23,7 +23,6 @@ Imports:
     TMB (>= 1.7.16),
     nngeo (>= 0.3.0),
     units,
-    raster,
     Rcpp,
     stars,
     abind
@@ -35,6 +34,7 @@ RoxygenNote: 7.1.2
 Suggests:
     MASS,
     knitr,
+    raster,
     rmarkdown,
     igraph,
     testthat (>= 3.0.0),

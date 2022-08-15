@@ -251,7 +251,13 @@ setMethod(
 setMethod(
     f = "strv_predict",
     signature = c("starve", "RasterLayer"),
-    definition = function(x, new_data, covariates, time="model") {
+    definition = function(x, new_data, covariates, time = "model") {
+  if( !requireNamespace("raster", quietly = TRUE) ) {
+    stop(
+      "Package \"raster\" must be installed to use this function.",
+      call. = FALSE
+    )
+  }
   # Convert raster to sf
   uniq_prediction_points<- sf::st_as_sf(
     raster::rasterToPoints(
