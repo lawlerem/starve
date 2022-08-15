@@ -12,14 +12,14 @@ NULL
 #'
 #' @noRd
 setMethod(
-  f = "initialize",
-  signature = "parameters",
-  definition = function(.Object,
-                        process_parameters = new("process_parameters"),
-                        observation_parameters = new("observation_parameters")) {
-    as(.Object,"process_parameters")<- process_parameters
-    as(.Object,"observation_parameters")<- observation_parameters
+    f = "initialize",
+    signature = "parameters",
+    definition = function(
+      .Object,
+      process_parameters = new("process_parameters"),
+      observation_parameters = new("observation_parameters")) {
+  as(.Object,"process_parameters")<- process_parameters
+  as(.Object,"observation_parameters")<- observation_parameters
 
-    return(.Object)
-  }
-)
+  return(.Object)
+})

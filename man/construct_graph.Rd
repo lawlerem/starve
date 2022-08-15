@@ -43,56 +43,63 @@ Construct directed acyclic graphs
 \section{Functions}{
 \itemize{
 \item \code{construct_persistent_graph}: Construct a directed acyclic graph for a single
-  \code{sf} object. This function uses a greedy algorithm to sort the locations
-  of x. The first location of x is the first location of the sorted copy.
-  Subsequent locations of the sorted copy are found iteratively by taking
-  the as-of-yet unsorted location closest to any of the already sorted locations.
+  \code{sf} object. This function uses a greedy algorithm to sort the
+  locations of x. The first location of x is the first location of the sorted
+  copy. Subsequent locations of the sorted copy are found iteratively by
+  takingthe as-of-yet unsorted location closest to any of the already sorted
+  locations.
 
-  After sorting the locations, the directed acyclic graph is constructed by first
-  creating an initial graph element with no "from" vertices and "to" vertices
-  consisting of the first n sorted locations (where n equals the \code{n_neighbours}
-  element of the settings argument). Any locations not present in the "to" vertices
-  of the initial graph elements are given their own graph element with a single
-  "to" vertex for that location and "from" vertices the n closest
-  (by distance) locations before it in the sorted copy.
+  After sorting the locations, the directed acyclic graph is constructed by
+  first creating an initial graph element with no "from" vertices and "to"
+  vertices consisting of the first n sorted locations (where n equals the
+  \code{n_neighbours} element of the settings argument). Any locations not
+  present in the "to" vertices of the initial graph elements are given their
+  own graph element with a single "to" vertex for that location and "from"
+  vertices the n closest (by distance) locations before it in the sorted
+  copy.
 
-  A vertex with index i in either the "to" or "from" vertices represents the location
-  in row i of the sorted copy of x.
+  A vertex with index i in either the "to" or "from" vertices represents the
+  location in row i of the sorted copy of x.
 
-\item \code{construct_transient_graph}: Construct a directed acyclic graph with "to" vertices
-  representing locations in x and "from" vertices representing locations in y.
-  Unlike strv_construct_persistent_graph, neither x nor y are sorted, but the
-  time argument must already be sorted when given as an argument (make sure
-  that the locations in x are likewise sorted according to their respective times).
+\item \code{construct_transient_graph}: Construct a directed acyclic graph with "to"
+  vertices representing locations in x and "from" vertices representing
+  locations in y. Unlike strv_construct_persistent_graph, neither x nor y are
+  sorted, but the time argument must already be sorted when given as an
+  argument (make sure that the locations in x are likewise sorted according7
+  to their respective times).
 
-  The locations in x are first split into groups according to the values of the
-  time argument. Then within each group each location is given a graph element
-  with a single "to" vertex for that location (in x) and whose "from" vertices
-  are the n closest locations (in y) (where n equals the \code{n_neighbours} element
-  of the settings argument).
-
-  A vertex with index i in the "to" vertices represents the location in row i in the
-  subset of x in the same time index group. Note that the same value of i may be used
-  if there is more than one unique value in the time argument. A vertex with i in the
-  "from" vertices represents the location in row i of y.
-
-\item \code{construct_prediction_graph}: Works essentially the same as \code{construct_transient_graph},
-  with a few minor differences. Instead of directly supplying the locations for the
-  "from" vertices, the "from" vertices are taken from the locations used in the
-  persistent graph and transient graph from the model argument.
-
-  The locations in pred are grouped according to their time index in pred.
-  Each location is given a graph element with a single "to" vertex representing
-  that location in pred. If that location is the same as any model location
-  then the graph element has a single "from" vertex representing that model
-  location, otherwise "from" vertices are the n closest model locations (where
-  n equals the \code{n_neighbours} element of the settings argument).
+  The locations in x are first split into groups according to the values of
+  thetime argument. Then within each group each location is given a graph
+  element with a single "to" vertex for that location (in x) and whose "from"
+  vertices are the n closest locations (in y) (where n equals the
+  \code{n_neighbours} element of the settings argument).
 
   A vertex with index i in the "to" vertices represents the location in row i
-  of pred (regardless of time index group). A vertex with index j in the "from"
-  vertices represents the j'th location of the persistent graph if j <= k where
-  k is the number of persistent graph locations, or represents the  (j-k)'th location
-  of the transient graph with the same time index as the "to" vertex.
+  in the subset of x in the same time index group. Note that the same value
+  of i may be used if there is more than one unique value in the time
+  argument. A vertex with i in the "from" vertices represents the location in
+  row i of y.
+
+\item \code{construct_prediction_graph}: Works essentially the same as
+  \code{construct_transient_graph}, with a few minor differences. Instead of
+  directly supplying the locations for the "from" vertices, the "from"
+  vertices are taken from the locations used in the persistent graph and
+  transient graph from the model argument.
+
+  The locations in pred are grouped according to their time index in pred.
+  Each location is given a graph element with a single "to" vertex
+  representing that location in pred. If that location is the same as any
+  model location then the graph element has a single "from" vertex
+  representing that model location, otherwise "from" vertices are the n
+  closest model locations (where n equals the \code{n_neighbours} element of
+  the settings argument).
+
+  A vertex with index i in the "to" vertices represents the location in row i
+  of pred (regardless of time index group). A vertex with index j in the
+  "from" vertices represents the j'th location of the persistent graph if
+  j <= k where k is the number of persistent graph locations, or represents
+  the  (j-k)'th location of the transient graph with the same time index as
+  the "to" vertex.
 }}
 
 \seealso{

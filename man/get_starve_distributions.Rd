@@ -24,22 +24,24 @@ Print a list of implemented response distributions, link functions, and
 \describe{
   \item{gaussian - }{Linear predictor determines the mean,
     has a variance parameter.}
-  \item{gamma - }{Used for model strictly positive continuous data such as biomass,
-    linear predictor determines the mean, has a variance parameter.}
-  \item{lognormal - }{Used for modelling strictly positive continuous data such
-    as biomass, linear predictor determines the mean, has a variance parameter.}
-  \item{tweedie - }{Used to model non-negative continuous data with point mass at 0,
-    linear predictor determines the response mean before applying the offset.
-    The offset term is a multiplier to the response mean and can be supplied
-    in the model formula through the sample.size(...) term.}
+  \item{gamma - }{Used for model strictly positive continuous data such as
+    biomass, linear predictor determines the mean, has a variance parameter.}
+  \item{lognormal - }{Used for modelling strictly positive continuous data
+    such as biomass, linear predictor determines the mean, has a variance
+    parameter.}
+  \item{tweedie - }{Used to model non-negative continuous data with point
+    mass at 0, linear predictor determines the response mean before applying
+    the offset. The offset term is a multiplier to the response mean and can
+    be supplied in the model formula through the sample.size(...) term.}
   \item{poisson - }{Typically used for count data, linear
     predictor determines the intensity parameter.}
   \item{negative binomial - }{Typically used for over-dispersed count data,
     linear predictor determines the mean, has an overdispersion
     parameter (>1 results in overdispersion).}
-  \item{compois - }{Used to model over- and under-dispersed count data, linear
-    predictor determines the mean, has a dispersion parameter. A dispersion <1
-    results in under-dispersion, while a dispersion >1 results in over-dispersion.}
+  \item{compois - }{Used to model over- and under-dispersed count data,
+    linear predictor determines the mean, has a dispersion parameter. A
+    dispersion <1 results in under-dispersion, while a dispersion >1 results
+    in over-dispersion.}
   \item{bernoulli - }{Used to model yes/no or presence/absence data, linear
     predictor determines the probability of a yes.}
   \item{binomial - }{Used to model the # of yesses in k yes/no trials, linear
@@ -47,9 +49,10 @@ Print a list of implemented response distributions, link functions, and
     sample size k for each observation can be supplied in the model formula
     through the sample.size(...) term.}
   \item{atLeastOneBinomial - }{Used to model the probability of observing at
-    least one yes in k yes/no trials, linear predictor determines the probability
-    of a yes in a single trial. The sample size k for each observation can be
-    supplied in the model formula through the sample.size(...) term.}
+    least one yes in k yes/no trials, linear predictor determines the
+    probability of a yes in a single trial. The sample size k for each
+    observation can be supplied in the model formula through the
+    sample.size(...) term.}
 }
 }
 
@@ -65,17 +68,17 @@ Print a list of implemented response distributions, link functions, and
 \section{Covariance Functions}{
 
 \describe{
-  \item{exponential - }{Matern covariance with smoothness nu = 0.5. Results in
-    a non-differentiable Gaussian random field.}
-  \item{gaussian - }{Limiting function of the Matern covariance as smoothness nu
-    approaches infinity. Results in smooth (infinitely differentiable) Gaussian
-    random field. The variance parameter in this covariance function gives the
-    marginal variance of the spatial field.}
+  \item{exponential - }{Matern covariance with smoothness nu = 0.5. Results
+    in a non-differentiable Gaussian random field.}
+  \item{gaussian - }{Limiting function of the Matern covariance as smoothness
+    nu approaches infinity. Results in smooth (infinitely differentiable)
+    Gaussian random field. The variance parameter in this covariance function
+    gives the marginal variance of the spatial field.}
   \item{matern - }{Matern covariance with arbitrary smoothness nu. Results in
-    Gaussian random fields that are floor(nu) times differentiable. The smoothness
-    parameter is hard to estimate, so fixing it to a set value is recommended.
-    This option will run much slower than other specific values of the Matern
-    covariance function (e.g. exponential).}
+    Gaussian random fields that are floor(nu) times differentiable. The
+    smoothness parameter is hard to estimate, so fixing it to a set value is
+    recommended. This option will run much slower than other specific values
+    of the Matern covariance function (e.g. exponential).}
   \item{matern32 - }{Matern covariance with smoothness nu = 1.5. Results in
     a smooth (once differentiable) Gaussian random field.}
 }

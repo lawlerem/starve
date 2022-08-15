@@ -289,6 +289,8 @@ setClass(
 #' @keywords internal
 setClass(
   Class = "parameters",
-  contains = c("process_parameters",
-               "observation_parameters")
+  contains = c(
+    "process_parameters",
+    "observation_parameters"
+  )
 )

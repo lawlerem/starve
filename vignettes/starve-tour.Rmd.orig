@@ -25,10 +25,10 @@ set.seed(4326)
 library(starve)
 ```
 
-The starve package implements a spatio-temporal GLMM for analyzing discrete-time, continuous-space data.
+The starve package implements a spatio-temporal generalized linear mixed model for analyzing discrete-time, continuous-space data.
 Throughout this vignette we will refer to the time unit as year/yearly, although any other regular unit (daily, monthly, etc.) can be used.
-Functionality include maximum likelihood inference, model-based spatial interpolation and forecasting and hindcasting, and simulations.
-The sf and raster packages are tightly integrated into the starve package, allowing users to easily incorporate the starve package into their existing workflows.
+Functionality includes maximum likelihood inference, model-based spatial interpolation, forecasting and hindcasting, and simulations.
+The sf, raster, and stars packages are tightly integrated into the starve package, allowing users to easily incorporate the starve package into their existing workflows.
 
 The spatio-temporal GLMM is structured as a hierarchical model with 3 levels:
 
@@ -61,7 +61,7 @@ The location of each observation, taken as the centroid of transect, is given in
 We'll work with a smaller subset of the data in the vignette.
 
 ```{r}
-bird_survey<- subset(bird_survey,year >= 2005)
+bird_survey<- subset(bird_survey, year >= 2005)
 ```
 
 
@@ -90,25 +90,24 @@ bird_model
 ```
 
 ```{r}
-spatial_parameters(bird_model)$cnt["range","par"]<- 80
-spatial_parameters(bird_model)$cnt["range","fixed"]<- TRUE
+space_parameters(bird_model)$cnt["range", "par"]<- 80
+space_parameters(bird_model)$cnt["range", "fixed"]<- TRUE
 ```
 
 The individual components of a 'starve" object are explained in the following sections.
-For now, note the columns labelled 'par' in the 'time_parameters', 'spatial_parameters', 'response_parameters', and 'fixed_effects' slots (the latter two of which have 0 rows in this particular model).
-These are the parameter values for the model.
-The 'strv_fit' function finds the maximum likelihood (ML) estimates of these parameters.
-The parameter values in the starve object will be the starting values used when finding the ML estimate.
+For now, note that printing the model give a summary of the model form, including the model formula, response distribution, link function, and an optimizer message that gives info on if/how the model is fit, and a summary of the data.
+The 'strv_fit' function finds the maximum likelihood (ML) estimates of the model parameters.
+The parameter values in the starve object will be the starting values used when finding the ML estimate, and unless you change them then default starting values will be used.
 Details for changing these values is given in section [Modifying a starve model].
 
 ```{r fit-model}
 bird_model<- strv_fit(
   bird_model,
-  silent=T
+  silent = TRUE
 )
 ```
 
-The output of the 'strv_fit' function is a 'starve' object with the ML parameter estimates.
+The output of the 'strv_fit' function is a 'starve' object with the ML parameter estimates, and you can see that the optimizer message has changed to tell you if the optimization procedure successfully converged.
 
 ```{r}
 bird_model
@@ -147,10 +146,16 @@ Some messages that indicate the optimization routine failed to converge are
 
 See '?nlminb' and the PORT routines documentation for more details.
 
+
 The parameters hold the parameter values/estimates, the standard errors of the parameter estimates (for a fitted model), and whether the parameters are held fixed in the model.
 These quantities are held in the 'par', 'se', and 'fixed' columns, respectively.
 The spatial covariance function, response distribution, and link function used are also part of the parameter descriptions.
 The parameters are split into groups according to the different conceptual parts of the model.
+
+```{r spatial-parameters}
+covariance_function(bird_model)
+space_parameters(bird_model)
+```
 
 The spatial parameters describe the spatial covariance function for each response variable.
 The starve package uses a Matern covariance function with the following parameters:
@@ -159,10 +164,8 @@ The starve package uses a Matern covariance function with the following paramete
 - **range**: a range parameter. Typically interpreted as the distance by which two locations need to be separated to be approximately uncorrelated.
 - **nu**: a smoothness parameter. Higher values correspond to smoother spatial surfaces. The smoothness parameter is only estimated when the covariance function is 'matern'. Must be greater than 0.
 
-
-```{r spatial-parameters}
-covariance_function(bird_model)
-spatial_parameters(bird_model)
+```{r time-parameters}
+time_parameters(bird_model)
 ```
 
 The time parameters describe the temporal structure of the random effects.
@@ -172,31 +175,28 @@ An autoregressive order 1 AR(1) model is used:
 - **ar1**: A correlation parameter. Higher values correspond to adjacent years being more highly correlated. Must be between -1 and +1.
 - **sd**: A scale parameter. Higher values correspond to more year-to-year variation. Must be greater than 0.
 
-
-```{r time-parameters}
-time_parameters(bird_model)
-```
-
-The response parameters describe e.g. the observation error, overdispersion, etc.
-The specific parameters depend on the response distribution used and are described in section [Response distribution].
-
 ```{r response-distribution}
 response_distribution(bird_model)
 response_parameters(bird_model)
 ```
 
-The fixed effects describe the effects of covariates, as in a generalized linear model.
-A description of how to include covariates in a starve analysis is given in section [Including covariates].
+The response parameters describe e.g. the observation error, overdispersion, etc.
+The specific parameters depend on the response distribution used and are described in section [Response distribution].
+
 
 ```{r fixed-effects}
 fixed_effects(bird_model)
 ```
 
-You can extract all of the parameter values using the 'parameters' function.
+The fixed effects describe the effects of covariates, as in a generalized linear model.
+A description of how to include covariates in a starve analysis is given in section [Including covariates].
+
 
 ```{r parameters}
 parameters(bird_model)
 ```
+
+You can extract all of the parameter values using the 'parameters' function.
 
 
 ## Random effect predictions
@@ -210,7 +210,7 @@ time_effects(bird_model)
 ```
 
 The spatio-temporal random effects describe a spatial surface that varies from year to year.
-The locations of the random effects act like the nodes in a mesh used in the R-INLA package, or basis functions used in a spline model.
+The locations of the random effects act like the nodes in a mesh used in the INLA package, or basis functions used in a spline model.
 The spatial surface at new locations are predicted using the values of these random effects.
 The random effects are split into two groups.
 The persistent graph random effects are placed at nodes that re-occur at the same location every year, and thus help
@@ -260,10 +260,13 @@ We can add the random effect and response mean predictions to the data for plott
 
 ```{r}
 tmp<- cbind(
-  do.call(cbind,values(data_predictions(bird_model))[,,1]),
+  do.call(
+    cbind,
+    values(data_predictions(bird_model))[, , 1]
+  ),
   dat(bird_model)
 )
-colnames(tmp)[1:6]<- c("w","w_se","linear","linear_se","response","response_se")
+colnames(tmp)[1:6]<- c("w", "w_se", "linear", "linear_se", "response", "response_se")
 tmp
 ```
 
@@ -294,11 +297,11 @@ settings(bird_model)
 Changing the covariance function also resets the spatial parameters, and updates the value of nu to reflect the specific covariance function as a special case of the Matern covariance.
 
 ```{r change-covariance}
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 
 covariance_function(bird_model)<- "matern32"
 
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 ```
 
 You can change the parameter values by accessing the relevant set of parameters, and changing the 'par' column of that data.frame.
@@ -307,14 +310,14 @@ For example a 'sd' (standard deviation) parameter must be positive; if it is set
 You can also change the 'se' and 'fixed' columns in the same way.
 
 ```{r change-pars}
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 time_parameters(bird_model)
 
-time_parameters(bird_model)$cnt[c("mu","ar1"),"par"]<- c(10,0.75)
-spatial_parameters(bird_model)$cnt["range","par"]<- 80
-spatial_parameters(bird_model)$cnt["range","fixed"]<- T
+time_parameters(bird_model)$cnt[c("mu", "ar1"), "par"]<- c(10, 0.75)
+space_parameters(bird_model)$cnt["range", "par"]<- 80
+space_parameters(bird_model)$cnt["range", "fixed"]<- TRUE
 
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 time_parameters(bird_model)
 ```
 
@@ -364,7 +367,7 @@ The fixed effects parameters will be automatically updated to reflect the new fo
 formula(bird_model)
 fixed_effects(bird_model)
 
-formula(bird_model)<- cnt~elev+time(year)
+formula(bird_model)<- cnt ~ elev + time(year)
 
 formula(bird_model)
 fixed_effects(bird_model)
@@ -374,10 +377,10 @@ The distance units used in calculations can be changed to any valid distance uni
 Distances are standardized within the model so changing the distance units should not affect inference or predictions.
 
 ```{r change-units}
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 graph(bird_model)
 distance_units(bird_model)<- "ft"
-spatial_parameters(bird_model)
+space_parameters(bird_model)
 graph(bird_model)
 ```
 
@@ -406,7 +409,10 @@ pred_points<- st_sample(
   st_as_sfc(st_bbox(bird_survey)),
   size = 25
 )
-pred_points<- st_sf(geom = pred_points,year=rep(2012:2016,each=5))
+pred_points<- st_sf(
+  geom = pred_points,
+  year = rep(2012:2016, each = 5)
+)
 pred_points
 ```
 
@@ -428,10 +434,10 @@ These predictions can be converted to a single sf data.frame fairly easily.
 
 ```{r}
 tmp<- cbind(
-  do.call(cbind,values(sf_pred)[,,1]),
+  do.call(cbind,values(sf_pred)[, , 1]),
   locations(sf_pred)
 )
-colnames(tmp)[1:6]<- c("w","w_se","linear","linear_se","response","response_se")
+colnames(tmp)[1:6]<- c("w", "w_se", "linear", "linear_se", "response", "response_se")
 tmp
 ```
 
@@ -465,14 +471,14 @@ See '?raster::mask' for details on creating raster with NAs.
 
 ```{r predict_mask_raster}
 pred_raster[]<- 0
-pred_raster[3,3]<- NA
+pred_raster[3, 3]<- NA
 pred_raster
 as.matrix(pred_raster)
 pred_out<- strv_predict(
   bird_model,
   pred_raster
 )
-pred_out$response[,,1,1]
+pred_out$response[, , 1, 1]
 ```
 
 For raster predictions an additional 'time' option is available to specify which years to make predictions for, with the default behaviour being to predict every year between the earliest and latest year in the original dataset.
@@ -502,13 +508,14 @@ No record of the previous values are stored.
 
 ```{r sim-bird}
 sim_model<- strv_prepare(
-  cnt~time(year),
+  cnt ~ time(year),
   bird_survey,
-  distribution="poisson",
-  fit=T
+  distribution = "poisson",
+  fit = TRUE
 )
 sim_model<- strv_simulate(sim_model)
 sim_model
+parameters(sim_model)
 ```
 
 To simulate from a completely new model you first have to create a template sf data.frame.
@@ -520,19 +527,19 @@ We will use a sf data.frame with a 4x4 grid of points replicated over 5 years.
 sim_df<- st_as_sf(
   data.frame(
     y = 0,
-    t = rep(1:5,each=16),
-    ycoord = rep(1:4,4),
-    xcoord = rep(1:4,each=4)
+    t = rep(1:5, each = 16),
+    ycoord = rep(1:4, 4),
+    xcoord = rep(1:4, each = 4)
   ),
-  coords = c("ycoord","xcoord")
+  coords = c("ycoord", "xcoord")
 )
 sim_df
 
 sim_model<- strv_prepare(
-  y~time(t),
+  y ~ time(t),
   sim_df,
   distribution = "gaussian",
-  fit = F
+  fit = FALSE
 )
 ```
 
@@ -540,11 +547,12 @@ Once a starve model is created from the template data, the parameter values and 
 After doing so you can simulate new random effects and data from the model.
 
 ```{r sim-new2}
-time_parameters(sim_model)$y[c("mu","ar1","sd"),"par"]<- c(10,0.7,1)
-spatial_parameters(sim_model)$y[c("sd","range"),"par"]<- c(2,0.5)
-response_parameters(sim_model)$y["sd","par"]<- 0.5
+time_parameters(sim_model)$y[c("mu", "ar1", "sd"), "par"]<- c(10, 0.7, 1)
+space_parameters(sim_model)$y[c("sd", "range"), "par"]<- c(2, 0.5)
+response_parameters(sim_model)$y["sd", "par"]<- 0.5
 sim_model<- strv_simulate(sim_model)
-sim_model
+dat(sim_model)
+parameters(sim_model)
 ```
 
 
@@ -569,7 +577,7 @@ head(dat(sim_model)$y)
 
 ## Simulating only observations
 
-Simulations of only new data, conditional on the existing time effects and random effects, can be made by giving the 'conditional=T' option.
+Simulations of only new data, conditional on the existing time effects and random effects, can be made by giving the 'conditional=TRUE' option.
 Note that the time effects and random effects are the same before and after simulation, but that the response variable is different.
 
 ```{r simulate-obs}
@@ -578,7 +586,7 @@ pg_re(sim_model)
 head(dat(sim_model)$y)
 sim_model<- strv_simulate(
   sim_model,
-  conditional=T
+  conditional = TRUE
 )
 time_effects(sim_model)
 pg_re(sim_model)
@@ -613,10 +621,10 @@ All covariates that are named in the model formula are also present in the data 
 
 ```{r covar-fit-elev}
 bird_model<- strv_prepare(
-  cnt ~ elev+temp+time(year),
+  cnt ~ elev + temp + time(year),
   bird_survey,
   distribution = "poisson",
-  fit = T
+  fit = TRUE
 )
 fixed_effects(bird_model)
 dat(bird_model)
@@ -626,10 +634,10 @@ More complex covariate effects such as interaction terms, transformations, and p
 
 ```{r covar-fit-elev-temp}
 bird_model<- strv_prepare(
-  cnt ~ I(abs(temp))+poly(elev,2) + time(year),
+  cnt ~ I(abs(temp)) + poly(elev, 2) + time(year),
   bird_survey,
   distribution = "poisson",
-  fit = T
+  fit = TRUE
 )
 fixed_effects(bird_model)
 dat(bird_model)
@@ -642,10 +650,10 @@ We'll use the simpler covariate model for predictions.
 
 ```{r pred-covar-model}
 bird_model<- strv_prepare(
-  cnt ~ elev+temp + time(year),
+  cnt ~ elev + temp + time(year),
   bird_survey,
   distribution = "poisson",
-  fit = T
+  fit = TRUE
 )
 ```
 
@@ -656,7 +664,10 @@ pred_points<- st_sample(
   st_as_sfc(st_bbox(bird_survey)),
   size = 25
 )
-pred_points<- st_sf(geom = pred_points,year=rep(2012:2016,each=5))
+pred_points<- st_sf(
+  geom = pred_points,
+  year = rep(2012:2016, each = 5)
+)
 pred_points$elev<- rnorm(nrow(pred_points))
 pred_points$temp<- rnorm(nrow(pred_points))
 pred_points
@@ -674,8 +685,8 @@ strv_predict(
 
 
 
-## Raster predictions
 
+## Raster predictions
 
 Covariates for raster predictions need to be supplied in a specific format: a list with a named element for each covariate.
 The elements need to have the same name as the covariate.
@@ -691,16 +702,16 @@ pred_raster<- raster(
   nrow = 5,
   ncol = 5
 )
-raster_elev<- stack(lapply(min(bird_survey$year):2019,function(year) {
+raster_elev<- stack(lapply(min(bird_survey$year):2019, function(year) {
   band<- pred_raster
   band[]<- rnorm(ncell(band))
-  names(band)<- paste0("T",year)
+  names(band)<- paste0("T", year)
   return(band)
 }))
-raster_temp<- stack(lapply(min(bird_survey$year):2019,function(year) {
+raster_temp<- stack(lapply(min(bird_survey$year):2019 ,function(year) {
   band<- pred_raster
   band[]<- rnorm(ncell(band))
-  names(band)<- paste0("T",year)
+  names(band)<- paste0("T", year)
   return(band)
 }))
 pred_covar<- list(
@@ -727,6 +738,8 @@ strv_predict(
 ```{r include=F}
 bird_model<- cache_model
 ```
+
+
 
 
 # Options
@@ -854,9 +867,9 @@ A model with all parameters held constant can still be fitted with the 'strv_fit
 ```{r fixed-parameters}
 parameters(bird_model)
 
-time_parameters(bird_model)$cnt["ar1","par"]<- 0
-time_parameters(bird_model)$cnt["ar1","fixed"]<- T
-bird_model<- strv_fit(bird_model,silent=T)
+time_parameters(bird_model)$cnt["ar1", "par"]<- 0
+time_parameters(bird_model)$cnt["ar1", "fixed"]<- TRUE
+bird_model<- strv_fit(bird_model, silent = TRUE)
 
 parameters(bird_model)
 ```

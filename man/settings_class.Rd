@@ -44,8 +44,8 @@ An S4 class to hold settings for a starve model
 
 \item \code{distance_units,settings-method}: Get distance units used for the model.
 
-\item \code{distance_units<-,settings-method}: Set distance units. Automatically converts max_distance
-setting to new units.
+\item \code{distance_units<-,settings-method}: Set distance units. Automatically converts
+max_distance setting to new units.
 
 \item \code{max_distance,settings-method}: Get maximum distance for edges in the graph
 
