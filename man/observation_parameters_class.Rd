@@ -66,8 +66,8 @@ get_starve_distributions("link") for valid options.
 \item{\code{response_distribution}}{The response distribution(s), must be one from
 get_starve_distributions("distribution").}
 
-\item{\code{response_parameters}}{A list containing a data.frame of response distribution
-parameters for each response variable.}
+\item{\code{response_parameters}}{A list containing a data.frame of response
+distribution parameters for each response variable.}
 
 \item{\code{link_function}}{The link function(s), must be one from
 get_starve_distributions("link").}

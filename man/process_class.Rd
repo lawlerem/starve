@@ -83,9 +83,11 @@ effects and the transient graph random effects.
 \describe{
 \item{\code{time_effects}}{A stars object containing temporal random effects}
 
-\item{\code{random_effects}}{A stars object containing spatio-temporal random effects.}
+\item{\code{random_effects}}{A stars object containing spatio-temporal random
+effects.}
 
-\item{\code{persistent_graph}}{A dag object describing the dependence graph of the process.}
+\item{\code{persistent_graph}}{A dag object describing the dependence graph of the
+process.}
 
 \item{\code{parameters}}{An object of class process_parameters.}
 }}

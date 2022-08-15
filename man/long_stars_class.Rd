@@ -28,9 +28,9 @@ An S4 class to hold a multi-dimensional array and a data.frame with a
   many-to-one relationship.
 }
 \details{
-The \code{predictions} slot will have at least 1 dimension, the first
-  of which must be named \code{idx} and is identical to the row dimension of
-  \code{locations}.
+The \code{predictions} slot will have at least 1 dimension, the
+  first of which must be named \code{idx} and is identical to the row
+  dimension of \code{locations}.
 }
 \section{Functions}{
 \itemize{
@@ -48,7 +48,8 @@ The \code{predictions} slot will have at least 1 dimension, the first
 \describe{
 \item{\code{predictions}}{A stars object.}
 
-\item{\code{locations}}{An sf object with at least a time column and point geometries.}
+\item{\code{locations}}{An sf object with at least a time column and point
+geometries.}
 }}
 
 \seealso{

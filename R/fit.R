@@ -494,7 +494,7 @@ predict_w<- function(x, predictions, dist_tol = 0.00001, ...) {
       })
     )
     if( !intersects[[i]] ) {
-      next;
+      next
     } else {}
     if( s[[i]] <= dim(pg_re(x))[[1]] ) {
       # Take re from persistent graph -- be sure to use from est

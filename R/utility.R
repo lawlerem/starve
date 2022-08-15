@@ -837,7 +837,9 @@ sample_size_from_formula<- function(x, data, unique_vars = FALSE) {
   } else {}
   var_call<- rep(var_call, length.out = n_response(x))
 
-  var_idx<- sapply(var_call, is.symbol) | sapply(var_call, is.character)
+  
+  var_idx<- vapply(var_call, is.symbol, logical(1)) |
+    vapply(var_call, is.character, logical(1))
   char_vars<- unique(paste(var_call[var_idx]))
 
   missing_vars<- char_vars[!(char_vars %in% colnames(data))]

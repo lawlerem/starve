@@ -59,10 +59,11 @@ max_distance setting to new units.
 
 \item{\code{n_neighbours}}{The number of parents for each node in the graph.}
 
-\item{\code{distance_units}}{The units used for distance calculation.  Must be compatible
-with units::set_units.}
+\item{\code{distance_units}}{The units used for distance calculation.  Must be
+compatible with units::set_units.}
 
-\item{\code{max_distance}}{The maximum allowable distance for edges in the transient graph.}
+\item{\code{max_distance}}{The maximum allowable distance for edges in the transient
+graph.}
 }}
 
 \seealso{

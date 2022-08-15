@@ -2,7 +2,8 @@
 #'
 #' To see documentation for a particular class, load the package and run e.g.
 #'   class?starve. To see a list of all methods available for a specific class,
-#'   see the help page for that class or run e.g. \code{methods(class="starve")}.
+#'   see the help page for that class or run e.g.
+#'   \code{methods(class="starve")}.
 #'
 #' @section Classes:
 #' \itemize{
@@ -40,13 +41,14 @@ setOldClass("stars")
 #' @slot edges A list whose elements consist of a "to" vector and a
 #'   "from" vector. There is a directed edge in the graph from each vertex in
 #'   "from" to each vertex in "to". If there are multiple vertices in "to" then
-#'   there are undirected edges between all vertices in "to" (forming a Kn graph).
-#' @slot distances A list whose elements consist of a distance matrix for the edges
-#'   in the correponding entry of edges. The rows/columns of the distance matrix
-#'   are in the same order as the vertices in that edge list, starting with the
-#'   vertices in "to" and then the vertices in "from".
-#' @slot distance_units The units used for distance calculation.  Must be compatible
-#'   with units::set_units.
+#'   there are undirected edges between all vertices in "to" (forming a Kn
+#'   graph).
+#' @slot distances A list whose elements consist of a distance matrix for the
+#'   edges in the correponding entry of edges. The rows/columns of the distance
+#'   matrix are in the same order as the vertices in that edge list, starting
+#'   with the vertices in "to" and then the vertices in "from".
+#' @slot distance_units The units used for distance calculation.  Must be
+#'   compatible with units::set_units.
 #'
 #' @rdname dag_class
 #'
@@ -65,12 +67,13 @@ setClass(
 #' An S4 class to hold a multi-dimensional array and a data.frame with a
 #'   many-to-one relationship.
 #'
-#' @details The \code{predictions} slot will have at least 1 dimension, the first
-#'   of which must be named \code{idx} and is identical to the row dimension of
-#'   \code{locations}.
+#' @details The \code{predictions} slot will have at least 1 dimension, the
+#'   first of which must be named \code{idx} and is identical to the row
+#'   dimension of \code{locations}.
 #'
 #' @slot predictions A stars object.
-#' @slot locations An sf object with at least a time column and point geometries.
+#' @slot locations An sf object with at least a time column and point
+#'   geometries.
 #'
 #' @rdname long_stars_class
 #'
@@ -88,9 +91,10 @@ setClass(
 #'
 #' @slot formula A formula
 #' @slot n_neighbours The number of parents for each node in the graph.
-#' @slot distance_units The units used for distance calculation.  Must be compatible
-#'   with units::set_units.
-#' @slot max_distance The maximum allowable distance for edges in the transient graph.
+#' @slot distance_units The units used for distance calculation.  Must be
+#'   compatible with units::set_units.
+#' @slot max_distance The maximum allowable distance for edges in the transient
+#'   graph.
 #'
 #' @rdname settings_class
 #'
@@ -112,8 +116,10 @@ setClass(
 #'
 #' @slot covariance_function The covariance function(s), must be one from
 #'   get_starve_distributions("covariance").
-#' @slot space_parameters A list containing spatial parameters for each response variable.
-#' @slot time_parameters A list containing time parameters for each response variable.
+#' @slot space_parameters A list containing spatial parameters for each response
+#'   variable.
+#' @slot time_parameters A list containing time parameters for each response
+#'   variable.
 #'
 #' @family starve_classes
 #'
@@ -132,8 +138,10 @@ setClass(
 #' An S4 class to hold the process information for a starve model.
 #'
 #' @slot time_effects A stars object containing temporal random effects
-#' @slot random_effects A stars object containing spatio-temporal random effects.
-#' @slot persistent_graph A dag object describing the dependence graph of the process.
+#' @slot random_effects A stars object containing spatio-temporal random
+#'   effects.
+#' @slot persistent_graph A dag object describing the dependence graph of the
+#'   process.
 #' @slot parameters An object of class process_parameters.
 #'
 #' @seealso strv_prepare
@@ -159,8 +167,8 @@ setClass(
 #'
 #' @slot response_distribution The response distribution(s), must be one from
 #'   get_starve_distributions("distribution").
-#' @slot response_parameters A list containing a data.frame of response distribution
-#'   parameters for each response variable.
+#' @slot response_parameters A list containing a data.frame of response
+#'   distribution parameters for each response variable.
 #' @slot link_function The link function(s), must be one from
 #'   get_starve_distributions("link").
 #' @slot fixed_effects A list containing a data.frame of fixed effect parameters
@@ -206,9 +214,12 @@ setClass(
 
 #' An S4 class to hold optimization tracing for a starve model
 #'
-#' @slot opt_time A proc_time object. Time elapsed while computing the ML estimates.
-#' @slot hess_time A proc_time object. Time elapsed while computing the hessian matrix.
-#' @slot sdr_time A proc_time object. Time elapsed while computing standard errors.
+#' @slot opt_time A proc_time object. Time elapsed while computing the ML
+#'   estimates.
+#' @slot hess_time A proc_time object. Time elapsed while computing the hessian
+#'   matrix.
+#' @slot sdr_time A proc_time object. Time elapsed while computing standard
+#'   errors.
 #' @slot parameter_hessian The hessian matrix for parameter estimates.
 #' @slot parameter_covariance The covariance matrix for parameter estimates.
 #'

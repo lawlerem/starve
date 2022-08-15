@@ -54,9 +54,11 @@ Setting the covariance function also overwrites the spatial parameters.
 \item{\code{covariance_function}}{The covariance function(s), must be one from
 get_starve_distributions("covariance").}
 
-\item{\code{space_parameters}}{A list containing spatial parameters for each response variable.}
+\item{\code{space_parameters}}{A list containing spatial parameters for each response
+variable.}
 
-\item{\code{time_parameters}}{A list containing time parameters for each response variable.}
+\item{\code{time_parameters}}{A list containing time parameters for each response
+variable.}
 }}
 
 \seealso{

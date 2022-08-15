@@ -55,11 +55,14 @@ fit, hessian, and sdr.
 \section{Slots}{
 
 \describe{
-\item{\code{opt_time}}{A proc_time object. Time elapsed while computing the ML estimates.}
+\item{\code{opt_time}}{A proc_time object. Time elapsed while computing the ML
+estimates.}
 
-\item{\code{hess_time}}{A proc_time object. Time elapsed while computing the hessian matrix.}
+\item{\code{hess_time}}{A proc_time object. Time elapsed while computing the hessian
+matrix.}
 
-\item{\code{sdr_time}}{A proc_time object. Time elapsed while computing standard errors.}
+\item{\code{sdr_time}}{A proc_time object. Time elapsed while computing standard
+errors.}
 
 \item{\code{parameter_hessian}}{The hessian matrix for parameter estimates.}
 

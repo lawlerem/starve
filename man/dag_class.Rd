@@ -50,15 +50,16 @@ converted to the new units.
 \item{\code{edges}}{A list whose elements consist of a "to" vector and a
 "from" vector. There is a directed edge in the graph from each vertex in
 "from" to each vertex in "to". If there are multiple vertices in "to" then
-there are undirected edges between all vertices in "to" (forming a Kn graph).}
+there are undirected edges between all vertices in "to" (forming a Kn
+graph).}
 
-\item{\code{distances}}{A list whose elements consist of a distance matrix for the edges
-in the correponding entry of edges. The rows/columns of the distance matrix
-are in the same order as the vertices in that edge list, starting with the
-vertices in "to" and then the vertices in "from".}
+\item{\code{distances}}{A list whose elements consist of a distance matrix for the
+edges in the correponding entry of edges. The rows/columns of the distance
+matrix are in the same order as the vertices in that edge list, starting
+with the vertices in "to" and then the vertices in "from".}
 
-\item{\code{distance_units}}{The units used for distance calculation.  Must be compatible
-with units::set_units.}
+\item{\code{distance_units}}{The units used for distance calculation.  Must be
+compatible with units::set_units.}
 }}
 
 \seealso{
