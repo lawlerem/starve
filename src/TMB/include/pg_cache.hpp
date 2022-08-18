@@ -9,7 +9,7 @@ class pg_cache {
     );
 
     vector<conditional_normal<Type> > operator() (int idx) { return conditional_normals(idx); }
-    conditional_normal<Type> operator() (int idx,int v) { return conditional_normals(idx)(v); }
+    conditional_normal<Type> operator() (int idx, int v) { return conditional_normals(idx)(v); }
 };
 
 
@@ -19,16 +19,16 @@ pg_cache<Type>::pg_cache(
     vector<covariance<Type> >& cv
   ) {
     conditional_normals.resize(pg.dim_g());
-    for(int i=0; i<conditional_normals.size(); i++) {
+    for(int i = 0; i < conditional_normals.size(); i++) {
       conditional_normals(i).resizeLike(cv);
     }
 
-    for(int v=0; v<cv.size(); v++) {
+    for(int v = 0; v < cv.size(); v++) {
       Type init_marginal_sd = sqrt(cv(v)(Type(0.0)));
       // Fill in cache for nodes with parents
       Type avg_sd = 0.0;
       int avg_n = 0;
-      for(int i=0; i<conditional_normals.size(); i++) {
+      for(int i = 0; i < conditional_normals.size(); i++) {
         dag_node<Type> node = pg(i).node;
         if( node.from.size() == 0 ) {
           // No parent nodes
@@ -39,8 +39,8 @@ pg_cache<Type>::pg_cache(
             cv(v)(node.d),
             node.from.size()
           );
-          for(int j=0; j<node.to.size(); j++) {
-            avg_sd += sqrt(conditional_normals(i)(v).conditional_cov()(j,j));
+          for(int j = 0; j < node.to.size(); j++) {
+            avg_sd += sqrt(conditional_normals(i)(v).conditional_cov()(j, j));
           }
           avg_n += node.to.size();
         }
@@ -52,7 +52,7 @@ pg_cache<Type>::pg_cache(
         cv(v).update_marginal_sd(avg_sd);
       } else {}
 
-      for(int i=0; i<conditional_normals.size(); i++) {
+      for(int i = 0; i < conditional_normals.size(); i++) {
         dag_node<Type> node = pg(i).node;
         if( node.from.size() == 0 ) {
           conditional_normals(i)(v) = conditional_normal<Type>(

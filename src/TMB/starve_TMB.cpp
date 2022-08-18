@@ -22,11 +22,11 @@ using namespace density;
 template<class Type>
 Type objective_function<Type>::operator() () {
   DATA_STRING(model);
-  if(model == "model") {
+  if( model == "model" ) {
     return starve_model(this);
-  } else if(model == "family") {
+  } else if( model == "family" ) {
     return family_f(this);
-  } else if(model == "testing") {
+  } else if( model == "testing" ) {
     return testing(this);
   } else {
     error("Unknown model.");
