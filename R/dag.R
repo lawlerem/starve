@@ -226,7 +226,7 @@ construct_transient_graph<- function(
 
   # Make sure geometry columns are named the same
   colnames(y)[colnames(y) == attr(y,"sf_column")]<- attr(x, "sf_column")
-  st_geometry(y)<- attr(x, "sf_column")
+  sf::st_geometry(y)<- attr(x, "sf_column")
 
   # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(
@@ -352,7 +352,7 @@ construct_prediction_graph<- function(
   pred_sf_idx<- colnames(locations(pred)) == attr(locations(pred), "sf_column")
   model_sf_column<- attr(locations_from_stars(pg_re(model)), "sf_column")
   colnames(locations(pred))[pred_sf_idx]<- model_sf_column
-  st_geometry(locations(pred))<- model_sf_column
+  sf::st_geometry(locations(pred))<- model_sf_column
 
   # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(

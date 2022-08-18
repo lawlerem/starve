@@ -1,0 +1,6 @@
+^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+.github
+_pkgdown.yml
