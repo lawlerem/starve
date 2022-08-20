@@ -86,11 +86,11 @@ SEXP dist_to_dag(const Eigen::Map<Eigen::MatrixXd> &d, const int n_neighbours) {
       0,
       n_neighbours - 1
     ),
-    Rcpp::Named("from") = Eigen::Matrix<int,0,1>::Constant(0)
+    Rcpp::Named("from") = Eigen::Matrix<int, 0, 1>::Constant(0)
   );
   for(int i = 1; i < edge_list.size(); i++) {
     edge_list[i] = Rcpp::List::create(
-      Rcpp::Named("to") = Eigen::Matrix<int,1,1>::Constant(i + n_neighbours - 1),
+      Rcpp::Named("to") = Eigen::Matrix<int, 1, 1>::Constant(i + n_neighbours - 1),
       Rcpp::Named("from") = lowest_k(
         sorted_d.col(i + n_neighbours - 1).head(i + n_neighbours - 1),
         n_neighbours
@@ -114,6 +114,100 @@ SEXP dist_to_dag(const Eigen::Map<Eigen::MatrixXd> &d, const int n_neighbours) {
 
   return Rcpp::List::create(
     Rcpp::Named("order") = order,
+    Rcpp::Named("edge_list") = edge_list,
+    Rcpp::Named("dist_list") = dist_list
+  );
+}
+
+
+// [[Rcpp::export("dist_to_tg_dag")]]
+SEXP dist_to_tg_dag(
+    const Eigen::Map<Eigen::MatrixXd> &d,
+    const Eigen::Map<Eigen::MatrixXd> &pg_d,
+    const int n_neighbours) {
+  std::vector<SEXP> edge_list(d.rows());
+  for(int i = 0; i < d.rows(); i++) {
+    edge_list[i] = Rcpp::List::create(
+      Rcpp::Named("to") = Eigen::Matrix<int, 1, 1>::Constant(i),
+      Rcpp::Named("from") = lowest_k(d.row(i), n_neighbours)
+    );
+  }
+
+  std::vector<Eigen::MatrixXd> dist_list(d.rows());
+  for(int i = 0; i < dist_list.size(); i++) {
+    Eigen::VectorXi nodes = from_list(edge_list[i]);
+    dist_list[i].resize(nodes.size() + 1, nodes.size() + 1);
+    for(int r = 0; r < nodes.size() + 1; r++) {
+      for(int c = 0; c < nodes.size() + 1; c++) {
+        if( r == 0 & c == 0 ) {
+          // tg node to itself
+          dist_list[i](r, c) = 0.0;
+        } else if( r == 0 & c > 0 ) {
+          // tg node (r) to pg node (c)
+          dist_list[i](r, c) = d(i, nodes(c - 1));
+        } else if( r > 0 & c == 0 ) {
+          // pg node (r) to tg node (c)
+          dist_list[i](r, c) = d(i, nodes(r - 1));
+        } else {
+          // pg node (r) to tg node (c)
+          dist_list[i](r, c) = pg_d(nodes(r - 1), nodes(c - 1));
+        }
+      }
+    }
+  }
+
+  return Rcpp::List::create(
+    Rcpp::Named("edge_list") = edge_list,
+    Rcpp::Named("dist_list") = dist_list
+  );
+}
+
+
+// [[Rcpp::export("dist_to_pred_dag")]]
+SEXP dist_to_pred_dag(
+    const Eigen::Map<Eigen::MatrixXd> &d,
+    const Eigen::Map<Eigen::MatrixXd> &g_d,
+    const Eigen::MatrixXi &node_alignment,
+    const int n_neighbours) {
+  std::vector<SEXP> edge_list(d.rows());
+  std::vector<Eigen::VectorXi> from_lists(d.rows());
+  for(int i = 0; i < d.rows(); i++) {
+    from_lists[i] = lowest_k(d.row(i), n_neighbours);
+    Eigen::VectorXi aligned_from = from_lists[i];
+    for(int j = 0; j < aligned_from.size(); j++) {
+      aligned_from(j) = node_alignment(i, aligned_from(j));
+    }
+    edge_list[i] = Rcpp::List::create(
+      Rcpp::Named("to") = Eigen::Matrix<int, 1, 1>::Constant(i),
+      // Change "from" later using node_alignment
+      Rcpp::Named("from") = aligned_from
+    );
+  }
+
+  std::vector<Eigen::MatrixXd> dist_list(d.rows());
+  for(int i = 0; i < dist_list.size(); i++) {
+    Eigen::VectorXi nodes = from_lists[i];
+    dist_list[i].resize(nodes.size() + 1, nodes.size() + 1);
+    for(int r = 0; r < nodes.size() + 1; r++) {
+      for(int c = 0; c < nodes.size() + 1; c++) {
+        if( r == 0 & c == 0 ) {
+          // tg node to itself
+          dist_list[i](r, c) = 0.0;
+        } else if( r == 0 & c > 0 ) {
+          // tg node (r) to pg node (c)
+          dist_list[i](r, c) = d(i, nodes(c - 1));
+        } else if( r > 0 & c == 0 ) {
+          // pg node (r) to tg node (c)
+          dist_list[i](r, c) = d(i, nodes(r - 1));
+        } else {
+          // pg node (r) to tg node (c)
+          dist_list[i](r, c) = g_d(nodes(r - 1), nodes(c - 1));
+        }
+      }
+    }
+  }
+
+  return Rcpp::List::create(
     Rcpp::Named("edge_list") = edge_list,
     Rcpp::Named("dist_list") = dist_list
   );

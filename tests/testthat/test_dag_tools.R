@@ -167,6 +167,7 @@ test_that("Order distance matrix", {
   )
 })
 
+
 test_that("Distance matrix to dag", {
   d<- unname(as.matrix(dist(1:5)))
   order<- order_d_matrix(d)
@@ -225,6 +226,66 @@ test_that("Distance matrix to dag", {
 })
 
 
+test_that("Dist_to_tg_dag", {
+  pg_locs<- 1:5
+  tg_locs<- c(0, 1.5, 3.5, 6)
+  d<- unname(as.matrix(dist(c(tg_locs, pg_locs))))
+
+  tg_idx<- seq_along(tg_locs)
+  pg_idx<- length(tg_locs) + seq_along(pg_locs)
+
+  dag<- starve:::dist_to_tg_dag(
+    d[tg_idx, pg_idx],
+    d[pg_idx, pg_idx],
+    3
+  )
+
+  parents<- do.call(rbind, lapply(dag$edge_list, `[[`, "from"))
+  eparents<- rbind(
+    c(0, 1, 2), # 0 : 1, 2, 3
+    c(0, 1, 2), # 1.5 : 1, 2, 3
+    c(2, 3, 1), # 3.5 : 3, 4, 2
+    c(4, 3, 2) # 6 : 5, 4, 3
+  )
+  expect_equal(
+    parents,
+    eparents
+  )
+
+  ad<- dag$dist_list
+  ed<- list(
+    rbind( # 0 : 1, 2, 3
+      c(0, 1, 2, 3),
+      c(1, 0, 1, 2),
+      c(2, 1, 0, 1),
+      c(3, 2, 1, 0)
+    ),
+    rbind( # 1.5 : 1, 2, 3
+      c(0, 0.5, 0.5, 1.5),
+      c(0.5, 0, 1, 2),
+      c(0.5, 1, 0, 1),
+      c(1.5, 2, 1, 0)
+    ),
+    rbind( # 3.5 : 3, 4, 2
+      c(0, 0.5, 0.5, 1.5),
+      c(0.5, 0, 1, 1),
+      c(0.5, 1, 0, 2),
+      c(1.5, 1, 2, 0)
+    ),
+    rbind( # 6 : 5, 4, 3
+      c(0, 1, 2, 3),
+      c(1, 0, 1, 2),
+      c(2, 1, 0, 1),
+      c(3, 2, 1, 0)
+    )
+  )
+  expect_equal(
+    ad,
+    ed
+  )
+})
+
+
 
 test_that("Construct_transient_dag", {
   frompoints<- cbind(1:5, 0)
@@ -275,9 +336,6 @@ test_that("Construct_transient_dag", {
       c(1.5, 1, 2, 0)
     )
   )
-  for(i in 1:3) {
-    rownames(dists[[i]])<- colnames(dists[[i]])<- 1:4
-  }
   e<- new(
     "dag",
     edges = edges,

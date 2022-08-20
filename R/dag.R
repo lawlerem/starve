@@ -250,72 +250,49 @@ construct_transient_graph<- function(
   } else if( !all.equal(c(time), sort(time)) ) {
     stop("Time must be sorted.")
   } else {}
-
-  splitx<- split(
-    x,
-    factor(
-      time - min(time) + 1,
-      levels = seq(max(time) - min(time) + 1)
-    ),
-    drop = FALSE
-  )
-  tg<- lapply(splitx, function(t_x) {
-    if( nrow(t_x) == 0 ) {
-      return( NULL )
-    } else {}
-
-    # Remove any locations of t_x already in y
-    t_x<- t_x[lengths(sf::st_equals(t_x, y)) == 0, ]
-    if( nrow(t_x) == 0 ) {
-      return( NULL )
-    } else {}
-
-    # Get nearest neighbours
-    nn_list<- suppressMessages(
-      nngeo::st_nn(
-        x = t_x,
-        y = y,
-        returnDist = FALSE,
-        sparse = TRUE,
-        progress = !silent,
-        k = n_neighbours(settings),
-        maxdist = max_distance(settings)
-      )
+  to_vals<- do.call(
+    c,
+    lapply(
+      rle(c(time))$lengths,
+      seq
     )
-    edge_list<- lapply(seq(nrow(t_x)), function(i) {
-      return(list(
-        to = i,
-        from = nn_list[[i]]
-      ))
-    })
-    dist_list<- lapply(edge_list, function(e) {
-      dists<- sf::st_distance(
-        rbind(
-          t_x[e$to, attr(x, "sf_column")],
-          y[e$from, attr(y, "sf_column")]
-        )
-      )
-      dists<- units::set_units(
-        dists,
-        distance_units(settings),
-        mode = "standard"
-      )
-      return(units::drop_units(dists))
-    })
+  )
 
-    return(list(
-      edges = edge_list,
-      distances = dist_list
-    ))
-  })
+  # Find distances from tg locs to pg locs
+  dist_matrix<- as.matrix(
+    units::set_units(
+      sf::st_distance(x, y),
+      distance_units(settings),
+      mode = "standard"
+    )
+  )
+  pg_dist_matrix<- as.matrix(
+    units::set_units(
+      sf::st_distance(y),
+      distance_units(settings),
+      mode = "standard"
+    )
+  )
 
+  dag<- dist_to_tg_dag(
+    dist_matrix,
+    pg_dist_matrix,
+    n_neighbours(settings)
+  )
 
-  return(new(
+  # Reset "to" counter at start of new years
+  for( i in seq_along(dag$edge_list) ) {
+    dag$edge_list[[i]][["to"]]<- to_vals[[i]] - 1
+  }
+  dag<- new(
     "dag",
-    edges = unname(do.call(c, lapply(tg, `[[`, 1))),
-    distances = unname(do.call(c, lapply(tg, `[[`, 2))),
+    edges = dag$edge_list,
+    distances = dag$dist_list,
     distance_units = distance_units(settings)
-  ))
+  )
+  dag<- convert_idxC_to_R(dag)
+
+  return(dag)
 }
 
 
@@ -349,10 +326,11 @@ construct_prediction_graph<- function(
     silent = TRUE) {
   settings<- settings(model)
 
+  # Make sure geometry columns are named the same
   pred_sf_idx<- colnames(locations(pred)) == attr(locations(pred), "sf_column")
-  model_sf_column<- attr(locations_from_stars(pg_re(model)), "sf_column")
-  colnames(locations(pred))[pred_sf_idx]<- model_sf_column
-  sf::st_geometry(locations(pred))<- model_sf_column
+  model_sf_name<- attr(locations_from_stars(pg_re(model)), "sf_column")
+  colnames(locations(pred))[pred_sf_idx]<- model_sf_name
+  sf::st_geometry(locations(pred))<- model_sf_name
 
   # Parents won't be eligible if their distance is too far
   max_dist<- units::set_units(
@@ -363,102 +341,93 @@ construct_prediction_graph<- function(
   max_distance(settings)<- as.numeric(units::set_units(max_dist, "m"))
   ### st_nn expects meters.
 
-  pg_s<- sf::st_geometry(locations_from_stars(pg_re(model)))
-  tg_s<- sf::st_geometry(locations(tg_re(model)))
-
   t<- time_from_formula(formula(model), locations(pred))
   if( !all.equal(c(t), sort(t)) ) {
     stop("The rows of pred must be sorted by their time index.")
   } else {}
 
-  time_dim_vals<- stars::st_get_dimension_values(pg_re(model), time_name(model))
-  g_by_t<- lapply(time_dim_vals, function(t) {
-    pr_t<- time_from_formula(formula(model), locations(pred))
-    pr_s<- locations(pred)[pr_t == t, ]
-    if( length(tg_s) > 0 ) {
-      tg_re_t<- time_from_formula(formula(model), locations(tg_re(model)))
-      g_s<- sf::st_sf(
-        geom = c(
-          pg_s,
-          sf::st_sfc(unique(tg_s[tg_re_t == t]))
-        )
-      )
-    } else {
-      g_s<- sf::st_sf(geom = pg_s)
-    }
+  # Find distances from pred locs to graph locs
+  pg_s<- sf::st_geometry(locations_from_stars(pg_re(model)))
+  tg_s<- sf::st_geometry(locations(tg_re(model)))
+  graph_locs<- sf::st_sf(
+    t = c(
+      rep(NA, length(pg_s)),
+      time_from_formula(formula(model), locations(tg_re(model)), "vector")
+    ),
+    geom = c(pg_s, tg_s)
+  )
+  colnames(graph_locs)[2]<- model_sf_name
+  sf::st_geometry(graph_locs)<- model_sf_name
 
-    # Find prediction locations that coincide with graph locations
-    edge_list<- st_equals(pr_s, g_s)
-    edge_list<- lapply(seq_along(edge_list), function(i) {
-      return(list(
-        to = i,
-        from = edge_list[[i]]
-      ))
-    })
-
-    # Find nearest neighbours for remaining locations
-    from_lengths<- do.call(
-      c,
-      lapply(edge_list, function(e) return(length(e$from)))
+  dist_matrix<- as.matrix(
+    units::set_units(
+      sf::st_distance(locations(pred), graph_locs),
+      distance_units(settings),
+      mode = "standard"
     )
-    nn_idx<- which(from_lengths == 0)
-    if( length(nn_idx) > 0 ) {
-      suppressMessages({
-        nn_list<- nngeo::st_nn(
-          x = pr_s[nn_idx, ],
-          y = g_s,
-          returnDist = FALSE,
-          sparse = TRUE,
-          progress = !silent,
-          k = n_neighbours(settings),
-          maxdist = max_distance(settings)
-        )
-      })
-      for( i in seq_along(nn_idx) ) {
-        edge_list[[nn_idx[[i]]]]$from<- nn_list[[i]]
-      }
-    } else {}
+  )
+  graph_dist_matrix<- as.matrix(
+    units::set_units(
+      sf::st_distance(graph_locs),
+      distance_units(settings),
+      mode = "standard"
+    )
+  )
 
-    # Get distance matrices
-    dist_list<- lapply(edge_list, function(e) {
-      if( length(e$from) == 1 ) {
-        return(matrix(0))
-      } else {
-        dists<- sf::st_distance(
-          rbind(
-            pr_s[e$to, attr(pr_s, "sf_column")],
-            g_s[e$from, , attr(g_s, "sf_column")]
-          )
-        )
-        dists<- units::set_units(
-          dists,
-          distance_units(settings),
-          mode = "standard"
-        )
-        return(units::drop_units(dists))
-      }
-    })
+  # Set distances from pred loc to tg loc to INF if not at same time
+  t_equal<- outer(
+    c(time_from_formula(formula(model), locations(pred), "vector")),
+    graph_locs$t,
+    `==`
+  )
+  dist_matrix[!t_equal]<- Inf
+  # Create a matrix that tells us how to convert an index from
+  #   c(pg_locs, tg_locs) to an index from c(pg_locs, tg_locs[[t]])
+  node_alignment<- t_equal
+  node_alignment[is.na(node_alignment)]<- TRUE
+  node_alignment[!node_alignment]<- NA
 
+  seq_by_row<- lapply(
+    rowSums(node_alignment, na.rm = TRUE),
+    seq
+  )
+  node_alignment_t<- t(node_alignment)
+  node_alignment_t[which(node_alignment_t)]<- do.call(c, seq_by_row)
+  node_alignment<- t(node_alignment_t)
+  # e.g. node_alignment[2, 5] = 4 means that for pred_loc 2, the 5th node of
+  #  c(pg_locs, tg_locs) is the 4th node in this year's graph
+
+  dag<- dist_to_pred_dag(
+    dist_matrix,
+    graph_dist_matrix,
+    node_alignment - 1,
+    n_neighbours(settings)
+  )
+
+
+  # Replace graph for pred locs that intersect graph locs
+  intersects<- st_equals(locations(pred), graph_locs)
+  intersects_idx<- which(lengths(intersects) == 1)
+  intersects_list<- lapply(seq_along(intersects), function(i) {
     return(list(
-      edge_list = edge_list,
-      dist_dist = dist_list
+      to = i,
+      from = intersects[[i]] - 1
     ))
   })
+  dag$edge_list[intersects_idx]<- intersects_list[intersects_idx]
+  dag$dist_list[intersects_idx]<- lapply(intersects_idx,function(x) matrix(0))
 
-  # Don't want edge$to to reset every year
-  edges<- unname(do.call(c, lapply(g_by_t, `[[`, 1)))
-  edges<- lapply(seq_along(edges), function(i) {
-    e<- edges[[i]]
-    e$to<- i
-    return(e)
-  })
+  # Don't want to reset "to" counter at start of new years
 
-  return(new(
+  dag<- new(
     "dag",
-    edges = edges,
-    distances = unname(do.call(c, lapply(g_by_t, `[[`, 2))),
+    edges = dag$edge_list,
+    distances = dag$dist_list,
     distance_units = distance_units(settings)
-  ))
+  )
+  dag<- convert_idxC_to_R(dag)
+
+  return(dag)
 }
 
 

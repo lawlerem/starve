@@ -13,3 +13,11 @@ dist_to_dag <- function(d, n_neighbours) {
     .Call(`_starve_dist_to_dag`, d, n_neighbours)
 }
 
+dist_to_tg_dag <- function(d, pg_d, n_neighbours) {
+    .Call(`_starve_dist_to_tg_dag`, d, pg_d, n_neighbours)
+}
+
+dist_to_pred_dag <- function(d, g_d, node_alignment, n_neighbours) {
+    .Call(`_starve_dist_to_pred_dag`, d, g_d, node_alignment, n_neighbours)
+}
+

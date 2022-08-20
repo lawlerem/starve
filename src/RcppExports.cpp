@@ -46,11 +46,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dist_to_tg_dag
+SEXP dist_to_tg_dag(const Eigen::Map<Eigen::MatrixXd>& d, const Eigen::Map<Eigen::MatrixXd>& pg_d, const int n_neighbours);
+RcppExport SEXP _starve_dist_to_tg_dag(SEXP dSEXP, SEXP pg_dSEXP, SEXP n_neighboursSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd>& >::type d(dSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd>& >::type pg_d(pg_dSEXP);
+    Rcpp::traits::input_parameter< const int >::type n_neighbours(n_neighboursSEXP);
+    rcpp_result_gen = Rcpp::wrap(dist_to_tg_dag(d, pg_d, n_neighbours));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dist_to_pred_dag
+SEXP dist_to_pred_dag(const Eigen::Map<Eigen::MatrixXd>& d, const Eigen::Map<Eigen::MatrixXd>& g_d, const Eigen::MatrixXi& node_alignment, const int n_neighbours);
+RcppExport SEXP _starve_dist_to_pred_dag(SEXP dSEXP, SEXP g_dSEXP, SEXP node_alignmentSEXP, SEXP n_neighboursSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd>& >::type d(dSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd>& >::type g_d(g_dSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type node_alignment(node_alignmentSEXP);
+    Rcpp::traits::input_parameter< const int >::type n_neighbours(n_neighboursSEXP);
+    rcpp_result_gen = Rcpp::wrap(dist_to_pred_dag(d, g_d, node_alignment, n_neighbours));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_starve_order_d_matrix", (DL_FUNC) &_starve_order_d_matrix, 1},
     {"_starve_lowest_k", (DL_FUNC) &_starve_lowest_k, 2},
     {"_starve_dist_to_dag", (DL_FUNC) &_starve_dist_to_dag, 2},
+    {"_starve_dist_to_tg_dag", (DL_FUNC) &_starve_dist_to_tg_dag, 3},
+    {"_starve_dist_to_pred_dag", (DL_FUNC) &_starve_dist_to_pred_dag, 4},
     {NULL, NULL, 0}
 };
 
