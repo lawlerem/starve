@@ -139,13 +139,13 @@ SEXP dist_to_tg_dag(
     dist_list[i].resize(nodes.size() + 1, nodes.size() + 1);
     for(int r = 0; r < nodes.size() + 1; r++) {
       for(int c = 0; c < nodes.size() + 1; c++) {
-        if( r == 0 & c == 0 ) {
+        if( (r == 0) & (c == 0) ) {
           // tg node to itself
           dist_list[i](r, c) = 0.0;
-        } else if( r == 0 & c > 0 ) {
+        } else if( (r == 0) & (c > 0) ) {
           // tg node (r) to pg node (c)
           dist_list[i](r, c) = d(i, nodes(c - 1));
-        } else if( r > 0 & c == 0 ) {
+        } else if( (r > 0) & (c == 0) ) {
           // pg node (r) to tg node (c)
           dist_list[i](r, c) = d(i, nodes(r - 1));
         } else {
@@ -190,13 +190,13 @@ SEXP dist_to_pred_dag(
     dist_list[i].resize(nodes.size() + 1, nodes.size() + 1);
     for(int r = 0; r < nodes.size() + 1; r++) {
       for(int c = 0; c < nodes.size() + 1; c++) {
-        if( r == 0 & c == 0 ) {
+        if( (r == 0) & (c == 0) ) {
           // tg node to itself
           dist_list[i](r, c) = 0.0;
-        } else if( r == 0 & c > 0 ) {
+        } else if( (r == 0) & (c > 0) ) {
           // tg node (r) to pg node (c)
           dist_list[i](r, c) = d(i, nodes(c - 1));
-        } else if( r > 0 & c == 0 ) {
+        } else if( (r > 0) & (c == 0) ) {
           // pg node (r) to tg node (c)
           dist_list[i](r, c) = d(i, nodes(r - 1));
         } else {
