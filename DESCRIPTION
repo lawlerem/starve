@@ -1,6 +1,6 @@
 Package: starve
 Title: Spatio-Temporal Analysis of Research surVEy data
-Version: 0.18.0
+Version: 0.18.1
 Authors@R:
     person(given = "Ethan",
            family = "Lawler",
