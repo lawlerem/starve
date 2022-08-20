@@ -10,7 +10,7 @@ class tg_cache {
     );
     tg_cache() = default;
 
-    conditional_normal<Type> operator() (int idx,int t,int v) { return conditional_normals(t)(idx)(v); }
+    conditional_normal<Type> operator() (int idx, int t, int v) { return conditional_normals(t)(idx)(v); }
 };
 
 
@@ -21,12 +21,12 @@ tg_cache<Type>::tg_cache(
     vector<covariance<Type> >& cv
   ) {
   conditional_normals.resize(tg.dim_t());
-  for(int t=0; t<tg.dim_t(); t++) {
+  for(int t = 0; t < tg.dim_t(); t++) {
     conditional_normals(t) = vector<vector<conditional_normal<Type> > >(tg.dim_g(t));
-    for(int i=0; i<tg.dim_g(t); i++) {
+    for(int i = 0; i < tg.dim_g(t); i++) {
       conditional_normals(t)(i) = vector<conditional_normal<Type> >(tg.dim_v());
-      for(int v=0; v<tg.dim_v(); v++) {
-        dag_node<Type> node = tg(i,t,v,pg).node;
+      for(int v = 0; v < tg.dim_v(); v++) {
+        dag_node<Type> node = tg(i, t, v, pg).node;
         conditional_normals(t)(i)(v) = conditional_normal<Type>(
           cv(v)(node.d),
           node.from.size()

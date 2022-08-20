@@ -185,7 +185,7 @@ strv_prepare_process<- function(
 
   # pg_re = "sf",
   colnames(nodes)[colnames(nodes) == attr(nodes,"sf_column")]<- sf_name
-  st_geometry(nodes)<- sf_name
+  sf::st_geometry(nodes)<- sf_name
   uniq_nodes<- unique(nodes[, sf_name])
 
   if( !identical(persistent_graph, NA) ) {
@@ -233,7 +233,7 @@ strv_prepare_process<- function(
   # Construct transient graph if not supplied
   pg_locs<- locations_from_stars(pg_re(process))
   colnames(pg_locs)[colnames(pg_locs) == attr(pg_locs,"sf_column")]<- sf_name
-  st_geometry(pg_locs)<- sf_name
+  sf::st_geometry(pg_locs)<- sf_name
   data<- data[lengths(sf::st_equals(data, pg_locs)) == 0, ]
 
   transient_graph(process)<- construct_transient_graph(

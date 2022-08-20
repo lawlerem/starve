@@ -1,5 +1,6 @@
-#' @importFrom sf st_distance st_equals st_geometry st_sf st_sfc st_join
-#'   st_point st_crs st_bbox st_coordinates st_as_sf st_drop_geometry st_as_sfc
+#' @importFrom sf st_distance st_equals st_geometry st_geometry<- st_sf st_sfc
+#'   st_join st_point st_crs st_bbox st_coordinates st_as_sf st_drop_geometry
+#'   st_as_sfc
 #' @importFrom abind abind
 #' @importFrom methods show initialize as as<- new
 #' @importFrom Rcpp sourceCpp

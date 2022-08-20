@@ -10,15 +10,17 @@ struct directed_graph {
     vector<vector<vector<int> > > dag;
     directed_graph(SEXP edge_list) {
         dag.resize(LENGTH(edge_list));
-        for(int i=0; i<LENGTH(edge_list); i++) {
-          SEXP v = VECTOR_ELT(edge_list,i);
+        for(int i = 0; i < LENGTH(edge_list); i++) {
+          SEXP v = VECTOR_ELT(edge_list, i);
           dag(i).resize(2);
 
-          vector<int> to = asVector<int>(VECTOR_ELT(v,0));
-          dag(i)(0).resizeLike(to); dag(i)(0) = to;
+          vector<int> to = asVector<int>(VECTOR_ELT(v, 0));
+          dag(i)(0).resizeLike(to);
+          dag(i)(0) = to;
 
-          vector<int> from = asVector<int>(VECTOR_ELT(v,1));
-          dag(i)(1).resizeLike(from);  dag(i)(1) = from;
+          vector<int> from = asVector<int>(VECTOR_ELT(v, 1));
+          dag(i)(1).resizeLike(from);
+          dag(i)(1) = from;
         }
     }
 };
@@ -31,8 +33,8 @@ struct dag_dists {
     vector<matrix<Type> > dag_dist;
     dag_dists(SEXP dist_list) {
         dag_dist.resize(LENGTH(dist_list));
-        for(int i=0; i<LENGTH(dist_list); i++) {
-            SEXP m = VECTOR_ELT(dist_list,i);
+        for(int i = 0; i < LENGTH(dist_list); i++) {
+            SEXP m = VECTOR_ELT(dist_list, i);
             dag_dist(i) = asMatrix<Type>(m);
         }
     }
@@ -47,12 +49,12 @@ struct dag_dists {
 vector<int> get_time_segment(const vector<int>& times, int this_time) {
   vector<int> segment(2);
   segment << 0, 0;
-  int i=0;
+  int i = 0;
    // Run through times until you hit a this_time (or the end)
-  while( i<times.size() && times(i) < this_time ) i++;
+  while( i < times.size() && times(i) < this_time ) i++;
   segment(0) = i;
   // Continue until you hit the next time (or the end)
-  while( i<times.size() && times(i) == this_time ) {
+  while( i < times.size() && times(i) == this_time ) {
     segment(1)++;
     i++;
   }
@@ -62,9 +64,9 @@ vector<int> get_time_segment(const vector<int>& times, int this_time) {
 // Subset rows of a matrix by start point and number of rows wanted
 template<class Type>
 matrix<Type> matrix_row_segment(const matrix<Type>& full_matrix, int position, int size) {
-  matrix<Type> small_matrix(size,full_matrix.cols());
-  for(int i=0; i<size; i++) {
-    small_matrix.row(i) = full_matrix.row(i+position);
+  matrix<Type> small_matrix(size, full_matrix.cols());
+  for(int i = 0; i < size; i++) {
+    small_matrix.row(i) = full_matrix.row(i + position);
   }
   return small_matrix;
 }

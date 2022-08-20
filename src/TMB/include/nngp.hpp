@@ -14,12 +14,13 @@ class nngp {
     void update_tg_mean();
     Type tg_loglikelihood(time_series<Type>& ts);
     nngp<Type> tg_simulate(time_series<Type>& ts);
+
   public:
     nngp(
       persistent_graph<Type>& pg,
       transient_graph<Type>& tg,
       vector<covariance<Type> >& cv
-    ) : pg{pg}, tg{tg}, cv{cv}, pg_c{pg,cv}, tg_c{tg,pg,cv} {};
+    ) : pg{pg}, tg{tg}, cv{cv}, pg_c{pg, cv}, tg_c{tg, pg, cv} {};
 
     int dim_g(int t) { return pg.dim_g() + tg.dim_g(t); } // number of nodes in pg + number in tg(t)
     int dim_s(int t) { return pg.dim_s() + tg.dim_s(t); } // number of locs in pg + number in tg(t)
@@ -35,13 +36,30 @@ class nngp {
     dag<Type> get_tg_graph() { return tg.get_graph(); }
 
     // Returns just the random effect for [location, time, var]
-    Type operator() (int s,int t, int v) {return (s<pg.dim_s() ? pg.re(s,t,v) : tg.re(t)(s-pg.dim_s(),v));}
-    Type mean(int s,int t, int v) {return (s<pg.dim_s() ? pg.mean(s,t,v) : tg.mean(t)(s-pg.dim_s(),v));}
+    Type operator() (int s,int t, int v) {
+      return (
+        s < pg.dim_s() ?
+        pg.re(s, t, v) :
+        tg.re(t)(s - pg.dim_s(), v)
+      );
+    }
+    Type mean(int s, int t, int v) {
+      return (
+        s < pg.dim_s() ?
+        pg.mean(s, t, v) :
+        tg.mean(t)(s - pg.dim_s(), v)
+      );
+    }
 
-    Type loglikelihood(time_series<Type>& ts) { return pg_loglikelihood(ts)+tg_loglikelihood(ts); }
+    Type loglikelihood(time_series<Type>& ts) { return pg_loglikelihood(ts) + tg_loglikelihood(ts); }
     nngp<Type> simulate(time_series<Type>& ts) { pg_simulate(ts); tg_simulate(ts); return *this; }
 
-    Type prediction_loglikelihood(dag<Type>& pred_g,vector<int>& pred_t, array<Type>& pred_re,time_series<Type>& ts);
+    Type prediction_loglikelihood(
+      dag<Type>& pred_g,
+      vector<int>& pred_t,
+      array<Type>& pred_re,
+      time_series<Type>& ts
+    );
 };
 
 
@@ -55,10 +73,13 @@ Type nngp<Type>::pg_loglikelihood(time_series<Type>& ts) {
 
   // Use pg_cache to compute loglikelihood
   Type pg_ll = 0.0;
-  for(int v=0; v<pg.dim_v(); v++) {
-    for(int t=0; t<pg.dim_t(); t++) {
-      for(int node=0; node<pg.dim_g(); node++) {
-        pg_ll += pg_c(node,v).loglikelihood(pg(node,t,v).re,pg(node,t,v).mean);
+  for(int v = 0; v < pg.dim_v(); v++) {
+    for(int t = 0; t < pg.dim_t(); t++) {
+      for(int node = 0; node < pg.dim_g(); node++) {
+        pg_ll += pg_c(node, v).loglikelihood(
+          pg(node, t, v).re,
+          pg(node, t, v).mean
+        );
       }
     }
   }
@@ -77,18 +98,23 @@ nngp<Type> nngp<Type>::pg_simulate(time_series<Type>& ts) {
         2.) Simulate random effects for node and year t
         3.) Update random effects for year t in persistent graph
   */
-  for(int v=0; v<pg.dim_v(); v++) {
-    for(int t=0; t<pg.dim_t(); t++) {
-      for(int node=0; node<pg.dim_g(); node++) {
+  for(int v = 0; v < pg.dim_v(); v++) {
+    for(int t = 0; t < pg.dim_t(); t++) {
+      for(int node = 0; node < pg.dim_g(); node++) {
         re_dag_node<Type> pg_node = pg(node);
-        vector<Type> to_mean = ts.propagate_structure(pg_node.re,t,v);
-        pg.set_mean_by_to_g(to_mean.segment(0,pg_node.node.to.size()),node,t,v);
+        vector<Type> to_mean = ts.propagate_structure(pg_node.re, t, v);
+        pg.set_mean_by_to_g(
+          to_mean.segment(0, pg_node.node.to.size()),
+          node,
+          t,
+          v
+        );
 
-        pg_node = pg(node,t,v);
+        pg_node = pg(node, t, v);
         // "to" nodes for pg_node.re won't be used
-        vector<Type> sim = pg_c(node,v).simulate(pg_node.re,pg_node.mean);
+        vector<Type> sim = pg_c(node, v).simulate(pg_node.re, pg_node.mean);
 
-        pg.set_re_by_to_g(sim,node,t,v);
+        pg.set_re_by_to_g(sim, node, t, v);
       }
     }
   }
@@ -99,11 +125,11 @@ nngp<Type> nngp<Type>::pg_simulate(time_series<Type>& ts) {
 
 template<class Type>
 void nngp<Type>::update_tg_mean() {
-  for(int v=0; v<tg.dim_v(); v++) {
-    for(int t=0; t<tg.dim_t(); t++) {
-      for(int node=0; node<tg.dim_g(t); node++) {
-        vector<Type> new_mean = tg_c(node,t,v).interpolate_mean(tg(node,t,v,pg).mean);
-        tg.set_mean_by_to_g(new_mean,node,t,v,pg);
+  for(int v = 0; v < tg.dim_v(); v++) {
+    for(int t = 0; t < tg.dim_t(); t++) {
+      for(int node = 0; node < tg.dim_g(t); node++) {
+        vector<Type> new_mean = tg_c(node, t, v).interpolate_mean(tg(node, t, v, pg).mean);
+        tg.set_mean_by_to_g(new_mean, node, t, v, pg);
       }
     }
   }
@@ -113,10 +139,13 @@ template<class Type>
 Type nngp<Type>::tg_loglikelihood(time_series<Type>& ts) {
   update_tg_mean();
   Type tg_ll = 0.0;
-  for(int v=0; v<tg.dim_v(); v++) {
-    for(int t=0; t<tg.dim_t(); t++) {
-      for(int node=0; node<tg.dim_g(t); node++) {
-        tg_ll += tg_c(node,t,v).loglikelihood(tg(node,t,v,pg).re,tg(node,t,v,pg).mean);
+  for(int v = 0; v < tg.dim_v(); v++) {
+    for(int t = 0; t < tg.dim_t(); t++) {
+      for(int node = 0; node < tg.dim_g(t); node++) {
+        tg_ll += tg_c(node, t, v).loglikelihood(
+          tg(node, t, v, pg).re,
+          tg(node, t, v, pg).mean
+        );
       }
     }
   }
@@ -137,13 +166,13 @@ nngp<Type> nngp<Type>::tg_simulate(time_series<Type>& ts) {
         3.) update random effects and mean in transient graph
   */
   update_tg_mean();
-  for(int v=0; v<tg.dim_v(); v++) {
-    for(int t=0; t<tg.dim_t(); t++) {
-      for(int node=0; node<tg.dim_g(t); node++) {
-        re_dag_node<Type> tg_node = tg(node,t,v,pg);
-        vector<Type> sim = tg_c(node,t,v).simulate(tg_node.re,tg_node.mean);
+  for(int v = 0; v < tg.dim_v(); v++) {
+    for(int t = 0; t < tg.dim_t(); t++) {
+      for(int node = 0; node < tg.dim_g(t); node++) {
+        re_dag_node<Type> tg_node = tg(node, t, v, pg);
+        vector<Type> sim = tg_c(node, t, v).simulate(tg_node.re, tg_node.mean);
 
-        tg.set_re_by_to_g(sim,node,t,v,pg);
+        tg.set_re_by_to_g(sim, node, t, v, pg);
       }
     }
   }
@@ -153,36 +182,42 @@ nngp<Type> nngp<Type>::tg_simulate(time_series<Type>& ts) {
 
 
 template<class Type>
-Type nngp<Type>::prediction_loglikelihood(dag<Type>& pred_g,vector<int>& pred_t, array<Type>& pred_re,time_series<Type>& ts) {
+Type nngp<Type>::prediction_loglikelihood(
+    dag<Type>& pred_g,
+    vector<int>& pred_t,
+    array<Type>& pred_re,
+    time_series<Type>& ts) {
   Type pred_ll = 0.0;
-  for(int i=0; i<pred_g.size(); i++) {
+  for(int i = 0; i < pred_g.size(); i++) {
     if( pred_g(i).from.size() == 1 ) {
       continue; // from.size() == 1  --> random effect is mapped
     } else {}
 
     // Consolidate random effects into a re_dag_node
     int n = pred_g(i).to.size() + pred_g(i).from.size();
-    re_dag_node<Type> node {array<Type>(n,dim_v()),
-                            array<Type>(n,dim_v()),
-                            pred_g(i)};
+    re_dag_node<Type> node {
+      array<Type>(n, dim_v()),
+      array<Type>(n, dim_v()),
+      pred_g(i)
+    };
 
-    for(int j=0; j<node.node.to.size(); j++) {
-      for(int v=0; v<dim_v(); v++) {
-        node.re(j,v) = pred_re(node.node.to(j),v);
-        node.mean(j,v) = 0.0; // Mean will be interpolated
+    for(int j = 0; j < node.node.to.size(); j++) {
+      for(int v = 0; v < dim_v(); v++) {
+        node.re(j, v) = pred_re(node.node.to(j), v);
+        node.mean(j, v) = 0.0; // Mean will be interpolated
       }
     }
-    for(int j=0; j<node.node.from.size(); j++) {
-      for(int v=0; v<dim_v(); v++) {
-        node.re(j+node.node.to.size(),v) = operator() (node.node.from(j),pred_t(i),v);
-        node.mean(j+node.node.to.size(),v) = mean(node.node.from(j),pred_t(i),v);
+    for(int j = 0; j < node.node.from.size(); j++) {
+      for(int v = 0; v < dim_v(); v++) {
+        node.re(j + node.node.to.size(), v) = operator() (node.node.from(j), pred_t(i), v);
+        node.mean(j + node.node.to.size(), v) = mean(node.node.from(j), pred_t(i), v);
       }
     }
     // Create a conditional normal, interpolate mean, and compute loglikelihood
-    for(int v=0; v<dim_v(); v++) {
-      conditional_normal<Type> cn {cv(v)(node.node.d),static_cast<int>(node.node.from.size())};
+    for(int v = 0; v < dim_v(); v++) {
+      conditional_normal<Type> cn {cv(v)(node.node.d), static_cast<int>(node.node.from.size())};
       node.mean = cn.interpolate_mean(node.mean);
-      pred_ll += cn.loglikelihood(node.re,node.mean);
+      pred_ll += cn.loglikelihood(node.re, node.mean);
     }
   }
 

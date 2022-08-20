@@ -44,7 +44,7 @@ setMethod(
         message = "No parameters to optimize (NA)"
       )
     }
-  })
+  }, gcFirst = FALSE)
 
   hess_time(tracing)<- system.time({
     if( length(opt(TMB_out)$par) > 0 ) {
@@ -67,7 +67,7 @@ setMethod(
 
     parameter_hessian(tracing)<- hess
     parameter_covariance(tracing)<- par_cov
-  })
+  }, gcFirst = FALSE)
 
   sdr_time(tracing)<- system.time({
     # Get standard errors for parameters and random effects
@@ -78,7 +78,7 @@ setMethod(
       getReportCovariance = FALSE,
       ...
     )
-  })
+  }, gcFirst = FALSE)
 
   # Update starve object based on parameter estimates
   tracing(object)<- tracing
@@ -478,33 +478,35 @@ predict_w<- function(x, predictions, dist_tol = 0.00001, ...) {
   values(predictions)$w<- est$pred_re
   values(predictions)$w_se<- se$pred_re
 
-  s<- do.call(
+  first_loc<- do.call(
     c,
     lapply(edges(dag), function(e) {
       return(e$from[[1]])
     })
   )
+  intersects<- do.call(
+    c,
+    lapply(edges(dag), function(e) {
+      return(length(e$from) == 1)
+    })
+  )
+
   t<- time_from_formula(formula(x), locations(predictions)) - min_t + 1
   std_tg_t<- time_from_formula(formula(x), locations(tg_re(x))) - min_t + 1
+
   for( i in seq(nrow(locations(predictions))) ) {
-    intersects<- do.call(
-      c,
-      lapply(edges(dag), function(e) {
-        return(length(e$from) == 1)
-      })
-    )
     if( !intersects[[i]] ) {
       next
     } else {}
-    if( s[[i]] <= dim(pg_re(x))[[1]] ) {
+    if( first_loc[[i]] <= dim(pg_re(x))[[1]] ) {
       # Take re from persistent graph -- be sure to use from est
       # so we get the extra years before/after data
-      values(predictions)$w[i, ]<- est$pg_re[s[[i]], t[[i]], ]
-      values(predictions)$w_se[i, ]<- se$pg_re[s[[i]], t[[i]], ]
+      values(predictions)$w[i, ]<- est$pg_re[first_loc[[i]], t[[i]], ]
+      values(predictions)$w_se[i, ]<- se$pg_re[first_loc[[i]], t[[i]], ]
     } else {
       # Take re from transient graph
       this_t_tg<- which(std_tg_t == t[[i]])
-      row<- this_t_tg[s[[i]] - dim(pg_re(x))[[1]]]
+      row<- this_t_tg[first_loc[[i]] - dim(pg_re(x))[[1]]]
       values(predictions)$w[i, ]<- values(tg_re(x))$w[row, ]
       values(predictions)$w_se[i, ]<- values(tg_re(x))$se[row, ]
     }

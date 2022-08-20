@@ -489,7 +489,7 @@ locations_from_stars<- function(x) {
     stars::st_dimensions(x)[[which_sfc(x)]][["values"]]
   )
   colnames(sf_obj)<- which_sfc(x)
-  st_geometry(sf_obj)<- which_sfc(x)
+  sf::st_geometry(sf_obj)<- which_sfc(x)
 
   return(sf_obj)
 }
@@ -837,7 +837,7 @@ sample_size_from_formula<- function(x, data, unique_vars = FALSE) {
   } else {}
   var_call<- rep(var_call, length.out = n_response(x))
 
-  
+
   var_idx<- vapply(var_call, is.symbol, logical(1)) |
     vapply(var_call, is.character, logical(1))
   char_vars<- unique(paste(var_call[var_idx]))

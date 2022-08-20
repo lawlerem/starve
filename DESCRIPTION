@@ -1,6 +1,6 @@
 Package: starve
 Title: Spatio-Temporal Analysis of Research surVEy data
-Version: 0.18.0
+Version: 0.18.1
 Authors@R:
     person(given = "Ethan",
            family = "Lawler",
@@ -22,7 +22,6 @@ ByteCompile: true
 Imports:
     methods,
     TMB (>= 1.7.16),
-    nngeo (>= 0.3.0),
     units,
     Rcpp,
     stars,
