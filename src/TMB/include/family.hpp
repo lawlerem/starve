@@ -46,6 +46,7 @@ struct distribution {
         pars(1), // power
         true
       ); // Tweedie
+      case 10 : return dt(data - mean, pars(0), true); // Student's t
       default : return dnorm(data, mean, pars(0), true); // Normal
     }
   }
@@ -67,6 +68,7 @@ struct distribution {
       case 7 : return (rbinom(T(size), mean) == 0 ? 0 : 1); // AtLeastOneBinomial
       case 8 : return rcompois2(mean, 1.0 / pars(0)); // Conway-Maxwell-Poisson
       case 9 : return rtweedie(size * mean, pars(0), pars(1)); // Tweedie
+      case 10 : return (rt(pars(0)) + mean); // Student's t
       default : return rnorm(mean, pars(0)); // Normal
     }
   }

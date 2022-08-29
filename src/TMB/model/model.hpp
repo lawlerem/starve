@@ -149,6 +149,9 @@ Type starve_model(objective_function<Type>* obj) {
         response_pars(0, v) = exp(working_response_pars(0, v)); // scale --> (0,Inf)
         response_pars(1, v) = 1.0 / (1.0 + exp(-working_response_pars(1, v))) + 1.0; // power --> (1,2)
         break;
+      case 10 : // Student's t
+        response_pars(0, v) = exp(working_response_pars(0, v)); // df --> (0, Inf)
+        break;
       default : // Normal
         response_pars(0, v) = exp(working_response_pars(0, v)); // sd --> (0,Inf)
         break;

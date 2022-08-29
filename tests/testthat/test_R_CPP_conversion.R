@@ -66,6 +66,10 @@ test_that("Distribution to code", {
     distribution_to_code("tweedie"),
     9
   )
+  expect_equal(
+    distribution_to_code("t"),
+    10
+  )
   expect_error(
     distribution_to_code("UNUSED"),
     "Supplied distribution"
