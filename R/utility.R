@@ -315,6 +315,8 @@ distribution_to_code<- function(distribution) {
 #' \describe{
 #'   \item{gaussian - }{Linear predictor determines the mean,
 #'     has a variance parameter.}
+#'   \item{t - }{Linear predictor determines the mean, has a degrees of
+#'     freedom parameter.}
 #'   \item{gamma - }{Used for model strictly positive continuous data such as
 #'     biomass, linear predictor determines the mean, has a variance parameter.}
 #'   \item{lognormal - }{Used for modelling strictly positive continuous data
@@ -395,7 +397,8 @@ get_starve_distributions<- function(
       "binomial", # 6
       "atLeastOneBinomial", # 7
       "compois", # 8
-      "tweedie" # 9
+      "tweedie", # 9
+      "t" # 10
     )
     names(distributions)<- rep("distribution", length(distributions))
   } else {

@@ -917,6 +917,11 @@ setMethod(
               qlogis(par_df["power", "par"] - 1),
               qlogis(1.5 - 1)
             )
+          ),
+          t = c( # Student's t
+            bounds_check(par_df["df", ], 0, Inf),
+            log(par_df["df", "par"]),
+            log(2)
           )
         )}
       )

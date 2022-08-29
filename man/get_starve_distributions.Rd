@@ -24,6 +24,8 @@ Print a list of implemented response distributions, link functions, and
 \describe{
   \item{gaussian - }{Linear predictor determines the mean,
     has a variance parameter.}
+  \item{t - }{Linear predictor determines the mean, has a degrees of
+    freedom parameter.}
   \item{gamma - }{Used for model strictly positive continuous data such as
     biomass, linear predictor determines the mean, has a variance parameter.}
   \item{lognormal - }{Used for modelling strictly positive continuous data

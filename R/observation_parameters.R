@@ -124,6 +124,12 @@ setReplaceMethod(
         se = numeric(2),
         fixed = c(FALSE, FALSE),
         row.names = c("dispersion", "power")
+      ),
+      t = data.frame(
+        par = numeric(1),
+        se = numeric(1),
+        fixed = logical(1),
+        row.names = "df"
       )
     )
   })
@@ -144,7 +150,8 @@ setReplaceMethod(
           binomial = "logit",
           atLeastOneBinomial = "logit",
           compois = "log",
-          tweedie = "log"
+          tweedie = "log",
+          gaussian = "identity"
         )
       )
     })

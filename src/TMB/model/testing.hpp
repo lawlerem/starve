@@ -349,7 +349,7 @@ Type testing(objective_function<Type>* obj) {
       DATA_MATRIX(size);
 
       matrix<Type> ans = x;
-      for(int code = 0; code < 10; code++) { // code < # of cases in distribution
+      for(int code = 0; code < 11; code++) { // code < # of cases in distribution
         for(int i = 0; i < x.rows(); i++) {
           ans(i, code) = distribution<Type>{code, pars.col(code)}(
             x(i, code),
@@ -370,7 +370,7 @@ Type testing(objective_function<Type>* obj) {
       DATA_MATRIX(size);
 
       matrix<Type> ans = x;
-      for(int code = 0; code < 10; code++) {
+      for(int code = 0; code < 11; code++) {
         int link_code = 0;
         switch(code) {
           case 0 : link_code = 0; break; // Normal - identity
@@ -383,6 +383,7 @@ Type testing(objective_function<Type>* obj) {
           case 7 : link_code = 2; break; // atLeastOneBinomial - logit
           case 8 : link_code = 1; break; // Compois - log
           case 9 : link_code = 1; break; // Tweedie - log
+          case 10 : link_code = 0; break; // Student's t - identity
         };
         for(int i = 0; i < x.rows(); i++) {
           ans(i, code) = family<Type>{

@@ -558,7 +558,8 @@ test_that("C++ distribution", {
     seq(xsize) - 1, # Binomial
     c(0, 1), # atLeastOneBinomial
     seq(xsize) - 1, # Compois
-    seq(0, 5, length.out = xsize) # Tweedie
+    seq(0, 5, length.out = xsize), # Tweedie
+    seq(-5, 5, length.out = xsize) # Student's t
   )
   mean<- c(
     0, # Normal
@@ -570,7 +571,8 @@ test_that("C++ distribution", {
     0.5, # Binomial
     0.5, # atLeastOneBinomial
     10, # Compois
-    3 # tweedie
+    3, # tweedie
+    0 # Student's t
   )
   pars<- cbind(
     1, # Normal (sd)
@@ -582,7 +584,8 @@ test_that("C++ distribution", {
     NA, # Binomial
     NA, # atLeastOneBinomial
     1, # Compois (sd)
-    c(0.5, 1.5) # tweedie (dispersion,power)
+    c(0.5, 1.5), # tweedie (dispersion,power)
+    5 # Student's t (df)
   )
   size<- cbind(
     NA, # Normal
@@ -594,7 +597,8 @@ test_that("C++ distribution", {
     rep(xsize, xsize), # Binomial
     4, # atLeastOneBinomial
     NA, # compois
-    1 # tweedie
+    1, # tweedie
+    NA # Student's t
   )
   obj<- TMB::MakeADFun(
     data = list(
@@ -679,6 +683,12 @@ test_that("C++ distribution", {
 
   # Tweedie
     # No readily available R implementation
+
+  # Student's t
+  expect_equal(
+    report$ans[, 11],
+    dt(x[, 11] - mean[[11]], df = pars[[1, 11]], log = TRUE)
+  )
 })
 
 
@@ -695,7 +705,8 @@ test_that("C++ family", {
     seq(xsize) - 1, # Binomial
     c(0, 1), # atLeastOneBinomial
     seq(xsize) - 1, # Compois
-    seq(0, 5, length.out = xsize) # Tweedie
+    seq(0, 5, length.out = xsize), # Tweedie
+    seq(-5, 5, length.out = xsize) # Student's t
   )
   mean<- c(
     0, # Normal
@@ -707,7 +718,8 @@ test_that("C++ family", {
     qlogis(0.5), # Binomial
     qlogis(0.5), # atLeastOneBinomial
     log(10), # Compois
-    log(3) # tweedie
+    log(3), # tweedie
+    0 # Student's t
   )
   pars<- cbind(
     1, # Normal (sd)
@@ -719,7 +731,8 @@ test_that("C++ family", {
     NA, # Binomial
     NA, # atLeastOneBinomial
     1, # Compois (sd)
-    c(0.5, 1.5) # tweedie (dispersion,power)
+    c(0.5, 1.5), # tweedie (dispersion,power)
+    5 # Student's t (df)
   )
   size<- cbind(
     NA, # Normal
@@ -731,7 +744,8 @@ test_that("C++ family", {
     rep(xsize, xsize), # Binomial
     4, # atLeastOneBinomial
     NA, # compois
-    1 # tweedie
+    1, # tweedie
+    NA # Student's t
   )
   obj<- TMB::MakeADFun(
     data = list(
@@ -816,6 +830,12 @@ test_that("C++ family", {
 
   # Tweedie
     # No readily available R implementation
+
+  # Student's t
+  expect_equal(
+    report$ans[, 11],
+    dt(x[, 11] - mean[[11]], df = pars[[1, 11]], log = TRUE)
+  )
 })
 
 
