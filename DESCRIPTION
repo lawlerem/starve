@@ -39,8 +39,9 @@ Suggests:
     igraph,
     testthat (>= 3.0.0),
     condMVNorm,
-    mvtnorm
-VignetteBuilder: rmarkdown
+    mvtnorm,
+    markdown
+VignetteBuilder: knitr
 Depends:
     sf,
     R (>= 3.5.0)

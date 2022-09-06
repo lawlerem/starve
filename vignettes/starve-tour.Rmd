@@ -1,8 +1,7 @@
 ---
 title: "starve-tour"
 output:
-  rmarkdown::html_vignette:
-    toc: true
+  rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{starve-tour}
   %\VignetteEngine{knitr::rmarkdown}
