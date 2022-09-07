@@ -4,3 +4,4 @@
 ^pkgdown$
 .github
 _pkgdown.yml
+^\vignettes\*.orig
