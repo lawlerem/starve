@@ -151,6 +151,7 @@ setReplaceMethod(
           atLeastOneBinomial = "logit",
           compois = "log",
           tweedie = "log",
+          t = "identity",
           gaussian = "identity"
         )
       )

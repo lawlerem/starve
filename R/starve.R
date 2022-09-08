@@ -918,7 +918,7 @@ setMethod(
               qlogis(1.5 - 1)
             )
           ),
-          t = c( # Student's t
+          t = ifelse( # Student's t
             bounds_check(par_df["df", ], 0, Inf),
             log(par_df["df", "par"]),
             log(2)
