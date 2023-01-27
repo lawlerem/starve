@@ -24,9 +24,9 @@ Takes an unfitted model object and performs inference.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{starve}: Takes an unfitted starve object and performs
+\item \code{strv_fit(starve)}: Takes an unfitted starve object and performs
 maximum likelihood inference via the \code{TMB} package to obtain parameter
 and random effect estimates with their associated standard errors. Options
 in the \dots argument are passed to TMB::MakeADFun and TMB::sdreport.
-}}
 
+}}

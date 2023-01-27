@@ -32,18 +32,18 @@ An S4 class to hold a directed acyclic graph with distances.
 }
 \section{Functions}{
 \itemize{
-\item \code{edges,dag-method}: Get edge list
+\item \code{edges(dag)}: Get edge list
 
-\item \code{distances,dag-method}: Get list of edge distances
+\item \code{distances(dag)}: Get list of edge distances
 
-\item \code{distance_units,dag-method}: Get distance units
+\item \code{distance_units(dag)}: Get distance units
 
-\item \code{distance_units<-,dag-method}: Set distance units. Edge distances are automatically
+\item \code{distance_units(dag) <- value}: Set distance units. Edge distances are automatically
 converted to the new units.
 
-\item \code{show,dag-method}: Print method
-}}
+\item \code{show(dag)}: Print method
 
+}}
 \section{Slots}{
 
 \describe{

@@ -33,21 +33,21 @@ An S4 class to hold process parameters for a starve model.
 }
 \section{Functions}{
 \itemize{
-\item \code{covariance_function,process_parameters-method}: Get covariance function(s)
+\item \code{covariance_function(process_parameters)}: Get covariance function(s)
 
-\item \code{covariance_function<-,process_parameters-method}: Set covariance function(s). Run
+\item \code{covariance_function(process_parameters) <- value}: Set covariance function(s). Run
 get_starve_distributions("covariance") for valid covariance functions.
 Setting the covariance function also overwrites the spatial parameters.
 
-\item \code{space_parameters,process_parameters-method}: Get spatial parameters
+\item \code{space_parameters(process_parameters)}: Get spatial parameters
 
-\item \code{space_parameters<-,process_parameters-method}: Set spatial parameters
+\item \code{space_parameters(process_parameters) <- value}: Set spatial parameters
 
-\item \code{time_parameters,process_parameters-method}: Get time parameters
+\item \code{time_parameters(process_parameters)}: Get time parameters
 
-\item \code{time_parameters<-,process_parameters-method}: Set time parameters
+\item \code{time_parameters(process_parameters) <- value}: Set time parameters
+
 }}
-
 \section{Slots}{
 
 \describe{

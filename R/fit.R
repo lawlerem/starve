@@ -410,13 +410,11 @@ NULL
 # #'
 # #' @param x A starve object
 # #' @param predictions A long_stars object
-# #' @param dist_tol A small number so that prediction variances are not
-# #'   computationally singular
 # #'
 # #' @return An \code{sf} object with predictions for random effects (w) and
 # #'   their standard errors.
 #' @noRd
-predict_w<- function(x, predictions, dist_tol = 0.00001, ...) {
+predict_w<- function(x, predictions, ...) {
   # Add random effects for times not present in the original model,
   # only added to pass to TMB
   pred_times<- unique(locations(predictions)[, time_name(x), drop = TRUE])
@@ -478,7 +476,7 @@ predict_w<- function(x, predictions, dist_tol = 0.00001, ...) {
   values(predictions)$w<- est$pred_re
   values(predictions)$w_se<- se$pred_re
 
-  first_loc<- do.call(
+  first_parents<- do.call(
     c,
     lapply(edges(dag), function(e) {
       return(e$from[[1]])
@@ -498,15 +496,14 @@ predict_w<- function(x, predictions, dist_tol = 0.00001, ...) {
     if( !intersects[[i]] ) {
       next
     } else {}
-    if( first_loc[[i]] <= dim(pg_re(x))[[1]] ) {
+    if( first_parents[[i]] <= dim(pg_re(x))[[1]] ) {
       # Take re from persistent graph -- be sure to use from est
       # so we get the extra years before/after data
       values(predictions)$w[i, ]<- est$pg_re[first_loc[[i]], t[[i]], ]
       values(predictions)$w_se[i, ]<- se$pg_re[first_loc[[i]], t[[i]], ]
     } else {
       # Take re from transient graph
-      this_t_tg<- which(std_tg_t == t[[i]])
-      row<- this_t_tg[first_loc[[i]] - dim(pg_re(x))[[1]]]
+      row<- first_parents[[i]] - dim(pg_re(x))[[1]]
       values(predictions)$w[i, ]<- values(tg_re(x))$w[row, ]
       values(predictions)$w_se[i, ]<- values(tg_re(x))$se[row, ]
     }

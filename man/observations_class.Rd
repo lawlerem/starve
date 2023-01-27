@@ -33,26 +33,26 @@ An S4 class to hold the observation information for a starve model.
 }
 \section{Functions}{
 \itemize{
-\item \code{dat,observations-method}: Get data, including response variables,
+\item \code{dat(observations)}: Get data, including response variables,
 time indices, locations, covariates, etc.
 
-\item \code{dat<-,observations-method}: Set data. Warning: if you want to add new
+\item \code{dat(observations) <- value}: Set data. Warning: if you want to add new
 rows you must give each additional row a value in the graph_idx column,
 or create a new object from scratch.
 
-\item \code{data_predictions,observations-method}: Get data_predictions, a long_stars object
+\item \code{data_predictions(observations)}: Get data_predictions, a long_stars object
 with the data (see \code{dat}) and associated random effect predictions.
 
-\item \code{data_predictions<-,observations-method}: Set data predictions
+\item \code{data_predictions(observations) <- value}: Set data predictions
 
-\item \code{parameters,observations-method}: Get parameters as an
+\item \code{parameters(observations)}: Get parameters as an
 observation_parameters object.
 
-\item \code{parameters<-,observations,ANY-method}: Set parameters using a new
+\item \code{parameters(x = observations) <- value}: Set parameters using a new
 observation_parameters object. Not the recommended way to
 modify specific parameter values, instead see vignette("starve-tour").
-}}
 
+}}
 \section{Slots}{
 
 \describe{

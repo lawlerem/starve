@@ -215,7 +215,13 @@ Type nngp<Type>::prediction_loglikelihood(
     }
     // Create a conditional normal, interpolate mean, and compute loglikelihood
     for(int v = 0; v < dim_v(); v++) {
-      conditional_normal<Type> cn {cv(v)(node.node.d), static_cast<int>(node.node.from.size())};
+      matrix<Type> cov_mat = cv(v)(node.node.d);
+        for(int i = 0; i < cov_mat.rows(); i++) {
+          // Add a small number to main diagonal for numerical stability
+          // Make sure that the smalled eigenvalue is > 0/
+          cov_mat(i, i) *= 1.001;
+        }
+      conditional_normal<Type> cn {cov_mat, static_cast<int>(node.node.from.size())};
       node.mean = cn.interpolate_mean(node.mean);
       pred_ll += cn.loglikelihood(node.re, node.mean);
     }

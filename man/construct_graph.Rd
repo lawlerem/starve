@@ -42,7 +42,7 @@ Construct directed acyclic graphs
 }
 \section{Functions}{
 \itemize{
-\item \code{construct_persistent_graph}: Construct a directed acyclic graph for a single
+\item \code{construct_persistent_graph()}: Construct a directed acyclic graph for a single
   \code{sf} object. This function uses a greedy algorithm to sort the
   locations of x. The first location of x is the first location of the sorted
   copy. Subsequent locations of the sorted copy are found iteratively by
@@ -61,7 +61,7 @@ Construct directed acyclic graphs
   A vertex with index i in either the "to" or "from" vertices represents the
   location in row i of the sorted copy of x.
 
-\item \code{construct_transient_graph}: Construct a directed acyclic graph with "to"
+\item \code{construct_transient_graph()}: Construct a directed acyclic graph with "to"
   vertices representing locations in x and "from" vertices representing
   locations in y. Unlike strv_construct_persistent_graph, neither x nor y are
   sorted, but the time argument must already be sorted when given as an
@@ -80,7 +80,7 @@ Construct directed acyclic graphs
   argument. A vertex with i in the "from" vertices represents the location in
   row i of y.
 
-\item \code{construct_prediction_graph}: Works essentially the same as
+\item \code{construct_prediction_graph()}: Works essentially the same as
   \code{construct_transient_graph}, with a few minor differences. Instead of
   directly supplying the locations for the "from" vertices, the "from"
   vertices are taken from the locations used in the persistent graph and
@@ -100,8 +100,8 @@ Construct directed acyclic graphs
   j <= k where k is the number of persistent graph locations, or represents
   the  (j-k)'th location of the transient graph with the same time index as
   the "to" vertex.
-}}
 
+}}
 \seealso{
 dag_class For class definition of directed acyclic graphs
 }

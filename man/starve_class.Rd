@@ -134,98 +134,98 @@ An S4 class describing a starve model.
 }
 \section{Functions}{
 \itemize{
-\item \code{settings,starve-method}: Get model settings
+\item \code{settings(starve)}: Get model settings
 
-\item \code{tracing,starve-method}: Get tracing information, see \link{tracing}.
+\item \code{tracing(starve)}: Get tracing information, see \link{tracing}.
 
-\item \code{time_effects,starve-method}: Get temporal random effects
+\item \code{time_effects(starve)}: Get temporal random effects
 
-\item \code{time_effects<-,starve-method}: Set temporal random effects
+\item \code{time_effects(starve) <- value}: Set temporal random effects
 
-\item \code{pg_re,starve-method}: Get persistent graph random effects
+\item \code{pg_re(starve)}: Get persistent graph random effects
 
-\item \code{pg_re<-,starve-method}: Set spatio-temporal random effects
+\item \code{pg_re(starve) <- value}: Set spatio-temporal random effects
 
-\item \code{tg_re,starve-method}: Get transient graph random effects
+\item \code{tg_re(starve)}: Get transient graph random effects
 
-\item \code{tg_re<-,starve-method}: Set transient graph random effects
+\item \code{tg_re(starve) <- value}: Set transient graph random effects
 
-\item \code{random_effects,starve-method}: Get list containing the persistent graph random
+\item \code{random_effects(starve)}: Get list containing the persistent graph random
 effects and the transient graph random effects.
 
-\item \code{persistent_graph,starve-method}: Get persistent graph
+\item \code{persistent_graph(starve)}: Get persistent graph
 
-\item \code{transient_graph,starve-method}: Get transient graph
+\item \code{transient_graph(starve)}: Get transient graph
 
-\item \code{graph,starve-method}: Get a list containing the persistent and transient graphs
+\item \code{graph(starve)}: Get a list containing the persistent and transient graphs
 
-\item \code{covariance_function,starve-method}: Get covariance function
+\item \code{covariance_function(starve)}: Get covariance function
 
-\item \code{covariance_function<-,starve-method}: Set covariance function(s). Run
+\item \code{covariance_function(starve) <- value}: Set covariance function(s). Run
 get_starve_distributions("covariance") for valid covariance functions.
 Setting the covariance function also overwrites the spatial parameters.
 
-\item \code{space_parameters,starve-method}: Get spatial parameters
+\item \code{space_parameters(starve)}: Get spatial parameters
 
-\item \code{space_parameters<-,starve-method}: Set spatial parameters
+\item \code{space_parameters(starve) <- value}: Set spatial parameters
 
-\item \code{time_parameters,starve-method}: Get time parameters
+\item \code{time_parameters(starve)}: Get time parameters
 
-\item \code{time_parameters<-,starve-method}: Set time parameters
+\item \code{time_parameters(starve) <- value}: Set time parameters
 
-\item \code{dat,starve-method}: Get data including response variables, time indices,
+\item \code{dat(starve)}: Get data including response variables, time indices,
 locations, covariates, etc.
 
-\item \code{dat<-,starve-method}: Set data. Warning: if you want to add new
+\item \code{dat(starve) <- value}: Set data. Warning: if you want to add new
 rows you must give each additional row a value in the graph_idx column,
 or create a new object from scratch.
 
-\item \code{data_predictions,starve-method}: Get data predictions, a long_stars object
+\item \code{data_predictions(starve)}: Get data predictions, a long_stars object
 with the data (see \code{dat}) and associated random effect
 predictions.
 
-\item \code{data_predictions<-,starve-method}: Set data predictions
+\item \code{data_predictions(starve) <- value}: Set data predictions
 
-\item \code{response_distribution,starve-method}: Get the response distribution(s)
+\item \code{response_distribution(starve)}: Get the response distribution(s)
 
-\item \code{response_distribution<-,starve-method}: Set the response distribution(s). Run
+\item \code{response_distribution(starve) <- value}: Set the response distribution(s). Run
 get_starve_distributions("distribution") for valid options.
 Setting the response distribution also overwrites the response
 parameters and link function(s).
 
-\item \code{response_parameters,starve-method}: Get response distribution parameters
+\item \code{response_parameters(starve)}: Get response distribution parameters
 
-\item \code{response_parameters<-,starve-method}: Set response distribution parameters
+\item \code{response_parameters(starve) <- value}: Set response distribution parameters
 
-\item \code{link_function,starve-method}: Get link function(s)
+\item \code{link_function(starve)}: Get link function(s)
 
-\item \code{link_function<-,starve-method}: Set link function(s). Run
+\item \code{link_function(starve) <- value}: Set link function(s). Run
 get_starve_distributions("link") for valid link functions.
 
-\item \code{fixed_effects,starve-method}: Get fixed effect parameters
+\item \code{fixed_effects(starve)}: Get fixed effect parameters
 
-\item \code{fixed_effects<-,starve-method}: Set fixed effect parameters
+\item \code{fixed_effects(starve) <- value}: Set fixed effect parameters
 
-\item \code{distance_units,starve-method}: Get distance units used for the model
+\item \code{distance_units(starve)}: Get distance units used for the model
 
-\item \code{distance_units<-,starve-method}: Set distance units used for the model
+\item \code{distance_units(starve) <- value}: Set distance units used for the model
 
-\item \code{formula,starve-method}: Get formula used for model
+\item \code{formula(starve)}: Get formula used for model
 
-\item \code{formula<-,starve-method}: Set formula used for the model
+\item \code{formula(starve) <- value}: Set formula used for the model
 
-\item \code{parameters,starve-method}: Get all model parameters as a parameters object
+\item \code{parameters(starve)}: Get all model parameters as a parameters object
 
-\item \code{parameters<-,starve,parameters-method}: Set all model parameters with a new
+\item \code{parameters(x = starve) <- value}: Set all model parameters with a new
 parameters object
 
-\item \code{convergence,starve-method}: Get convergence message from optimizer
+\item \code{convergence(starve)}: Get convergence message from optimizer
 
-\item \code{timing,starve-method}: Get all timing information, see \link{tracing}
+\item \code{timing(starve)}: Get all timing information, see \link{tracing}
 
-\item \code{show,starve-method}: Print method
+\item \code{show(starve)}: Print method
+
 }}
-
 \section{Slots}{
 
 \describe{

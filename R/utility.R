@@ -245,7 +245,7 @@ covariance_to_code<- function(covariance) {
     get_starve_distributions("covariance"),
     duplicates.ok = TRUE
   )
-  if( is.na(covar_code) || covar_code == 0 ) {
+  if( any(is.na(covar_code)) || any(covar_code == 0) ) {
     stop(
       paste(
         "Supplied covariance function is not implemented, \n",
@@ -278,7 +278,7 @@ distribution_to_code<- function(distribution) {
     get_starve_distributions("distribution"),
     duplicates.ok=TRUE
   )
-  if( is.na(distribution_code) || distribution_code == 0  ) {
+  if( any(is.na(distribution_code)) || any(distribution_code == 0)  ) {
     stop(
       "Supplied distribution is not implemented, or matches multiple distributions."
     )
@@ -477,7 +477,7 @@ link_to_code<- function(link) {
     get_starve_distributions("link"),
     duplicates.ok = TRUE
   )
-  if( is.na(link_code) || link_code == 0 ) {
+  if( any(is.na(link_code)) || any(link_code == 0) ) {
     stop("Supplied link function is not implemented, or matches multiple link functions.")
   } else {}
   link_code<- link_code - 1 # Convert to cpp

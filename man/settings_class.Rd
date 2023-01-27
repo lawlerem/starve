@@ -36,22 +36,22 @@ An S4 class to hold settings for a starve model
 }
 \section{Functions}{
 \itemize{
-\item \code{formula,settings-method}: Get model formula
+\item \code{formula(settings)}: Get model formula
 
-\item \code{formula<-,settings-method}: Set model formula
+\item \code{formula(settings) <- value}: Set model formula
 
-\item \code{n_neighbours,settings-method}: Get maximum number of neighbours used in graphs
+\item \code{n_neighbours(settings)}: Get maximum number of neighbours used in graphs
 
-\item \code{distance_units,settings-method}: Get distance units used for the model.
+\item \code{distance_units(settings)}: Get distance units used for the model.
 
-\item \code{distance_units<-,settings-method}: Set distance units. Automatically converts
+\item \code{distance_units(settings) <- value}: Set distance units. Automatically converts
 max_distance setting to new units.
 
-\item \code{max_distance,settings-method}: Get maximum distance for edges in the graph
+\item \code{max_distance(settings)}: Get maximum distance for edges in the graph
 
-\item \code{max_distance<-,settings-method}: Set maximum distance for edges in the graph
+\item \code{max_distance(settings) <- value}: Set maximum distance for edges in the graph
+
 }}
-
 \section{Slots}{
 
 \describe{

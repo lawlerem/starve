@@ -30,13 +30,19 @@ pg_cache<Type>::pg_cache(
       int avg_n = 0;
       for(int i = 0; i < conditional_normals.size(); i++) {
         dag_node<Type> node = pg(i).node;
+        matrix<Type> cov_mat = cv(v)(node.d);
+        for(int i = 0; i < cov_mat.rows(); i++) {
+          // Add a small number to main diagonal for numerical stability
+          // Make sure that the smalled eigenvalue is > 0/
+          cov_mat(i, i) *= 1.001;
+        }
         if( node.from.size() == 0 ) {
           // No parent nodes
           // Skip for now so we can get average forecast variance
           continue;
         } else {
           conditional_normals(i)(v) = conditional_normal<Type>(
-            cv(v)(node.d),
+            cov_mat,
             node.from.size()
           );
           for(int j = 0; j < node.to.size(); j++) {
@@ -54,9 +60,15 @@ pg_cache<Type>::pg_cache(
 
       for(int i = 0; i < conditional_normals.size(); i++) {
         dag_node<Type> node = pg(i).node;
+        matrix<Type> cov_mat = cv(v)(node.d);
+        for(int i = 0; i < cov_mat.rows(); i++) {
+          // Add a small number to main diagonal for numerical stability
+          // Make sure that the smalled eigenvalue is > 0/
+          cov_mat(i, i) *= 1.001;
+        }
         if( node.from.size() == 0 ) {
           conditional_normals(i)(v) = conditional_normal<Type>(
-            cv(v)(node.d),
+            cov_mat,
             node.from.size()
           );
         } else {

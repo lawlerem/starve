@@ -178,111 +178,111 @@ These accessor functions are used to extract different components from the
 }
 \section{Functions}{
 \itemize{
-\item \code{convergence}: Get convergence message
+\item \code{convergence()}: Get convergence message
 
-\item \code{covariance_function}: Get covariance function
+\item \code{covariance_function()}: Get covariance function
 
-\item \code{covariance_function<-}: Set covariance function
+\item \code{covariance_function(x) <- value}: Set covariance function
 
-\item \code{dat}: Get data
+\item \code{dat()}: Get data
 
-\item \code{dat<-}: Set data
+\item \code{dat(x) <- value}: Set data
 
-\item \code{data_predictions}: Get data predictions
+\item \code{data_predictions()}: Get data predictions
 
-\item \code{data_predictions<-}: Set data
+\item \code{data_predictions(x) <- value}: Set data
 
-\item \code{distance_units}: Get distance units
+\item \code{distance_units()}: Get distance units
 
-\item \code{distance_units<-}: Set distance units
+\item \code{distance_units(x) <- value}: Set distance units
 
-\item \code{distances}: Get distances
+\item \code{distances()}: Get distances
 
-\item \code{edges}: Get edges
+\item \code{edges()}: Get edges
 
-\item \code{fixed_effects}: Get fixed effects
+\item \code{fixed_effects()}: Get fixed effects
 
-\item \code{fixed_effects<-}: Set fixed effects
+\item \code{fixed_effects(x) <- value}: Set fixed effects
 
-\item \code{formula}: Get model formula
+\item \code{formula()}: Get model formula
 
-\item \code{formula<-}: Set model formula
+\item \code{formula(x) <- value}: Set model formula
 
-\item \code{graph}: Get graph
+\item \code{graph()}: Get graph
 
-\item \code{hess_time}: Get hessian computation time
+\item \code{hess_time()}: Get hessian computation time
 
-\item \code{link_function}: Get link function
+\item \code{link_function()}: Get link function
 
-\item \code{link_function<-}: Set link function
+\item \code{link_function(x) <- value}: Set link function
 
-\item \code{locations}: Get locations
+\item \code{locations()}: Get locations
 
-\item \code{locations<-}: Get locations
+\item \code{locations(x) <- value}: Get locations
 
-\item \code{max_distance}: Get max distance
+\item \code{max_distance()}: Get max distance
 
-\item \code{max_distance<-}: Set max distance
+\item \code{max_distance(x) <- value}: Set max distance
 
-\item \code{n_neighbours}: Get n_neighbours setting
+\item \code{n_neighbours()}: Get n_neighbours setting
 
-\item \code{opt_time}: Get optimization time
+\item \code{opt_time()}: Get optimization time
 
-\item \code{parameter_covariance}: Get parameter estimator covariance matrix
+\item \code{parameter_covariance()}: Get parameter estimator covariance matrix
 
-\item \code{parameter_hessian}: Get parameter estimator hessian matrix
+\item \code{parameter_hessian()}: Get parameter estimator hessian matrix
 
-\item \code{parameters}: Get parameters
+\item \code{parameters()}: Get parameters
 
-\item \code{parameters<-}: Set parameters
+\item \code{parameters(x) <- value}: Set parameters
 
-\item \code{persistent_graph}: Get persistent graph
+\item \code{persistent_graph()}: Get persistent graph
 
-\item \code{pg_re}: Get persistent graph random effects
+\item \code{pg_re()}: Get persistent graph random effects
 
-\item \code{pg_re<-}: Set persistent graph random effects
+\item \code{pg_re(x) <- value}: Set persistent graph random effects
 
-\item \code{random_effects}: Get random effects
+\item \code{random_effects()}: Get random effects
 
-\item \code{response_distribution}: Get response distribution
+\item \code{response_distribution()}: Get response distribution
 
-\item \code{response_distribution<-}: Set response distribution
+\item \code{response_distribution(x) <- value}: Set response distribution
 
-\item \code{response_parameters}: Get response distribution parameters
+\item \code{response_parameters()}: Get response distribution parameters
 
-\item \code{response_parameters<-}: Set response distribution parameters
+\item \code{response_parameters(x) <- value}: Set response distribution parameters
 
-\item \code{sdr_time}: Get standard error computation time
+\item \code{sdr_time()}: Get standard error computation time
 
-\item \code{settings}: Get settings
+\item \code{settings()}: Get settings
 
-\item \code{space_parameters}: Get spatial parameters
+\item \code{space_parameters()}: Get spatial parameters
 
-\item \code{space_parameters<-}: Set spatial parameters
+\item \code{space_parameters(x) <- value}: Set spatial parameters
 
-\item \code{tg_re}: Get transient graph random effects
+\item \code{tg_re()}: Get transient graph random effects
 
-\item \code{tg_re<-}: Set transient graph random effects
+\item \code{tg_re(x) <- value}: Set transient graph random effects
 
-\item \code{time_effects}: Get time effects
+\item \code{time_effects()}: Get time effects
 
-\item \code{time_effects<-}: Set time effects
+\item \code{time_effects(x) <- value}: Set time effects
 
-\item \code{time_parameters}: Get time parameters
+\item \code{time_parameters()}: Get time parameters
 
-\item \code{time_parameters<-}: Set time parameters
+\item \code{time_parameters(x) <- value}: Set time parameters
 
-\item \code{timing}: Get model computation times
+\item \code{timing()}: Get model computation times
 
-\item \code{tracing}: Get tracing information
+\item \code{tracing()}: Get tracing information
 
-\item \code{transient_graph}: Get transient graph
+\item \code{transient_graph()}: Get transient graph
 
-\item \code{values}: Get values
+\item \code{values()}: Get values
 
-\item \code{values<-}: Set values
+\item \code{values(x) <- value}: Set values
+
 }}
-
 \seealso{
 \linkS4class{dag}, \linkS4class{long_stars}, \linkS4class{tracing}, \linkS4class{starve}
 }

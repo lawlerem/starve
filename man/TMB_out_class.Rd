@@ -21,11 +21,11 @@ An S4 class to hold TMB-related objects
 }
 \section{Functions}{
 \itemize{
-\item \code{convergence,TMB_out-method}: Get convergence message from optimizer
+\item \code{convergence(TMB_out)}: Get convergence message from optimizer
 
-\item \code{show,TMB_out-method}: Print method
+\item \code{show(TMB_out)}: Print method
+
 }}
-
 \section{Slots}{
 
 \describe{

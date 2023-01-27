@@ -27,8 +27,14 @@ tg_cache<Type>::tg_cache(
       conditional_normals(t)(i) = vector<conditional_normal<Type> >(tg.dim_v());
       for(int v = 0; v < tg.dim_v(); v++) {
         dag_node<Type> node = tg(i, t, v, pg).node;
+        matrix<Type> cov_mat = cv(v)(node.d);
+        for(int i = 0; i < cov_mat.rows(); i++) {
+          // Add a small number to main diagonal for numerical stability
+          // Make sure that the smalled eigenvalue is > 0/
+          cov_mat(i, i) *= 1.001;
+        }
         conditional_normals(t)(i)(v) = conditional_normal<Type>(
-          cv(v)(node.d),
+          cov_mat,
           node.from.size()
         );
       }

@@ -36,22 +36,22 @@ An S4 class to hold optimization tracing for a starve model
 }
 \section{Functions}{
 \itemize{
-\item \code{opt_time,tracing-method}: Get optimization time
+\item \code{opt_time(tracing)}: Get optimization time
 
-\item \code{hess_time,tracing-method}: Get hessian computation time
+\item \code{hess_time(tracing)}: Get hessian computation time
 
-\item \code{sdr_time,tracing-method}: Get standard error computation time
+\item \code{sdr_time(tracing)}: Get standard error computation time
 
-\item \code{parameter_hessian,tracing-method}: Get parameter estimator hessian matrix
+\item \code{parameter_hessian(tracing)}: Get parameter estimator hessian matrix
 
-\item \code{parameter_covariance,tracing-method}: Get parameter estimator covariance matrix
+\item \code{parameter_covariance(tracing)}: Get parameter estimator covariance matrix
 
-\item \code{timing,tracing-method}: Get all timing information as a list with elements
+\item \code{timing(tracing)}: Get all timing information as a list with elements
 fit, hessian, and sdr.
 
-\item \code{show,tracing-method}: Print method
-}}
+\item \code{show(tracing)}: Print method
 
+}}
 \section{Slots}{
 
 \describe{

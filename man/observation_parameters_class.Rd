@@ -39,27 +39,27 @@ An S4 class to hold observation parameters for a starve model.
 }
 \section{Functions}{
 \itemize{
-\item \code{response_distribution,observation_parameters-method}: Get response distribution(s)
+\item \code{response_distribution(observation_parameters)}: Get response distribution(s)
 
-\item \code{response_distribution<-,observation_parameters-method}: Get/set response distribution(s). Run
+\item \code{response_distribution(observation_parameters) <- value}: Get/set response distribution(s). Run
 get_starve_distributions("distribution") for valid options. Setting the
 the response distribution also overwrites the response parameters and
 link function(s).
 
-\item \code{response_parameters,observation_parameters-method}: Get response distribution parameters
+\item \code{response_parameters(observation_parameters)}: Get response distribution parameters
 
-\item \code{response_parameters<-,observation_parameters-method}: Set response distribution parameters
+\item \code{response_parameters(observation_parameters) <- value}: Set response distribution parameters
 
-\item \code{link_function,observation_parameters-method}: Get link function(s)
+\item \code{link_function(observation_parameters)}: Get link function(s)
 
-\item \code{link_function<-,observation_parameters-method}: set link function(s).  Run
+\item \code{link_function(observation_parameters) <- value}: set link function(s).  Run
 get_starve_distributions("link") for valid options.
 
-\item \code{fixed_effects,observation_parameters-method}: Get fixed effect parameters
+\item \code{fixed_effects(observation_parameters)}: Get fixed effect parameters
 
-\item \code{fixed_effects<-,observation_parameters-method}: Set fixed effect parameters
+\item \code{fixed_effects(observation_parameters) <- value}: Set fixed effect parameters
+
 }}
-
 \section{Slots}{
 
 \describe{

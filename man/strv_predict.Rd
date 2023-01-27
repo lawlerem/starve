@@ -45,14 +45,14 @@ Use a fitted model to predict.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{x = starve,new_data = sf}: Predict/forecast at the specific locations and
+\item \code{strv_predict(x = starve, new_data = sf)}: Predict/forecast at the specific locations and
 times given in \code{new_data}. Any covariates used to fit the model
 should be included in the rows of \code{new_data}. Returns a
 \code{long_stars} object containing a copy of \code{new_data} and the
 associated predictions and standard errors for the random effects and
 response mean on both the link and natural scale.
 
-\item \code{x = starve,new_data = RasterLayer}: Predictions will be made for all raster cells
+\item \code{strv_predict(x = starve, new_data = RasterLayer)}: Predictions will be made for all raster cells
 whose value are not NA. If the raster has no values, then predictions will
 be made at every raster cell. Raster predictions are not treated as areal
 data, instead point predictions are made at the midpoint of each raster
@@ -60,8 +60,8 @@ cell. The value of the midpoint prediction is taken as the prediction for
 that cell. Returns a \code{stars} object whose first two dimensions are the
 raster geometry of \code{new_data}, the third dimension is the time index
 given in \code{time}, and the fourth dimension is the response variable.
-}}
 
+}}
 \section{Random effect predictions}{
 
 Predictions of spatio-temporal random effects.

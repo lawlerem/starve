@@ -34,15 +34,15 @@ The \code{predictions} slot will have at least 1 dimension, the
 }
 \section{Functions}{
 \itemize{
-\item \code{values,long_stars-method}: Get values in multi-dimensional array
+\item \code{values(long_stars)}: Get values in multi-dimensional array
 
-\item \code{values<-,long_stars-method}: Set values in multi-dimensional array
+\item \code{values(long_stars) <- value}: Set values in multi-dimensional array
 
-\item \code{locations,long_stars-method}: Get locations
+\item \code{locations(long_stars)}: Get locations
 
-\item \code{locations<-,long_stars-method}: Set locations
+\item \code{locations(long_stars) <- value}: Set locations
+
 }}
-
 \section{Slots}{
 
 \describe{

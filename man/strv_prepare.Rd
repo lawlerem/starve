@@ -121,7 +121,7 @@ The \code{space(...)} term specifies the spatial covariance function. See
 }
 \section{Functions}{
 \itemize{
-\item \code{strv_prepare_process}: Creates a new process object with the correct
+\item \code{strv_prepare_process()}: Creates a new process object with the correct
   dimensions for the temporal random effects, persistent graph random
   effects, and transient graph random effects. Initializes the temporal and
   spatial parameters for the model according to the options specified in the
@@ -132,13 +132,13 @@ The \code{space(...)} term specifies the spatial covariance function. See
   are removed. Before creating the transient graph any location in data that
   is present in nodes is removed.
 
-\item \code{strv_prepare_observations}: Creates a new observation object with the correct dimensions
+\item \code{strv_prepare_observations()}: Creates a new observation object with the correct dimensions
 for the random effect predictions. Initializes the response distribution
 and fixed effect parameters for the model according to the options specified
 in the formula element of the settings argument. Also adds a column "graph_idx"
 to the supplied data.
-}}
 
+}}
 \seealso{
 starve_class
 }
