@@ -77,8 +77,8 @@ Type nngp<Type>::pg_loglikelihood(time_series<Type>& ts) {
     for(int t = 0; t < pg.dim_t(); t++) {
       for(int node = 0; node < pg.dim_g(); node++) {
         pg_ll += pg_c(node, v).loglikelihood(
-          pg(node, t, v).re,
-          pg(node, t, v).mean
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * pg(node, t, v).re,
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * pg(node, t, v).mean
         );
       }
     }
@@ -112,7 +112,10 @@ nngp<Type> nngp<Type>::pg_simulate(time_series<Type>& ts) {
 
         pg_node = pg(node, t, v);
         // "to" nodes for pg_node.re won't be used
-        vector<Type> sim = pg_c(node, v).simulate(pg_node.re, pg_node.mean);
+        vector<Type> sim = pg_c(node, v).simulate(
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * pg_node.re,
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * pg_node.mean
+        );
 
         pg.set_re_by_to_g(sim, node, t, v);
       }
@@ -143,8 +146,8 @@ Type nngp<Type>::tg_loglikelihood(time_series<Type>& ts) {
     for(int t = 0; t < tg.dim_t(); t++) {
       for(int node = 0; node < tg.dim_g(t); node++) {
         tg_ll += tg_c(node, t, v).loglikelihood(
-          tg(node, t, v, pg).re,
-          tg(node, t, v, pg).mean
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * tg(node, t, v, pg).re,
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * tg(node, t, v, pg).mean
         );
       }
     }
@@ -170,7 +173,10 @@ nngp<Type> nngp<Type>::tg_simulate(time_series<Type>& ts) {
     for(int t = 0; t < tg.dim_t(); t++) {
       for(int node = 0; node < tg.dim_g(t); node++) {
         re_dag_node<Type> tg_node = tg(node, t, v, pg);
-        vector<Type> sim = tg_c(node, t, v).simulate(tg_node.re, tg_node.mean);
+        vector<Type> sim = tg_c(node, t, v).simulate(
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * tg_node.re,
+          (t == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * tg_node.mean
+        );
 
         tg.set_re_by_to_g(sim, node, t, v, pg);
       }
@@ -215,7 +221,7 @@ Type nngp<Type>::prediction_loglikelihood(
     }
     // Create a conditional normal, interpolate mean, and compute loglikelihood
     for(int v = 0; v < dim_v(); v++) {
-      matrix<Type> cov_mat = cv(v)(node.node.d);
+      matrix<Type> cov_mat = (pred_t(i) == 0 ? 1.0 * ts.initial_sd_scale(v) : 1.0 ) * cv(v)(node.node.d);
         for(int i = 0; i < cov_mat.rows(); i++) {
           // Add a small number to main diagonal for numerical stability
           // Make sure that the smalled eigenvalue is > 0/
