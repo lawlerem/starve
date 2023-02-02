@@ -30,7 +30,7 @@ LinkingTo:
     Rcpp,
     RcppEigen,
     TMB
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests:
     MASS,
     knitr,

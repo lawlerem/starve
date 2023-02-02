@@ -342,13 +342,31 @@ setMethod(
       stars::st_rasterize,
       template = stars::st_as_stars(new_data)
     )
-    pred_stars<- do.call(
-      c,
-      c(
-        pred_sf_list,
-        list(along = time_name(x))
+    pred_sf_list<- lapply(
+      pred_sf_list,
+      `[`,
+      1:6
+    ) # Remove time data array, we'll add it back in as a dimension from
+    # the names of the list
+    if( length(time) == 1 ) {
+      pred_stars<- do.call(
+        c,
+        c(
+          pred_sf_list,
+          pred_sf_list,
+          list(along = time_name(x))
+        )
       )
-    )
+      pred_stars<- pred_stars[, , , 1, drop = FALSE]
+    } else {
+      pred_stars<- do.call(
+        c,
+        c(
+          pred_sf_list,
+          list(along = time_name(x))
+        )
+      )
+    }
     return(pred_stars)
   })
 
@@ -362,6 +380,7 @@ setMethod(
       )
     )
     pred_stars<- pred_stars[, , , , 1, drop = FALSE]
+    # pred_stars[field, x, y, time, variable]
   } else {
     pred_stars<- do.call(
       c,
