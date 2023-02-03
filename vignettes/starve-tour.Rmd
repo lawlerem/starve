@@ -19,7 +19,7 @@ vignette: >
 set.seed(4326)
 library(starve)
 #> Loading required package: sf
-#> Linking to GEOS 3.11.0, GDAL 3.5.1, PROJ 9.0.1; sf_use_s2() is TRUE
+#> Linking to GEOS 3.11.1, GDAL 3.6.2, PROJ 9.1.0; sf_use_s2() is TRUE
 ```
 
 The starve package implements a spatio-temporal generalized linear mixed model for analyzing discrete-time, continuous-space data.
@@ -161,7 +161,12 @@ bird_model
 #> -95.23445  36.11935 -89.24779  40.47128
 ```
 
+We'll store this fitted model so we can restore it throughout the rest of the vignette.
 
+
+```r
+original_model<- bird_model
+```
 
 
 
@@ -206,10 +211,10 @@ covariance_function(bird_model)
 #> [1] "exponential"
 space_parameters(bird_model)
 #> $cnt
-#>               par          se fixed
-#> sd     0.05149631 0.003859773 FALSE
-#> range 80.00000000 0.000000000  TRUE
-#> nu     0.50000000 0.000000000  TRUE
+#>              par          se fixed
+#> sd     0.0701626 0.004168122 FALSE
+#> range 80.0000000 0.000000000  TRUE
+#> nu     0.5000000 0.000000000  TRUE
 ```
 
 The spatial parameters describe the spatial covariance function for each response variable.
@@ -223,10 +228,10 @@ The starve package uses a Matern covariance function with the following paramete
 ```r
 time_parameters(bird_model)
 #> $cnt
-#>           par         se fixed
-#> mu  1.9894915 0.33874433 FALSE
-#> ar1 0.9259455 0.03137069 FALSE
-#> sd  0.1292182 0.08643885 FALSE
+#>              par         se fixed
+#> mu  2.023901e+00 0.11475229 FALSE
+#> ar1 6.863147e-01 0.03413923 FALSE
+#> sd  5.352055e-05 0.08869789 FALSE
 ```
 
 The time parameters describe the temporal structure of the random effects.
@@ -271,18 +276,18 @@ parameters(bird_model)
 #> 
 #> Slot "space_parameters":
 #> $cnt
-#>               par          se fixed
-#> sd     0.05149631 0.003859773 FALSE
-#> range 80.00000000 0.000000000  TRUE
-#> nu     0.50000000 0.000000000  TRUE
+#>              par          se fixed
+#> sd     0.0701626 0.004168122 FALSE
+#> range 80.0000000 0.000000000  TRUE
+#> nu     0.5000000 0.000000000  TRUE
 #> 
 #> 
 #> Slot "time_parameters":
 #> $cnt
-#>           par         se fixed
-#> mu  1.9894915 0.33874433 FALSE
-#> ar1 0.9259455 0.03137069 FALSE
-#> sd  0.1292182 0.08643885 FALSE
+#>              par         se fixed
+#> mu  2.023901e+00 0.11475229 FALSE
+#> ar1 6.863147e-01 0.03413923 FALSE
+#> sd  5.352055e-05 0.08869789 FALSE
 #> 
 #> 
 #> Slot "response_distribution":
@@ -317,13 +322,13 @@ The main purpose of the time effects is to induce a correlation structure in the
 time_effects(bird_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
-#>          Min.   1st Qu.    Median      Mean  3rd Qu.      Max.
-#> w   1.8311170 1.9565328 1.9644131 2.0001637 2.079084 2.1349304
-#> se  0.1425165 0.1868914 0.2160742 0.2151038 0.244742 0.2810572
+#>          Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
+#> w   2.0239014 2.0239014 2.0239014 2.0239014 2.0239014 2.0239015
+#> se  0.1147523 0.1147523 0.1147523 0.1147523 0.1147523 0.1147524
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> year        1 10   2005     1     NA FALSE   NULL
-#> variable    1  1     NA    NA     NA FALSE    cnt
+#>          from to offset delta point values
+#> year        1 10   2005     1 FALSE   NULL
+#> variable    1  1     NA    NA FALSE    cnt
 ```
 
 The spatio-temporal random effects describe a spatial surface that varies from year to year.
@@ -339,18 +344,14 @@ These random effects form a data cube, and we hold the random effect in a 'stars
 pg_re(bird_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
-#>           Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
-#> w   0.07190553 1.2898495 1.8695070 1.8195227 2.3891039 3.6931705
-#> se  0.13865263 0.2321807 0.3137034 0.3563984 0.4538327 0.8961573
+#>          Min.   1st Qu.   Median      Mean   3rd Qu.      Max.
+#> w   0.3418203 1.2967234 1.899344 1.8562750 2.4018926 3.6955683
+#> se  0.1457640 0.2605394 0.348152 0.3896557 0.5075699 0.7894589
 #> dimension(s):
-#>          from to offset delta refsys point
-#> geom        1 63     NA    NA WGS 84  TRUE
-#> year        1 10   2005     1     NA FALSE
-#> variable    1  1     NA    NA     NA FALSE
-#>                                                             values
-#> geom     POINT (-89.24779 36.82526),...,POINT (-95.23445 40.46577)
-#> year                                                          NULL
-#> variable                                                       cnt
+#>          from to offset delta refsys point                                                    values
+#> geom        1 63     NA    NA WGS 84  TRUE POINT (-89.24779 36.82526),...,POINT (-95.23445 40.46577)
+#> year        1 10   2005     1     NA FALSE                                                      NULL
+#> variable    1  1     NA    NA     NA FALSE                                                       cnt
 ```
 
 The transient graph random effects are placed at nodes at the location of each data point within a year (unless that
@@ -370,9 +371,9 @@ tg_re(bird_model)
 #> w      0       0      0    0       0    0    0
 #> se    NA      NA     NA  NaN      NA   NA    1
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> i           1  1     NA    NA     NA FALSE [1,NA)
-#> variable    1  1     NA    NA     NA FALSE    cnt
+#>          from to point values
+#> i           1  1 FALSE [1,NA)
+#> variable    1  1 FALSE    cnt
 #> 
 #> Slot "locations":
 #> Simple feature collection with 0 features and 1 field
@@ -390,18 +391,14 @@ random_effects(bird_model)
 #> $pg_re
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
-#>           Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
-#> w   0.07190553 1.2898495 1.8695070 1.8195227 2.3891039 3.6931705
-#> se  0.13865263 0.2321807 0.3137034 0.3563984 0.4538327 0.8961573
+#>          Min.   1st Qu.   Median      Mean   3rd Qu.      Max.
+#> w   0.3418203 1.2967234 1.899344 1.8562750 2.4018926 3.6955683
+#> se  0.1457640 0.2605394 0.348152 0.3896557 0.5075699 0.7894589
 #> dimension(s):
-#>          from to offset delta refsys point
-#> geom        1 63     NA    NA WGS 84  TRUE
-#> year        1 10   2005     1     NA FALSE
-#> variable    1  1     NA    NA     NA FALSE
-#>                                                             values
-#> geom     POINT (-89.24779 36.82526),...,POINT (-95.23445 40.46577)
-#> year                                                          NULL
-#> variable                                                       cnt
+#>          from to offset delta refsys point                                                    values
+#> geom        1 63     NA    NA WGS 84  TRUE POINT (-89.24779 36.82526),...,POINT (-95.23445 40.46577)
+#> year        1 10   2005     1     NA FALSE                                                      NULL
+#> variable    1  1     NA    NA     NA FALSE                                                       cnt
 #> 
 #> $tg_re
 #> An object of class "long_stars"
@@ -412,9 +409,9 @@ random_effects(bird_model)
 #> w      0       0      0    0       0    0    0
 #> se    NA      NA     NA  NaN      NA   NA    1
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> i           1  1     NA    NA     NA FALSE [1,NA)
-#> variable    1  1     NA    NA     NA FALSE    cnt
+#>          from to point values
+#> i           1  1 FALSE [1,NA)
+#> variable    1  1 FALSE    cnt
 #> 
 #> Slot "locations":
 #> Simple feature collection with 0 features and 1 field
@@ -439,17 +436,17 @@ data_predictions(bird_model)
 #> Slot "values":
 #> stars object with 2 dimensions and 6 attributes
 #> attribute(s):
-#>                    Min.   1st Qu.    Median      Mean    3rd Qu.       Max.
-#> w            0.07190553 1.4405398 1.9781818 1.9475905  2.5354778  3.6931705
-#> w_se         0.13865263 0.2100599 0.2533709 0.2706754  0.3133941  0.5462116
-#> linear       0.07190553 1.4405398 1.9781818 1.9475905  2.5354778  3.6931705
-#> linear_se    0.13865263 0.2100599 0.2533709 0.2706754  0.3133941  0.5462116
-#> response     1.07455382 4.2229842 7.2295973 9.4200013 12.6224613 40.1720117
-#> response_se  0.57135559 1.3207965 1.8857317 2.0977277  2.6955289  5.8001441
+#>                   Min.   1st Qu.    Median      Mean    3rd Qu.       Max.
+#> w            0.3418203 1.4137255 1.9392809 1.9533530  2.5442830  3.6955683
+#> w_se         0.1457640 0.2311281 0.2836568 0.2962474  0.3465745  0.5275732
+#> linear       0.3418203 1.4137255 1.9392809 1.9533530  2.5442830  3.6955683
+#> linear_se    0.1457640 0.2311281 0.2836568 0.2962474  0.3465745  0.5275732
+#> response     1.4075073 4.1112466 6.9537489 9.4135140 12.7342819 40.2684502
+#> response_se  0.6586820 1.4674325 2.0526681 2.3002681  2.9407366  6.0592744
 #> dimension(s):
-#>          from  to offset delta refsys point values
-#> i           1 404      1     1     NA FALSE   NULL
-#> variable    1   1     NA    NA     NA FALSE    cnt
+#>          from  to offset delta point values
+#> i           1 404      1     1 FALSE   NULL
+#> variable    1   1     NA    NA FALSE    cnt
 #> 
 #> Slot "locations":
 #> Simple feature collection with 404 features and 3 fields
@@ -515,28 +512,17 @@ tmp
 #> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>            w      w_se   linear linear_se  response response_se cnt year
-#> 422 1.179892 0.3136286 1.179892 0.3136286  3.254024    1.045350   1 2005
-#> 417 1.705660 0.2618878 1.705660 0.2618878  5.505020    1.466209   7 2005
-#> 402 1.800773 0.2594937 1.800773 0.2594937  6.054328    1.597289   5 2005
-#> 415 2.032948 0.2337168 2.032948 0.2337168  7.636569    1.809003   7 2005
-#> 416 1.329678 0.2933801 1.329678 0.2933801  3.779827    1.132536   3 2005
-#> 392 1.851794 0.2506113 1.851794 0.2506113  6.371239    1.621581   3 2005
-#> 420 1.896124 0.2496938 1.896124 0.2496938  6.660031    1.688690   4 2005
-#> 384 2.336048 0.2229222 2.336048 0.2229222 10.340296    2.333543  11 2005
-#> 391 1.995064 0.2355331 1.995064 0.2355331  7.352677    1.755652   7 2005
-#> 397 1.528142 0.2647238 1.528142 0.2647238  4.609605    1.241467   2 2005
-#>     graph_idx                       geom
-#> 422        63 POINT (-95.23445 40.46577)
-#> 417        62 POINT (-95.03312 40.02546)
-#> 402        59 POINT (-94.66548 39.65398)
-#> 415        58 POINT (-94.50103 39.39702)
-#> 416        57 POINT (-94.14222 40.10026)
-#> 392        29   POINT (-94.1192 37.1404)
-#> 420        43 POINT (-94.10504 38.66985)
-#> 384        37  POINT (-93.9101 36.66086)
-#> 391        26 POINT (-93.85185 37.77059)
-#> 397        24 POINT (-93.84015 38.19498)
+#>            w      w_se   linear linear_se  response response_se cnt year graph_idx                       geom
+#> 422 1.246790 0.3256055 1.246790 0.3256055  3.479158    1.162471   1 2005        63 POINT (-95.23445 40.46577)
+#> 417 1.714209 0.2779146 1.714209 0.2779146  5.552282    1.572573   7 2005        62 POINT (-95.03312 40.02546)
+#> 402 1.745803 0.2700080 1.745803 0.2700080  5.730504    1.575230   5 2005        59 POINT (-94.66548 39.65398)
+#> 415 1.932474 0.2549324 1.932474 0.2549324  6.906575    1.789088   7 2005        58 POINT (-94.50103 39.39702)
+#> 416 1.356623 0.3085669 1.356623 0.3085669  3.883058    1.226372   3 2005        57 POINT (-94.14222 40.10026)
+#> 392 1.855902 0.2672773 1.855902 0.2672773  6.397468    1.740167   3 2005        29   POINT (-94.1192 37.1404)
+#> 420 1.752453 0.2768931 1.752453 0.2768931  5.768737    1.627652   4 2005        43 POINT (-94.10504 38.66985)
+#> 384 2.346046 0.2337334 2.346046 0.2337334 10.444196    2.474273  11 2005        37  POINT (-93.9101 36.66086)
+#> 391 1.978881 0.2511399 1.978881 0.2511399  7.234644    1.845334   7 2005        26 POINT (-93.85185 37.77059)
+#> 397 1.499599 0.2843062 1.499599 0.2843062  4.479892    1.299144   2 2005        24 POINT (-93.84015 38.19498)
 ```
 
 
@@ -582,10 +568,10 @@ Changing the covariance function also resets the spatial parameters, and updates
 ```r
 space_parameters(bird_model)
 #> $cnt
-#>               par          se fixed
-#> sd     0.05149631 0.003859773 FALSE
-#> range 80.00000000 0.000000000  TRUE
-#> nu     0.50000000 0.000000000  TRUE
+#>              par          se fixed
+#> sd     0.0701626 0.004168122 FALSE
+#> range 80.0000000 0.000000000  TRUE
+#> nu     0.5000000 0.000000000  TRUE
 
 covariance_function(bird_model)<- "matern32"
 
@@ -612,10 +598,10 @@ space_parameters(bird_model)
 #> nu    1.5  0  TRUE
 time_parameters(bird_model)
 #> $cnt
-#>           par         se fixed
-#> mu  1.9894915 0.33874433 FALSE
-#> ar1 0.9259455 0.03137069 FALSE
-#> sd  0.1292182 0.08643885 FALSE
+#>              par         se fixed
+#> mu  2.023901e+00 0.11475229 FALSE
+#> ar1 6.863147e-01 0.03413923 FALSE
+#> sd  5.352055e-05 0.08869789 FALSE
 
 time_parameters(bird_model)$cnt[c("mu", "ar1"), "par"]<- c(10, 0.75)
 space_parameters(bird_model)$cnt["range", "par"]<- 80
@@ -629,10 +615,10 @@ space_parameters(bird_model)
 #> nu     1.5  0  TRUE
 time_parameters(bird_model)
 #> $cnt
-#>            par         se fixed
-#> mu  10.0000000 0.33874433 FALSE
-#> ar1  0.7500000 0.03137069 FALSE
-#> sd   0.1292182 0.08643885 FALSE
+#>              par         se fixed
+#> mu  1.000000e+01 0.11475229 FALSE
+#> ar1 7.500000e-01 0.03413923 FALSE
+#> sd  5.352055e-05 0.08869789 FALSE
 ```
 
 Changing the response distribution will automatically update the response parameters, and will change the link function based on the valid range of the response mean for that distribution.
@@ -785,6 +771,9 @@ graph(bird_model)
 
 
 
+```r
+bird_model<- original_model
+```
 
 
 
@@ -848,17 +837,17 @@ sf_pred
 #> Slot "values":
 #> stars object with 2 dimensions and 6 attributes
 #> attribute(s):
-#>                   Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
-#> w            0.5743433 1.3811713 1.8612697 1.8220030 2.1972667  3.252203
-#> w_se         0.2183548 0.3034367 0.4471111 0.4646962 0.6246919  0.754356
-#> linear       0.5743433 1.3811713 1.8612697 1.8220030 2.1972667  3.252203
-#> linear_se    0.2183548 0.3034367 0.4471111 0.4646962 0.6246919  0.754356
-#> response     1.7759638 3.9795602 6.4318981 7.8752109 9.0003794 25.847206
-#> response_se  0.8771502 1.9261910 2.8786432 3.2365043 4.1049406  5.928878
+#>                   Min.   1st Qu.    Median      Mean   3rd Qu.       Max.
+#> w            0.8915512 1.5297933 1.9242710 1.9684835 2.2485223  3.2423735
+#> w_se         0.2814687 0.3890376 0.5373377 0.5415401 0.7043491  0.7792289
+#> linear       0.8915512 1.5297933 1.9242710 1.9684835 2.2485223  3.2423735
+#> linear_se    0.2814687 0.3890376 0.5373377 0.5415401 0.7043491  0.7792289
+#> response     2.4389098 4.6172222 6.8501531 8.6129167 9.4737261 25.5943982
+#> response_se  1.2803799 2.8642218 4.1709730 4.4827407 5.4796824  9.1206640
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> i           1 25      1     1     NA FALSE   NULL
-#> variable    1  1     NA    NA     NA FALSE    cnt
+#>          from to offset delta point values
+#> i           1 25      1     1 FALSE   NULL
+#> variable    1  1     NA    NA FALSE    cnt
 #> 
 #> Slot "locations":
 #> Simple feature collection with 25 features and 1 field
@@ -896,28 +885,17 @@ tmp
 #> Bounding box:  xmin: -95.1653 ymin: 36.1487 xmax: -89.41267 ymax: 40.43233
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>            w      w_se    linear linear_se  response response_se year
-#> 1  1.8936657 0.2842439 1.8936657 0.2842439  6.643678   1.9261910 2012
-#> 2  2.1972667 0.3034367 2.1972667 0.3034367  9.000379   2.7932030 2012
-#> 3  2.5549501 0.4316747 2.5549501 0.4316747 12.870657   5.8090011 2012
-#> 4  2.9444298 0.2997785 2.9444298 0.2997785 18.999825   5.8222976 2012
-#> 5  0.5743433 0.4688127 0.5743433 0.4688127  1.775964   0.8771502 2012
-#> 6  2.0279095 0.3586221 2.0279095 0.3586221  7.598186   2.8111235 2013
-#> 7  1.4415828 0.4624025 1.4415828 0.4624025  4.227382   2.0565887 2013
-#> 8  1.3763507 0.3570432 1.3763507 0.3570432  3.960423   1.4584115 2013
-#> 9  2.8588279 0.2885053 2.8588279 0.2885053 17.441072   5.1354812 2013
-#> 10 3.2522025 0.2183548 3.2522025 0.2183548 25.847206   5.7107389 2013
-#>                          geom
-#> 1  POINT (-93.44969 37.48708)
-#> 2   POINT (-92.76769 36.7374)
-#> 3  POINT (-89.66307 36.49022)
-#> 4  POINT (-89.41267 36.74711)
-#> 5   POINT (-95.1653 40.43233)
-#> 6  POINT (-91.23448 36.59283)
-#> 7   POINT (-94.56619 36.1487)
-#> 8  POINT (-92.09355 38.93433)
-#> 9  POINT (-89.75907 36.99413)
-#> 10 POINT (-89.79193 37.16898)
+#>            w      w_se    linear linear_se  response response_se year                       geom
+#> 1  1.8257378 0.3536672 1.8257378 0.3536672  6.207373    2.262952 2012 POINT (-93.44969 37.48708)
+#> 2  2.2485223 0.3876362 2.2485223 0.3876362  9.473726    3.807815 2012  POINT (-92.76769 36.7374)
+#> 3  2.7471516 0.5455440 2.7471516 0.5455440 15.598138    9.120664 2012 POINT (-89.66307 36.49022)
+#> 4  3.0199091 0.3890376 3.0199091 0.3890376 20.489429    8.267269 2012 POINT (-89.41267 36.74711)
+#> 5  0.8915512 0.4954547 0.8915512 0.4954547  2.438910    1.280380 2012  POINT (-95.1653 40.43233)
+#> 6  2.1564964 0.4591179 2.1564964 0.4591179  8.640811    4.170973 2013 POINT (-91.23448 36.59283)
+#> 7  1.5086987 0.5853902 1.5086987 0.5853902  4.520844    2.864222 2013  POINT (-94.56619 36.1487)
+#> 8  1.3504781 0.4613334 1.3504781 0.4613334  3.859270    1.872746 2013 POINT (-92.09355 38.93433)
+#> 9  2.8738356 0.3788960 2.8738356 0.3788960 17.704797    6.944868 2013 POINT (-89.75907 36.99413)
+#> 10 3.2423735 0.2814687 3.2423735 0.2814687 25.594398    7.345321 2013 POINT (-89.79193 37.16898)
 ```
 
 
@@ -953,13 +931,13 @@ strv_predict(
 )
 #> stars object with 4 dimensions and 6 attributes
 #> attribute(s):
-#>                   Min.   1st Qu.    Median      Mean    3rd Qu.      Max.
-#> w            0.1785328 1.2302633 1.8241130 1.7333403  2.3126393  3.301629
-#> w_se         0.2458533 0.3556013 0.4154899 0.4089841  0.4487114  0.683468
-#> linear       0.1785328 1.2302633 1.8241130 1.7333403  2.3126393  3.301629
-#> linear_se    0.2458533 0.3556013 0.4154899 0.4089841  0.4487114  0.683468
-#> response     1.1954621 3.4221325 6.1978362 7.1262945 10.1010797 27.156843
-#> response_se  0.6456785 1.5226590 2.5492215 2.7704882  3.6785018  7.498415
+#>                   Min.   1st Qu.    Median      Mean    3rd Qu.       Max.
+#> w            0.5043729 1.2665291 1.8387064 1.7916416  2.3220179  3.2753496
+#> w_se         0.3078033 0.4543535 0.5269558 0.5131551  0.5788521  0.7269391
+#> linear       0.5043729 1.2665291 1.8387064 1.7916416  2.3220179  3.2753496
+#> linear_se    0.3078033 0.4543535 0.5269558 0.5131551  0.5788521  0.7269391
+#> response     1.6559467 3.5485572 6.2883999 7.3411008 10.1967232 26.4524727
+#> response_se  0.8583888 2.0625396 3.2954091 3.7649984  4.9822870 10.5778303
 #> dimension(s):
 #>          from to   offset     delta refsys point        values x/y
 #> x           1  5 -95.2344   1.19733 WGS 84 FALSE          NULL [x]
@@ -996,12 +974,12 @@ pred_out<- strv_predict(
   pred_raster
 )
 pred_out$response[, , 1, 1]
-#>          [,1]     [,2]      [,3]     [,4]      [,5]
-#> [1,] 4.595541 7.582502  6.831593  6.73246  7.663349
-#> [2,] 3.428379 4.833342  5.370199 14.47482 10.936831
-#> [3,] 3.309876 5.394929        NA 10.30159  7.071058
-#> [4,] 4.819618 6.279708 13.484937 10.05760 10.879663
-#> [5,] 6.903951 7.948005 10.597116 14.10767 11.057125
+#>          [,1]     [,2]      [,3]      [,4]      [,5]
+#> [1,] 4.770998 6.747846  6.284509  6.570138  7.602039
+#> [2,] 3.591247 4.812789  5.183274 14.350691 10.986241
+#> [3,] 3.530449 5.560762        NA 10.605582  7.147877
+#> [4,] 4.953887 6.583373 13.248190  9.730127 10.616614
+#> [5,] 6.741280 7.786520 10.358959 13.735930 10.867354
 ```
 
 For raster predictions an additional 'time' option is available to specify which years to make predictions for, with the default behaviour being to predict every year between the earliest and latest year in the original dataset.
@@ -1015,13 +993,13 @@ strv_predict(
 )
 #> stars object with 4 dimensions and 6 attributes
 #> attribute(s):
-#>                   Min.   1st Qu.    Median      Mean   3rd Qu.       Max. NA's
-#> w            0.5411165 1.2974578 1.7896265 1.7272752 2.1457890  3.2069449    5
-#> w_se         0.4042275 0.6325751 0.7226648 0.7163256 0.8173013  0.9605696    5
-#> linear       0.5411165 1.2974578 1.7896265 1.7272752 2.1457890  3.2069449    5
-#> linear_se    0.4042275 0.6325751 0.7226648 0.7163256 0.8173013  0.9605696    5
-#> response     1.7179240 3.6648861 5.9877410 6.8124258 8.5508947 24.7035007    5
-#> response_se  1.1786307 2.9771994 4.4255650 5.1608529 6.5614954 13.1951571    5
+#>                   Min.   1st Qu.    Median     Mean   3rd Qu.       Max. NA's
+#> w            1.0674812 1.8105632 1.9439828 1.936494 2.0759628  2.8888571    5
+#> w_se         0.5089666 0.6832938 0.7491744 0.728151 0.7767126  0.8389123    5
+#> linear       1.0674812 1.8105632 1.9439828 1.936494 2.0759628  2.8888571    5
+#> linear_se    0.5089666 0.6832938 0.7491744 0.728151 0.7767126  0.8389123    5
+#> response     2.9080453 6.1139021 6.9865274 7.198349 7.9722294 17.9727592    5
+#> response_se  2.2399492 5.0435823 5.8209367 5.823770 6.5955395  9.7219114    5
 #> dimension(s):
 #>          from to   offset     delta refsys point        values x/y
 #> x           1  5 -95.2344   1.19733 WGS 84 FALSE          NULL [x]
@@ -1075,18 +1053,18 @@ parameters(sim_model)
 #> 
 #> Slot "space_parameters":
 #> $cnt
-#>               par se fixed
-#> sd      0.0454728 NA FALSE
-#> range 141.2524496 NA FALSE
-#> nu      0.5000000 NA  TRUE
+#>                par se fixed
+#> sd      0.06485105 NA FALSE
+#> range 111.25818894 NA FALSE
+#> nu      0.50000000 NA  TRUE
 #> 
 #> 
 #> Slot "time_parameters":
 #> $cnt
 #>              par se fixed
-#> mu  2.219418e+00 NA FALSE
-#> ar1 9.384590e-01 NA FALSE
-#> sd  3.987924e-05 NA FALSE
+#> mu  2.128829e+00 NA FALSE
+#> ar1 6.916911e-01 NA FALSE
+#> sd  4.647812e-05 NA FALSE
 #> 
 #> 
 #> Slot "response_distribution":
@@ -1167,16 +1145,16 @@ dat(sim_model)
 #> CRS:           NA
 #> First 10 features:
 #>            y t graph_idx    geometry
-#> 1   9.891189 1         1 POINT (1 1)
-#> 5   8.381199 1         5 POINT (1 2)
-#> 9   9.848376 1         9 POINT (1 3)
-#> 13  8.132670 1        13 POINT (1 4)
-#> 2   7.266278 1         2 POINT (2 1)
-#> 6  10.578628 1         6 POINT (2 2)
-#> 10  8.019771 1        10 POINT (2 3)
-#> 14  4.554173 1        14 POINT (2 4)
-#> 3   5.608597 1         3 POINT (3 1)
-#> 7   8.396912 1         7 POINT (3 2)
+#> 1  13.107194 1         1 POINT (1 1)
+#> 5  11.421097 1         5 POINT (1 2)
+#> 9  11.442914 1         9 POINT (1 3)
+#> 13 11.261029 1        13 POINT (1 4)
+#> 2  15.214689 1         2 POINT (2 1)
+#> 6  12.619755 1         6 POINT (2 2)
+#> 10  8.728856 1        10 POINT (2 3)
+#> 14 11.286046 1        14 POINT (2 4)
+#> 3  12.862683 1         3 POINT (3 1)
+#> 7  14.133636 1         7 POINT (3 2)
 parameters(sim_model)
 #> An object of class "parameters"
 #> Slot "covariance_function":
@@ -1229,67 +1207,67 @@ time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
 #>        w           se          
-#>  Min.   :7.502   Mode:logical  
-#>  1st Qu.:7.806   NA's:5        
-#>  Median :8.053                 
-#>  Mean   :7.989                 
-#>  3rd Qu.:8.262                 
-#>  Max.   :8.322                 
+#>  Min.   :7.268   Mode:logical  
+#>  1st Qu.:7.644   NA's:5        
+#>  Median :8.540                 
+#>  Mean   :8.302                 
+#>  3rd Qu.:8.916                 
+#>  Max.   :9.144                 
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> t           1  5      1     1     NA FALSE   NULL
-#> variable    1  1     NA    NA     NA FALSE      y
+#>          from to offset delta point values
+#> t           1  5      1     1 FALSE   NULL
+#> variable    1  1     NA    NA FALSE      y
 pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 3.124   Mode:logical  
-#>  1st Qu.: 6.582   NA's:80       
-#>  Median : 7.756                 
-#>  Mean   : 7.682                 
-#>  3rd Qu.: 9.217                 
-#>  Max.   :11.528                 
+#>  Min.   : 4.087   Mode:logical  
+#>  1st Qu.: 8.914   NA's:80       
+#>  Median :11.037                 
+#>  Mean   :10.945                 
+#>  3rd Qu.:12.760                 
+#>  Max.   :17.112                 
 #> dimension(s):
-#>          from to offset delta refsys point                      values
-#> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
-#> t           1  5      1     1     NA FALSE                        NULL
-#> variable    1  1     NA    NA     NA FALSE                           y
+#>          from to offset delta point                      values
+#> geom        1 16     NA    NA  TRUE POINT (1 1),...,POINT (4 4)
+#> t           1  5      1     1 FALSE                        NULL
+#> variable    1  1     NA    NA FALSE                           y
 head(dat(sim_model)$y)
-#> [1]  9.891189  8.381199  9.848376  8.132670  7.266278 10.578628
+#> [1] 13.10719 11.42110 11.44291 11.26103 15.21469 12.61976
 sim_model<- strv_simulate(
   sim_model
 )
 time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
-#>        w            se          
-#>  Min.   : 7.732   Mode:logical  
-#>  1st Qu.:10.826   NA's:5        
-#>  Median :11.478                 
-#>  Mean   :10.787                 
-#>  3rd Qu.:11.719                 
-#>  Max.   :12.181                 
+#>        w           se          
+#>  Min.   :7.572   Mode:logical  
+#>  1st Qu.:7.589   NA's:5        
+#>  Median :7.772                 
+#>  Mean   :8.037                 
+#>  3rd Qu.:8.410                 
+#>  Max.   :8.841                 
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> t           1  5      1     1     NA FALSE   NULL
-#> variable    1  1     NA    NA     NA FALSE      y
+#>          from to offset delta point values
+#> t           1  5      1     1 FALSE   NULL
+#> variable    1  1     NA    NA FALSE      y
 pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 3.979   Mode:logical  
-#>  1st Qu.: 9.130   NA's:80       
-#>  Median :10.735                 
-#>  Mean   :10.617                 
-#>  3rd Qu.:12.167                 
-#>  Max.   :15.758                 
+#>  Min.   : 5.519   Mode:logical  
+#>  1st Qu.: 8.627   NA's:80       
+#>  Median :10.124                 
+#>  Mean   :10.170                 
+#>  3rd Qu.:11.518                 
+#>  Max.   :14.400                 
 #> dimension(s):
-#>          from to offset delta refsys point                      values
-#> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
-#> t           1  5      1     1     NA FALSE                        NULL
-#> variable    1  1     NA    NA     NA FALSE                           y
+#>          from to offset delta point                      values
+#> geom        1 16     NA    NA  TRUE POINT (1 1),...,POINT (4 4)
+#> t           1  5      1     1 FALSE                        NULL
+#> variable    1  1     NA    NA FALSE                           y
 head(dat(sim_model)$y)
-#> [1]  7.519813  9.280342 11.673805  9.254610  8.113644  7.067058
+#> [1] 12.001182 10.252801  9.382655 11.795263 13.903926 10.053934
 ```
 
 
@@ -1303,34 +1281,34 @@ Note that the time effects and random effects are the same before and after simu
 time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
-#>        w            se          
-#>  Min.   : 7.732   Mode:logical  
-#>  1st Qu.:10.826   NA's:5        
-#>  Median :11.478                 
-#>  Mean   :10.787                 
-#>  3rd Qu.:11.719                 
-#>  Max.   :12.181                 
+#>        w           se          
+#>  Min.   :7.572   Mode:logical  
+#>  1st Qu.:7.589   NA's:5        
+#>  Median :7.772                 
+#>  Mean   :8.037                 
+#>  3rd Qu.:8.410                 
+#>  Max.   :8.841                 
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> t           1  5      1     1     NA FALSE   NULL
-#> variable    1  1     NA    NA     NA FALSE      y
+#>          from to offset delta point values
+#> t           1  5      1     1 FALSE   NULL
+#> variable    1  1     NA    NA FALSE      y
 pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 3.979   Mode:logical  
-#>  1st Qu.: 9.130   NA's:80       
-#>  Median :10.735                 
-#>  Mean   :10.617                 
-#>  3rd Qu.:12.167                 
-#>  Max.   :15.758                 
+#>  Min.   : 5.519   Mode:logical  
+#>  1st Qu.: 8.627   NA's:80       
+#>  Median :10.124                 
+#>  Mean   :10.170                 
+#>  3rd Qu.:11.518                 
+#>  Max.   :14.400                 
 #> dimension(s):
-#>          from to offset delta refsys point                      values
-#> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
-#> t           1  5      1     1     NA FALSE                        NULL
-#> variable    1  1     NA    NA     NA FALSE                           y
+#>          from to offset delta point                      values
+#> geom        1 16     NA    NA  TRUE POINT (1 1),...,POINT (4 4)
+#> t           1  5      1     1 FALSE                        NULL
+#> variable    1  1     NA    NA FALSE                           y
 head(dat(sim_model)$y)
-#> [1]  7.519813  9.280342 11.673805  9.254610  8.113644  7.067058
+#> [1] 12.001182 10.252801  9.382655 11.795263 13.903926 10.053934
 sim_model<- strv_simulate(
   sim_model,
   conditional = TRUE
@@ -1338,34 +1316,34 @@ sim_model<- strv_simulate(
 time_effects(sim_model)
 #> stars object with 2 dimensions and 2 attributes
 #> attribute(s):
-#>        w            se          
-#>  Min.   : 7.732   Mode:logical  
-#>  1st Qu.:10.826   NA's:5        
-#>  Median :11.478                 
-#>  Mean   :10.787                 
-#>  3rd Qu.:11.719                 
-#>  Max.   :12.181                 
+#>        w           se          
+#>  Min.   :7.572   Mode:logical  
+#>  1st Qu.:7.589   NA's:5        
+#>  Median :7.772                 
+#>  Mean   :8.037                 
+#>  3rd Qu.:8.410                 
+#>  Max.   :8.841                 
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> t           1  5      1     1     NA FALSE   NULL
-#> variable    1  1     NA    NA     NA FALSE      y
+#>          from to offset delta point values
+#> t           1  5      1     1 FALSE   NULL
+#> variable    1  1     NA    NA FALSE      y
 pg_re(sim_model)
 #> stars object with 3 dimensions and 2 attributes
 #> attribute(s):
 #>        w            se          
-#>  Min.   : 3.979   Mode:logical  
-#>  1st Qu.: 9.130   NA's:80       
-#>  Median :10.735                 
-#>  Mean   :10.617                 
-#>  3rd Qu.:12.167                 
-#>  Max.   :15.758                 
+#>  Min.   : 5.519   Mode:logical  
+#>  1st Qu.: 8.627   NA's:80       
+#>  Median :10.124                 
+#>  Mean   :10.170                 
+#>  3rd Qu.:11.518                 
+#>  Max.   :14.400                 
 #> dimension(s):
-#>          from to offset delta refsys point                      values
-#> geom        1 16     NA    NA     NA  TRUE POINT (1 1),...,POINT (4 4)
-#> t           1  5      1     1     NA FALSE                        NULL
-#> variable    1  1     NA    NA     NA FALSE                           y
+#>          from to offset delta point                      values
+#> geom        1 16     NA    NA  TRUE POINT (1 1),...,POINT (4 4)
+#> t           1  5      1     1 FALSE                        NULL
+#> variable    1  1     NA    NA FALSE                           y
 head(dat(sim_model)$y)
-#> [1]  9.088818  8.993705 11.890719 10.081252  7.361262  7.049294
+#> [1] 11.380851 10.756820  9.770946 12.390927 13.845153 10.378006
 ```
 
 
@@ -1405,9 +1383,9 @@ bird_model<- strv_prepare(
 )
 fixed_effects(bird_model)
 #> $cnt
-#>               par         se fixed
-#> elev -0.001530904 0.02637356 FALSE
-#> temp  0.055148435 0.02473195 FALSE
+#>              par         se fixed
+#> elev  0.05870063 0.02695098 FALSE
+#> temp -0.02082338 0.03094434 FALSE
 dat(bird_model)
 #> Simple feature collection with 404 features and 5 fields
 #> Geometry type: POINT
@@ -1415,17 +1393,17 @@ dat(bird_model)
 #> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>           elev        temp cnt year graph_idx                       geom
-#> 422  0.9072227  0.26233355   1 2005        63 POINT (-95.23445 40.46577)
-#> 417 -0.7617050 -1.35049412   7 2005        62 POINT (-95.03312 40.02546)
-#> 402  0.4249136 -0.47306635   5 2005        59 POINT (-94.66548 39.65398)
-#> 415 -0.5561445 -0.96943566   7 2005        58 POINT (-94.50103 39.39702)
-#> 416 -0.4008697 -0.11856966   3 2005        57 POINT (-94.14222 40.10026)
-#> 392 -0.3445642 -1.09132773   3 2005        29   POINT (-94.1192 37.1404)
-#> 420  0.9499547 -0.88194970   4 2005        43 POINT (-94.10504 38.66985)
-#> 384  0.8287906  1.98793662  11 2005        37  POINT (-93.9101 36.66086)
-#> 391  0.7272536  0.04271795   7 2005        26 POINT (-93.85185 37.77059)
-#> 397  0.9610694  0.18945147   2 2005        24 POINT (-93.84015 38.19498)
+#>            elev        temp cnt year graph_idx                       geom
+#> 422 -1.55220124  1.70746482   1 2005        63 POINT (-95.23445 40.46577)
+#> 417  1.20925770  0.58431734   7 2005        62 POINT (-95.03312 40.02546)
+#> 402 -0.84953858 -1.80022707   5 2005        59 POINT (-94.66548 39.65398)
+#> 415 -0.78794983  0.77766062   7 2005        58 POINT (-94.50103 39.39702)
+#> 416 -0.00647576  1.66643029   3 2005        57 POINT (-94.14222 40.10026)
+#> 392 -0.53692552  0.04127467   3 2005        29   POINT (-94.1192 37.1404)
+#> 420 -1.03666143 -0.48871253   4 2005        43 POINT (-94.10504 38.66985)
+#> 384 -1.77121307  0.77697867  11 2005        37  POINT (-93.9101 36.66086)
+#> 391  0.41426209 -0.46497711   7 2005        26 POINT (-93.85185 37.77059)
+#> 397 -0.32768340  0.93101337   2 2005        24 POINT (-93.84015 38.19498)
 ```
 
 More complex covariate effects such as interaction terms, transformations, and polynomial functions can be included in the model formula.
@@ -1441,9 +1419,9 @@ bird_model<- strv_prepare(
 fixed_effects(bird_model)
 #> $cnt
 #>                        par         se fixed
-#> I(abs(temp))    0.00152017 0.03941195 FALSE
-#> poly(elev, 2)1 -0.03240787 0.50385275 FALSE
-#> poly(elev, 2)2  0.49380021 0.47159868 FALSE
+#> I(abs(temp))   -0.06651065 0.05221592 FALSE
+#> poly(elev, 2)1  1.22256609 0.53163936 FALSE
+#> poly(elev, 2)2  0.70515678 0.53546333 FALSE
 dat(bird_model)
 #> Simple feature collection with 404 features and 5 fields
 #> Geometry type: POINT
@@ -1451,17 +1429,17 @@ dat(bird_model)
 #> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>            temp       elev cnt year graph_idx                       geom
-#> 422  0.26233355  0.9072227   1 2005        63 POINT (-95.23445 40.46577)
-#> 417 -1.35049412 -0.7617050   7 2005        62 POINT (-95.03312 40.02546)
-#> 402 -0.47306635  0.4249136   5 2005        59 POINT (-94.66548 39.65398)
-#> 415 -0.96943566 -0.5561445   7 2005        58 POINT (-94.50103 39.39702)
-#> 416 -0.11856966 -0.4008697   3 2005        57 POINT (-94.14222 40.10026)
-#> 392 -1.09132773 -0.3445642   3 2005        29   POINT (-94.1192 37.1404)
-#> 420 -0.88194970  0.9499547   4 2005        43 POINT (-94.10504 38.66985)
-#> 384  1.98793662  0.8287906  11 2005        37  POINT (-93.9101 36.66086)
-#> 391  0.04271795  0.7272536   7 2005        26 POINT (-93.85185 37.77059)
-#> 397  0.18945147  0.9610694   2 2005        24 POINT (-93.84015 38.19498)
+#>            temp        elev cnt year graph_idx                       geom
+#> 422  1.70746482 -1.55220124   1 2005        63 POINT (-95.23445 40.46577)
+#> 417  0.58431734  1.20925770   7 2005        62 POINT (-95.03312 40.02546)
+#> 402 -1.80022707 -0.84953858   5 2005        59 POINT (-94.66548 39.65398)
+#> 415  0.77766062 -0.78794983   7 2005        58 POINT (-94.50103 39.39702)
+#> 416  1.66643029 -0.00647576   3 2005        57 POINT (-94.14222 40.10026)
+#> 392  0.04127467 -0.53692552   3 2005        29   POINT (-94.1192 37.1404)
+#> 420 -0.48871253 -1.03666143   4 2005        43 POINT (-94.10504 38.66985)
+#> 384  0.77697867 -1.77121307  11 2005        37  POINT (-93.9101 36.66086)
+#> 391 -0.46497711  0.41426209   7 2005        26 POINT (-93.85185 37.77059)
+#> 397  0.93101337 -0.32768340   2 2005        24 POINT (-93.84015 38.19498)
 ```
 
 
@@ -1497,20 +1475,20 @@ pred_points
 #> Simple feature collection with 25 features and 3 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -95.15498 ymin: 36.21214 xmax: -89.75344 ymax: 40.35134
+#> Bounding box:  xmin: -94.98225 ymin: 36.85612 xmax: -89.4243 ymax: 40.34121
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>    year                       geom        elev       temp
-#> 1  2012 POINT (-95.15498 37.93436) -0.09840643  0.4703777
-#> 2  2012  POINT (-89.75344 39.5785)  1.00846581  0.3356741
-#> 3  2012 POINT (-95.14561 36.41512) -0.82732277  1.5741667
-#> 4  2012 POINT (-90.84599 36.51493)  0.24684041  0.8341889
-#> 5  2012 POINT (-90.24617 37.92396)  1.13449375  0.2189963
-#> 6  2013  POINT (-90.5351 40.35134) -0.80550036  0.1519377
-#> 7  2013 POINT (-93.07369 38.76934) -0.31044326 -1.0368923
-#> 8  2013 POINT (-92.87761 38.35209) -0.28163080  0.4513662
-#> 9  2013 POINT (-90.73921 39.39198) -1.01051802  1.4318069
-#> 10 2013 POINT (-93.15171 37.53583)  0.98690528  0.9491188
+#>    year                       geom       elev        temp
+#> 1  2012 POINT (-93.20253 40.34121) -1.4314675  1.95329914
+#> 2  2012  POINT (-90.1854 40.06496)  1.4726169 -0.07283367
+#> 3  2012 POINT (-92.19819 37.25459)  1.0165623  0.24319339
+#> 4  2012 POINT (-94.01301 39.21975)  0.7018237 -0.63364929
+#> 5  2012 POINT (-90.40311 39.52463) -0.4781471  1.68626030
+#> 6  2013 POINT (-91.65752 37.02698)  0.1250207 -0.87733341
+#> 7  2013  POINT (-89.4243 37.56945) -1.2047673  1.58992690
+#> 8  2013 POINT (-90.01585 37.23285) -1.7498346  1.05078013
+#> 9  2013 POINT (-91.39739 37.73979)  0.4829350  0.31936888
+#> 10 2013 POINT (-93.97566 38.68882) -0.2918312 -0.70970530
 ```
 
 The output is the same as predictions without covariates, but the covariates used are also included in the resulting 'long_stars' object.
@@ -1525,36 +1503,36 @@ strv_predict(
 #> Slot "values":
 #> stars object with 2 dimensions and 6 attributes
 #> attribute(s):
-#>                   Min.   1st Qu.    Median      Mean   3rd Qu.       Max.
-#> w            0.4337881 1.0607123 1.7590924 1.7132263 2.2267261  3.2009888
-#> w_se         0.2460823 0.3673565 0.4823502 0.4893581 0.6096465  0.7538131
-#> linear       0.4434004 1.0597415 1.7139219 1.7176241 2.2832601  3.1895010
-#> linear_se    0.2470282 0.3683301 0.4824978 0.4904452 0.6100288  0.7544784
-#> response     1.5579960 2.8856249 5.5506881 7.5969329 9.8086055 24.2763094
-#> response_se  0.9093627 1.5924302 2.8044815 3.4246183 4.5274684  9.0578221
+#>                   Min.   1st Qu.    Median      Mean    3rd Qu.       Max.
+#> w            0.6242814 1.5770910 1.9015970 1.9182454  2.4540083  3.2253786
+#> w_se         0.3185400 0.4552610 0.5510214 0.5794976  0.7069414  0.8541179
+#> linear       0.4995791 1.6211938 1.9146289 1.9124752  2.4633296  3.1156481
+#> linear_se    0.3235255 0.4561585 0.5511852 0.5808272  0.7072825  0.8543738
+#> response     1.6480274 5.0591265 6.7844205 8.6413421 11.7438483 22.5480379
+#> response_se  1.2253985 2.7355176 4.9224507 4.9683523  6.9472964 13.5003792
 #> dimension(s):
-#>          from to offset delta refsys point values
-#> i           1 25      1     1     NA FALSE   NULL
-#> variable    1  1     NA    NA     NA FALSE    cnt
+#>          from to offset delta point values
+#> i           1 25      1     1 FALSE   NULL
+#> variable    1  1     NA    NA FALSE    cnt
 #> 
 #> Slot "locations":
 #> Simple feature collection with 25 features and 3 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -95.15498 ymin: 36.21214 xmax: -89.75344 ymax: 40.35134
+#> Bounding box:  xmin: -94.98225 ymin: 36.85612 xmax: -89.4243 ymax: 40.34121
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>    year                       geom        elev       temp
-#> 1  2012 POINT (-95.15498 37.93436) -0.09840643  0.4703777
-#> 2  2012  POINT (-89.75344 39.5785)  1.00846581  0.3356741
-#> 3  2012 POINT (-95.14561 36.41512) -0.82732277  1.5741667
-#> 4  2012 POINT (-90.84599 36.51493)  0.24684041  0.8341889
-#> 5  2012 POINT (-90.24617 37.92396)  1.13449375  0.2189963
-#> 6  2013  POINT (-90.5351 40.35134) -0.80550036  0.1519377
-#> 7  2013 POINT (-93.07369 38.76934) -0.31044326 -1.0368923
-#> 8  2013 POINT (-92.87761 38.35209) -0.28163080  0.4513662
-#> 9  2013 POINT (-90.73921 39.39198) -1.01051802  1.4318069
-#> 10 2013 POINT (-93.15171 37.53583)  0.98690528  0.9491188
+#>    year                       geom       elev        temp
+#> 1  2012 POINT (-93.20253 40.34121) -1.4314675  1.95329914
+#> 2  2012  POINT (-90.1854 40.06496)  1.4726169 -0.07283367
+#> 3  2012 POINT (-92.19819 37.25459)  1.0165623  0.24319339
+#> 4  2012 POINT (-94.01301 39.21975)  0.7018237 -0.63364929
+#> 5  2012 POINT (-90.40311 39.52463) -0.4781471  1.68626030
+#> 6  2013 POINT (-91.65752 37.02698)  0.1250207 -0.87733341
+#> 7  2013  POINT (-89.4243 37.56945) -1.2047673  1.58992690
+#> 8  2013 POINT (-90.01585 37.23285) -1.7498346  1.05078013
+#> 9  2013 POINT (-91.39739 37.73979)  0.4829350  0.31936888
+#> 10 2013 POINT (-93.97566 38.68882) -0.2918312 -0.70970530
 ```
 
 
@@ -1602,8 +1580,8 @@ pred_covar
 #> extent     : -95.23445, -89.24779, 36.11935, 40.47128  (xmin, xmax, ymin, ymax)
 #> crs        : +proj=longlat +datum=WGS84 +no_defs 
 #> names      :     T2005,     T2006,     T2007,     T2008,     T2009,     T2010,     T2011,     T2012,     T2013,     T2014,     T2015,     T2016,     T2017,     T2018,     T2019 
-#> min values : -3.418857, -2.062440, -1.723448, -1.957272, -2.600349, -1.742927, -2.254533, -1.757465, -2.662935, -1.377822, -1.714059, -1.912300, -2.004042, -2.211060, -2.030086 
-#> max values :  1.537536,  1.845269,  1.354448,  1.249079,  1.440349,  1.432193,  1.843411,  2.197493,  1.728091,  2.438909,  1.775691,  2.742359,  2.219493,  1.541506,  1.161871 
+#> min values : -2.042545, -1.234785, -1.764981, -2.710441, -1.952138, -1.744013, -1.461189, -1.391086, -1.723311, -2.094202, -2.850768, -1.240047, -2.268515, -2.767407, -2.093092 
+#> max values :  1.681302,  2.925987,  2.875539,  2.297244,  1.509723,  2.460695,  1.386407,  1.945983,  2.572277,  1.503268,  1.781158,  2.119150,  3.011629,  2.477737,  1.791498 
 #> 
 #> 
 #> $temp
@@ -1613,8 +1591,8 @@ pred_covar
 #> extent     : -95.23445, -89.24779, 36.11935, 40.47128  (xmin, xmax, ymin, ymax)
 #> crs        : +proj=longlat +datum=WGS84 +no_defs 
 #> names      :     T2005,     T2006,     T2007,     T2008,     T2009,     T2010,     T2011,     T2012,     T2013,     T2014,     T2015,     T2016,     T2017,     T2018,     T2019 
-#> min values : -2.222009, -2.118209, -1.847952, -2.085452, -2.822138, -3.701192, -1.474486, -2.303146, -2.639094, -2.298241, -1.420547, -1.750296, -2.093928, -1.490359, -1.148627 
-#> max values : 2.1656276, 2.0403016, 1.8421039, 1.7298567, 1.9380880, 1.4341396, 2.8848033, 2.6304022, 0.7742199, 1.7672524, 1.7344098, 2.8635858, 1.9149066, 1.6668995, 1.6124974
+#> min values : -2.582781, -2.147606, -2.335309, -1.847914, -2.017880, -2.610209, -1.747992, -2.271189, -2.350050, -3.242521, -1.410069, -2.093518, -1.714399, -1.052274, -2.627122 
+#> max values : 1.7176189, 2.0641953, 1.5637893, 2.1805607, 2.0511301, 0.8304818, 1.7905348, 1.6248482, 1.5099041, 1.9059847, 2.0114348, 1.6242241, 2.4889615, 2.3564719, 1.6749011
 ```
 
 For raster predictions, covariates are supplied to 'strv_predict' by giving the covariate raster list for the covariates is supplied as the third argument.
@@ -1630,24 +1608,15 @@ strv_predict(
 )
 #> stars object with 4 dimensions and 8 attributes
 #> attribute(s):
-#>                      Min.    1st Qu.      Median        Mean    3rd Qu.
-#> w             0.026504120  1.1978117  1.84100068  1.73237986  2.2805742
-#> w_se          0.228572965  0.3723104  0.44044849  0.52486726  0.6525957
-#> linear        0.005097097  1.2145507  1.84210026  1.73029349  2.3136318
-#> linear_se     0.231181860  0.3739160  0.44165832  0.52636825  0.6531663
-#> response      1.005110145  3.3687861  6.30977678  7.16050844 10.1111088
-#> response_se   0.567298234  1.8231915  3.05749083  3.73590886  4.8347173
-#> elev         -3.418857098 -0.5830220  0.01710944 -0.02733674  0.6350922
-#> temp         -3.701192141 -0.7444533 -0.05331650 -0.03859074  0.6366460
-#>                   Max.
-#> w             3.317222
-#> w_se          1.109247
-#> linear        3.365296
-#> linear_se     1.109636
-#> response     28.942074
-#> response_se  14.787893
-#> elev          2.742359
-#> temp          2.884803
+#>                    Min.    1st Qu.      Median        Mean   3rd Qu.       Max.
+#> w             0.3685742  1.4834727  1.97414017  1.85525392 2.2432287  3.2480822
+#> w_se          0.2928870  0.4713487  0.56968415  0.59817424 0.7196757  0.9261985
+#> linear        0.3089259  1.4703826  1.97782981  1.86033556 2.2426341  3.3050125
+#> linear_se     0.2930130  0.4733295  0.57285911  0.59978739 0.7203524  0.9266124
+#> response      1.3619615  4.3509111  7.22704220  7.54705866 9.4181304 27.2488823
+#> response_se   0.7678669  2.6017853  4.56449223  4.78992609 6.8331456 11.9334135
+#> elev         -2.8507679 -0.6810697 -0.04194679  0.05471833 0.7681166  3.0116289
+#> temp         -3.2425215 -0.8951053 -0.03892113 -0.08978533 0.6495850  2.4889615
 #> dimension(s):
 #>          from to   offset     delta refsys point        values x/y
 #> x           1  5 -95.2344   1.19733 WGS 84 FALSE          NULL [x]
@@ -1659,6 +1628,9 @@ strv_predict(
 
 
 
+```r
+bird_model<- original_model
+```
 
 
 
@@ -1693,14 +1665,8 @@ The valid response distributions can be found with the 'get_starve_distributions
 
 ```r
 get_starve_distributions("distribution")
-#>         distribution         distribution         distribution 
-#>           "gaussian"            "poisson"  "negative binomial" 
-#>         distribution         distribution         distribution 
-#>          "bernoulli"              "gamma"          "lognormal" 
-#>         distribution         distribution         distribution 
-#>           "binomial" "atLeastOneBinomial"            "compois" 
-#>         distribution         distribution 
-#>            "tweedie"                  "t"
+#>         distribution         distribution         distribution         distribution         distribution         distribution         distribution         distribution         distribution         distribution         distribution 
+#>           "gaussian"            "poisson"  "negative binomial"          "bernoulli"              "gamma"          "lognormal"           "binomial" "atLeastOneBinomial"            "compois"            "tweedie"                  "t"
 ```
 
 - **gaussian**: Used for continuous data. Random effects and covariates determine the mean.
@@ -1816,18 +1782,18 @@ parameters(bird_model)
 #> 
 #> Slot "space_parameters":
 #> $cnt
-#>               par          se fixed
-#> sd     0.05149631 0.003859773 FALSE
-#> range 80.00000000 0.000000000  TRUE
-#> nu     0.50000000 0.000000000  TRUE
+#>              par          se fixed
+#> sd     0.0701626 0.004168122 FALSE
+#> range 80.0000000 0.000000000  TRUE
+#> nu     0.5000000 0.000000000  TRUE
 #> 
 #> 
 #> Slot "time_parameters":
 #> $cnt
-#>           par         se fixed
-#> mu  1.9894915 0.33874433 FALSE
-#> ar1 0.9259455 0.03137069 FALSE
-#> sd  0.1292182 0.08643885 FALSE
+#>              par         se fixed
+#> mu  2.023901e+00 0.11475229 FALSE
+#> ar1 6.863147e-01 0.03413923 FALSE
+#> sd  5.352055e-05 0.08869789 FALSE
 #> 
 #> 
 #> Slot "response_distribution":
@@ -1859,7 +1825,7 @@ parameters(bird_model)
 #> Slot "space_parameters":
 #> $cnt
 #>              par          se fixed
-#> sd     0.1042155 0.005035682 FALSE
+#> sd     0.1040974 0.005029524 FALSE
 #> range 80.0000000 0.000000000  TRUE
 #> nu     0.5000000 0.000000000  TRUE
 #> 
@@ -1867,9 +1833,9 @@ parameters(bird_model)
 #> Slot "time_parameters":
 #> $cnt
 #>              par         se fixed
-#> mu  2.037032e+00 0.08868931 FALSE
+#> mu  2.035880e+00 0.08870712 FALSE
 #> ar1 0.000000e+00 0.00000000  TRUE
-#> sd  5.313066e-05 0.07370894 FALSE
+#> sd  5.352054e-05 0.07372248 FALSE
 #> 
 #> 
 #> Slot "response_distribution":

@@ -113,8 +113,10 @@ The output of the 'strv_fit' function is a 'starve' object with the ML parameter
 bird_model
 ```
 
-```{r cache-model,include=F}
-cache_model<- bird_model
+We'll store this fitted model so we can restore it throughout the rest of the vignette.
+
+```{r cache-model,include=TRUE}
+original_model<- bird_model
 ```
 
 
@@ -385,8 +387,8 @@ graph(bird_model)
 ```
 
 
-```{r include = F}
-bird_model<- cache_model
+```{r include = T}
+bird_model<- original_model
 ```
 
 
@@ -735,8 +737,8 @@ strv_predict(
 
 
 
-```{r include=F}
-bird_model<- cache_model
+```{r include=T}
+bird_model<- original_model
 ```
 
 
