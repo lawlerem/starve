@@ -192,6 +192,19 @@ construct_persistent_graph<- function(
   ))
 }
 
+#' @describeIn construct_graph Construct a directed acyclic graph for a single
+#'   \code{sf} object using INLA's inla.mesh.2d function. This allows
+#'   the user to supply a boundary to support barrier models.
+construct_persistent_graph_from_mesh<- function(
+    x,
+    boundary = NULL,
+    settings = new("settings"),
+    silent = TRUE,
+    ...
+  ) {
+
+}
+
 
 
 #' @param time A numeric vector containing the time index of each row in x.
