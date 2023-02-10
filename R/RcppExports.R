@@ -5,6 +5,10 @@ order_d_matrix <- function(d) {
     .Call(`_starve_order_d_matrix`, d)
 }
 
+order_adjacency_matrix <- function(m) {
+    .Call(`_starve_order_adjacency_matrix`, m)
+}
+
 lowest_k <- function(d, k) {
     .Call(`_starve_lowest_k`, d, k)
 }

@@ -22,6 +22,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// order_adjacency_matrix
+Eigen::VectorXi order_adjacency_matrix(Eigen::MatrixXi& m);
+RcppExport SEXP _starve_order_adjacency_matrix(SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXi& >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(order_adjacency_matrix(m));
+    return rcpp_result_gen;
+END_RCPP
+}
 // lowest_k
 Eigen::VectorXi lowest_k(const Eigen::VectorXd& d, const int k);
 RcppExport SEXP _starve_lowest_k(SEXP dSEXP, SEXP kSEXP) {
@@ -76,6 +87,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_starve_order_d_matrix", (DL_FUNC) &_starve_order_d_matrix, 1},
+    {"_starve_order_adjacency_matrix", (DL_FUNC) &_starve_order_adjacency_matrix, 1},
     {"_starve_lowest_k", (DL_FUNC) &_starve_lowest_k, 2},
     {"_starve_dist_to_dag", (DL_FUNC) &_starve_dist_to_dag, 2},
     {"_starve_dist_to_tg_dag", (DL_FUNC) &_starve_dist_to_tg_dag, 3},
