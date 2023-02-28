@@ -234,6 +234,14 @@ strv_prepare_process<- function(
   pg_locs<- locations_from_stars(pg_re(process))
   colnames(pg_locs)[colnames(pg_locs) == attr(pg_locs,"sf_column")]<- sf_name
   sf::st_geometry(pg_locs)<- sf_name
+  data<- data[
+    !duplicated(
+      data[
+        ,
+        c(time_name(settings), attr(data, "sf_column"))
+      ]
+    ),
+  ]
   data<- data[lengths(sf::st_equals(data, pg_locs)) == 0, ]
 
   transient_graph(process)<- construct_transient_graph(
