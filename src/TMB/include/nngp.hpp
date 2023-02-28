@@ -101,6 +101,7 @@ nngp<Type> nngp<Type>::pg_simulate(time_series<Type>& ts) {
   for(int v = 0; v < pg.dim_v(); v++) {
     for(int t = 0; t < pg.dim_t(); t++) {
       for(int node = 0; node < pg.dim_g(); node++) {
+
         re_dag_node<Type> pg_node = pg(node);
         vector<Type> to_mean = ts.propagate_structure(pg_node.re, t, v);
         pg.set_mean_by_to_g(
@@ -116,6 +117,7 @@ nngp<Type> nngp<Type>::pg_simulate(time_series<Type>& ts) {
           (t == 0 ? 1.0 / ts.initial_sd_scale(v) : 1.0 ) * pg_node.re,
           (t == 0 ? 1.0 / ts.initial_sd_scale(v) : 1.0 ) * pg_node.mean
         );
+        sim.segment(0, pg_node.node.to.size()) = (t == 0 ? ts.initial_sd_scale(v) : 1.0) * sim.segment(0, pg_node.node.to.size());
 
         pg.set_re_by_to_g(sim, node, t, v);
       }
@@ -232,8 +234,6 @@ Type nngp<Type>::prediction_loglikelihood(
       pred_ll += cn.loglikelihood(node.re.col(v), node.mean.col(v));
     }
   }
-
-  Rcout << "\n";
 
   return pred_ll;
 }
