@@ -468,7 +468,6 @@ predict_w<- function(x, predictions, ...) {
     pred_re<- logical_to_map(pred_re)
   })
 
-
   # Create the TMB object and evaluate it at the ML estimates
   obj<- TMB::MakeADFun(
     data = TMB_input$data,
