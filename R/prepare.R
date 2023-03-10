@@ -96,6 +96,8 @@ strv_prepare<- function(
     ...) {
   model<- new("starve")
 
+    #More info here about "model"
+    
   # Set the settings in the model
   settings(model)<- new(
     "settings",
