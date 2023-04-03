@@ -9,6 +9,10 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+# Knit this to an .Rmd file using knitr::knit("starve-tour.Rmd.orig", output = "starve-tour.Rmd")
+```
+
+```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -70,7 +74,7 @@ The 'strv_prepare' function uses a supplied sf data.frame to create a 'starve' o
 
 ```{r create-model}
 bird_model<- strv_prepare(
-  cnt ~ time(year),
+  cnt ~ time(year , "rw"),
   data = bird_survey,
   distribution = "poisson"
 )
@@ -509,13 +513,7 @@ The time effects, random effects, and observations in the output are the simulat
 No record of the previous values are stored.
 
 ```{r sim-bird}
-sim_model<- strv_prepare(
-  cnt ~ time(year),
-  bird_survey,
-  distribution = "poisson",
-  fit = TRUE
-)
-sim_model<- strv_simulate(sim_model)
+sim_model<- strv_simulate(original_model)
 sim_model
 parameters(sim_model)
 ```
@@ -623,7 +621,7 @@ All covariates that are named in the model formula are also present in the data 
 
 ```{r covar-fit-elev}
 bird_model<- strv_prepare(
-  cnt ~ elev + temp + time(year),
+  cnt ~ elev + temp + time(year, "rw"),
   bird_survey,
   distribution = "poisson",
   fit = TRUE
@@ -636,7 +634,7 @@ More complex covariate effects such as interaction terms, transformations, and p
 
 ```{r covar-fit-elev-temp}
 bird_model<- strv_prepare(
-  cnt ~ I(abs(temp)) + poly(elev, 2) + time(year),
+  cnt ~ I(abs(temp)) + poly(elev, 2) + time(year, "rw"),
   bird_survey,
   distribution = "poisson",
   fit = TRUE
@@ -652,7 +650,7 @@ We'll use the simpler covariate model for predictions.
 
 ```{r pred-covar-model}
 bird_model<- strv_prepare(
-  cnt ~ elev + temp + time(year),
+  cnt ~ elev + temp + time(year, "rw"),
   bird_survey,
   distribution = "poisson",
   fit = TRUE
@@ -675,7 +673,7 @@ pred_points$temp<- rnorm(nrow(pred_points))
 pred_points
 ```
 
-The output is the same as predictions without covariates, but the covariates used are also included in the resulting 'long_stars' object.
+The output uses the same format as predictions without covariates, but the covariates used are also included in the resulting 'long_stars' object.
 
 ```{r pred-covar-sf}
 strv_predict(
@@ -724,7 +722,7 @@ pred_covar
 ```
 
 For raster predictions, covariates are supplied to 'strv_predict' by giving the covariate raster list for the covariates is supplied as the third argument.
-The output is the same as raster predictions without covariates, but the resulting stars raster for each year has  additional layer containing the covariate values.
+The output uses the same format as raster predictions without covariates, but the resulting stars raster for each year has  additional layer containing the covariate values.
 
 ```{r pred-covar-raster}
 strv_predict(
@@ -746,6 +744,37 @@ bird_model<- original_model
 
 # Options
 
+## Using an INLA mesh for the persistent graph
+
+The underlying structure of the random effects is described by a directed acyclic graph, which is analogous to the mesh used in the INLA package.
+If desired an INLA mesh can be supplied to the 'strv_prepare' function, which will translate the mesh into a directed acyclic graph.
+Using an INLA mesh is roughly equivalent to using a spatially dense set of nodes with a small value for n_neighbours, so can often improve computation speed compared to the default behaviour of 'strv_prepare'.
+An additional benefit is that an INLA mesh can be constructed to run around barriers so that no nodes are inside the barrier and no edges go through the barrier.
+Accounting for barriers can be important in examples such as marine ecology, where one needs to account for the fact that fish cannot (usually) swim over land.
+
+See the INLA documentation ('?INLA::inla.mesh.2d') for details on how to create a mesh.
+The performance of the INLA package is often sensitive to the exact construction of the mesh, however the starve package is not very sensitive when translating an INLA mesh to a graph.
+
+Once a mesh has been created, you can simply supply the mesh object to the 'nodes' argument of 'strv_prepare'.
+In this case, the 'n_neighbours' argument determines the number of parents only for the transient graph / transient random effects and the number of parents when predicting new random effects using the 'strv_predict' function.
+
+```{r eval=F}
+mesh<- INLA::inla.mesh.2d(
+  loc = sf::st_coordinates(bird_survey),
+  max.edge = 1,
+  cutoff = 0.2,
+  crs = as(sf::st_crs(bird_survey), "CRS")
+)
+model<- strv_prepare(
+  cnt ~ time(year, "rw"),
+  bird_survey,
+  mesh,
+  distribution = "poisson",
+  n_neighbours = 3,
+  fit = TRUE
+)
+```
+
 ## Formula syntax
 
 A model formula specifies the response variable, the covariate effects, the temporal structure, and the spatial structure.
@@ -763,7 +792,7 @@ Some options to the individual terms in the above model formula can be specified
     - **independent**: Each year in the model is assumed to be independent. The 'ar1' time parameter is fixed at 0.
     - **ar1** (default): An autoregressive order 1 model is used. The 'ar1' time parameter is freely estimated.
     - **rw**: A random walk is used. The 'ar1' time parameter is fixed at 1.
-- **space(...covariance=,nu=)**: The name of the covariance function should be given to the covariance argument. If using the 'matern' covariance function, supplying a value to the nu option fixes the smoothness parameter nu at that value. Can be omitted from the formula, in which case the default exponential covariance function will be used.
+- **space(...,covariance=,nu=)**: The name of the covariance function should be given to the covariance argument. If using the 'matern' covariance function, supplying a value to the nu option fixes the smoothness parameter nu at that value. Can be omitted from the formula, in which case the default exponential covariance function will be used.
 
 
 ## Response distribution

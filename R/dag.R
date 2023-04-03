@@ -192,17 +192,71 @@ construct_persistent_graph<- function(
   ))
 }
 
-#' @describeIn construct_graph Construct a directed acyclic graph for a single
-#'   \code{sf} object using INLA's inla.mesh.2d function. This allows
-#'   the user to supply a boundary to support barrier models.
+#' @param mesh An INLA mesh
+#' @describeIn construct_graph Convert an INLA mesh to a persistent graph.
 construct_persistent_graph_from_mesh<- function(
-    x,
-    boundary = NULL,
-    settings = new("settings"),
-    silent = TRUE,
-    ...
+    mesh,
+    settings = new("settings")
   ) {
+  mesh_nodes<- sf::st_as_sf(
+    as.data.frame(mesh$loc),
+    crs = sf::st_crs(mesh$crs),
+    coords = c(1, 2)
+  )
+  mesh_graph<- as.matrix(mesh$graph$vv)
+  o<- order_adjacency_matrix(mesh_graph) + 1
+  mesh_nodes<- mesh_nodes[o, ]
+  mesh_graph<- mesh_graph[o, o]
+  mesh_graph[lower.tri(mesh_graph)]<- 0
 
+  n_init<- 5
+  edge_list<- vector(
+    mode = "list",
+    length = nrow(mesh_nodes) - n_init + 1
+  )
+  edge_list[[1]]<- list(
+    to = seq(n_init),
+    from = numeric(0)
+  )
+  edge_list[2:length(edge_list)]<- lapply(
+    (n_init + 1):nrow(mesh_nodes),
+    function(i) {
+      return(
+        list(
+          to = i,
+          from = which(mesh_graph[, i] != 0)
+        )
+      )
+    }
+  )
+
+  dist_list<- lapply(
+    edge_list,
+    function(x) {
+      return(sf::st_distance(mesh_nodes[c(x$to, x$from), ]))
+    }
+  )
+
+  distance_units<- "m"
+  if( "units" %in% class(dist_list[[1]]) ) {
+    distance_units<- as.character(units(dist_list[[1]]))
+    dist_list<- lapply(dist_list, units::drop_units)
+  }
+
+  graph<- new(
+    "dag",
+    edges = edge_list,
+    distances = dist_list,
+    distance_units = distance_units
+  )
+  distance_units(graph)<- distance_units(settings)
+
+  return(
+    list(
+      locations = mesh_nodes,
+      dag = graph
+    )
+  )
 }
 
 

@@ -34,7 +34,9 @@ variables needed to fit the model.}
 
 \item{nodes}{An `sf` object containing point geometries, defaulting to
 \code{data}. These locations will be used as the locations for the
-persistent graph.}
+persistent graph. Can also be an "inla.mesh" object, in which case
+it defines both the persistent graph locations and the persistent graph
+itself.}
 
 \item{n_neighbours}{An integer (default=10) giving the (maximum) number of
 parents for each node.}

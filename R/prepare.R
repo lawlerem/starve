@@ -48,7 +48,9 @@ NULL
 #'   variables needed to fit the model.
 #' @param nodes An `sf` object containing point geometries, defaulting to
 #'   \code{data}. These locations will be used as the locations for the
-#'   persistent graph.
+#'   persistent graph. Can also be an "inla.mesh" object, in which case
+#'   it defines both the persistent graph locations and the persistent graph
+#'   itself.
 #' @param n_neighbours An integer (default=10) giving the (maximum) number of
 #'   parents for each node.
 #' @param persistent_graph If an object of class \code{dag} is supplied, that
@@ -184,6 +186,15 @@ strv_prepare_process<- function(
 
 
   # pg_re = "sf",
+  if( identical(class(nodes), "inla.mesh") ) {
+    graph<- construct_persistent_graph_from_mesh(
+      nodes,
+      settings
+    )
+    nodes<- graph$locations
+    persistent_graph<- graph$dag
+  } else {}
+
   colnames(nodes)[colnames(nodes) == attr(nodes,"sf_column")]<- sf_name
   sf::st_geometry(nodes)<- sf_name
   uniq_nodes<- unique(nodes[, sf_name])
