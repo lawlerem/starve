@@ -3,11 +3,14 @@
 \name{construct_graph}
 \alias{construct_graph}
 \alias{construct_persistent_graph}
+\alias{construct_persistent_graph_from_mesh}
 \alias{construct_transient_graph}
 \alias{construct_prediction_graph}
 \title{Construct directed acyclic graphs}
 \usage{
 construct_persistent_graph(x, settings = new("settings"), silent = TRUE)
+
+construct_persistent_graph_from_mesh(mesh, settings = new("settings"))
 
 construct_transient_graph(
   x,
@@ -25,6 +28,8 @@ construct_prediction_graph(pred, model, silent = TRUE)
 \item{settings}{An object of class \code{settings}}
 
 \item{silent}{Should intermediate calculations be shown?}
+
+\item{mesh}{An INLA mesh}
 
 \item{time}{A numeric vector containing the time index of each row in x.}
 
@@ -60,6 +65,8 @@ Construct directed acyclic graphs
 
   A vertex with index i in either the "to" or "from" vertices represents the
   location in row i of the sorted copy of x.
+
+\item \code{construct_persistent_graph_from_mesh()}: Convert an INLA mesh to a persistent graph.
 
 \item \code{construct_transient_graph()}: Construct a directed acyclic graph with "to"
   vertices representing locations in x and "from" vertices representing
