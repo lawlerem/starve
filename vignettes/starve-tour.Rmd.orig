@@ -25,6 +25,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 set.seed(4326)
+library(raster)
 library(starve)
 ```
 
@@ -453,7 +454,6 @@ tmp
 To predict a raster for a smooth prediction surface you can supply a raster object from the 'raster' package.
 
 ```{r}
-library(raster)
 pred_raster<- raster(
   bird_survey,
   nrow = 5,

@@ -19,7 +19,16 @@ vignette: >
 
 ```r
 set.seed(4326)
+library(raster)
+#> Loading required package: sp
 library(starve)
+#> Loading required package: sf
+#> Linking to GEOS 3.11.1, GDAL 3.6.3, PROJ 9.2.0; sf_use_s2() is TRUE
+#> 
+#> Attaching package: 'starve'
+#> The following objects are masked from 'package:raster':
+#> 
+#>     values, values<-
 ```
 
 The starve package implements a spatio-temporal generalized linear mixed model for analyzing discrete-time, continuous-space data.
@@ -504,26 +513,25 @@ tmp<- cbind(
   ),
   dat(bird_model)
 )
-#> Error in (function (classes, fdef, mtable) : unable to find an inherited method for function 'values' for signature '"long_stars"'
 colnames(tmp)[1:6]<- c("w", "w_se", "linear", "linear_se", "response", "response_se")
 tmp
-#> Simple feature collection with 25 features and 7 fields
+#> Simple feature collection with 404 features and 9 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -95.1653 ymin: 36.1487 xmax: -89.41267 ymax: 40.43233
+#> Bounding box:  xmin: -95.23445 ymin: 36.11935 xmax: -89.2478 ymax: 40.47128
 #> Geodetic CRS:  WGS 84
 #> First 10 features:
-#>            w      w_se    linear linear_se  response response_se year                       geom
-#> 1  2.0779800 0.1716468 2.0779800 0.1716468  7.988316   1.3812318 2012 POINT (-93.44969 37.48708)
-#> 2  2.1742585 0.1696455 2.1742585 0.1696455  8.795661   1.5028421 2012  POINT (-92.76769 36.7374)
-#> 3  2.2738594 0.2732058 2.2738594 0.2732058  9.716829   2.7037776 2012 POINT (-89.66307 36.49022)
-#> 4  2.7952578 0.1651262 2.7952578 0.1651262 16.366847   2.7209549 2012 POINT (-89.41267 36.74711)
-#> 5  0.3158178 0.3688616 0.3158178 0.3688616  1.371380   0.5227729 2012  POINT (-95.1653 40.43233)
-#> 6  1.9191796 0.2139632 1.9191796 0.2139632  6.815365   1.4748325 2013 POINT (-91.23448 36.59283)
-#> 7  1.4941485 0.2571189 1.4941485 0.2571189  4.455541   1.1643838 2013  POINT (-94.56619 36.1487)
-#> 8  1.4722731 0.1986460 1.4722731 0.1986460  4.359133   0.8744248 2013 POINT (-92.09355 38.93433)
-#> 9  2.8309055 0.1574095 2.8309055 0.1574095 16.960812   2.6862804 2013 POINT (-89.75907 36.99413)
-#> 10 3.2670159 0.1243152 3.2670159 0.1243152 26.232939   3.2737289 2013 POINT (-89.79193 37.16898)
+#>             w      w_se    linear linear_se response response_se cnt year graph_idx                       geom
+#> 422 0.4519017 0.4002253 0.4519017 0.4002253 1.571297   0.6535713   1 2005        63 POINT (-95.23445 40.46577)
+#> 417 1.6367452 0.2563444 1.6367452 0.2563444 5.138418   1.3386689   7 2005        62 POINT (-95.03312 40.02546)
+#> 402 1.7988173 0.2905332 1.7988173 0.2905332 6.042497   1.7922096   5 2005        59 POINT (-94.66548 39.65398)
+#> 415 2.2923494 0.2028224 2.2923494 0.2028224 9.898165   2.0281106   7 2005        58 POINT (-94.50103 39.39702)
+#> 416 1.0550894 0.3506373 1.0550894 0.3506373 2.872232   1.0376053   3 2005        57 POINT (-94.14222 40.10026)
+#> 392 1.5388872 0.2515250 1.5388872 0.2515250 4.659402   1.1903475   3 2005        29   POINT (-94.1192 37.1404)
+#> 420 2.1304296 0.2144210 2.1304296 0.2144210 8.418483   1.8257293   4 2005        43 POINT (-94.10504 38.66985)
+#> 384 2.2176496 0.2225458 2.2176496 0.2225458 9.185715   2.0693983  11 2005        37  POINT (-93.9101 36.66086)
+#> 391 2.0738770 0.2159448 2.0738770 0.2159448 7.955607   1.7378851   7 2005        26 POINT (-93.85185 37.77059)
+#> 397 1.3034949 0.2906817 1.3034949 0.2906817 3.682143   1.0927074   2 2005        24 POINT (-93.84015 38.19498)
 ```
 
 
@@ -878,7 +886,6 @@ tmp<- cbind(
   do.call(cbind,values(sf_pred)[, , 1]),
   locations(sf_pred)
 )
-#> Error in (function (classes, fdef, mtable) : unable to find an inherited method for function 'values' for signature '"long_stars"'
 colnames(tmp)[1:6]<- c("w", "w_se", "linear", "linear_se", "response", "response_se")
 tmp
 #> Simple feature collection with 25 features and 7 fields
@@ -907,7 +914,6 @@ To predict a raster for a smooth prediction surface you can supply a raster obje
 
 
 ```r
-library(raster)
 pred_raster<- raster(
   bird_survey,
   nrow = 5,
@@ -1860,7 +1866,7 @@ parameters(bird_model)
 #>              par         se fixed
 #> mu  2.035864e+00 0.08870732 FALSE
 #> ar1 0.000000e+00 0.00000000  TRUE
-#> sd  6.150842e-05 0.07372249 FALSE
+#> sd  6.150842e-05 0.07372240 FALSE
 #> 
 #> 
 #> Slot "response_distribution":
