@@ -179,6 +179,7 @@ nngp<Type> nngp<Type>::tg_simulate(time_series<Type>& ts) {
           (t == 0 ? 1.0 / ts.initial_sd_scale(v) : 1.0 ) * tg_node.re,
           (t == 0 ? 1.0 / ts.initial_sd_scale(v) : 1.0 ) * tg_node.mean
         );
+        sim.segment(0, tg_node.node.to.size()) = (t == 0 ? ts.initial_sd_scale(v) : 1.0) * sim.segment(0, tg_node.node.to.size());
 
         tg.set_re_by_to_g(sim, node, t, v, pg);
       }
