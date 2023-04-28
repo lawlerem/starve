@@ -517,8 +517,8 @@ predict_w<- function(x, predictions, ...) {
     if( first_parents[[i]] <= dim(pg_re(x))[[1]] ) {
       # Take re from persistent graph -- be sure to use from est
       # so we get the extra years before/after data
-      values(predictions)$w[i, ]<- est$pg_re[first_loc[[i]], t[[i]], ]
-      values(predictions)$w_se[i, ]<- se$pg_re[first_loc[[i]], t[[i]], ]
+      values(predictions)$w[i, ]<- est$pg_re[first_parents[[i]], t[[i]], ]
+      values(predictions)$w_se[i, ]<- se$pg_re[first_parents[[i]], t[[i]], ]
     } else {
       # Take re from transient graph
       row<- first_parents[[i]] - dim(pg_re(x))[[1]]
