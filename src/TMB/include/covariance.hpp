@@ -34,7 +34,7 @@ T covariance<Type>::operator() (const T& d) {
     // Matern [sd, range, nu]
     case 2 : return (T) pow(pars(0), 2) * pow(pars(1), 2 * pars(2)) * matern(d, pars(1), pars(2));
     // Matern32 [sd, range]
-    case 3 : return (T) pow(pars(0), 2) * (1 + sqrt(3.0) * d / (T)pars(1)) * exp( -sqrt(3.0) * d / (T)pars(1) );
+    case 3 : return (T) pow(pars(0), 2) * pow(pars(1), 3) * (1 + sqrt(3.0) * d / (T)pars(1)) * exp( -sqrt(3.0) * d / (T)pars(1) );
     // Exponential [sd, range]
     default : return (T) pow(pars(0), 2) * pars(1) * exp( -d / (T)pars(1) );
   }
