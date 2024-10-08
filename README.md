@@ -18,6 +18,8 @@ vignette("starve-tour", package = "starve")
 
 This vignette acts as an in-depth reference for working with the starve package.
 
+If you are having trouble creating the vignette during the package instruction, please make sure you have pandoc installed on your system.
+
 
 # Guiding Design Principles
 
